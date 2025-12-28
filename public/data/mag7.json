@@ -1,0 +1,23 @@
+{
+  "meta": {
+    "title": "Mag 7 Momentum",
+    "generated_at": "2025-12-28T16:00:00",
+    "inspector": {
+      "tag": "Trend Signal",
+      "description": "Tracking the 'Net Call Delta' (Bullish Pressure) vs 'Net Put Delta' (Bearish Pressure). A positive spread indicates institutional positioning for upward momentum.",
+      "sql_logic": "SELECT \n    trade_date,\n    ticker,\n    SUM(CASE \n        WHEN option_type = 'call' THEN net_delta \n        ELSE -net_delta \n    END) as net_flow_sentiment\nFROM silver_options_flow\nWHERE ticker IN ('NVDA', 'TSLA')\nGROUP BY 1, 2\nORDER BY trade_date ASC;"
+    }
+  },
+  "data": [
+    {"date": "2025-12-01", "ticker": "NVDA", "signal": 120},
+    {"date": "2025-12-02", "ticker": "NVDA", "signal": 145},
+    {"date": "2025-12-03", "ticker": "NVDA", "signal": 130},
+    {"date": "2025-12-04", "ticker": "NVDA", "signal": 160},
+    {"date": "2025-12-05", "ticker": "NVDA", "signal": 185},
+    {"date": "2025-12-01", "ticker": "TSLA", "signal": -50},
+    {"date": "2025-12-02", "ticker": "TSLA", "signal": -20},
+    {"date": "2025-12-03", "ticker": "TSLA", "signal": 10},
+    {"date": "2025-12-04", "ticker": "TSLA", "signal": -15},
+    {"date": "2025-12-05", "ticker": "TSLA", "signal": -40}
+  ]
+}

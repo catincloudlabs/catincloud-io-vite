@@ -3,36 +3,37 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import MetricCard from './components/MetricCard';
 import InspectorCard from './components/InspectorCard';
-
-// Icons
 import { Activity, Zap, Radio, Server } from 'lucide-react';
 
 function App() {
   
-  // --- STATE MANAGEMENT ---
+  // --- STATE ---
   const [chaosData, setChaosData] = useState(null);
   const [chaosLoading, setChaosLoading] = useState(true);
 
   const [whaleData, setWhaleData] = useState(null);
   const [whaleLoading, setWhaleLoading] = useState(true);
 
-  // --- DATA FETCHING ---
+  const [magData, setMagData] = useState(null);
+  const [magLoading, setMagLoading] = useState(true);
+
+  // --- FETCHING ---
   useEffect(() => {
     
-    // 1. Fetch Chaos Scatter Data
+    // 1. Chaos Scatter
     fetch('/data/chaos.json')
       .then(res => res.json())
       .then(json => {
         const raw = json.data;
         const plotTrace = {
-          x: raw.map(d => d.dte),          // X: Days to Expiration
-          y: raw.map(d => d.moneyness),    // Y: Greed (Strike/Spot)
-          text: raw.map(d => d.contract),  // Hover Text
+          x: raw.map(d => d.dte),
+          y: raw.map(d => d.moneyness),
+          text: raw.map(d => d.contract),
           mode: 'markers',
           type: 'scatter',
           marker: {
-            size: raw.map(d => Math.log(d.volume) * 4), // Log scale for bubbles
-            color: raw.map(d => d.iv),     // Color by Volatility
+            size: raw.map(d => Math.log(d.volume) * 4),
+            color: raw.map(d => d.iv),
             colorscale: 'Viridis',
             showscale: true,
             opacity: 0.8
@@ -40,113 +41,117 @@ function App() {
         };
         setChaosData({ plot: [plotTrace], meta: json.meta });
         setChaosLoading(false);
-      })
-      .catch(err => console.error("Chaos Artifact Missing:", err));
+      });
 
-    // 2. Fetch Whale Table Data
+    // 2. Whale Table
     fetch('/data/whales.json')
       .then(res => res.json())
       .then(json => {
         setWhaleData(json);
         setWhaleLoading(false);
-      })
-      .catch(err => console.error("Whale Artifact Missing:", err));
+      });
+
+    // 3. Mag 7 Momentum (NEW)
+    fetch('/data/mag7.json')
+      .then(res => res.json())
+      .then(json => {
+        const raw = json.data;
+        
+        // Transform: Split flat array into 2 traces (NVDA vs TSLA)
+        const nvda = raw.filter(d => d.ticker === 'NVDA');
+        const tsla = raw.filter(d => d.ticker === 'TSLA');
+
+        const traces = [
+          {
+            x: nvda.map(d => d.date),
+            y: nvda.map(d => d.signal),
+            name: 'NVDA',
+            type: 'scatter',
+            mode: 'lines+markers',
+            line: { color: '#22c55e', width: 2 } // Green
+          },
+          {
+            x: tsla.map(d => d.date),
+            y: tsla.map(d => d.signal),
+            name: 'TSLA',
+            type: 'scatter',
+            mode: 'lines+markers',
+            line: { color: '#ef4444', width: 2 } // Red
+          }
+        ];
+
+        setMagData({ plot: traces, meta: json.meta });
+        setMagLoading(false);
+      });
 
   }, []);
 
-  // --- SHARED LAYOUTS ---
-  const darkLayout = {
-    xaxis: { 
-      title: 'Days to Expiration (DTE)', 
-      gridcolor: '#334155',
-      zerolinecolor: '#334155'
-    },
-    yaxis: { 
-      title: 'Moneyness (Strike / Spot)', 
-      gridcolor: '#334155',
-      zerolinecolor: '#334155',
-      range: [0.5, 2.0] 
-    },
+  // --- LAYOUTS ---
+  const scatterLayout = {
+    xaxis: { title: 'DTE', gridcolor: '#334155', zerolinecolor: '#334155' },
+    yaxis: { title: 'Moneyness', gridcolor: '#334155', zerolinecolor: '#334155', range: [0.5, 2.0] },
     showlegend: false
+  };
+
+  const lineLayout = {
+    xaxis: { title: 'Date', gridcolor: '#334155' },
+    yaxis: { title: 'Net Sentiment Flow', gridcolor: '#334155', zerolinecolor: '#334155' },
+    showlegend: true,
+    legend: { x: 0, y: 1, font: { color: '#94a3b8' } }
   };
 
   return (
     <div className="app-container">
       <Header />
-      
       <main className="bento-grid">
         
-        {/* ROW 1: LIVE METRICS */}
-        <MetricCard 
-          title="Pipeline State" 
-          value="ONLINE" 
-          subValue="Latency: 42ms" 
-          icon={<Server size={16} className="text-green" />}
-          statusColor="green"
-        />
-        <MetricCard 
-          title="Chaos Index" 
-          value="8.2σ" 
-          subValue="GME Volatility Spike" 
-          icon={<Zap size={16} className="text-yellow" />}
-        />
-        <MetricCard 
-          title="Whale Flow" 
-          value="$142M" 
-          subValue="Premium Traded (1h)" 
-          icon={<Activity size={16} className="text-accent" />}
-        />
-        <MetricCard 
-          title="Last Build" 
-          value="16:05" 
-          subValue="2025-12-28" 
-          icon={<Radio size={16} className="text-muted" />}
-        />
+        {/* ROW 1 */}
+        <MetricCard title="Pipeline State" value="ONLINE" subValue="Latency: 42ms" icon={<Server size={16} className="text-green" />} statusColor="green"/>
+        <MetricCard title="Chaos Index" value="8.2σ" subValue="GME Volatility Spike" icon={<Zap size={16} className="text-yellow" />}/>
+        <MetricCard title="Whale Flow" value="$142M" subValue="Premium Traded (1h)" icon={<Activity size={16} className="text-accent" />}/>
+        <MetricCard title="Last Build" value="16:05" subValue="2025-12-28" icon={<Radio size={16} className="text-muted" />}/>
 
-        {/* ROW 2: MAG 7 (Placeholder for now) */}
+        {/* ROW 2: MAG 7 (NOW LIVE) */}
         <div className="span-2">
            <InspectorCard 
-              title="Mag 7 Momentum" 
+              title={magData?.meta.title || "Mag 7 Momentum"} 
               tag="Trend"
-              desc="Bullish/Bearish Flow Signals vs Price Action."
-              isLoading={true} // Loading state until we build this JSON
-              chartType="line" 
+              desc={magData?.meta.inspector.description || "Loading..."}
+              isLoading={magLoading}
+              chartType="line"
+              plotData={magData?.plot}
+              plotLayout={lineLayout}
+              sqlCode={magData?.meta.inspector.sql_logic} 
            />
         </div>
 
-        {/* ROW 2: CHAOS SCATTER (Live) */}
+        {/* ROW 2: CHAOS */}
         <div className="span-2">
            <InspectorCard 
               title={chaosData?.meta.title || "Chaos Engine"} 
-              tag={chaosData?.meta.inspector.tag || "Risk"}
-              desc={chaosData?.meta.inspector.description || "Loading..."}
+              tag="Risk"
+              desc={chaosData?.meta.inspector.description}
               isLoading={chaosLoading}
-              
               chartType="scatter"
               plotData={chaosData?.plot}
-              plotLayout={darkLayout}
-              
+              plotLayout={scatterLayout}
               sqlCode={chaosData?.meta.inspector.sql_logic}
            />
         </div>
 
-        {/* ROW 3: WHALE HUNTER (Live Table) */}
+        {/* ROW 3: WHALES */}
         <div className="span-4">
            <InspectorCard 
               title={whaleData?.meta.title || "Whale Hunter"}
               tag="Flow"
-              desc={whaleData?.meta.inspector.description || "Loading..."}
+              desc={whaleData?.meta.inspector.description}
               isLoading={whaleLoading}
-              
               chartType="table"
               tableData={whaleData?.data}
-              
               sqlCode={whaleData?.meta.inspector.sql_logic}
            />
         </div>
-
       </main>
-
       <Footer />
     </div>
   );
