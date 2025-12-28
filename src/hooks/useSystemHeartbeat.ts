@@ -21,7 +21,7 @@ export const useSystemHeartbeat = () => {
     const fetchHeartbeat = async () => {
       try {
         // Cache Busting: ?t=timestamp forces a fresh fetch from CloudFront/S3
-        const response = await fetch(`/metadata.json?t=${Date.now()}`);
+        const response = await fetch(`/data/metadata.json?t=${Date.now()}`);
         
         if (!response.ok) {
           throw new Error(`Status Code: ${response.status}`);
