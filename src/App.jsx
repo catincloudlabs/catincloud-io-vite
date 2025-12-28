@@ -3,6 +3,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import MetricCard from './components/MetricCard';
 import InspectorCard from './components/InspectorCard';
+import { SystemStatusRibbon } from './components/SystemStatusRibbon'; // <--- NEW IMPORT
 import { Activity, Zap, Radio, Server } from 'lucide-react';
 
 function App() {
@@ -66,7 +67,6 @@ function App() {
         const traces = [
           {
             x: nvda.map(d => d.trade_date),
-            // FIXED: Mapped to 'net_sentiment_flow' (was 'signal')
             y: nvda.map(d => d.net_sentiment_flow), 
             name: 'NVDA',
             type: 'scatter',
@@ -75,7 +75,6 @@ function App() {
           },
           {
             x: tsla.map(d => d.trade_date),
-            // FIXED: Mapped to 'net_sentiment_flow' (was 'signal')
             y: tsla.map(d => d.net_sentiment_flow), 
             name: 'TSLA',
             type: 'scatter',
@@ -95,28 +94,41 @@ function App() {
   const scatterLayout = {
     xaxis: { title: 'DTE', gridcolor: '#334155', zerolinecolor: '#334155' },
     yaxis: { title: 'Moneyness', gridcolor: '#334155', zerolinecolor: '#334155', range: [0.5, 2.0] },
-    showlegend: false
+    showlegend: false,
+    paper_bgcolor: 'rgba(0,0,0,0)', // Transparent background
+    plot_bgcolor: 'rgba(0,0,0,0)',
+    font: { color: '#94a3b8' }
   };
 
   const lineLayout = {
     xaxis: { title: 'Date', gridcolor: '#334155' },
     yaxis: { title: 'Net Sentiment Flow', gridcolor: '#334155', zerolinecolor: '#334155' },
     showlegend: true,
-    legend: { x: 0, y: 1, font: { color: '#94a3b8' } }
+    legend: { x: 0, y: 1, font: { color: '#94a3b8' } },
+    paper_bgcolor: 'rgba(0,0,0,0)',
+    plot_bgcolor: 'rgba(0,0,0,0)',
+    font: { color: '#94a3b8' }
   };
 
   return (
     <div className="app-container">
+      {/* --- 1. OBSERVABILITY LAYER --- */}
+      <SystemStatusRibbon />
+
+      {/* --- 2. MAIN APPLICATION --- */}
       <Header />
+      
       <main className="bento-grid">
         
-        {/* ROW 1 */}
+        {/* ROW 1: KPI CARDS */}
+        {/* Note: 'Pipeline State' card is now functionally redundant with the Ribbon, 
+            but kept here as a visual summary for the 'Executive' view. */}
         <MetricCard title="Pipeline State" value="ONLINE" subValue="Latency: 42ms" icon={<Server size={16} className="text-green" />} statusColor="green"/>
         <MetricCard title="Chaos Index" value="8.2σ" subValue="GME Volatility Spike" icon={<Zap size={16} className="text-yellow" />}/>
         <MetricCard title="Whale Flow" value="$142M" subValue="Premium Traded (1h)" icon={<Activity size={16} className="text-accent" />}/>
         <MetricCard title="Last Build" value="16:05" subValue="2025-12-28" icon={<Radio size={16} className="text-muted" />}/>
 
-        {/* ROW 2: MAG 7 (NOW LIVE) */}
+        {/* ROW 2: MAG 7 */}
         <div className="span-2">
            <InspectorCard 
               title={magData?.meta.title || "Mag 7 Momentum"} 
