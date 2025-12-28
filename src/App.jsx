@@ -3,13 +3,17 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import MetricCard from './components/MetricCard';
 import InspectorCard from './components/InspectorCard';
-import { SystemStatusRibbon } from './components/SystemStatusRibbon'; // <--- NEW IMPORT
+import { SystemStatusRibbon } from './components/SystemStatusRibbon';
+import TimeSlider from './components/TimeSlider'; // <--- NEW IMPORT
 import { Activity, Zap, Radio, Server } from 'lucide-react';
 
 function App() {
   
   // --- STATE ---
-  const [chaosData, setChaosData] = useState(null);
+  // Chaos State (Now supports history)
+  const [chaosRaw, setChaosRaw] = useState([]); 
+  const [chaosMeta, setChaosMeta] = useState(null);
+  const [selectedDate, setSelectedDate] = useState('');
   const [chaosLoading, setChaosLoading] = useState(true);
 
   const [whaleData, setWhaleData] = useState(null);
@@ -21,29 +25,24 @@ function App() {
   // --- FETCHING ---
   useEffect(() => {
     
-    // 1. Chaos Scatter
+    // 1. Chaos Scatter (Time Travel Enabled)
     fetch('/data/chaos.json')
       .then(res => res.json())
       .then(json => {
-        const raw = json.data;
-        const plotTrace = {
-          x: raw.map(d => d.dte),
-          y: raw.map(d => d.moneyness),
-          text: raw.map(d => d.contract),
-          mode: 'markers',
-          type: 'scatter',
-          marker: {
-            size: raw.map(d => Math.log(d.volume) * 4),
-            color: raw.map(d => d.iv),
-            colorscale: 'Viridis',
-            showscale: true,
-            opacity: 0.8
-          }
-        };
-        setChaosData({ plot: [plotTrace], meta: json.meta });
+        setChaosRaw(json.data); // Store ALL rows
+        setChaosMeta(json.meta);
+        
+        // Auto-select the latest date
+        if (json.meta.available_dates && json.meta.available_dates.length > 0) {
+           const latest = json.meta.available_dates[json.meta.available_dates.length - 1];
+           setSelectedDate(latest);
+        }
         setChaosLoading(false);
       })
-      .catch(err => console.error("Chaos Data Fetch Error:", err));
+      .catch(err => {
+        console.error("Chaos Data Fetch Error:", err);
+        setChaosLoading(false);
+      });
 
     // 2. Whale Table
     fetch('/data/whales.json')
@@ -52,7 +51,10 @@ function App() {
         setWhaleData(json);
         setWhaleLoading(false);
       })
-      .catch(err => console.error("Whale Data Fetch Error:", err));
+      .catch(err => {
+         console.error("Whale Data Fetch Error:", err);
+         setWhaleLoading(false);
+      });
 
     // 3. Mag 7 Momentum
     fetch('/data/mag7.json')
@@ -60,7 +62,6 @@ function App() {
       .then(json => {
         const raw = json.data;
         
-        // Transform: Split flat array into 2 traces (NVDA vs TSLA)
         const nvda = raw.filter(d => d.ticker === 'NVDA');
         const tsla = raw.filter(d => d.ticker === 'TSLA');
 
@@ -71,7 +72,7 @@ function App() {
             name: 'NVDA',
             type: 'scatter',
             mode: 'lines+markers',
-            line: { color: '#22c55e', width: 2 } // Green
+            line: { color: '#22c55e', width: 2 } 
           },
           {
             x: tsla.map(d => d.trade_date),
@@ -79,25 +80,54 @@ function App() {
             name: 'TSLA',
             type: 'scatter',
             mode: 'lines+markers',
-            line: { color: '#ef4444', width: 2 } // Red
+            line: { color: '#ef4444', width: 2 } 
           }
         ];
 
         setMagData({ plot: traces, meta: json.meta });
         setMagLoading(false);
       })
-      .catch(err => console.error("Mag 7 Fetch Error:", err));
+      .catch(err => {
+         console.error("Mag 7 Fetch Error:", err);
+         setMagLoading(false);
+      });
 
   }, []);
+
+  // --- HELPERS ---
+  
+  // Filter Chaos Data based on Slider
+  const getFilteredChaosPlot = () => {
+    if (!selectedDate || chaosRaw.length === 0) return [];
+
+    // Filter by the selected date string (YYYY-MM-DD)
+    const dailyData = chaosRaw.filter(d => d.trade_date && d.trade_date.startsWith(selectedDate));
+
+    return [{
+       x: dailyData.map(d => d.dte),
+       y: dailyData.map(d => d.moneyness),
+       text: dailyData.map(d => d.contract),
+       mode: 'markers',
+       type: 'scatter',
+       marker: {
+         size: dailyData.map(d => Math.log(d.volume) * 4),
+         color: dailyData.map(d => d.iv),
+         colorscale: 'Viridis',
+         showscale: true,
+         opacity: 0.8
+       }
+    }];
+  };
 
   // --- LAYOUTS ---
   const scatterLayout = {
     xaxis: { title: 'DTE', gridcolor: '#334155', zerolinecolor: '#334155' },
     yaxis: { title: 'Moneyness', gridcolor: '#334155', zerolinecolor: '#334155', range: [0.5, 2.0] },
     showlegend: false,
-    paper_bgcolor: 'rgba(0,0,0,0)', // Transparent background
+    paper_bgcolor: 'rgba(0,0,0,0)', 
     plot_bgcolor: 'rgba(0,0,0,0)',
-    font: { color: '#94a3b8' }
+    font: { color: '#94a3b8' },
+    margin: { t: 0, b: 40, l: 40, r: 20 } // Tight margins
   };
 
   const lineLayout = {
@@ -121,8 +151,6 @@ function App() {
       <main className="bento-grid">
         
         {/* ROW 1: KPI CARDS */}
-        {/* Note: 'Pipeline State' card is now functionally redundant with the Ribbon, 
-            but kept here as a visual summary for the 'Executive' view. */}
         <MetricCard title="Pipeline State" value="ONLINE" subValue="Latency: 42ms" icon={<Server size={16} className="text-green" />} statusColor="green"/>
         <MetricCard title="Chaos Index" value="8.2σ" subValue="GME Volatility Spike" icon={<Zap size={16} className="text-yellow" />}/>
         <MetricCard title="Whale Flow" value="$142M" subValue="Premium Traded (1h)" icon={<Activity size={16} className="text-accent" />}/>
@@ -142,18 +170,26 @@ function App() {
            />
         </div>
 
-        {/* ROW 2: CHAOS */}
+        {/* ROW 2: CHAOS (WITH TIME TRAVEL) */}
         <div className="span-2">
            <InspectorCard 
-              title={chaosData?.meta.title || "Chaos Engine"} 
+              title={chaosMeta?.title || "Chaos Engine"} 
               tag="Risk"
-              desc={chaosData?.meta.inspector.description}
+              desc={chaosMeta?.inspector.description}
               isLoading={chaosLoading}
               chartType="scatter"
-              plotData={chaosData?.plot}
+              plotData={getFilteredChaosPlot()}
               plotLayout={scatterLayout}
-              sqlCode={chaosData?.meta.inspector.sql_logic}
+              sqlCode={chaosMeta?.inspector.sql_logic}
            />
+           {/* Slider Attached to Bottom */}
+           {!chaosLoading && chaosMeta?.available_dates && (
+              <TimeSlider 
+                dates={chaosMeta.available_dates}
+                selectedDate={selectedDate}
+                onChange={setSelectedDate}
+              />
+           )}
         </div>
 
         {/* ROW 3: WHALES */}
