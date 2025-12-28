@@ -41,7 +41,8 @@ function App() {
         };
         setChaosData({ plot: [plotTrace], meta: json.meta });
         setChaosLoading(false);
-      });
+      })
+      .catch(err => console.error("Chaos Data Fetch Error:", err));
 
     // 2. Whale Table
     fetch('/data/whales.json')
@@ -49,9 +50,10 @@ function App() {
       .then(json => {
         setWhaleData(json);
         setWhaleLoading(false);
-      });
+      })
+      .catch(err => console.error("Whale Data Fetch Error:", err));
 
-    // 3. Mag 7 Momentum (NEW)
+    // 3. Mag 7 Momentum
     fetch('/data/mag7.json')
       .then(res => res.json())
       .then(json => {
@@ -64,7 +66,8 @@ function App() {
         const traces = [
           {
             x: nvda.map(d => d.trade_date),
-            y: nvda.map(d => d.signal),
+            // FIXED: Mapped to 'net_sentiment_flow' (was 'signal')
+            y: nvda.map(d => d.net_sentiment_flow), 
             name: 'NVDA',
             type: 'scatter',
             mode: 'lines+markers',
@@ -72,7 +75,8 @@ function App() {
           },
           {
             x: tsla.map(d => d.trade_date),
-            y: tsla.map(d => d.signal),
+            // FIXED: Mapped to 'net_sentiment_flow' (was 'signal')
+            y: tsla.map(d => d.net_sentiment_flow), 
             name: 'TSLA',
             type: 'scatter',
             mode: 'lines+markers',
@@ -82,7 +86,8 @@ function App() {
 
         setMagData({ plot: traces, meta: json.meta });
         setMagLoading(false);
-      });
+      })
+      .catch(err => console.error("Mag 7 Fetch Error:", err));
 
   }, []);
 
