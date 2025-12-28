@@ -1,0 +1,18 @@
+/* TEAM */
+  Creator: CatInCloud Labs
+  Contact: dave@catincloudlabs.com
+  Site: https://catincloudlabs.com
+  Location: Minneapolis, MN
+
+/* SITE */
+  Purpose: Live R&D Environment ("The Engine Room")
+  Last Update: 2025/12/27
+  Standards: HTML5, CSS3, WCAG 2.1 AA
+
+/* TECH STACK */
+  Data Warehouse: Snowflake
+  Orchestration: Apache Airflow
+  Storage: AWS S3 (Private Bucket)
+  CDN: AWS CloudFront (Security Hardened)
+  Visualization: Plotly.js
+  DNS: Cloudflare (DNS Only)

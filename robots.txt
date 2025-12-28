@@ -1,0 +1,6 @@
+User-agent: *
+Disallow: /assets/data/
+Disallow: /assets/js/
+Allow: /
+
+Sitemap: https://catincloud.io/sitemap.xml
