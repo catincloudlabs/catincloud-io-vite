@@ -1,0 +1,347 @@
+/*
+  CatInCloud.io — The Engine Room (Terminal Theme)
+  Purpose: High-density, cohesive financial workspace.
+*/
+
+/* ==================================================================== */
+/* 1. TOKENS (Dark Mode / Terminal Theme)                               */
+/* ==================================================================== */
+
+:root {
+  /* Brand Colors */
+  --accent: #38bdf8;       /* Light Blue */
+  --accent-dim: #0ea5e9;   /* Mid Blue */
+  
+  /* Semantic Signals */
+  --green: #22c55e;
+  --red: #ef4444;
+  --yellow: #eab308;
+
+  /* Surfaces */
+  --bg-app: #0f172a;       /* Deep Navy Background */
+  --bg-panel: #1e293b;     /* Lighter Navy for Cards */
+  --border: #334155;       /* Subtle borders */
+  --bg-black: #000000;
+  
+  /* Typography */
+  --text-main: #f8fafc;    /* Almost White */
+  --text-muted: #94a3b8;   /* Slate Gray */
+  
+  /* Layout */
+  --radius: 8px;           
+  --spacing: 16px;         
+  --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+}
+
+/* ==================================================================== */
+/* 2. GLOBAL RESET & BASE                                               */
+/* ==================================================================== */
+
+html, body {
+  height: 100%;
+  margin: 0;
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ==================================================================== */
+/* 3. LAYOUT ENGINE (Bento Grid)                                        */
+/* ==================================================================== */
+
+.app-container {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: auto auto;
+  gap: var(--spacing);
+}
+
+/* Header & Footer */
+.app-header {
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.app-footer {
+  text-align: center;
+  margin-top: 40px;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+/* ==================================================================== */
+/* 4. PANEL COMPONENT                                                   */
+/* ==================================================================== */
+
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.panel:hover {
+  border-color: var(--accent-dim);
+}
+
+/* Terminal Panel Variant */
+.panel-terminal {
+  background: var(--bg-black);
+  border: none;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  padding-bottom: 12px;
+}
+
+.panel-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.panel-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  margin-top: 0;
+}
+
+.tag {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.1);
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* ==================================================================== */
+/* 5. GRID SPANS                                                        */
+/* ==================================================================== */
+
+.span-1 { grid-column: span 1; }
+.span-2 { grid-column: span 2; height: 500px; }
+.span-4 { grid-column: span 4; }
+
+@media (max-width: 1024px) {
+  .bento-grid { grid-template-columns: 1fr; }
+  .span-1, .span-2, .span-4 { grid-column: span 1; }
+  .panel { min-height: auto; }
+}
+
+/* ==================================================================== */
+/* 6. TYPOGRAPHY & METRICS                                              */
+/* ==================================================================== */
+
+.brand-title {
+  font-size: 1.5rem;
+  margin: 0;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.brand-sub {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.text-accent { color: var(--accent); }
+.nav-link { color: var(--text-muted); text-decoration: none; font-size: 0.85rem; }
+.nav-link:hover { color: var(--text-main); }
+
+.metric-big {
+  font-family: var(--font-mono);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.05em;
+}
+
+.metric-sub {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.metric-row {
+  display: flex;
+  gap: 16px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+/* System Status Dot */
+.status-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--green);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--green);
+}
+
+.system-metrics {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* ==================================================================== */
+/* 7. CONTROLS & CHARTS                                                 */
+/* ==================================================================== */
+
+.controls-bar {
+  display: flex;
+  gap: 12px;
+  background: rgba(0,0,0,0.2);
+  padding: 8px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+
+.controls-bar select {
+  background: var(--bg-app);
+  color: var(--text-main);
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.helper-text {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  align-self: center;
+}
+
+.chart-box {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+}
+
+.chart-box-sm {
+  height: 350px;
+}
+
+.loading-state {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 20px;
+}
+
+/* Animation State */
+.fade-in-section {
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+
+/* Terminal Log Area */
+.term-header {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--accent-dim);
+  margin-bottom: 8px;
+}
+
+.term-output {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--green);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  max-height: 100px;
+  margin: 0;
+}
+
+/* ==================================================================== */
+/* 8. MODAL                                                             */
+/* ==================================================================== */
+
+.modal-overlay {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(4px);
+}
+
+.modal-box {
+  background: var(--bg-panel);
+  margin: 5% auto;
+  padding: 20px;
+  width: 80%;
+  max-width: 900px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+  animation: modalSlide 0.3s ease-out;
+}
+
+@keyframes modalSlide {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+}
+
+.modal-title {
+  margin: 0;
+  color: var(--text-main);
+  font-size: 1.1rem;
+}
+
+.modal-close {
+  cursor: pointer;
+  font-size: 1.5rem;
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+.modal-close:hover { color: var(--red); }
+
+.modal-chart-container {
+  height: 450px;
+  width: 100%;
+}
+
+/* Utilities */
+.text-green { color: var(--green); }
+.text-red { color: var(--red); }
