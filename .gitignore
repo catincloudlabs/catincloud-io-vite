@@ -33,3 +33,7 @@ build/
 # scratch paper for notes
 scratch.txt
 scratch.json
+
+
+node_modules
+package-lock.json
