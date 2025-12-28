@@ -1,5 +1,5 @@
 User-agent: *
-Disallow: /assets/data/
+Disallow: /data/
 Disallow: /assets/js/
 Allow: /
 
