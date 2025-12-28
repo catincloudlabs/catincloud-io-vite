@@ -63,7 +63,7 @@ function App() {
 
         const traces = [
           {
-            x: nvda.map(d => d.date),
+            x: nvda.map(d => d.trade_date),
             y: nvda.map(d => d.signal),
             name: 'NVDA',
             type: 'scatter',
@@ -71,7 +71,7 @@ function App() {
             line: { color: '#22c55e', width: 2 } // Green
           },
           {
-            x: tsla.map(d => d.date),
+            x: tsla.map(d => d.trade_date),
             y: tsla.map(d => d.signal),
             name: 'TSLA',
             type: 'scatter',
