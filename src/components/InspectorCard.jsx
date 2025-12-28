@@ -4,7 +4,7 @@ import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
 import sql from 'react-syntax-highlighter/dist/esm/languages/hljs/sql';
 import { atomOneDark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 
-// Register SQL language
+// Register SQL language support for the syntax highlighter
 SyntaxHighlighter.registerLanguage('sql', sql);
 
 const InspectorCard = ({ 
@@ -15,7 +15,7 @@ const InspectorCard = ({
   isLoading, 
   plotData, 
   plotLayout, 
-  tableData, // New prop for table rows
+  tableData, 
   sqlCode 
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
@@ -41,10 +41,10 @@ const InspectorCard = ({
         </button>
       </div>
 
-      {/* --- DESCRIPTION (Hidden in Code Mode) --- */}
+      {/* --- DESCRIPTION (Hide in Logic Mode to save space) --- */}
       {!isFlipped && <p className="panel-desc">{desc}</p>}
 
-      {/* --- CONTENT AREA --- */}
+      {/* --- MAIN CONTENT AREA --- */}
       <div className="chart-box" style={{ flex: 1, minHeight: 0, position: 'relative', overflow: 'hidden' }}>
         
         {/* State 1: Loading */}
