@@ -66,7 +66,7 @@ const ManualModal = ({ isOpen, onClose }) => {
                 unusual options activity across Mag 7 and meme-tier equities.
               </p>
               <p className="manual-p">
-                Data is ingested via Polygon.io, normalized in Snowflake, and served via 
+                Data is ingested via Massive.com, normalized in Snowflake, and served via 
                 static JSON endpoints for low-latency retrieval.
               </p>
             </section>
@@ -93,7 +93,7 @@ const ManualModal = ({ isOpen, onClose }) => {
                 Filters for institutional block trades exceeding <span className="text-green">$1M premium</span>.
               </p>
               <p className="manual-p">
-                <span className="text-accent">Logic:</span> See <code>models/marts/core/fct_whale_flow.sql</code> via the "View Logic" button on the card.
+                <span className="text-accent">Logic:</span> See <code>models/intermediate/int_massive__whale_hunter.sql</code> via the "View Logic" button on the card.
               </p>
             </section>
 
