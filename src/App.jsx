@@ -1,40 +1,42 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import MetricCard from './components/MetricCard';
 import InspectorCard from './components/InspectorCard';
 import { SystemStatusRibbon } from './components/SystemStatusRibbon';
 import TimeSlider from './components/TimeSlider';
-import { Activity, Zap, Radio, Server } from 'lucide-react';
+import { Activity, Zap, Radio, Server, ChevronDown } from 'lucide-react';
 
 // --- CONFIGURATION ---
-// Distinct colors for dark mode visibility
 const MAG7_CONFIG = {
-  NVDA: { color: '#4ade80', label: 'NVDA' }, // Green
-  TSLA: { color: '#f87171', label: 'TSLA' }, // Red
-  AAPL: { color: '#94a3b8', label: 'AAPL' }, // Slate (Silver)
-  MSFT: { color: '#38bdf8', label: 'MSFT' }, // Sky Blue
-  AMZN: { color: '#fbbf24', label: 'AMZN' }, // Amber
-  GOOGL: { color: '#818cf8', label: 'GOOGL' }, // Indigo
-  META: { color: '#c084fc', label: 'META' }  // Purple
+  NVDA: { color: '#4ade80', label: 'NVDA' },
+  TSLA: { color: '#f87171', label: 'TSLA' },
+  AAPL: { color: '#94a3b8', label: 'AAPL' },
+  MSFT: { color: '#38bdf8', label: 'MSFT' },
+  AMZN: { color: '#fbbf24', label: 'AMZN' },
+  GOOGL: { color: '#818cf8', label: 'GOOGL' },
+  META: { color: '#c084fc', label: 'META' } 
 };
 
 function App() {
   
   // --- STATE ---
+  // Chaos State
   const [chaosRaw, setChaosRaw] = useState([]); 
   const [chaosMeta, setChaosMeta] = useState(null);
   const [selectedDate, setSelectedDate] = useState('');
+  const [selectedChaosTicker, setSelectedChaosTicker] = useState('GME'); // Default Ticker
   const [chaosLoading, setChaosLoading] = useState(true);
 
+  // Whale State
   const [whaleData, setWhaleData] = useState(null);
   const [whaleLoading, setWhaleLoading] = useState(true);
 
   // Mag 7 State
-  const [magRaw, setMagRaw] = useState([]); // Store all raw data rows
+  const [magRaw, setMagRaw] = useState([]); 
   const [magMeta, setMagMeta] = useState(null);
   const [magLoading, setMagLoading] = useState(true);
-  const [visibleTickers, setVisibleTickers] = useState(['NVDA', 'TSLA']); // Default View
+  const [visibleTickers, setVisibleTickers] = useState(['NVDA', 'TSLA']);
 
   // --- FETCHING ---
   useEffect(() => {
@@ -59,7 +61,7 @@ function App() {
       .then(json => { setWhaleData(json); setWhaleLoading(false); })
       .catch(err => { console.error("Whale Error:", err); setWhaleLoading(false); });
 
-    // 3. Mag 7 Momentum (Fetch ALL data, do not filter yet)
+    // 3. Mag 7 Momentum
     fetch('/data/mag7.json')
       .then(res => res.json())
       .then(json => {
@@ -73,16 +75,12 @@ function App() {
 
   // --- HELPERS ---
 
-  // 1. Dynamic Mag 7 Plot Generator
+  // 1. Dynamic Mag 7 Plot
   const getMag7PlotData = () => {
     if (!magRaw || magRaw.length === 0) return [];
-
-    // Map through the visible tickers and create a trace for each
     return visibleTickers.map(ticker => {
-      // Find rows for this specific ticker
       const tickerData = magRaw.filter(d => d.ticker === ticker);
       const config = MAG7_CONFIG[ticker] || { color: '#ccc' };
-
       return {
         x: tickerData.map(d => d.trade_date),
         y: tickerData.map(d => d.net_sentiment_flow),
@@ -95,10 +93,24 @@ function App() {
     });
   };
 
-  // 2. Chaos Plot Generator
+  // 2. Helper: Get Unique Tickers from Chaos Data
+  // This calculates the list of available tickers dynamically
+  const availableChaosTickers = useMemo(() => {
+    if (!chaosRaw.length) return ['GME'];
+    const tickers = [...new Set(chaosRaw.map(d => d.ticker))];
+    return tickers.sort(); 
+  }, [chaosRaw]);
+
+  // 3. Chaos Plot Generator
   const getFilteredChaosPlot = () => {
     if (!selectedDate || chaosRaw.length === 0) return [];
-    const dailyData = chaosRaw.filter(d => d.trade_date?.startsWith(selectedDate));
+    
+    // Filter by Date AND Ticker
+    const dailyData = chaosRaw.filter(d => 
+      d.trade_date?.startsWith(selectedDate) && 
+      d.ticker === selectedChaosTicker
+    );
+
     return [{
        x: dailyData.map(d => d.dte),
        y: dailyData.map(d => d.moneyness),
@@ -115,11 +127,10 @@ function App() {
     }];
   };
 
-  // --- TOGGLE HANDLER ---
+  // --- TOGGLE HANDLER (Mag 7) ---
   const toggleTicker = (ticker) => {
     setVisibleTickers(prev => {
       if (prev.includes(ticker)) {
-        // Prevent removing the last ticker (keeps chart from crashing)
         if (prev.length === 1) return prev; 
         return prev.filter(t => t !== ticker);
       } else {
@@ -142,7 +153,7 @@ function App() {
   const lineLayout = {
     xaxis: { title: 'Date', gridcolor: '#334155' },
     yaxis: { title: 'Net Sentiment Flow', gridcolor: '#334155', zerolinecolor: '#334155' },
-    showlegend: false, // Hidden because we use Pill Buttons as the legend now
+    showlegend: false,
     paper_bgcolor: 'rgba(0,0,0,0)',
     plot_bgcolor: 'rgba(0,0,0,0)',
     font: { color: '#94a3b8' },
@@ -165,65 +176,82 @@ function App() {
         {/* ROW 2: MAG 7 (WITH TOGGLES) */}
         <div className="span-2">
            <InspectorCard 
-              title={magMeta?.title || "Mag 7 Momentum"} 
-              tag="Trend"
-              desc={magMeta?.inspector.description || "Loading..."}
-              isLoading={magLoading}
-              chartType="line"
-              plotData={getMag7PlotData()}
-              plotLayout={lineLayout}
-              sqlCode={magMeta?.inspector.sql_logic} 
+             title={magMeta?.title || "Mag 7 Momentum"} 
+             tag="Trend"
+             desc={magMeta?.inspector.description || "Loading..."}
+             isLoading={magLoading}
+             chartType="line"
+             plotData={getMag7PlotData()}
+             plotLayout={lineLayout}
+             sqlCode={magMeta?.inspector.sql_logic} 
            >
-              {/* NEW CONTROLS COMPONENT */}
-              <div className="ticker-controls-container">
-                {Object.keys(MAG7_CONFIG).map(ticker => (
-                  <button
-                    key={ticker}
-                    onClick={() => toggleTicker(ticker)}
-                    className={`ticker-pill ${visibleTickers.includes(ticker) ? 'active' : ''}`}
-                    style={{ 
-                      '--pill-color': MAG7_CONFIG[ticker].color 
-                    }}
-                  >
-                    {ticker}
-                  </button>
-                ))}
-              </div>
+             <div className="ticker-controls-container">
+               {Object.keys(MAG7_CONFIG).map(ticker => (
+                 <button
+                   key={ticker}
+                   onClick={() => toggleTicker(ticker)}
+                   className={`ticker-pill ${visibleTickers.includes(ticker) ? 'active' : ''}`}
+                   style={{ '--pill-color': MAG7_CONFIG[ticker].color }}
+                 >
+                   {ticker}
+                 </button>
+               ))}
+             </div>
            </InspectorCard>
         </div>
 
-        {/* ROW 2: CHAOS (WITH TIME TRAVEL) */}
+        {/* ROW 2: CHAOS (WITH DROPDOWN & TIME TRAVEL) */}
         <div className="span-2">
            <InspectorCard 
-              title={chaosMeta?.title || "Chaos Engine"} 
-              tag="Risk"
-              desc={chaosMeta?.inspector.description}
-              isLoading={chaosLoading}
-              chartType="scatter"
-              plotData={getFilteredChaosPlot()}
-              plotLayout={scatterLayout}
-              sqlCode={chaosMeta?.inspector.sql_logic}
+             title={chaosMeta?.title || "Chaos Engine"} 
+             tag="Risk"
+             desc={chaosMeta?.inspector.description}
+             isLoading={chaosLoading}
+             chartType="scatter"
+             plotData={getFilteredChaosPlot()}
+             plotLayout={scatterLayout}
+             sqlCode={chaosMeta?.inspector.sql_logic}
            >
-              {!chaosLoading && chaosMeta?.available_dates && (
-                  <TimeSlider 
-                    dates={chaosMeta.available_dates}
-                    selectedDate={selectedDate}
-                    onChange={setSelectedDate}
-                  />
-              )}
+             {/* NEW: FILTER CONTAINER */}
+             <div className="chaos-controls-container">
+               {/* 1. Styled Select Dropdown */}
+               <div className="terminal-select-wrapper">
+                 <select 
+                   value={selectedChaosTicker} 
+                   onChange={(e) => setSelectedChaosTicker(e.target.value)}
+                   className="terminal-select"
+                 >
+                   {availableChaosTickers.map(t => (
+                     <option key={t} value={t}>{t}</option>
+                   ))}
+                 </select>
+                 <ChevronDown size={14} className="select-arrow" />
+               </div>
+
+               {/* 2. Time Slider */}
+               {!chaosLoading && chaosMeta?.available_dates && (
+                  <div style={{ flex: 1 }}> 
+                    <TimeSlider 
+                      dates={chaosMeta.available_dates}
+                      selectedDate={selectedDate}
+                      onChange={setSelectedDate}
+                    />
+                  </div>
+               )}
+             </div>
            </InspectorCard>
         </div>
 
         {/* ROW 3: WHALES */}
         <div className="span-4">
            <InspectorCard 
-              title={whaleData?.meta.title || "Whale Hunter"}
-              tag="Flow"
-              desc={whaleData?.meta.inspector.description}
-              isLoading={whaleLoading}
-              chartType="table"
-              tableData={whaleData?.data}
-              sqlCode={whaleData?.meta.inspector.sql_logic}
+             title={whaleData?.meta.title || "Whale Hunter"}
+             tag="Flow"
+             desc={whaleData?.meta.inspector.description}
+             isLoading={whaleLoading}
+             chartType="table"
+             tableData={whaleData?.data}
+             sqlCode={whaleData?.meta.inspector.sql_logic}
            />
         </div>
       </main>
