@@ -102,10 +102,10 @@ const ArchitectureModal = ({ isOpen, onClose }) => {
 
           </div>
 
-          {/* Footer / Infrastructure as Code */}
+          {/* Footer */}
           <div className="arch-footer">
             <div className="arch-cicd">
-              <span className="text-accent">IaC:</span> Entire infrastructure defined in <strong>Terraform</strong>.
+              <span className="text-accent">CI/CD:</span> GitHub Actions automates the harvest & cooking schedule.
             </div>
           </div>
         </div>

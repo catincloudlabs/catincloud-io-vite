@@ -32,13 +32,14 @@ const Header = () => {
 
           <span className="nav-separator">/</span>
 
-          {/* Exit Link */}
+          {/* Updated Link Text */}
           <a href="https://catincloudlabs.com" className="nav-link">
-            Exit to Main Site &rarr;
+            Built by CatInCloud Labs &rarr;
           </a>
         </div>
       </header>
 
+      {/* MODAL */}
       <ArchitectureModal 
         isOpen={isModalOpen} 
         onClose={() => setModalOpen(false)} 
