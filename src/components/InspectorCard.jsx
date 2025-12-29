@@ -28,7 +28,7 @@ const InspectorCard = ({
           className="nav-link panel-toggle-btn" 
           disabled={isLoading}
         >
-          {isFlipped ? "Show Chart 📊" : "View Logic 👨‍💻"}
+          {isFlipped ? "Show Chart 📊" : "View Logic 🐈"}
         </button>
       </div>
 
