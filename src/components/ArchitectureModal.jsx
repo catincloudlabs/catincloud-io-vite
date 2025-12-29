@@ -37,15 +37,15 @@ const ArchitectureModal = ({ isOpen, onClose }) => {
           {/* THE FLOW DIAGRAM */}
           <div className="arch-flow">
             
-            {/* STEP 1: ORCHESTRATION & TRANSFORM */}
+            {/* STEP 1: INGESTION & ORCHESTRATION */}
             <div className="arch-node">
               <div className="arch-icon-box color-orange">
                 <CloudCog size={24} />
               </div>
-              <div className="arch-label">ORCHESTRATION</div>
-              <div className="arch-tech">MWAA + dbt Core</div>
+              <div className="arch-label">INGESTION & TRANSFORM</div>
+              <div className="arch-tech">MWAA (Airflow)</div>
               <div className="arch-desc">
-                Airflow triggers <code>dbt build</code> to transform raw data. Runs securely in a <strong>Private VPC</strong>.
+                DAGs ingest market data, load to Snowflake, and trigger <code>dbt build</code> models.
               </div>
             </div>
 
@@ -62,7 +62,7 @@ const ArchitectureModal = ({ isOpen, onClose }) => {
               <div className="arch-label">WAREHOUSE</div>
               <div className="arch-tech">Snowflake Data Lake</div>
               <div className="arch-desc">
-                The System of Record. Stores raw ingestion and materialized "Gold" models.
+                The System of Record. Stores raw JSON ingestion and materialized dbt models.
               </div>
             </div>
 
