@@ -295,11 +295,8 @@ html, body {
   height: 100%;
   background: rgba(0,0,0,0.8);
   backdrop-filter: blur(4px);
-  /* FIX: Allow the overlay itself to scroll */
   overflow-y: auto;
-  /* FIX: Smooth scrolling on iOS */
   -webkit-overflow-scrolling: touch;
-  /* FIX: Ensure flex centering works with scrolling */
   align-items: flex-start; 
   justify-content: center;
   padding: 20px 0; /* Add breathing room for vertical scrolling */
