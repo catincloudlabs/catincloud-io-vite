@@ -784,3 +784,157 @@ html, body {
   border-color: var(--text-muted);
   color: var(--text-main);
 }
+
+/* ==================================================================== */
+/* 17. ARCHITECTURE MODAL UTILITIES (New)                               */
+/* ==================================================================== */
+
+.architecture-modal {
+  max-width: 1000px; /* Wider than normal modal for the diagram */
+}
+
+.modal-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ml-2 { margin-left: 8px; }
+
+.arch-container {
+  padding: 10px 0;
+}
+
+.arch-intro {
+  text-align: center;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  margin-bottom: 32px;
+  font-style: italic;
+}
+
+/* THE FLOW GRID */
+.arch-flow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+/* NODES */
+.arch-node {
+  flex: 1;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+
+.arch-node:hover {
+  border-color: var(--accent);
+  background: rgba(255,255,255,0.05);
+}
+
+.arch-icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #1e293b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+  color: inherit; /* Allows the icon to take the border color */
+}
+
+.color-yellow { border-color: var(--yellow); color: var(--yellow); }
+.color-blue { border-color: var(--accent); color: var(--accent); }
+.color-orange { border-color: #f97316; color: #f97316; }
+.color-green { border-color: var(--green); color: var(--green); }
+
+.arch-label {
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+
+.arch-tech {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.arch-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* ARROWS */
+.arch-arrow {
+  align-self: center;
+  color: var(--text-muted);
+  font-size: 1.5rem;
+  font-weight: bold;
+  opacity: 0.5;
+}
+
+.desktop-arrow { display: block; }
+.mobile-arrow { display: none; }
+
+/* FOOTER */
+.arch-footer {
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+.arch-cicd {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  background: rgba(0,0,0,0.3);
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+/* RESPONSIVE FLOW (Vertical on Mobile) */
+@media (max-width: 768px) {
+  .arch-flow {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .arch-node {
+    width: 100%; /* Full width cards */
+    flex-direction: row; /* Horizontal interior layout for cards */
+    text-align: left;
+    gap: 16px;
+  }
+  
+  .arch-node .arch-icon-box {
+    margin-bottom: 0;
+    flex-shrink: 0;
+  }
+
+  .arch-node .arch-desc {
+    display: none; /* Hide description to save vertical space on phone */
+  }
+
+  /* Swap Arrows */
+  .desktop-arrow { display: none; }
+  .mobile-arrow { display: block; }
+}
