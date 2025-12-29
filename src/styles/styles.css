@@ -515,3 +515,111 @@ html, body {
 .time-slider-tick.active {
   background-color: var(--accent); /* Active color */
 }
+
+/* ==================================================================== */
+/* 11. SYSTEM STATUS RIBBON (New)                                       */
+/* ==================================================================== */
+
+.status-ribbon-container {
+  width: 100%;
+  height: 32px;
+  background-color: #0f172a; /* Slate-900 */
+  border-bottom: 1px solid #1e293b; /* Slate-800 */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  box-sizing: border-box;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+/* Dynamic Status Colors via Variables */
+.status-ribbon-container.status-healthy {
+  --status-color: #10B981; /* Green */
+}
+.status-ribbon-container.status-warning {
+  --status-color: #F59E0B; /* Amber */
+}
+
+.status-section-left, 
+.status-section-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap; /* Prevents text wrapping */
+}
+
+.status-separator {
+  color: #334155;
+  margin: 0 4px;
+}
+
+.status-text-main {
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.status-metric-text {
+  letter-spacing: 0.05em;
+}
+
+.status-value {
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+/* Indicator Animation */
+.status-indicator-wrapper {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+}
+
+.status-dot-static {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: var(--status-color);
+}
+
+.status-dot-ping {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: var(--status-color);
+  opacity: 0.75;
+  animation: statusPing 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes statusPing {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+/* ==================================================================== */
+/* MOBILE OPTIMIZATION (ADD THIS TO YOUR EXISTING MEDIA QUERY)           */
+/* ==================================================================== */
+
+@media (max-width: 1024px) {
+  /* ... existing mobile styles ... */
+
+  /* Hide detailed metrics on small screens to prevent overlap */
+  .mobile-hide {
+    display: none;
+  }
+  
+  /* Center the main status on mobile since it's the only thing left */
+  .status-ribbon-container {
+    justify-content: center; 
+  }
+}
