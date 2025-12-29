@@ -295,11 +295,20 @@ html, body {
   height: 100%;
   background: rgba(0,0,0,0.8);
   backdrop-filter: blur(4px);
+  /* FIX: Allow the overlay itself to scroll */
+  overflow-y: auto;
+  /* FIX: Smooth scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
+  /* FIX: Ensure flex centering works with scrolling */
+  align-items: flex-start; 
+  justify-content: center;
+  padding: 20px 0; /* Add breathing room for vertical scrolling */
 }
 
 .modal-box {
   background: var(--bg-panel);
-  margin: 5% auto;
+  /* CHANGED: Use auto margins for flexible centering */
+  margin: auto; 
   padding: 20px;
   width: 80%;
   max-width: 900px;
@@ -307,6 +316,7 @@ html, body {
   border: 1px solid var(--border);
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
   animation: modalSlide 0.3s ease-out;
+  position: relative; /* Ensure z-index works internally */
 }
 
 @keyframes modalSlide {
@@ -341,10 +351,6 @@ html, body {
   height: 450px;
   width: 100%;
 }
-
-/* Utilities */
-.text-green { color: var(--green); }
-.text-red { color: var(--red); }
 
 /* ==================================================================== */
 /* 9. INSPECTOR CARD UTILITIES                                          */
