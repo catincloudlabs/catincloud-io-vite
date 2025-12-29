@@ -188,6 +188,16 @@ html, body {
   .metric-big {
     font-size: 1.5rem; 
   }
+
+  /* 6. Hide detailed metrics on small screens to prevent overlap (Ribbon) */
+  .mobile-hide {
+    display: none;
+  }
+  
+  /* 7. Center the main status on mobile (Ribbon) */
+  .status-ribbon-container {
+    justify-content: center; 
+  }
 }
 
 /* ==================================================================== */
@@ -517,7 +527,7 @@ html, body {
 }
 
 /* ==================================================================== */
-/* 11. SYSTEM STATUS RIBBON (New)                                       */
+/* 11. SYSTEM STATUS RIBBON                                             */
 /* ==================================================================== */
 
 .status-ribbon-container {
@@ -607,19 +617,36 @@ html, body {
 }
 
 /* ==================================================================== */
-/* MOBILE OPTIMIZATION (ADD THIS TO YOUR EXISTING MEDIA QUERY)           */
+/* 12. METRIC CARD UTILITIES (New)                                      */
 /* ==================================================================== */
 
-@media (max-width: 1024px) {
-  /* ... existing mobile styles ... */
+.panel-icon-wrapper {
+  background: transparent;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
 
-  /* Hide detailed metrics on small screens to prevent overlap */
-  .mobile-hide {
-    display: none;
-  }
-  
-  /* Center the main status on mobile since it's the only thing left */
-  .status-ribbon-container {
-    justify-content: center; 
-  }
+.metric-status-dot {
+  position: absolute;
+  top: 24px;
+  right: 50px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.metric-status-dot.status-green {
+  background-color: var(--green);
+  box-shadow: 0 0 8px var(--green);
+}
+
+.metric-status-dot.status-yellow {
+  background-color: var(--yellow);
+  box-shadow: 0 0 8px var(--yellow);
+}
+
+.metric-status-dot.status-red {
+  background-color: var(--red);
+  box-shadow: 0 0 8px var(--red);
 }
