@@ -12,13 +12,13 @@ const TimeSlider = ({ dates, selectedDate, onChange }) => {
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.header}>
-        <div style={styles.label}>
+    <div className="time-slider-container">
+      <div className="time-slider-header">
+        <div className="time-slider-label">
           <Clock size={14} style={{ marginRight: '6px' }} />
           <span>TIME TRAVEL</span>
         </div>
-        <span style={styles.currentDate}>{selectedDate}</span>
+        <span className="time-slider-date">{selectedDate}</span>
       </div>
 
       <input
@@ -27,57 +27,20 @@ const TimeSlider = ({ dates, selectedDate, onChange }) => {
         max={dates.length - 1}
         value={currentIndex === -1 ? dates.length - 1 : currentIndex}
         onChange={handleRangeChange}
-        style={styles.slider}
+        className="time-slider-input"
       />
 
-      <div style={styles.ticks}>
+      <div className="time-slider-ticks">
         {dates.map((date, i) => (
           <div 
             key={date} 
-            style={{ 
-              ...styles.tick, 
-              backgroundColor: i === currentIndex ? '#38bdf8' : '#475569' 
-            }} 
+            className={`time-slider-tick ${i === currentIndex ? 'active' : ''}`}
             title={date}
           />
         ))}
       </div>
     </div>
   );
-};
-
-const styles = {
-  container: {
-    padding: '12px 16px',
-    backgroundColor: 'transparent', // Transparent to blend with card
-    width: '100%',
-  },
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    marginBottom: '8px',
-    fontSize: '11px',
-    color: '#94a3b8',
-    fontFamily: 'monospace',
-  },
-  label: { display: 'flex', alignItems: 'center', fontWeight: 'bold' },
-  currentDate: { color: '#e2e8f0', fontWeight: 'bold' },
-  slider: {
-    width: '100%',
-    cursor: 'pointer',
-    accentColor: '#38bdf8', 
-  },
-  ticks: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    marginTop: '4px',
-    padding: '0 4px',
-  },
-  tick: {
-    width: '4px',
-    height: '4px',
-    borderRadius: '50%',
-  }
 };
 
 export default TimeSlider;

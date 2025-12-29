@@ -154,10 +154,40 @@ html, body {
 
 .span-4 { grid-column: span 4; }
 
+/* ==================================================================== */
+/* MOBILE OPTIMIZATION (UPDATED)                                        */
+/* ==================================================================== */
+
 @media (max-width: 1024px) {
-  .bento-grid { grid-template-columns: 1fr; }
-  .span-1, .span-2, .span-4 { grid-column: span 1; }
-  .panel { min-height: auto; }
+  /* 1. Gain screen real estate by reducing outer padding */
+  .app-container {
+    padding: 12px;
+  }
+
+  /* 2. Use a 2-column grid instead of 1-column stack */
+  /* This allows KPI cards to sit 2-per-row side-by-side */
+  .bento-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px; 
+  }
+
+  /* 3. Force Charts to take full width (span both columns) */
+  .span-2, .span-4 {
+    grid-column: span 2;
+    /* Reduce height slightly so charts fit better on small screens */
+    height: 400px; 
+    margin-bottom: 12px;
+  }
+  
+  /* 4. Allow panels to shrink if needed */
+  .panel {
+    padding: 16px; 
+  }
+
+  /* 5. Metrics Typography Tweak to prevent wrapping */
+  .metric-big {
+    font-size: 1.5rem; 
+  }
 }
 
 /* ==================================================================== */
@@ -353,7 +383,7 @@ html, body {
 .text-red { color: var(--red); }
 
 /* ==================================================================== */
-/* 9. INSPECTOR CARD UTILITIES (New)                                    */
+/* 9. INSPECTOR CARD UTILITIES                                          */
 /* ==================================================================== */
 
 .panel-flex-column {
@@ -367,7 +397,7 @@ html, body {
   border: none;
   cursor: pointer;
   font-size: 0.75rem;
-  color: var(--text-muted); /* Inheriting color explicitly usually helps */
+  color: var(--text-muted); 
 }
 
 .panel-toggle-btn:hover {
@@ -425,4 +455,63 @@ html, body {
 
 .table-row-divider {
   border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+/* ==================================================================== */
+/* 10. TIME SLIDER COMPONENT                                            */
+/* ==================================================================== */
+
+.time-slider-container {
+  padding: 12px 16px;
+  background-color: transparent;
+  width: 100%;
+  box-sizing: border-box; /* Ensures padding doesn't overflow width */
+}
+
+.time-slider-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.time-slider-label {
+  display: flex;
+  align-items: center;
+  font-weight: bold;
+}
+
+.time-slider-date {
+  color: #e2e8f0;
+  font-weight: bold;
+}
+
+.time-slider-input {
+  width: 100%;
+  cursor: pointer;
+  accent-color: var(--accent);
+  height: 24px; /* Optimized touch target for mobile */
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.time-slider-ticks {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  padding: 0 4px;
+}
+
+.time-slider-tick {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: #475569; /* Default inactive color */
+  transition: background-color 0.2s;
+}
+
+.time-slider-tick.active {
+  background-color: var(--accent); /* Active color */
 }
