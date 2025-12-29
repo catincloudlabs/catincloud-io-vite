@@ -642,13 +642,18 @@ html, body {
 /* ==================================================================== */
 
 @media (max-width: 768px) {
-  /* 1. Bento Grid - Force single column on very small screens */
+  /* 1. Bento Grid - KEEP 2 COLUMNS */
+  /* We want KPI cards side-by-side, not stacked */
   .bento-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
   }
 
+  /* Charts must span the full width (both columns) */
   .span-2, .span-4 {
-    grid-column: auto; /* Return to default flow */
+    grid-column: span 2;
+    height: 400px; 
+    margin-bottom: 0;
   }
 
   /* 2. System Status Ribbon - Strict Cleanup */
