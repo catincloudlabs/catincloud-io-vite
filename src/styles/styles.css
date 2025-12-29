@@ -145,7 +145,13 @@ html, body {
 /* ==================================================================== */
 
 .span-1 { grid-column: span 1; }
-.span-2 { grid-column: span 2; height: 500px; }
+.span-2 { 
+  grid-column: span 2; 
+  height: 500px; 
+  display: flex;
+  flex-direction: column;
+}
+
 .span-4 { grid-column: span 4; }
 
 @media (max-width: 1024px) {

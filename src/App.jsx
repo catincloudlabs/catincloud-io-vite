@@ -10,7 +10,6 @@ import { Activity, Zap, Radio, Server } from 'lucide-react';
 function App() {
   
   // --- STATE ---
-  // Chaos State (Now supports history)
   const [chaosRaw, setChaosRaw] = useState([]); 
   const [chaosMeta, setChaosMeta] = useState(null);
   const [selectedDate, setSelectedDate] = useState('');
@@ -25,14 +24,13 @@ function App() {
   // --- FETCHING ---
   useEffect(() => {
     
-    // 1. Chaos Scatter (Time Travel Enabled)
+    // 1. Chaos Scatter
     fetch('/data/chaos.json')
       .then(res => res.json())
       .then(json => {
-        setChaosRaw(json.data); // Store ALL rows
+        setChaosRaw(json.data); 
         setChaosMeta(json.meta);
         
-        // Auto-select the latest date
         if (json.meta.available_dates && json.meta.available_dates.length > 0) {
            const latest = json.meta.available_dates[json.meta.available_dates.length - 1];
            setSelectedDate(latest);
@@ -61,7 +59,6 @@ function App() {
       .then(res => res.json())
       .then(json => {
         const raw = json.data;
-        
         const nvda = raw.filter(d => d.ticker === 'NVDA');
         const tsla = raw.filter(d => d.ticker === 'TSLA');
 
@@ -95,12 +92,9 @@ function App() {
   }, []);
 
   // --- HELPERS ---
-  
-  // Filter Chaos Data based on Slider
   const getFilteredChaosPlot = () => {
     if (!selectedDate || chaosRaw.length === 0) return [];
 
-    // Filter by the selected date string (YYYY-MM-DD)
     const dailyData = chaosRaw.filter(d => d.trade_date && d.trade_date.startsWith(selectedDate));
 
     return [{
@@ -127,7 +121,7 @@ function App() {
     paper_bgcolor: 'rgba(0,0,0,0)', 
     plot_bgcolor: 'rgba(0,0,0,0)',
     font: { color: '#94a3b8' },
-    margin: { t: 0, b: 40, l: 40, r: 20 } // Tight margins
+    margin: { t: 0, b: 40, l: 40, r: 20 } 
   };
 
   const lineLayout = {
@@ -142,10 +136,7 @@ function App() {
 
   return (
     <div className="app-container">
-      {/* --- 1. OBSERVABILITY LAYER --- */}
       <SystemStatusRibbon />
-
-      {/* --- 2. MAIN APPLICATION --- */}
       <Header />
       
       <main className="bento-grid">
@@ -158,24 +149,25 @@ function App() {
 
         {/* ROW 2: MAG 7 */}
         <div className="span-2">
-           <InspectorCard 
-              title={magData?.meta.title || "Mag 7 Momentum"} 
-              tag="Trend"
-              desc={magData?.meta.inspector.description || "Loading..."}
-              isLoading={magLoading}
-              chartType="line"
-              plotData={magData?.plot}
-              plotLayout={lineLayout}
-              sqlCode={magData?.meta.inspector.sql_logic} 
-           />
+           {/* Added chart-box class to ensure full height fill */}
+           <div className="chart-box">
+             <InspectorCard 
+                title={magData?.meta.title || "Mag 7 Momentum"} 
+                tag="Trend"
+                desc={magData?.meta.inspector.description || "Loading..."}
+                isLoading={magLoading}
+                chartType="line"
+                plotData={magData?.plot}
+                plotLayout={lineLayout}
+                sqlCode={magData?.meta.inspector.sql_logic} 
+             />
+           </div>
         </div>
 
         {/* ROW 2: CHAOS (WITH TIME TRAVEL) */}
-        {/* FIX: Use Flex Column so items share vertical space without clipping */}
-        <div className="span-2" style={{ display: 'flex', flexDirection: 'column' }}>
-           
-           {/* Chart Container: flex:1 lets it take available space */}
-           <div style={{ flex: 1, minHeight: 0 }}>
+        <div className="span-2">
+           {/* Chart Container: Uses existing CSS class to fill available space */}
+           <div className="chart-box">
              <InspectorCard 
                 title={chaosMeta?.title || "Chaos Engine"} 
                 tag="Risk"
@@ -188,7 +180,7 @@ function App() {
              />
            </div>
 
-           {/* Slider: Attached to Bottom */}
+           {/* Slider: Automatically stacks at bottom via Flexbox in CSS */}
            {!chaosLoading && chaosMeta?.available_dates && (
               <TimeSlider 
                 dates={chaosMeta.available_dates}
