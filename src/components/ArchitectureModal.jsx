@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { X, ShieldCheck, Cloud, Database, Layout } from 'lucide-react';
+import { X, CloudCog, Database, FileJson, Layout } from 'lucide-react';
 
 const ArchitectureModal = ({ isOpen, onClose }) => {
   // Close on Escape key
@@ -20,8 +20,8 @@ const ArchitectureModal = ({ isOpen, onClose }) => {
         {/* Header */}
         <div className="modal-header">
           <div className="modal-title-wrapper">
-            <span className="modal-title">SECURE ARCHITECTURE</span>
-            <span className="tag ml-2">us-east-2</span>
+            <span className="modal-title">THE STATIC PIPELINE</span>
+            <span className="tag ml-2">Latency: &lt;50ms</span>
           </div>
           <button className="panel-toggle-btn" onClick={onClose}>
             <X size={20} />
@@ -31,38 +31,21 @@ const ArchitectureModal = ({ isOpen, onClose }) => {
         {/* Content */}
         <div className="arch-container">
           <div className="arch-intro">
-            "The Fortress" — Private VPC pipeline orchestrated by Airflow.
+            High-performance architecture: Decoupling compute (Snowflake) from serving (S3).
           </div>
 
           {/* THE FLOW DIAGRAM */}
           <div className="arch-flow">
             
-            {/* STEP 1: SECURITY LAYER */}
-            <div className="arch-node">
-              <div className="arch-icon-box color-green">
-                <ShieldCheck size={24} />
-              </div>
-              <div className="arch-label">SECURE ACCESS</div>
-              <div className="arch-tech">AWS SSM / Private VPC</div>
-              <div className="arch-desc">
-                No public SSH. Bastion-less access via <strong>Session Manager</strong> into private subnets.
-              </div>
-            </div>
-
-            <div className="arch-arrow">
-              <span className="desktop-arrow">→</span>
-              <span className="mobile-arrow">↓</span>
-            </div>
-
-            {/* STEP 2: ORCHESTRATION */}
+            {/* STEP 1: ORCHESTRATION & TRANSFORM */}
             <div className="arch-node">
               <div className="arch-icon-box color-orange">
-                <Cloud size={24} />
+                <CloudCog size={24} />
               </div>
               <div className="arch-label">ORCHESTRATION</div>
-              <div className="arch-tech">AWS MWAA (Airflow)</div>
+              <div className="arch-tech">MWAA + dbt Core</div>
               <div className="arch-desc">
-                Managed Airflow routing traffic via <strong>NAT Gateway</strong> & <strong>Interface Endpoints</strong>.
+                Airflow triggers <code>dbt build</code> to transform raw data. Runs securely in a <strong>Private VPC</strong>.
               </div>
             </div>
 
@@ -71,15 +54,32 @@ const ArchitectureModal = ({ isOpen, onClose }) => {
               <span className="mobile-arrow">↓</span>
             </div>
 
-            {/* STEP 3: DATA LAKEHOUSE */}
+            {/* STEP 2: WAREHOUSE */}
             <div className="arch-node">
               <div className="arch-icon-box color-blue">
                 <Database size={24} />
               </div>
               <div className="arch-label">WAREHOUSE</div>
-              <div className="arch-tech">Snowflake + S3</div>
+              <div className="arch-tech">Snowflake Data Lake</div>
               <div className="arch-desc">
-                Raw ingestion to <strong>S3</strong> bucket. Transformation & modeling within <strong>Snowflake</strong>.
+                The System of Record. Stores raw ingestion and materialized "Gold" models.
+              </div>
+            </div>
+
+            <div className="arch-arrow">
+              <span className="desktop-arrow">→</span>
+              <span className="mobile-arrow">↓</span>
+            </div>
+
+            {/* STEP 3: SERVING LAYER */}
+            <div className="arch-node">
+              <div className="arch-icon-box color-green">
+                <FileJson size={24} />
+              </div>
+              <div className="arch-label">PUBLISHING DAG</div>
+              <div className="arch-tech">Airflow → S3 (JSON)</div>
+              <div className="arch-desc">
+                "The Exporter." Reads modeled data, serializes to static JSON, and pushes to <strong>S3</strong>.
               </div>
             </div>
 
@@ -94,9 +94,9 @@ const ArchitectureModal = ({ isOpen, onClose }) => {
                 <Layout size={24} />
               </div>
               <div className="arch-label">UI LAYER</div>
-              <div className="arch-tech">React / Vercel</div>
+              <div className="arch-tech">React / Vite</div>
               <div className="arch-desc">
-                Consuming modeled data via secure API endpoints.
+                Fetches pre-computed JSON from S3. No database queries on page load.
               </div>
             </div>
 
@@ -105,7 +105,7 @@ const ArchitectureModal = ({ isOpen, onClose }) => {
           {/* Footer */}
           <div className="arch-footer">
             <div className="arch-cicd">
-              <span className="text-accent">CI/CD:</span> GitHub Actions automates the harvest & cooking schedule.
+              <span className="text-accent">CI/CD:</span> Infrastructure & Models managed via GitHub Actions.
             </div>
           </div>
         </div>
