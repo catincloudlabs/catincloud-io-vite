@@ -351,3 +351,78 @@ html, body {
 /* Utilities */
 .text-green { color: var(--green); }
 .text-red { color: var(--red); }
+
+/* ==================================================================== */
+/* 9. INSPECTOR CARD UTILITIES (New)                                    */
+/* ==================================================================== */
+
+.panel-flex-column {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-toggle-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: var(--text-muted); /* Inheriting color explicitly usually helps */
+}
+
+.panel-toggle-btn:hover {
+  color: var(--text-main);
+}
+
+.chart-content-area {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.chart-footer-area {
+  flex-shrink: 0;
+  margin-top: auto;
+  border-top: 1px solid var(--border);
+}
+
+.code-view-container {
+  height: 100%;
+  overflow: auto;
+  font-size: 0.8rem;
+}
+
+.table-view-container {
+  overflow: auto;
+  height: 100%;
+  width: 100%;
+}
+
+.table-standard {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+}
+
+.table-header {
+  position: sticky;
+  top: 0;
+  background: var(--bg-panel);
+  z-index: 10;
+}
+
+.table-header-row {
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  color: var(--text-muted);
+}
+
+.table-cell-padding {
+  padding: 8px;
+}
+
+.table-row-divider {
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}

@@ -15,7 +15,7 @@ const InspectorCard = ({
   const isCall = (type) => ['C', 'CALL', 'Call'].includes(type);
 
   return (
-    <div className={`panel ${isFlipped ? 'panel-terminal' : ''}`} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div className={`panel ${isFlipped ? 'panel-terminal' : ''} panel-flex-column`}>
       
       {/* HEADER */}
       <div className="panel-header">
@@ -25,8 +25,7 @@ const InspectorCard = ({
         </div>
         <button 
           onClick={() => setIsFlipped(!isFlipped)}
-          className="nav-link" 
-          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.75rem' }}
+          className="nav-link panel-toggle-btn" 
           disabled={isLoading}
         >
           {isFlipped ? "Show Chart 📊" : "View Logic 👨‍💻"}
@@ -35,13 +34,13 @@ const InspectorCard = ({
 
       {!isFlipped && <p className="panel-desc">{desc}</p>}
 
-      {/* CONTENT: flex-1 ensures it fills space but shrinks for footer */}
-      <div className="chart-box" style={{ flex: 1, minHeight: 0, position: 'relative', overflow: 'hidden' }}>
+      {/* CONTENT */}
+      <div className="chart-box chart-content-area">
         {isLoading && <div className="loading-state">Fetching pipeline artifacts...</div>}
 
         {/* LOGIC VIEW */}
         {!isLoading && isFlipped && (
-          <div style={{ height: '100%', overflow: 'auto', fontSize: '0.8rem' }}>
+          <div className="code-view-container">
             <SyntaxHighlighter 
               language="sql" style={atomOneDark}
               customStyle={{ background: 'transparent', padding: 0, margin: 0 }}
@@ -72,27 +71,27 @@ const InspectorCard = ({
 
         {/* TABLE VIEW */}
         {!isLoading && !isFlipped && chartType === 'table' && tableData && (
-          <div style={{ overflow: 'auto', height: '100%', width: '100%' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}>
-              <thead style={{ position: 'sticky', top: 0, background: 'var(--bg-panel)', zIndex: 10 }}>
-                <tr style={{ borderBottom: '1px solid var(--border)', textAlign: 'left', color: 'var(--text-muted)' }}>
-                  <th style={{ padding: '8px' }}>TICKER</th>
-                  <th style={{ padding: '8px' }}>CONTRACT</th>
-                  <th style={{ padding: '8px' }}>EXPIRY</th>
-                  <th style={{ padding: '8px' }}>TYPE</th>
-                  <th style={{ padding: '8px', textAlign: 'right' }}>PREMIUM</th>
-                  <th style={{ padding: '8px', textAlign: 'right' }}>SENTIMENT</th>
+          <div className="table-view-container">
+            <table className="table-standard">
+              <thead className="table-header">
+                <tr className="table-header-row">
+                  <th className="table-cell-padding">TICKER</th>
+                  <th className="table-cell-padding">CONTRACT</th>
+                  <th className="table-cell-padding">EXPIRY</th>
+                  <th className="table-cell-padding">TYPE</th>
+                  <th className="table-cell-padding" style={{ textAlign: 'right' }}>PREMIUM</th>
+                  <th className="table-cell-padding" style={{ textAlign: 'right' }}>SENTIMENT</th>
                 </tr>
               </thead>
               <tbody>
                 {tableData.map((row, i) => (
-                  <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                    <td style={{ padding: '8px', fontWeight: 'bold', color: 'var(--accent)' }}>{row.ticker}</td>
-                    <td style={{ padding: '8px' }}>{row.contract}</td>
-                    <td style={{ padding: '8px', color: 'var(--text-muted)' }}>{row.expiry}</td>
-                    <td style={{ padding: '8px', color: isCall(row.type) ? 'var(--green)' : 'var(--red)' }}>{row.type}</td>
-                    <td style={{ padding: '8px', textAlign: 'right' }}>${(row.premium / 1000000).toFixed(1)}M</td>
-                    <td style={{ padding: '8px', textAlign: 'right', color: row.sentiment === 'Bullish' ? 'var(--green)' : 'var(--red)' }}>{row.sentiment}</td>
+                  <tr key={i} className="table-row-divider">
+                    <td className="table-cell-padding" style={{ fontWeight: 'bold', color: 'var(--accent)' }}>{row.ticker}</td>
+                    <td className="table-cell-padding">{row.contract}</td>
+                    <td className="table-cell-padding" style={{ color: 'var(--text-muted)' }}>{row.expiry}</td>
+                    <td className="table-cell-padding" style={{ color: isCall(row.type) ? 'var(--green)' : 'var(--red)' }}>{row.type}</td>
+                    <td className="table-cell-padding" style={{ textAlign: 'right' }}>${(row.premium / 1000000).toFixed(1)}M</td>
+                    <td className="table-cell-padding" style={{ textAlign: 'right', color: row.sentiment === 'Bullish' ? 'var(--green)' : 'var(--red)' }}>{row.sentiment}</td>
                   </tr>
                 ))}
               </tbody>
@@ -101,9 +100,9 @@ const InspectorCard = ({
         )}
       </div>
 
-      {/* FOOTER: The Slider goes here */}
+      {/* FOOTER */}
       {children && (
-        <div style={{ flexShrink: 0, marginTop: 'auto', borderTop: '1px solid var(--border)' }}>
+        <div className="chart-footer-area">
           {children}
         </div>
       )}
