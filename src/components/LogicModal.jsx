@@ -1,5 +1,10 @@
 import React, { useEffect } from 'react';
 import { X, Terminal } from 'lucide-react';
+import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
+import sql from 'react-syntax-highlighter/dist/esm/languages/hljs/sql';
+import { atomOneDark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+
+SyntaxHighlighter.registerLanguage('sql', sql);
 
 const LogicModal = ({ isOpen, onClose, title, sqlCode }) => {
   // Close on Escape
@@ -31,9 +36,20 @@ const LogicModal = ({ isOpen, onClose, title, sqlCode }) => {
         {/* Code Content */}
         <div className="logic-content">
           <div className="code-block-wrapper">
-            <pre className="sql-code">
-              <code>{sqlCode || "-- No logic definition found."}</code>
-            </pre>
+            <SyntaxHighlighter 
+              language="sql" 
+              style={atomOneDark}
+              customStyle={{ 
+                background: 'transparent', // Uses our VS Code #1e1e1e background
+                padding: 0, 
+                margin: 0,
+                fontSize: '0.85rem',
+                fontFamily: 'var(--font-mono)' // Ensures JetBrains Mono usage
+              }}
+              wrapLongLines={true}
+            >
+              {sqlCode || "-- No logic definition found."}
+            </SyntaxHighlighter>
           </div>
           
           <div className="logic-footer">
