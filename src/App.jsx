@@ -4,7 +4,7 @@ import Footer from './components/Footer';
 import MetricCard from './components/MetricCard';
 import InspectorCard from './components/InspectorCard';
 import { SystemStatusRibbon } from './components/SystemStatusRibbon';
-import TimeSlider from './components/TimeSlider'; // <--- NEW IMPORT
+import TimeSlider from './components/TimeSlider';
 import { Activity, Zap, Radio, Server } from 'lucide-react';
 
 function App() {
@@ -171,18 +171,24 @@ function App() {
         </div>
 
         {/* ROW 2: CHAOS (WITH TIME TRAVEL) */}
-        <div className="span-2">
-           <InspectorCard 
-              title={chaosMeta?.title || "Chaos Engine"} 
-              tag="Risk"
-              desc={chaosMeta?.inspector.description}
-              isLoading={chaosLoading}
-              chartType="scatter"
-              plotData={getFilteredChaosPlot()}
-              plotLayout={scatterLayout}
-              sqlCode={chaosMeta?.inspector.sql_logic}
-           />
-           {/* Slider Attached to Bottom */}
+        {/* FIX: Use Flex Column so items share vertical space without clipping */}
+        <div className="span-2" style={{ display: 'flex', flexDirection: 'column' }}>
+           
+           {/* Chart Container: flex:1 lets it take available space */}
+           <div style={{ flex: 1, minHeight: 0 }}>
+             <InspectorCard 
+                title={chaosMeta?.title || "Chaos Engine"} 
+                tag="Risk"
+                desc={chaosMeta?.inspector.description}
+                isLoading={chaosLoading}
+                chartType="scatter"
+                plotData={getFilteredChaosPlot()}
+                plotLayout={scatterLayout}
+                sqlCode={chaosMeta?.inspector.sql_logic}
+             />
+           </div>
+
+           {/* Slider: Attached to Bottom */}
            {!chaosLoading && chaosMeta?.available_dates && (
               <TimeSlider 
                 dates={chaosMeta.available_dates}
