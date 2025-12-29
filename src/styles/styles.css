@@ -606,7 +606,47 @@ html, body {
 }
 
 /* ==================================================================== */
-/* 13. MOBILE OPTIMIZATION (TABLET & DESKTOP)                           */
+/* 13. MAG 7 TICKER CONTROLS (New)                                      */
+/* ==================================================================== */
+
+.ticker-controls-container {
+  display: flex;
+  flex-wrap: wrap; /* Allows pills to wrap on small mobile screens */
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  margin-top: auto; /* Pushes to bottom of card */
+}
+
+.ticker-pill {
+  background: transparent;
+  border: 1px solid #334155; /* Default inactive border */
+  color: #64748b; /* Default inactive text */
+  padding: 4px 10px;
+  border-radius: 9999px; /* Pill shape */
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ticker-pill:hover {
+  background: rgba(255,255,255,0.05);
+  color: var(--text-muted);
+}
+
+/* Active State (Dynamic Color via inline CSS var) */
+/* The --pill-color var is passed from React style prop */
+.ticker-pill.active {
+  border-color: var(--pill-color);
+  color: var(--pill-color);
+  background: rgba(0,0,0,0.2); /* Subtle dim background */
+  box-shadow: 0 0 5px rgba(0,0,0,0.5); /* Slight lift */
+}
+
+/* ==================================================================== */
+/* 14. MOBILE OPTIMIZATION (TABLET & DESKTOP)                           */
 /* ==================================================================== */
 
 @media (max-width: 1024px) {
@@ -638,7 +678,7 @@ html, body {
 }
 
 /* ==================================================================== */
-/* 14. MOBILE OPTIMIZATION (STRICT PHONE)                               */
+/* 15. MOBILE OPTIMIZATION (STRICT PHONE)                               */
 /* ==================================================================== */
 
 @media (max-width: 768px) {

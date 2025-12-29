@@ -7,6 +7,18 @@ import { SystemStatusRibbon } from './components/SystemStatusRibbon';
 import TimeSlider from './components/TimeSlider';
 import { Activity, Zap, Radio, Server } from 'lucide-react';
 
+// --- CONFIGURATION ---
+// Distinct colors for dark mode visibility
+const MAG7_CONFIG = {
+  NVDA: { color: '#4ade80', label: 'NVDA' }, // Green
+  TSLA: { color: '#f87171', label: 'TSLA' }, // Red
+  AAPL: { color: '#94a3b8', label: 'AAPL' }, // Slate (Silver)
+  MSFT: { color: '#38bdf8', label: 'MSFT' }, // Sky Blue
+  AMZN: { color: '#fbbf24', label: 'AMZN' }, // Amber
+  GOOGL: { color: '#818cf8', label: 'GOOGL' }, // Indigo
+  META: { color: '#c084fc', label: 'META' }  // Purple
+};
+
 function App() {
   
   // --- STATE ---
@@ -18,8 +30,11 @@ function App() {
   const [whaleData, setWhaleData] = useState(null);
   const [whaleLoading, setWhaleLoading] = useState(true);
 
-  const [magData, setMagData] = useState(null);
+  // Mag 7 State
+  const [magRaw, setMagRaw] = useState([]); // Store all raw data rows
+  const [magMeta, setMagMeta] = useState(null);
   const [magLoading, setMagLoading] = useState(true);
+  const [visibleTickers, setVisibleTickers] = useState(['NVDA', 'TSLA']); // Default View
 
   // --- FETCHING ---
   useEffect(() => {
@@ -30,69 +45,60 @@ function App() {
       .then(json => {
         setChaosRaw(json.data); 
         setChaosMeta(json.meta);
-        if (json.meta.available_dates && json.meta.available_dates.length > 0) {
-           const latest = json.meta.available_dates[json.meta.available_dates.length - 1];
-           setSelectedDate(latest);
+        // Default to latest date
+        if (json.meta.available_dates?.length > 0) {
+           setSelectedDate(json.meta.available_dates[json.meta.available_dates.length - 1]);
         }
         setChaosLoading(false);
       })
-      .catch(err => {
-        console.error("Chaos Error:", err);
-        setChaosLoading(false);
-      });
+      .catch(err => { console.error("Chaos Error:", err); setChaosLoading(false); });
 
     // 2. Whale Table
     fetch('/data/whales.json')
       .then(res => res.json())
-      .then(json => {
-        setWhaleData(json);
-        setWhaleLoading(false);
-      })
-      .catch(err => {
-         console.error("Whale Error:", err);
-         setWhaleLoading(false);
-      });
+      .then(json => { setWhaleData(json); setWhaleLoading(false); })
+      .catch(err => { console.error("Whale Error:", err); setWhaleLoading(false); });
 
-    // 3. Mag 7 Momentum
+    // 3. Mag 7 Momentum (Fetch ALL data, do not filter yet)
     fetch('/data/mag7.json')
       .then(res => res.json())
       .then(json => {
-        const raw = json.data;
-        const nvda = raw.filter(d => d.ticker === 'NVDA');
-        const tsla = raw.filter(d => d.ticker === 'TSLA');
-
-        const traces = [
-          {
-            x: nvda.map(d => d.trade_date),
-            y: nvda.map(d => d.net_sentiment_flow), 
-            name: 'NVDA',
-            type: 'scatter',
-            mode: 'lines+markers',
-            line: { color: '#22c55e', width: 2 } 
-          },
-          {
-            x: tsla.map(d => d.trade_date),
-            y: tsla.map(d => d.net_sentiment_flow), 
-            name: 'TSLA',
-            type: 'scatter',
-            mode: 'lines+markers',
-            line: { color: '#ef4444', width: 2 } 
-          }
-        ];
-        setMagData({ plot: traces, meta: json.meta });
+        setMagRaw(json.data);
+        setMagMeta(json.meta);
         setMagLoading(false);
       })
-      .catch(err => {
-         console.error("Mag 7 Error:", err);
-         setMagLoading(false);
-      });
+      .catch(err => { console.error("Mag 7 Error:", err); setMagLoading(false); });
 
   }, []);
 
   // --- HELPERS ---
+
+  // 1. Dynamic Mag 7 Plot Generator
+  const getMag7PlotData = () => {
+    if (!magRaw || magRaw.length === 0) return [];
+
+    // Map through the visible tickers and create a trace for each
+    return visibleTickers.map(ticker => {
+      // Find rows for this specific ticker
+      const tickerData = magRaw.filter(d => d.ticker === ticker);
+      const config = MAG7_CONFIG[ticker] || { color: '#ccc' };
+
+      return {
+        x: tickerData.map(d => d.trade_date),
+        y: tickerData.map(d => d.net_sentiment_flow),
+        name: ticker,
+        type: 'scatter',
+        mode: 'lines+markers',
+        line: { color: config.color, width: 2 },
+        marker: { size: 4 }
+      };
+    });
+  };
+
+  // 2. Chaos Plot Generator
   const getFilteredChaosPlot = () => {
     if (!selectedDate || chaosRaw.length === 0) return [];
-    const dailyData = chaosRaw.filter(d => d.trade_date && d.trade_date.startsWith(selectedDate));
+    const dailyData = chaosRaw.filter(d => d.trade_date?.startsWith(selectedDate));
     return [{
        x: dailyData.map(d => d.dte),
        y: dailyData.map(d => d.moneyness),
@@ -109,6 +115,20 @@ function App() {
     }];
   };
 
+  // --- TOGGLE HANDLER ---
+  const toggleTicker = (ticker) => {
+    setVisibleTickers(prev => {
+      if (prev.includes(ticker)) {
+        // Prevent removing the last ticker (keeps chart from crashing)
+        if (prev.length === 1) return prev; 
+        return prev.filter(t => t !== ticker);
+      } else {
+        return [...prev, ticker];
+      }
+    });
+  };
+
+  // --- LAYOUTS ---
   const scatterLayout = {
     xaxis: { title: 'DTE', gridcolor: '#334155', zerolinecolor: '#334155' },
     yaxis: { title: 'Moneyness', gridcolor: '#334155', zerolinecolor: '#334155', range: [0.5, 2.0] },
@@ -122,11 +142,11 @@ function App() {
   const lineLayout = {
     xaxis: { title: 'Date', gridcolor: '#334155' },
     yaxis: { title: 'Net Sentiment Flow', gridcolor: '#334155', zerolinecolor: '#334155' },
-    showlegend: true,
-    legend: { x: 0, y: 1, font: { color: '#94a3b8' } },
+    showlegend: false, // Hidden because we use Pill Buttons as the legend now
     paper_bgcolor: 'rgba(0,0,0,0)',
     plot_bgcolor: 'rgba(0,0,0,0)',
-    font: { color: '#94a3b8' }
+    font: { color: '#94a3b8' },
+    margin: { t: 10, b: 40, l: 40, r: 10 }
   };
 
   return (
@@ -142,23 +162,38 @@ function App() {
         <MetricCard title="Whale Flow" value="$142M" subValue="Premium Traded (1h)" icon={<Activity size={16} className="text-accent" />}/>
         <MetricCard title="Last Build" value="16:05" subValue="2025-12-28" icon={<Radio size={16} className="text-muted" />}/>
 
-        {/* ROW 2: MAG 7 */}
+        {/* ROW 2: MAG 7 (WITH TOGGLES) */}
         <div className="span-2">
            <InspectorCard 
-              title={magData?.meta.title || "Mag 7 Momentum"} 
+              title={magMeta?.title || "Mag 7 Momentum"} 
               tag="Trend"
-              desc={magData?.meta.inspector.description || "Loading..."}
+              desc={magMeta?.inspector.description || "Loading..."}
               isLoading={magLoading}
               chartType="line"
-              plotData={magData?.plot}
+              plotData={getMag7PlotData()}
               plotLayout={lineLayout}
-              sqlCode={magData?.meta.inspector.sql_logic} 
-           />
+              sqlCode={magMeta?.inspector.sql_logic} 
+           >
+              {/* NEW CONTROLS COMPONENT */}
+              <div className="ticker-controls-container">
+                {Object.keys(MAG7_CONFIG).map(ticker => (
+                  <button
+                    key={ticker}
+                    onClick={() => toggleTicker(ticker)}
+                    className={`ticker-pill ${visibleTickers.includes(ticker) ? 'active' : ''}`}
+                    style={{ 
+                      '--pill-color': MAG7_CONFIG[ticker].color 
+                    }}
+                  >
+                    {ticker}
+                  </button>
+                ))}
+              </div>
+           </InspectorCard>
         </div>
 
         {/* ROW 2: CHAOS (WITH TIME TRAVEL) */}
         <div className="span-2">
-           {/* Slider Passed as Child to InspectorCard */}
            <InspectorCard 
               title={chaosMeta?.title || "Chaos Engine"} 
               tag="Risk"
