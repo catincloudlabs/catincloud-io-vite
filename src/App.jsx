@@ -21,22 +21,28 @@ const MAG7_CONFIG = {
 function App() {
   
   // --- STATE ---
-  // Chaos State
   const [chaosRaw, setChaosRaw] = useState([]); 
   const [chaosMeta, setChaosMeta] = useState(null);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedChaosTicker, setSelectedChaosTicker] = useState('GME'); 
   const [chaosLoading, setChaosLoading] = useState(true);
 
-  // Whale State
   const [whaleData, setWhaleData] = useState(null);
   const [whaleLoading, setWhaleLoading] = useState(true);
 
-  // Mag 7 State
   const [magRaw, setMagRaw] = useState([]); 
   const [magMeta, setMagMeta] = useState(null);
   const [magLoading, setMagLoading] = useState(true);
   const [visibleTickers, setVisibleTickers] = useState(['NVDA', 'TSLA']);
+
+  // NEW: Detect Mobile Screen Width for Layout Calculations
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // --- FETCHING ---
   useEffect(() => {
@@ -47,7 +53,6 @@ function App() {
       .then(json => {
         setChaosRaw(json.data); 
         setChaosMeta(json.meta);
-        // Default to latest date
         if (json.meta.available_dates?.length > 0) {
            setSelectedDate(json.meta.available_dates[json.meta.available_dates.length - 1]);
         }
@@ -94,18 +99,16 @@ function App() {
   };
 
   // 2. Helper: Get Unique Tickers from Chaos Data
-  // This calculates the list of available tickers dynamically
   const availableChaosTickers = useMemo(() => {
     if (!chaosRaw.length) return ['GME'];
     const tickers = [...new Set(chaosRaw.map(d => d.ticker))];
     return tickers.sort(); 
   }, [chaosRaw]);
 
-  // 3. Chaos Plot Generator
+  // 3. Chaos Plot Generator (Updated for Mobile)
   const getFilteredChaosPlot = () => {
     if (!selectedDate || chaosRaw.length === 0) return [];
     
-    // Filter by Date AND Ticker
     const dailyData = chaosRaw.filter(d => 
       d.trade_date?.startsWith(selectedDate) && 
       d.ticker === selectedChaosTicker
@@ -121,7 +124,8 @@ function App() {
          size: dailyData.map(d => Math.log(d.volume) * 4),
          color: dailyData.map(d => d.iv),
          colorscale: 'Viridis',
-         showscale: true,
+         // IMPORTANT: Disable the color bar on mobile to save width
+         showscale: !isMobile, 
          opacity: 0.8
        }
     }];
@@ -140,6 +144,8 @@ function App() {
   };
 
   // --- LAYOUTS ---
+  
+  // UPDATED: Tight margins for Mobile to maximize width
   const scatterLayout = {
     xaxis: { title: 'DTE', gridcolor: '#334155', zerolinecolor: '#334155' },
     yaxis: { title: 'Moneyness', gridcolor: '#334155', zerolinecolor: '#334155', range: [0.5, 2.0] },
@@ -147,7 +153,8 @@ function App() {
     paper_bgcolor: 'rgba(0,0,0,0)', 
     plot_bgcolor: 'rgba(0,0,0,0)',
     font: { color: '#94a3b8' },
-    margin: { t: 0, b: 40, l: 40, r: 20 } 
+    // Logic: If mobile, 0 right margin (no legend). If Desktop, 20 right margin.
+    margin: isMobile ? { t: 0, b: 40, l: 30, r: 0 } : { t: 0, b: 40, l: 40, r: 20 }
   };
 
   const lineLayout = {
@@ -157,7 +164,7 @@ function App() {
     paper_bgcolor: 'rgba(0,0,0,0)',
     plot_bgcolor: 'rgba(0,0,0,0)',
     font: { color: '#94a3b8' },
-    margin: { t: 10, b: 40, l: 40, r: 10 }
+    margin: isMobile ? { t: 10, b: 40, l: 30, r: 5 } : { t: 10, b: 40, l: 40, r: 10 }
   };
 
   return (
@@ -215,13 +222,12 @@ function App() {
              {/* FOOTER CONTROLS */}
              <div className="chaos-controls-container">
                
-               {/* 1. PILL SELECTOR (Mutually Exclusive) */}
+               {/* 1. PILL SELECTOR (Vertical) */}
                <div className="pill-group">
                  {availableChaosTickers.map(ticker => (
                    <button
                      key={ticker}
                      onClick={() => setSelectedChaosTicker(ticker)}
-                     // Apply 'active-chaos' class if this is the selected ticker
                      className={`ticker-pill ${selectedChaosTicker === ticker ? 'active-chaos' : ''}`}
                    >
                      {ticker}
