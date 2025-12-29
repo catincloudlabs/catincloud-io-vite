@@ -688,14 +688,13 @@ html, body {
     gap: 8px; /* Reduced gap from 12px to 8px for more space */
   }
 
-  /* 2. MAXIMIZE SCREEN WIDTH (New) */
-  /* Reduce outer padding to give charts maximum width */
+  /* 2. MAXIMIZE SCREEN WIDTH */
   .app-container {
-    padding: 8px; /* Was 12px */
+    padding: 8px; 
   }
 
   .panel {
-    padding: 12px 8px; /* Top/Bottom 12px, Left/Right 8px (Was 16px all around) */
+    padding: 12px 8px; 
   }
 
   /* 3. INCREASED HEIGHT FOR CHARTS */
@@ -715,7 +714,7 @@ html, body {
     justify-content: center;
   }
 
-  /* 5. Header Fixes (UPDATED) */
+  /* 5. Header Fixes */
   .app-header {
     flex-direction: column;
     align-items: flex-start;
@@ -733,7 +732,7 @@ html, body {
   }
 
   .nav-separator {
-    display: none; /* Hide the "/" separator on mobile */
+    display: none; 
   }
 
   .nav-link {
@@ -751,6 +750,79 @@ html, body {
   .js-plotly-plot .colorbar {
     display: none !important;
   }
+
+  /* 8. ARCHITECTURE MODAL INTERACTION (NEW) */
+  .arch-flow {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .arch-node {
+    width: 100%;
+    display: block; /* Reset flex for internal block layout */
+    text-align: left;
+    padding: 12px;
+    cursor: pointer;
+    border-color: rgba(255,255,255,0.1);
+  }
+
+  /* Header Container for Icon + Text + Chevron */
+  .arch-node-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+  }
+  
+  .arch-node .arch-icon-box {
+    margin-bottom: 0;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+  }
+  
+  .arch-meta {
+    flex: 1; /* Pushes chevron to the right */
+  }
+
+  /* Hide Description by default */
+  .arch-node .arch-desc {
+    display: none;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    font-size: 0.8rem;
+    line-height: 1.4;
+    color: var(--text-muted);
+    animation: fadeIn 0.3s ease;
+  }
+
+  /* Show Description when Active */
+  .arch-node.active .arch-desc {
+    display: block;
+  }
+
+  /* Active Card Styling */
+  .arch-node.active {
+    background: rgba(255,255,255,0.08);
+    border-color: var(--accent);
+  }
+
+  /* Chevron Animation */
+  .mobile-chevron {
+    color: var(--text-muted);
+    transition: transform 0.2s;
+  }
+  
+  .arch-node.active .mobile-chevron {
+    transform: rotate(180deg);
+    color: var(--accent);
+  }
+
+  /* Arrows */
+  .desktop-arrow { display: none; }
+  .mobile-arrow { display: block; opacity: 0.3; }
 }
 
 /* ==================================================================== */
@@ -954,7 +1026,7 @@ html, body {
 }
 
 /* ==================================================================== */
-/* 18. HEADER NAVIGATION (New)                                          */
+/* 18. HEADER NAVIGATION (Updated)                                      */
 /* ==================================================================== */
 
 .header-nav {
@@ -976,10 +1048,12 @@ html, body {
   align-items: center;
   font-family: var(--font-mono);
   font-size: 0.85rem;
-  color: var(--text-muted);
-  transition: color 0.2s;
+  color: var(--accent); 
+  font-weight: 500;
+  transition: all 0.2s;
 }
 
 .icon-link:hover {
-  color: var(--accent);
+  text-decoration: underline;
+  opacity: 0.8;
 }
