@@ -30,7 +30,6 @@ function App() {
       .then(json => {
         setChaosRaw(json.data); 
         setChaosMeta(json.meta);
-        
         if (json.meta.available_dates && json.meta.available_dates.length > 0) {
            const latest = json.meta.available_dates[json.meta.available_dates.length - 1];
            setSelectedDate(latest);
@@ -38,7 +37,7 @@ function App() {
         setChaosLoading(false);
       })
       .catch(err => {
-        console.error("Chaos Data Fetch Error:", err);
+        console.error("Chaos Error:", err);
         setChaosLoading(false);
       });
 
@@ -50,7 +49,7 @@ function App() {
         setWhaleLoading(false);
       })
       .catch(err => {
-         console.error("Whale Data Fetch Error:", err);
+         console.error("Whale Error:", err);
          setWhaleLoading(false);
       });
 
@@ -80,12 +79,11 @@ function App() {
             line: { color: '#ef4444', width: 2 } 
           }
         ];
-
         setMagData({ plot: traces, meta: json.meta });
         setMagLoading(false);
       })
       .catch(err => {
-         console.error("Mag 7 Fetch Error:", err);
+         console.error("Mag 7 Error:", err);
          setMagLoading(false);
       });
 
@@ -94,9 +92,7 @@ function App() {
   // --- HELPERS ---
   const getFilteredChaosPlot = () => {
     if (!selectedDate || chaosRaw.length === 0) return [];
-
     const dailyData = chaosRaw.filter(d => d.trade_date && d.trade_date.startsWith(selectedDate));
-
     return [{
        x: dailyData.map(d => d.dte),
        y: dailyData.map(d => d.moneyness),
@@ -113,7 +109,6 @@ function App() {
     }];
   };
 
-  // --- LAYOUTS ---
   const scatterLayout = {
     xaxis: { title: 'DTE', gridcolor: '#334155', zerolinecolor: '#334155' },
     yaxis: { title: 'Moneyness', gridcolor: '#334155', zerolinecolor: '#334155', range: [0.5, 2.0] },
@@ -149,45 +144,39 @@ function App() {
 
         {/* ROW 2: MAG 7 */}
         <div className="span-2">
-           {/* Added chart-box class to ensure full height fill */}
-           <div className="chart-box">
-             <InspectorCard 
-                title={magData?.meta.title || "Mag 7 Momentum"} 
-                tag="Trend"
-                desc={magData?.meta.inspector.description || "Loading..."}
-                isLoading={magLoading}
-                chartType="line"
-                plotData={magData?.plot}
-                plotLayout={lineLayout}
-                sqlCode={magData?.meta.inspector.sql_logic} 
-             />
-           </div>
+           <InspectorCard 
+              title={magData?.meta.title || "Mag 7 Momentum"} 
+              tag="Trend"
+              desc={magData?.meta.inspector.description || "Loading..."}
+              isLoading={magLoading}
+              chartType="line"
+              plotData={magData?.plot}
+              plotLayout={lineLayout}
+              sqlCode={magData?.meta.inspector.sql_logic} 
+           />
         </div>
 
         {/* ROW 2: CHAOS (WITH TIME TRAVEL) */}
         <div className="span-2">
-           {/* Chart Container: Uses existing CSS class to fill available space */}
-           <div className="chart-box">
-             <InspectorCard 
-                title={chaosMeta?.title || "Chaos Engine"} 
-                tag="Risk"
-                desc={chaosMeta?.inspector.description}
-                isLoading={chaosLoading}
-                chartType="scatter"
-                plotData={getFilteredChaosPlot()}
-                plotLayout={scatterLayout}
-                sqlCode={chaosMeta?.inspector.sql_logic}
-             />
-           </div>
-
-           {/* Slider: Automatically stacks at bottom via Flexbox in CSS */}
-           {!chaosLoading && chaosMeta?.available_dates && (
-              <TimeSlider 
-                dates={chaosMeta.available_dates}
-                selectedDate={selectedDate}
-                onChange={setSelectedDate}
-              />
-           )}
+           {/* Slider Passed as Child to InspectorCard */}
+           <InspectorCard 
+              title={chaosMeta?.title || "Chaos Engine"} 
+              tag="Risk"
+              desc={chaosMeta?.inspector.description}
+              isLoading={chaosLoading}
+              chartType="scatter"
+              plotData={getFilteredChaosPlot()}
+              plotLayout={scatterLayout}
+              sqlCode={chaosMeta?.inspector.sql_logic}
+           >
+              {!chaosLoading && chaosMeta?.available_dates && (
+                  <TimeSlider 
+                    dates={chaosMeta.available_dates}
+                    selectedDate={selectedDate}
+                    onChange={setSelectedDate}
+                  />
+              )}
+           </InspectorCard>
         </div>
 
         {/* ROW 3: WHALES */}

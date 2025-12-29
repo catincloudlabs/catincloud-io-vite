@@ -4,7 +4,6 @@ import { Clock } from 'lucide-react';
 const TimeSlider = ({ dates, selectedDate, onChange }) => {
   if (!dates || dates.length === 0) return null;
 
-  // Find index of current selected date
   const currentIndex = dates.indexOf(selectedDate);
 
   const handleRangeChange = (e) => {
@@ -50,11 +49,8 @@ const TimeSlider = ({ dates, selectedDate, onChange }) => {
 const styles = {
   container: {
     padding: '12px 16px',
-    backgroundColor: '#1e293b', // Slate-800
-    borderTop: '1px solid #334155',
-    marginTop: '-1px', 
-    borderBottomLeftRadius: '8px',
-    borderBottomRightRadius: '8px',
+    backgroundColor: 'transparent', // Transparent to blend with card
+    width: '100%',
   },
   header: {
     display: 'flex',
@@ -69,7 +65,7 @@ const styles = {
   slider: {
     width: '100%',
     cursor: 'pointer',
-    accentColor: '#38bdf8', // Sky-400
+    accentColor: '#38bdf8', 
   },
   ticks: {
     display: 'flex',

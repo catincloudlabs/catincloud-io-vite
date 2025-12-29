@@ -4,35 +4,25 @@ import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
 import sql from 'react-syntax-highlighter/dist/esm/languages/hljs/sql';
 import { atomOneDark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 
-// Register SQL language support
 SyntaxHighlighter.registerLanguage('sql', sql);
 
 const InspectorCard = ({ 
-  title, 
-  tag, 
-  desc, 
-  chartType, 
-  isLoading, 
-  plotData, 
-  plotLayout, 
-  tableData, 
-  sqlCode 
+  title, tag, desc, chartType, isLoading, 
+  plotData, plotLayout, tableData, sqlCode,
+  children 
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
-
-  // Helper to determine color for Call/Put (Handles 'C', 'CALL', 'Call')
   const isCall = (type) => ['C', 'CALL', 'Call'].includes(type);
 
   return (
     <div className={`panel ${isFlipped ? 'panel-terminal' : ''}`} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       
-      {/* --- HEADER --- */}
+      {/* HEADER */}
       <div className="panel-header">
         <div className="panel-title">
           <span>{title}</span>
           {tag && <span className="tag">{tag}</span>}
         </div>
-        
         <button 
           onClick={() => setIsFlipped(!isFlipped)}
           className="nav-link" 
@@ -43,26 +33,17 @@ const InspectorCard = ({
         </button>
       </div>
 
-      {/* --- DESCRIPTION --- */}
       {!isFlipped && <p className="panel-desc">{desc}</p>}
 
-      {/* --- CONTENT AREA --- */}
-      {/* flex: 1 ensures this fills remaining space, pushing against the slider if needed */}
+      {/* CONTENT: flex-1 ensures it fills space but shrinks for footer */}
       <div className="chart-box" style={{ flex: 1, minHeight: 0, position: 'relative', overflow: 'hidden' }}>
-        
-        {/* 1. Loading */}
-        {isLoading && (
-          <div className="loading-state">
-            Fetching pipeline artifacts...
-          </div>
-        )}
+        {isLoading && <div className="loading-state">Fetching pipeline artifacts...</div>}
 
-        {/* 2. Logic (Code) */}
+        {/* LOGIC VIEW */}
         {!isLoading && isFlipped && (
           <div style={{ height: '100%', overflow: 'auto', fontSize: '0.8rem' }}>
             <SyntaxHighlighter 
-              language="sql" 
-              style={atomOneDark}
+              language="sql" style={atomOneDark}
               customStyle={{ background: 'transparent', padding: 0, margin: 0 }}
               wrapLongLines={true}
             >
@@ -71,13 +52,13 @@ const InspectorCard = ({
           </div>
         )}
 
-        {/* 3A. Plotly Chart */}
+        {/* CHART VIEW */}
         {!isLoading && !isFlipped && chartType !== 'table' && plotData && (
           <Plot
             data={plotData}
             layout={{
               ...plotLayout,
-              autosize: true, // Critical for flex resizing
+              autosize: true,
               margin: { l: 40, r: 20, t: 20, b: 40 },
               paper_bgcolor: 'rgba(0,0,0,0)',
               plot_bgcolor: 'rgba(0,0,0,0)',
@@ -89,7 +70,7 @@ const InspectorCard = ({
           />
         )}
 
-        {/* 3B. HTML Table (Whale Hunter) */}
+        {/* TABLE VIEW */}
         {!isLoading && !isFlipped && chartType === 'table' && tableData && (
           <div style={{ overflow: 'auto', height: '100%', width: '100%' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}>
@@ -109,26 +90,23 @@ const InspectorCard = ({
                     <td style={{ padding: '8px', fontWeight: 'bold', color: 'var(--accent)' }}>{row.ticker}</td>
                     <td style={{ padding: '8px' }}>{row.contract}</td>
                     <td style={{ padding: '8px', color: 'var(--text-muted)' }}>{row.expiry}</td>
-                    
-                    {/* FIXED: Checks for 'C' or 'CALL' to color Green correctly */}
-                    <td style={{ padding: '8px', color: isCall(row.type) ? 'var(--green)' : 'var(--red)' }}>
-                        {row.type}
-                    </td>
-                    
-                    <td style={{ padding: '8px', textAlign: 'right' }}>
-                      ${(row.premium / 1000000).toFixed(1)}M
-                    </td>
-                    <td style={{ padding: '8px', textAlign: 'right', color: row.sentiment === 'Bullish' ? 'var(--green)' : 'var(--red)' }}>
-                      {row.sentiment}
-                    </td>
+                    <td style={{ padding: '8px', color: isCall(row.type) ? 'var(--green)' : 'var(--red)' }}>{row.type}</td>
+                    <td style={{ padding: '8px', textAlign: 'right' }}>${(row.premium / 1000000).toFixed(1)}M</td>
+                    <td style={{ padding: '8px', textAlign: 'right', color: row.sentiment === 'Bullish' ? 'var(--green)' : 'var(--red)' }}>{row.sentiment}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         )}
-
       </div>
+
+      {/* FOOTER: The Slider goes here */}
+      {children && (
+        <div style={{ flexShrink: 0, marginTop: 'auto', borderTop: '1px solid var(--border)' }}>
+          {children}
+        </div>
+      )}
     </div>
   );
 };
