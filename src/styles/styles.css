@@ -1092,3 +1092,139 @@ html, body {
   width: 100%;
   height: 100%;
 }
+
+/* ==================================================================== */
+/* 21. MANUAL MODAL (The "man" Page)                                    */
+/* ==================================================================== */
+
+.manual-modal {
+  max-width: 900px;
+  height: 80vh; /* Fixed height to allow internal scrolling */
+  display: flex;
+  flex-direction: column;
+  padding: 0; /* Remove default padding for split layout */
+}
+
+.manual-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0;
+}
+
+.manual-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden; /* Contains the scroll areas */
+}
+
+/* Sidebar Navigation */
+.manual-sidebar {
+  width: 200px;
+  border-right: 1px solid var(--border);
+  padding: 20px 0;
+  background: rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.manual-nav-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  text-align: left;
+  padding: 10px 20px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  cursor: pointer;
+  border-left: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.manual-nav-btn:hover {
+  color: var(--text-main);
+  background: rgba(255,255,255,0.05);
+}
+
+.manual-nav-btn.active {
+  color: var(--accent);
+  border-left-color: var(--accent);
+  background: rgba(56, 189, 248, 0.1);
+  font-weight: bold;
+}
+
+/* Right Content Area */
+.manual-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 30px;
+  scroll-behavior: smooth;
+}
+
+.manual-h3 {
+  font-size: 1rem;
+  color: var(--accent);
+  margin-top: 0;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px dashed var(--border);
+  padding-bottom: 8px;
+}
+
+.manual-p {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #e2e8f0;
+  margin-bottom: 16px;
+}
+
+.manual-list {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+  padding-left: 20px;
+}
+
+.manual-list li {
+  margin-bottom: 8px;
+}
+
+.manual-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 40px 0;
+  opacity: 0.5;
+}
+
+/* Keyboard Key styling */
+.key-cap {
+  border: 1px solid var(--text-muted);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.7rem;
+  background: rgba(255,255,255,0.1);
+}
+
+/* Mobile Tweak: Stack columns */
+@media (max-width: 768px) {
+  .manual-body {
+    flex-direction: column;
+  }
+  .manual-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 10px;
+  }
+  .manual-nav-btn {
+    white-space: nowrap;
+    border-left: none;
+    border-bottom: 2px solid transparent;
+  }
+  .manual-nav-btn.active {
+    border-left: none;
+    border-bottom-color: var(--accent);
+  }
+}
