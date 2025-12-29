@@ -715,11 +715,25 @@ html, body {
     justify-content: center;
   }
 
-  /* 5. Header Fixes */
+  /* 5. Header Fixes (UPDATED) */
   .app-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
+  }
+
+  /* Stack the navigation links vertically on mobile */
+  .header-nav {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .nav-separator {
+    display: none; /* Hide the "/" separator on mobile */
   }
 
   .nav-link {
@@ -937,4 +951,35 @@ html, body {
   /* Swap Arrows */
   .desktop-arrow { display: none; }
   .mobile-arrow { display: block; }
+}
+
+/* ==================================================================== */
+/* 18. HEADER NAVIGATION (New)                                          */
+/* ==================================================================== */
+
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.nav-separator {
+  color: var(--border);
+}
+
+.icon-link {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+
+.icon-link:hover {
+  color: var(--accent);
 }
