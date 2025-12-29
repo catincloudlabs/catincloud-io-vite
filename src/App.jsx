@@ -5,7 +5,7 @@ import MetricCard from './components/MetricCard';
 import InspectorCard from './components/InspectorCard';
 import { SystemStatusRibbon } from './components/SystemStatusRibbon';
 import TimeSlider from './components/TimeSlider';
-import { Activity, Zap, Radio, Server, ChevronDown } from 'lucide-react';
+import { Activity, Zap, Radio, Server } from 'lucide-react';
 
 // --- CONFIGURATION ---
 const MAG7_CONFIG = {
@@ -25,7 +25,7 @@ function App() {
   const [chaosRaw, setChaosRaw] = useState([]); 
   const [chaosMeta, setChaosMeta] = useState(null);
   const [selectedDate, setSelectedDate] = useState('');
-  const [selectedChaosTicker, setSelectedChaosTicker] = useState('GME'); // Default Ticker
+  const [selectedChaosTicker, setSelectedChaosTicker] = useState('GME'); 
   const [chaosLoading, setChaosLoading] = useState(true);
 
   // Whale State
@@ -127,7 +127,7 @@ function App() {
     }];
   };
 
-  // --- TOGGLE HANDLER (Mag 7) ---
+  // --- TOGGLE HANDLER (Mag 7 - Multi Select) ---
   const toggleTicker = (ticker) => {
     setVisibleTickers(prev => {
       if (prev.includes(ticker)) {
@@ -200,7 +200,7 @@ function App() {
            </InspectorCard>
         </div>
 
-        {/* ROW 2: CHAOS (WITH DROPDOWN & TIME TRAVEL) */}
+        {/* ROW 2: CHAOS (WITH PILLS & TIME TRAVEL) */}
         <div className="span-2">
            <InspectorCard 
              title={chaosMeta?.title || "Chaos Engine"} 
@@ -212,23 +212,24 @@ function App() {
              plotLayout={scatterLayout}
              sqlCode={chaosMeta?.inspector.sql_logic}
            >
-             {/* NEW: FILTER CONTAINER */}
+             {/* FOOTER CONTROLS */}
              <div className="chaos-controls-container">
-               {/* 1. Styled Select Dropdown */}
-               <div className="terminal-select-wrapper">
-                 <select 
-                   value={selectedChaosTicker} 
-                   onChange={(e) => setSelectedChaosTicker(e.target.value)}
-                   className="terminal-select"
-                 >
-                   {availableChaosTickers.map(t => (
-                     <option key={t} value={t}>{t}</option>
-                   ))}
-                 </select>
-                 <ChevronDown size={14} className="select-arrow" />
+               
+               {/* 1. PILL SELECTOR (Mutually Exclusive) */}
+               <div className="pill-group">
+                 {availableChaosTickers.map(ticker => (
+                   <button
+                     key={ticker}
+                     onClick={() => setSelectedChaosTicker(ticker)}
+                     // Apply 'active-chaos' class if this is the selected ticker
+                     className={`ticker-pill ${selectedChaosTicker === ticker ? 'active-chaos' : ''}`}
+                   >
+                     {ticker}
+                   </button>
+                 ))}
                </div>
 
-               {/* 2. Time Slider */}
+               {/* 2. TIME SLIDER (Flex Grow to fill remaining space) */}
                {!chaosLoading && chaosMeta?.available_dates && (
                   <div style={{ flex: 1 }}> 
                     <TimeSlider 

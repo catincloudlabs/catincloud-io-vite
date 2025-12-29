@@ -729,58 +729,36 @@ html, body {
 }
 
 /* ==================================================================== */
-/* 16. CHAOS CONTROLS (Dropdown + Slider)                               */
+/* 16. CHAOS CONTROLS                                                   */
 /* ==================================================================== */
 
 .chaos-controls-container {
   display: flex;
-  align-items: center; /* Aligns dropdown with slider vertically */
-  gap: 16px;
+  align-items: center;
+  gap: 20px; /* Space between the Pills and the Time Slider */
   padding: 12px 16px;
   border-top: 1px solid rgba(255,255,255,0.05);
   margin-top: auto;
   background: rgba(0,0,0,0.1);
 }
 
-/* Wrapper to handle the Custom Arrow Icon */
-.terminal-select-wrapper {
-  position: relative;
-  width: 100px; /* Fixed width for the ticker selector */
-  flex-shrink: 0;
+.pill-group {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0; /* Prevents pills from squishing if screen is small */
 }
 
-.terminal-select {
-  appearance: none; /* Hides default browser arrow */
-  -webkit-appearance: none;
-  width: 100%;
-  background-color: var(--bg-app); /* Deep Navy */
-  color: var(--accent); /* Light Blue Text */
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 6px 24px 6px 12px; /* Extra right padding for arrow */
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  font-weight: 600;
-  cursor: pointer;
-  outline: none;
-  transition: border-color 0.2s;
+/* Re-using .ticker-pill base styles, but adding specific active state for Chaos */
+.ticker-pill.active-chaos {
+  border-color: var(--accent);       /* Cyan Border */
+  color: var(--bg-app);              /* Dark Text */
+  background: var(--accent);         /* Cyan Background */
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.4); /* Glowing effect */
+  font-weight: 700;
 }
 
-.terminal-select:hover {
-  border-color: var(--accent);
-}
-
-.terminal-select:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent-dim);
-}
-
-/* Custom Icon Positioning */
-.select-arrow {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted);
-  pointer-events: none; /* Click passes through to select */
+/* Hover state for non-active pills */
+.ticker-pill:not(.active-chaos):hover {
+  border-color: var(--text-muted);
+  color: var(--text-main);
 }
