@@ -14,13 +14,13 @@ const LogicModal = ({ isOpen, onClose, title, sqlCode }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose} style={{ display: 'flex' }}>
+    <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box logic-modal" onClick={e => e.stopPropagation()}>
         
         {/* Editor Header */}
         <div className="modal-header logic-header">
           <div className="modal-title-wrapper">
-            <Terminal size={16} className="text-accent" style={{ marginRight: '8px' }} />
+            <Terminal size={16} className="text-accent mr-2" />
             <span className="modal-title">{title} :: LOGIC</span>
           </div>
           <button className="panel-toggle-btn" onClick={onClose}>

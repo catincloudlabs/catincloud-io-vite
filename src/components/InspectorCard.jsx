@@ -30,7 +30,7 @@ const InspectorCard = ({
             disabled={isLoading}
             title="View Logic"
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem' }}>
+            <div className="logic-btn-inner">
               <FileCode size={14} />
               <span className="mobile-hide">View Logic</span>
             </div>
@@ -53,14 +53,13 @@ const InspectorCard = ({
                   layout={{
                     ...plotLayout,
                     autosize: true,
-                    // Standardize margins if not provided
                     margin: plotLayout.margin || { l: 40, r: 20, t: 20, b: 40 },
                     paper_bgcolor: 'rgba(0,0,0,0)',
                     plot_bgcolor: 'rgba(0,0,0,0)',
                     font: { color: '#94a3b8', family: 'JetBrains Mono, monospace' }
                   }}
                   useResizeHandler={true} 
-                  style={{ width: '100%', height: '100%' }}
+                  className="plotly-fill"
                   config={{ displayModeBar: false }}
                 />
              )}
@@ -75,19 +74,21 @@ const InspectorCard = ({
                         <th className="table-cell-padding">CONTRACT</th>
                         <th className="table-cell-padding">EXPIRY</th>
                         <th className="table-cell-padding">TYPE</th>
-                        <th className="table-cell-padding" style={{ textAlign: 'right' }}>PREMIUM</th>
-                        <th className="table-cell-padding" style={{ textAlign: 'right' }}>SENTIMENT</th>
+                        <th className="table-cell-padding text-right">PREMIUM</th>
+                        <th className="table-cell-padding text-right">SENTIMENT</th>
                      </tr>
                    </thead>
                    <tbody>
                      {tableData.map((row, i) => (
                        <tr key={i} className="table-row-divider">
-                         <td className="table-cell-padding" style={{ fontWeight: 'bold', color: 'var(--accent)' }}>{row.ticker}</td>
+                         <td className="table-cell-padding font-bold text-accent">{row.ticker}</td>
                          <td className="table-cell-padding">{row.contract}</td>
-                         <td className="table-cell-padding" style={{ color: 'var(--text-muted)' }}>{row.expiry}</td>
-                         <td className="table-cell-padding" style={{ color: isCall(row.type) ? 'var(--green)' : 'var(--red)' }}>{row.type}</td>
-                         <td className="table-cell-padding" style={{ textAlign: 'right' }}>${(row.premium / 1000000).toFixed(1)}M</td>
-                         <td className="table-cell-padding" style={{ textAlign: 'right', color: row.sentiment === 'Bullish' ? 'var(--green)' : 'var(--red)' }}>{row.sentiment}</td>
+                         <td className="table-cell-padding text-muted">{row.expiry}</td>
+                         <td className={`table-cell-padding ${isCall(row.type) ? 'text-green' : 'text-red'}`}>{row.type}</td>
+                         <td className="table-cell-padding text-right">${(row.premium / 1000000).toFixed(1)}M</td>
+                         <td className={`table-cell-padding text-right ${row.sentiment === 'Bullish' ? 'text-green' : 'text-red'}`}>
+                           {row.sentiment}
+                         </td>
                        </tr>
                      ))}
                    </tbody>
