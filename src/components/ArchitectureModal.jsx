@@ -45,7 +45,7 @@ const ArchitectureModal = ({ isOpen, onClose }) => {
               <div className="arch-label">INGESTION & TRANSFORM</div>
               <div className="arch-tech">MWAA (Airflow)</div>
               <div className="arch-desc">
-                DAGs ingest market data, load to Snowflake, and trigger <code>dbt build</code> models.
+                DAGs ingest market data , load to Snowflake, and execute dbt transformations.
               </div>
             </div>
 
@@ -62,7 +62,7 @@ const ArchitectureModal = ({ isOpen, onClose }) => {
               <div className="arch-label">WAREHOUSE</div>
               <div className="arch-tech">Snowflake Data Lake</div>
               <div className="arch-desc">
-                The System of Record. Stores raw JSON ingestion and materialized dbt models.
+                The System of Record. Stores raw JSON ingestion and materialized incremental dbt models.
               </div>
             </div>
 
@@ -79,7 +79,7 @@ const ArchitectureModal = ({ isOpen, onClose }) => {
               <div className="arch-label">PUBLISHING DAG</div>
               <div className="arch-tech">Airflow → S3 (JSON)</div>
               <div className="arch-desc">
-                "The Exporter." Reads modeled data, serializes to static JSON, and pushes to <strong>S3</strong>.
+                "The Exporter." Reads modeled data, serializes to static JSON, and pushes to S3.
               </div>
             </div>
 
