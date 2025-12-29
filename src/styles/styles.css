@@ -683,33 +683,29 @@ html, body {
 
 @media (max-width: 768px) {
   /* 1. Bento Grid - KEEP 2 COLUMNS */
-  /* We want KPI cards side-by-side, not stacked */
   .bento-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
   }
 
-  /* Charts must span the full width (both columns) */
+  /* 2. INCREASED HEIGHT FOR CHARTS */
   .span-2, .span-4 {
     grid-column: span 2;
-    height: 400px; 
+    height: 550px; 
     margin-bottom: 0;
   }
 
-  /* 2. System Status Ribbon - Strict Cleanup */
-  /* Force hide the right section and extra details */
+  /* 3. System Status Ribbon - Strict Cleanup */
   .status-section-right, 
   .mobile-hide {
     display: none !important;
   }
 
-  /* Center the remaining "System Healthy" status */
   .status-ribbon-container {
     justify-content: center;
   }
 
-  /* 3. Header Fixes */
-  /* Stack the logo and link so they don't overlap */
+  /* 4. Header Fixes */
   .app-header {
     flex-direction: column;
     align-items: flex-start;
@@ -722,14 +718,11 @@ html, body {
     color: var(--accent);
   }
 
-  /* 4. Table Scroll Fix */
+  /* 5. Table Scroll Fix */
   .table-view-container {
     max-width: 100vw;
   }
 }
-
-/* ... (Sections 1-15 remain unchanged) ...
-*/
 
 /* ==================================================================== */
 /* 16. CHAOS CONTROLS (Vertical Stack Update)                           */
