@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import ArchitectureModal from './ArchitectureModal';
-import { Network } from 'lucide-react';
+import ManualModal from './ManualModal';
+import { Network, BookOpen } from 'lucide-react';
 
 const Header = () => {
-  const [isModalOpen, setModalOpen] = useState(false);
+  const [isArchOpen, setArchOpen] = useState(false);
+  const [isManualOpen, setManualOpen] = useState(false);
 
   return (
     <>
@@ -21,28 +23,44 @@ const Header = () => {
         {/* RIGHT: NAVIGATION */}
         <div className="header-nav">
           
-          {/* Architecture Trigger */}
+          {/* Operator Manual Trigger */}
           <button 
-            onClick={() => setModalOpen(true)}
+            onClick={() => setManualOpen(true)}
             className="nav-link icon-link"
           >
-            <Network size={14} style={{ marginRight: '6px' }} />
-            System Architecture
+            <BookOpen size={14} style={{ marginRight: '6px' }} />
+            Operator Manual
           </button>
 
           <span className="nav-separator">/</span>
 
-          {/* Updated Link Text */}
+          {/* Architecture Trigger */}
+          <button 
+            onClick={() => setArchOpen(true)}
+            className="nav-link icon-link"
+          >
+            <Network size={14} style={{ marginRight: '6px' }} />
+            Architecture
+          </button>
+
+          <span className="nav-separator">/</span>
+
+          {/* Exit Link */}
           <a href="https://catincloudlabs.com" className="nav-link">
             Built by CatInCloud Labs &rarr;
           </a>
         </div>
       </header>
 
-      {/* MODAL */}
+      {/* MODALS */}
       <ArchitectureModal 
-        isOpen={isModalOpen} 
-        onClose={() => setModalOpen(false)} 
+        isOpen={isArchOpen} 
+        onClose={() => setArchOpen(false)} 
+      />
+      
+      <ManualModal 
+        isOpen={isManualOpen} 
+        onClose={() => setManualOpen(false)} 
       />
     </>
   );

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X, BookOpen, Terminal } from 'lucide-react';
+import { X, BookOpen } from 'lucide-react';
 
 const ManualModal = ({ isOpen, onClose }) => {
   const [activeSection, setActiveSection] = useState('synopsis');
@@ -21,6 +21,11 @@ const ManualModal = ({ isOpen, onClose }) => {
     { id: 'whales', label: 'WHALE HUNTER' },
     { id: 'controls', label: 'CONTROLS' },
   ];
+
+  const scrollToSection = (id) => {
+    setActiveSection(id);
+    document.getElementById(`sec-${id}`)?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -44,10 +49,7 @@ const ManualModal = ({ isOpen, onClose }) => {
               <button 
                 key={s.id}
                 className={`manual-nav-btn ${activeSection === s.id ? 'active' : ''}`}
-                onClick={() => {
-                  setActiveSection(s.id);
-                  document.getElementById(`sec-${s.id}`)?.scrollIntoView({ behavior: 'smooth' });
-                }}
+                onClick={() => scrollToSection(s.id)}
               >
                 {s.label}
               </button>
@@ -61,7 +63,7 @@ const ManualModal = ({ isOpen, onClose }) => {
               <h3 className="manual-h3">1. SYNOPSIS</h3>
               <p className="manual-p">
                 <strong>CatInCloud.io</strong> is a real-time quantitative dashboard monitoring 
-                unusual options activity across the Mag 7 and meme-tier equities.
+                unusual options activity across Mag 7 and meme-tier equities.
               </p>
               <p className="manual-p">
                 Data is ingested via Polygon.io, normalized in Snowflake, and served via 
@@ -91,7 +93,7 @@ const ManualModal = ({ isOpen, onClose }) => {
                 Filters for institutional block trades exceeding <span className="text-green">$1M premium</span>.
               </p>
               <p className="manual-p">
-                <span className="text-accent">Logic:</span> See <code>models/marts/core/fct_whale_flow.sql</code> via the "View Logic" button.
+                <span className="text-accent">Logic:</span> See <code>models/marts/core/fct_whale_flow.sql</code> via the "View Logic" button on the card.
               </p>
             </section>
 
