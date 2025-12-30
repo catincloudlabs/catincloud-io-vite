@@ -1,12 +1,22 @@
-import React, { useEffect } from 'react';
-import { X, Terminal } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { X, Terminal, FileCode, Layers } from 'lucide-react';
 import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
 import sql from 'react-syntax-highlighter/dist/esm/languages/hljs/sql';
+import python from 'react-syntax-highlighter/dist/esm/languages/hljs/python';
 import { atomOneDark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 
+// Register languages
 SyntaxHighlighter.registerLanguage('sql', sql);
+SyntaxHighlighter.registerLanguage('python', python);
 
-const LogicModal = ({ isOpen, onClose, title, sqlCode }) => {
+const LogicModal = ({ isOpen, onClose, title, dagCode, dbtCode }) => {
+  const [activeTab, setActiveTab] = useState('dag'); // 'dag' or 'dbt'
+
+  // Reset tab when opening different modal
+  useEffect(() => {
+    if (isOpen) setActiveTab('dag');
+  }, [isOpen]);
+
   // Close on Escape
   useEffect(() => {
     const handleEsc = (e) => {
@@ -22,7 +32,7 @@ const LogicModal = ({ isOpen, onClose, title, sqlCode }) => {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box logic-modal" onClick={e => e.stopPropagation()}>
         
-        {/* Editor Header */}
+        {/* Header */}
         <div className="modal-header logic-header">
           <div className="modal-title-wrapper">
             <Terminal size={16} className="text-accent mr-2" />
@@ -33,27 +43,50 @@ const LogicModal = ({ isOpen, onClose, title, sqlCode }) => {
           </button>
         </div>
 
+        {/* TAB BAR */}
+        <div className="logic-tabs">
+          <button 
+            className={`logic-tab ${activeTab === 'dag' ? 'active' : ''}`}
+            onClick={() => setActiveTab('dag')}
+          >
+            <Layers size={14} className="mr-2 icon-blue" />
+            <span>airflow_dag.py</span>
+          </button>
+          
+          {dbtCode && (
+            <button 
+              className={`logic-tab ${activeTab === 'dbt' ? 'active' : ''}`}
+              onClick={() => setActiveTab('dbt')}
+            >
+              <FileCode size={14} className="mr-2 icon-orange" />
+              <span>model.sql</span>
+            </button>
+          )}
+        </div>
+
         {/* Code Content */}
         <div className="logic-content">
           <div className="code-block-wrapper">
             <SyntaxHighlighter 
-              language="sql" 
+              language={activeTab === 'dag' ? 'python' : 'sql'} 
               style={atomOneDark}
               customStyle={{ 
-                background: 'transparent', // Uses our VS Code #1e1e1e background
+                background: 'transparent', 
                 padding: 0, 
                 margin: 0,
                 fontSize: '0.85rem',
-                fontFamily: 'var(--font-mono)' // Ensures JetBrains Mono usage
+                fontFamily: 'var(--font-mono)' 
               }}
               wrapLongLines={true}
             >
-              {sqlCode || "-- No logic definition found."}
+              {(activeTab === 'dag' ? dagCode : dbtCode) || "-- Source code not available."}
             </SyntaxHighlighter>
           </div>
           
           <div className="logic-footer">
-            <span className="text-muted">Source: dbt (Snowflake)</span>
+            <span className="text-muted">
+              {activeTab === 'dag' ? 'Source: AWS MWAA (Airflow)' : 'Source: dbt Core (Snowflake)'}
+            </span>
           </div>
         </div>
       </div>

@@ -1031,6 +1031,44 @@ html, body {
   margin-bottom: 0;
 }
 
+/* TABS CONTAINER (NEW) */
+.logic-tabs {
+  display: flex;
+  background: #252526; /* VS Code Header Gray */
+  border-bottom: 1px solid #1e1e1e;
+}
+
+/* INDIVIDUAL TAB */
+.logic-tab {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  color: #9ca3af; /* Inactive Text */
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  cursor: pointer;
+  border-top: 2px solid transparent; /* Reserve space for active border */
+  transition: background 0.2s;
+}
+
+.logic-tab:hover {
+  background: #2d2d2d;
+  color: #f8fafc;
+}
+
+/* ACTIVE TAB STATE */
+.logic-tab.active {
+  background: #1e1e1e; /* Match content background */
+  color: #f8fafc;
+  border-top-color: var(--accent); /* Blue top border */
+}
+
+/* ICON COLORS */
+.icon-blue { color: #4fc1ff; }
+.icon-orange { color: #ce9178; }
+
 .logic-content {
   padding: 0;
   background: #1e1e1e;

@@ -5,7 +5,9 @@ import LogicModal from './LogicModal';
 
 const InspectorCard = ({ 
   title, tag, desc, chartType, isLoading, 
-  plotData, plotLayout, tableData, sqlCode,
+  plotData, plotLayout, tableData, 
+  sqlCode,
+  dbtCode,
   children 
 }) => {
   
@@ -23,7 +25,7 @@ const InspectorCard = ({
         </div>
         
         {/* LOGIC TRIGGER BUTTON */}
-        {sqlCode && (
+        {(sqlCode || dbtCode) && (
           <button 
             className="nav-link panel-toggle-btn"
             onClick={() => setShowLogic(true)}
@@ -111,7 +113,8 @@ const InspectorCard = ({
         isOpen={showLogic} 
         onClose={() => setShowLogic(false)}
         title={title}
-        sqlCode={sqlCode}
+        dagCode={sqlCode} 
+        dbtCode={dbtCode}
       />
     </div>
   );
