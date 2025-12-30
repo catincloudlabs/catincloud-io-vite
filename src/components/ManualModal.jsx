@@ -86,7 +86,7 @@ const ManualModal = ({ isOpen, onClose }) => {
                 <li><strong>Pipeline State:</strong>
                   <ul className="manual-list-nested">
                     <li><span className="text-green">GREEN</span> :: All Systems Operational.</li>
-                    <li><span className="text-yellow">YELLOW</span> :: Data Stale ( &gt; 26h ) or Degraded.</li>
+                    <li><span className="text-yellow">YELLOW</span> :: Data Stale (&gt; 26h Weekday / 72h Weekend).</li>
                     <li><span className="text-red">RED</span> :: System Offline / Connectivity Lost.</li>
                   </ul>
                 </li>

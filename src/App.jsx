@@ -10,7 +10,6 @@ import { useSystemHeartbeat } from './hooks/useSystemHeartbeat';
 import { getHealthColor, getSentimentColor, getRiskColor, getMomentumColor } from './utils/statusHelpers';
 
 // --- CONFIGURATION ---
-// We keep color codes here specifically for Plotly (Canvas requires Hex codes, not CSS classes)
 const MAG7_CONFIG = {
   NVDA: { color: '#4ade80', label: 'NVDA' },
   TSLA: { color: '#f87171', label: 'TSLA' },
@@ -80,7 +79,7 @@ function App() {
 
   // --- SMART METRICS ---
 
-  // 1. Whale Sentiment
+  // 1. Whale Sentiment (Dynamic Label Update)
   const whaleMetric = useMemo(() => {
     if (!whaleData?.data) return { value: "$0M", sub: "No Data" };
     
@@ -94,12 +93,16 @@ function App() {
     });
 
     const bullPct = total > 0 ? Math.round((bullTotal / total) * 100) : 0;
-    const formattedTotal = `$${(total / 1000000).toFixed(1)}M`;
+    const bearPct = 100 - bullPct; // Calculate the inverse
     
+    const formattedTotal = `$${(total / 1000000).toFixed(1)}M`;
+    const isBullish = bullPct > 50;
+
     return {
         value: formattedTotal,
-        sub: `${bullPct}% Bullish Flow`,
-        isBullish: bullPct > 50
+        // CHANGED: Show the dominant percentage
+        sub: isBullish ? `${bullPct}% Bullish Flow` : `${bearPct}% Bearish Flow`,
+        isBullish: isBullish
     };
   }, [whaleData]);
 
