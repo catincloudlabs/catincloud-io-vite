@@ -1161,6 +1161,7 @@ html, body {
 /* Color Utilities (Ensures these work globally) */
 .text-green { color: var(--green); }
 .text-red { color: var(--red); }
+.text-yellow { color: var(--yellow); } /* <--- ADDED THIS LINE */
 .text-accent { color: var(--accent); }
 
 /* Logic Button Layout */
