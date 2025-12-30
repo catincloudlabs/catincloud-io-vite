@@ -304,7 +304,6 @@ html, body {
 
 .modal-box {
   background: var(--bg-panel);
-  /* CHANGED: Use auto margins for flexible centering */
   margin: auto; 
   padding: 20px;
   width: 80%;
@@ -313,7 +312,7 @@ html, body {
   border: 1px solid var(--border);
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
   animation: modalSlide 0.3s ease-out;
-  position: relative; /* Ensure z-index works internally */
+  position: relative;
 }
 
 @keyframes modalSlide {
@@ -327,12 +326,23 @@ html, body {
   border-bottom: 1px solid var(--border);
   padding-bottom: 10px;
   margin-bottom: 10px;
+  /* Ensure header doesn't break on small screens */
+  min-width: 0; 
 }
 
+/* UPDATED: Title truncation styles */
 .modal-title {
   margin: 0;
   color: var(--text-main);
   font-size: 1.1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* NEW: Icon shrink prevention */
+.modal-title-icon {
+  flex-shrink: 0;
 }
 
 .modal-close {
@@ -340,6 +350,7 @@ html, body {
   font-size: 1.5rem;
   color: var(--text-muted);
   line-height: 1;
+  flex-shrink: 0; /* Don't squash the close button */
 }
 
 .modal-close:hover { color: var(--red); }
@@ -884,13 +895,16 @@ html, body {
 /* ==================================================================== */
 
 .architecture-modal {
-  max-width: 1000px; /* Wider than normal modal for the diagram */
+  max-width: 1000px; 
 }
 
+/* Wrapper logic to handle overflow */
 .modal-title-wrapper {
   display: flex;
   align-items: center;
   gap: 8px;
+  overflow: hidden; /* Essential for ellipsis to work */
+  min-width: 0;     /* Allows flex child to shrink below content size */
 }
 
 .ml-2 { margin-left: 8px; }
@@ -1072,7 +1086,7 @@ html, body {
 
 .logic-modal {
   max-width: 800px;
-  background: #1e1e1e; /* VS Code Dark Background */
+  background: #1e1e1e;
   border: 1px solid #333;
 }
 
@@ -1083,37 +1097,35 @@ html, body {
   margin-bottom: 0;
 }
 
-/* TABS CONTAINER (NEW) */
+/* UPDATED: Scrollable Tabs for Mobile */
 .logic-tabs {
   display: flex;
-  background: #252526; /* VS Code Header Gray */
+  background: #252526;
   border-bottom: 1px solid #1e1e1e;
-  /* MOBILE SCROLL POLISH START */
-  overflow-x: auto;
+  overflow-x: auto; /* Enable horizontal scroll */
   white-space: nowrap;
-  -webkit-overflow-scrolling: touch; /* Smooth scroll on iOS */
-  scrollbar-width: none; /* Hide scrollbar Firefox */
-}
-/* Hide scrollbar Chrome/Safari */
-.logic-tabs::-webkit-scrollbar {
-  display: none; 
+  -webkit-overflow-scrolling: touch; /* Smooth iOS scrolling */
+  scrollbar-width: none; /* Hide Firefox scrollbar */
 }
 
-/* INDIVIDUAL TAB */
+.logic-tabs::-webkit-scrollbar {
+  display: none; /* Hide Chrome/Safari scrollbar */
+}
+
+/* UPDATED: Tab item */
 .logic-tab {
   display: flex;
   align-items: center;
   padding: 10px 16px;
   background: transparent;
   border: none;
-  color: #9ca3af; /* Inactive Text */
+  color: #9ca3af;
   font-family: var(--font-mono);
   font-size: 0.8rem;
   cursor: pointer;
-  border-top: 2px solid transparent; /* Reserve space for active border */
+  border-top: 2px solid transparent;
   transition: background 0.2s;
-  /* MOBILE SCROLL POLISH START */
-  flex-shrink: 0; /* Prevents tabs from squishing */
+  flex-shrink: 0; /* Prevent tabs from shrinking/wrapping */
 }
 
 .logic-tab:hover {
@@ -1121,14 +1133,12 @@ html, body {
   color: #f8fafc;
 }
 
-/* ACTIVE TAB STATE */
 .logic-tab.active {
-  background: #1e1e1e; /* Match content background */
+  background: #1e1e1e;
   color: #f8fafc;
-  border-top-color: var(--accent); /* Blue top border */
+  border-top-color: var(--accent);
 }
 
-/* ICON COLORS */
 .icon-blue { color: #4fc1ff; }
 .icon-orange { color: #ce9178; }
 
@@ -1144,17 +1154,15 @@ html, body {
   font-family: var(--font-mono);
   font-size: 0.85rem;
   line-height: 1.5;
-  color: #d4d4d4; /* VS Code Default Text */
-  white-space: pre-wrap; /* Preserve formatting */
+  color: #d4d4d4;
+  white-space: pre-wrap;
 }
 
-.sql-code {
-  margin: 0;
-}
+.sql-code { margin: 0; }
 
 .logic-footer {
   padding: 8px 16px;
-  background: #007acc; /* VS Code Blue Status Bar */
+  background: #007acc;
   color: white;
   font-family: var(--font-mono);
   font-size: 0.7rem;

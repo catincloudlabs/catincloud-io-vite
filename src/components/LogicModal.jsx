@@ -59,12 +59,9 @@ const LogicModal = ({ isOpen, onClose, title, dagCode, dbtCode, dbtYml }) => {
         
         {/* Editor Header */}
         <div className="modal-header logic-header">
-          <div className="modal-title-wrapper" style={{ overflow: 'hidden' }}>
-            <Terminal size={16} className="text-accent mr-2" style={{ flexShrink: 0 }} />
-            <span 
-              className="modal-title" 
-              style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-            >
+          <div className="modal-title-wrapper">
+            <Terminal size={16} className="text-accent mr-2 modal-title-icon" />
+            <span className="modal-title">
               {title} :: LOGIC
             </span>
           </div>
