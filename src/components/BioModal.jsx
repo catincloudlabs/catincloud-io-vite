@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { X, Terminal, Github, Linkedin, Mail, FileText } from 'lucide-react';
+import { X, Terminal, Github, Linkedin, Mail, Globe } from 'lucide-react'; // Added Globe icon
 
 const BioModal = ({ isOpen, onClose }) => {
   // Close on Escape
@@ -56,6 +56,7 @@ const BioModal = ({ isOpen, onClose }) => {
             </div>
           </div>
 
+          {/* Divider Class from styles.css */}
           <div className="manual-divider bio-divider" />
 
           {/* TECH STACK */}
@@ -80,13 +81,15 @@ const BioModal = ({ isOpen, onClose }) => {
               <Linkedin size={18} />
               <span>LinkedIn</span>
             </a>
-            <a href="mailto:hello@catincloud.io" className="contact-btn">
+            <a href="mailto:dave@catincloudlabs.com" className="contact-btn">
               <Mail size={18} />
               <span>Email</span>
             </a>
-            <a href="/resume.pdf" target="_blank" className="contact-btn btn-primary">
-              <FileText size={18} />
-              <span>Resume</span>
+            
+            {/* UPDATED: Main Site Link */}
+            <a href="https://catincloudlabs.com" target="_blank" rel="noreferrer" className="contact-btn btn-primary">
+              <Globe size={18} />
+              <span>Main Site</span>
             </a>
           </div>
 
