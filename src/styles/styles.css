@@ -1262,6 +1262,14 @@ html, body {
   margin-bottom: 16px;
 }
 
+/* Nested List Styling */
+.manual-list-nested {
+  margin-top: 4px;
+  margin-bottom: 8px;
+  padding-left: 20px; 
+  list-style-type: disc; 
+}
+
 .manual-list {
   font-size: 0.85rem;
   line-height: 1.6;
@@ -1311,15 +1319,6 @@ html, body {
     border-left: none;
     border-bottom-color: var(--accent);
   }
-}
-
-/* Add to styles.css */
-
-.manual-list-nested {
-  margin-top: 4px;
-  margin-bottom: 8px;
-  padding-left: 20px; /* Standard indentation for nested lists */
-  list-style-type: disc; /* Ensures bullets show for nested items */
 }
 
 /* ==================================================================== */
