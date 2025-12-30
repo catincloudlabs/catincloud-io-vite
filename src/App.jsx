@@ -6,6 +6,7 @@ import InspectorCard from './components/InspectorCard';
 import { SystemStatusRibbon } from './components/SystemStatusRibbon';
 import TimeSlider from './components/TimeSlider';
 import { Activity, Zap, Radio, Server } from 'lucide-react';
+import { useSystemHeartbeat } from './hooks/useSystemHeartbeat'; // <--- 1. IMPORT HOOK
 
 // --- CONFIGURATION ---
 const MAG7_CONFIG = {
@@ -21,6 +22,9 @@ const MAG7_CONFIG = {
 function App() {
   
   // --- STATE ---
+  // 2. USE THE HEARTBEAT HOOK
+  const { data: heartbeat, loading: heartbeatLoading } = useSystemHeartbeat();
+
   const [chaosRaw, setChaosRaw] = useState([]); 
   const [chaosMeta, setChaosMeta] = useState(null);
   const [selectedDate, setSelectedDate] = useState('');
@@ -35,7 +39,6 @@ function App() {
   const [magLoading, setMagLoading] = useState(true);
   const [visibleTickers, setVisibleTickers] = useState(['NVDA', 'TSLA']);
 
-  // NEW: Detect Mobile Screen Width for Layout Calculations
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
@@ -46,7 +49,6 @@ function App() {
 
   // --- FETCHING ---
   useEffect(() => {
-    
     // 1. Chaos Scatter
     fetch('/data/chaos.json')
       .then(res => res.json())
@@ -78,9 +80,32 @@ function App() {
 
   }, []);
 
-  // --- HELPERS ---
+  // --- DYNAMIC CALCULATIONS (NEW) ---
 
-  // 1. Dynamic Mag 7 Plot
+  // A. Calculate Total Whale Premium on the fly
+  const totalWhalePremium = useMemo(() => {
+    if (!whaleData?.data) return "$0M";
+    // Sum premium, divide by million, fix to 1 decimal
+    const total = whaleData.data.reduce((acc, row) => acc + (row.premium || 0), 0);
+    return `$${(total / 1000000).toFixed(1)}M`;
+  }, [whaleData]);
+
+  // B. Calculate Chaos "Intensity" (e.g., number of high IV contracts)
+  const chaosMetric = useMemo(() => {
+    if (!chaosRaw.length) return "0";
+    // Just a fun metric: count contracts with IV > 50%
+    const highVol = chaosRaw.filter(c => c.iv > 50).length;
+    return `${highVol} Events`;
+  }, [chaosRaw]);
+
+  // C. Determine Pipeline Status Color
+  const getStatusColor = (status) => {
+    if (status === 'Healthy') return 'green';
+    if (status === 'Degraded') return 'yellow';
+    return 'red';
+  };
+
+  // --- CHART HELPERS ---
   const getMag7PlotData = () => {
     if (!magRaw || magRaw.length === 0) return [];
     return visibleTickers.map(ticker => {
@@ -98,14 +123,12 @@ function App() {
     });
   };
 
-  // 2. Helper: Get Unique Tickers from Chaos Data
   const availableChaosTickers = useMemo(() => {
     if (!chaosRaw.length) return ['GME'];
     const tickers = [...new Set(chaosRaw.map(d => d.ticker))];
     return tickers.sort(); 
   }, [chaosRaw]);
 
-  // 3. Chaos Plot Generator (Updated for Mobile)
   const getFilteredChaosPlot = () => {
     if (!selectedDate || chaosRaw.length === 0) return [];
     
@@ -124,14 +147,12 @@ function App() {
          size: dailyData.map(d => Math.log(d.volume) * 4),
          color: dailyData.map(d => d.iv),
          colorscale: 'Viridis',
-         // IMPORTANT: Disable the color bar on mobile to save width
          showscale: !isMobile, 
          opacity: 0.8
        }
     }];
   };
 
-  // --- TOGGLE HANDLER (Mag 7 - Multi Select) ---
   const toggleTicker = (ticker) => {
     setVisibleTickers(prev => {
       if (prev.includes(ticker)) {
@@ -143,9 +164,6 @@ function App() {
     });
   };
 
-  // --- LAYOUTS ---
-  
-  // UPDATED: Tight margins for Mobile to maximize width
   const scatterLayout = {
     xaxis: { title: 'DTE', gridcolor: '#334155', zerolinecolor: '#334155' },
     yaxis: { title: 'Moneyness', gridcolor: '#334155', zerolinecolor: '#334155', range: [0.5, 2.0] },
@@ -153,7 +171,6 @@ function App() {
     paper_bgcolor: 'rgba(0,0,0,0)', 
     plot_bgcolor: 'rgba(0,0,0,0)',
     font: { color: '#94a3b8' },
-    // Logic: If mobile, 0 right margin (no legend). If Desktop, 20 right margin.
     margin: isMobile ? { t: 0, b: 40, l: 30, r: 0 } : { t: 0, b: 40, l: 40, r: 20 }
   };
 
@@ -174,11 +191,35 @@ function App() {
       
       <main className="bento-grid">
         
-        {/* ROW 1: KPI CARDS */}
-        <MetricCard title="Pipeline State" value="ONLINE" subValue="Latency: 42ms" icon={<Server size={16} className="text-green" />} statusColor="green"/>
-        <MetricCard title="Chaos Index" value="8.2σ" subValue="GME Volatility Spike" icon={<Zap size={16} className="text-yellow" />}/>
-        <MetricCard title="Whale Flow" value="$142M" subValue="Premium Traded (1h)" icon={<Activity size={16} className="text-accent" />}/>
-        <MetricCard title="Last Build" value="16:05" subValue="2025-12-28" icon={<Radio size={16} className="text-muted" />}/>
+        {/* ROW 1: KPI CARDS (DYNAMICALLY WIRED) */}
+        <MetricCard 
+          title="Pipeline State" 
+          value={heartbeat?.system_status || "CONNECTING..."} 
+          subValue={heartbeat ? `${heartbeat.metrics.total_rows_managed.toLocaleString()} Rows` : "Waiting for heartbeat"} 
+          icon={<Server size={16} className={getStatusColor(heartbeat?.system_status) === 'green' ? "text-green" : "text-red"} />} 
+          statusColor={getStatusColor(heartbeat?.system_status)}
+        />
+        
+        <MetricCard 
+          title="Chaos Events" 
+          value={chaosMetric} 
+          subValue="High IV Contracts (>50%)" 
+          icon={<Zap size={16} className="text-yellow" />}
+        />
+        
+        <MetricCard 
+          title="Whale Flow" 
+          value={totalWhalePremium} 
+          subValue="Total Premium (Day)" 
+          icon={<Activity size={16} className="text-accent" />}
+        />
+        
+        <MetricCard 
+          title="Last Build" 
+          value={heartbeat ? new Date(heartbeat.last_updated_utc).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "--:--"} 
+          subValue={heartbeat ? new Date(heartbeat.last_updated_utc).toLocaleDateString() : "No Data"} 
+          icon={<Radio size={16} className="text-muted" />}
+        />
 
         {/* ROW 2: MAG 7 (WITH TOGGLES) */}
         <div className="span-2">
