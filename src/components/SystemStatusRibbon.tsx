@@ -58,12 +58,12 @@ export const SystemStatusRibbon: React.FC = () => {
         </span>
       </div>
 
-      <div className="status-section-right mobile-hide">
-        <span className="status-metric-text">
+      <div className="status-section-right">
+        <span className="status-metric-text mobile-hide">
           DATA POINTS: <span className="status-value">{formatNumber(data.metrics.total_rows_managed)}</span>
         </span>
         
-        <span className="status-separator">|</span>
+        <span className="status-separator mobile-hide">|</span>
 
         <span className="status-metric-text" title={`UTC: ${data.last_updated_utc}`}>
           UPDATED: <span className="status-value">{formatTime(data.last_updated_utc)}</span>
