@@ -18,6 +18,7 @@ const ManualModal = ({ isOpen, onClose }) => {
   const sections = [
     { id: 'synopsis', label: 'SYNOPSIS' },
     { id: 'chaos', label: 'CHAOS INDEX' },
+    { id: 'mag7', label: 'MAG 7 MOMENTUM' },
     { id: 'whales', label: 'WHALE HUNTER' },
     { id: 'controls', label: 'CONTROLS' },
   ];
@@ -59,6 +60,7 @@ const ManualModal = ({ isOpen, onClose }) => {
           {/* Content */}
           <div className="manual-content">
             
+            {/* 1. SYNOPSIS */}
             <section id="sec-synopsis" className="manual-section">
               <h3 className="manual-h3">1. SYNOPSIS</h3>
               <p className="manual-p">
@@ -73,6 +75,7 @@ const ManualModal = ({ isOpen, onClose }) => {
 
             <div className="manual-divider" />
 
+            {/* 2. CHAOS INDEX */}
             <section id="sec-chaos" className="manual-section">
               <h3 className="manual-h3">2. CHAOS INDEX (Scatter Plot)</h3>
               <p className="manual-p">
@@ -87,8 +90,23 @@ const ManualModal = ({ isOpen, onClose }) => {
 
             <div className="manual-divider" />
 
+            {/* 3. MAG 7 MOMENTUM */}
+            <section id="sec-mag7" className="manual-section">
+              <h3 className="manual-h3">3. MAG 7 MOMENTUM (Time Series)</h3>
+              <p className="manual-p">
+                <span className="text-accent">Purpose:</span> Tracks aggregated option sentiment flow for mega-cap tech.
+              </p>
+              <ul className="manual-list">
+                <li><strong>Metric (Y-Axis):</strong> Net Sentiment Flow. Calculated as <code>(Call Premium - Put Premium)</code> adjusted for delta.</li>
+                <li><strong>Multi-Select:</strong> Toggle individual tickers (NVDA, TSLA, etc.) using the control pills in the chart footer.</li>
+              </ul>
+            </section>
+
+            <div className="manual-divider" />
+
+            {/* 4. WHALE HUNTER */}
             <section id="sec-whales" className="manual-section">
-              <h3 className="manual-h3">3. WHALE HUNTER (Flow Tape)</h3>
+              <h3 className="manual-h3">4. WHALE HUNTER (Flow Tape)</h3>
               <p className="manual-p">
                 Filters for institutional block trades exceeding <span className="text-green">$1M premium</span>.
               </p>
@@ -99,8 +117,9 @@ const ManualModal = ({ isOpen, onClose }) => {
 
             <div className="manual-divider" />
 
+            {/* 5. CONTROLS */}
             <section id="sec-controls" className="manual-section">
-              <h3 className="manual-h3">4. CONTROLS</h3>
+              <h3 className="manual-h3">5. CONTROLS</h3>
               <ul className="manual-list">
                 <li><span className="key-cap">Scroll</span> :: Zoom Chart Axes</li>
                 <li><span className="key-cap">Click + Drag</span> :: Pan Chart Area</li>
