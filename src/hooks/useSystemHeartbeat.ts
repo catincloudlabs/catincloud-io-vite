@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 // Define the shape of our metadata based on the Airflow DAG
 export interface SystemMetadata {
-  system_status: 'Healthy' | 'Degraded' | 'Maintenance' | 'Stale'; // Added 'Stale'
+  system_status: 'Healthy' | 'Degraded' | 'Maintenance' | 'Stale';
   last_updated_utc: string;
   pipeline_version: string;
   metrics: {
@@ -30,16 +30,31 @@ export const useSystemHeartbeat = () => {
         const result: SystemMetadata = await response.json();
 
         // --- CLIENT-SIDE FRESHNESS CHECK ---
-        // If Airflow dies, the file won't update. We must catch this in the browser.
+        // Verify if data is stale based on the last update time
         const lastUpdate = new Date(result.last_updated_utc).getTime();
         const now = Date.now();
         const hoursDiff = (now - lastUpdate) / (1000 * 60 * 60);
 
-        if (hoursDiff > 26) {
-           console.warn(`System Heartbeat is stale by ${hoursDiff.toFixed(1)} hours.`);
+        // 1. Detect Weekend Window (UTC)
+        // 0=Sun, 1=Mon, ..., 6=Sat
+        // We include Monday (1) because new data usually arrives Tuesday morning.
+        const currentDay = new Date().getUTCDay();
+        const isWeekendWindow = [0, 1, 6].includes(currentDay);
+
+        // 2. Set Dynamic Threshold
+        // Weekends: 72h (Friday Data -> Tuesday Run)
+        // Weekdays: 26h (Daily Run + Buffer)
+        const stalenessThreshold = isWeekendWindow ? 72 : 26;
+
+        if (hoursDiff > stalenessThreshold) {
+           console.warn(`System Heartbeat is stale by ${hoursDiff.toFixed(1)} hours (Threshold: ${stalenessThreshold}h).`);
+           
            // Override status to warn the user
            result.system_status = 'Stale'; 
-           result.notices.push("Data stream has stopped updating.");
+           
+           // Add a helpful notice explaining why
+           const reason = isWeekendWindow ? "Market Closed" : "Pipeline Delay";
+           result.notices.push(`Data stream paused (${reason}). Last update: ${hoursDiff.toFixed(0)}h ago.`);
         }
         // -----------------------------------
 
@@ -54,7 +69,7 @@ export const useSystemHeartbeat = () => {
 
     fetchHeartbeat();
     
-    // Poll every 5 minutes
+    // Poll every 5 minutes to keep the UI fresh without refreshing page
     const interval = setInterval(fetchHeartbeat, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
