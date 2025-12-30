@@ -61,10 +61,10 @@ const BioModal = ({ isOpen, onClose }) => {
           {/* TECH STACK */}
           <h3 className="bio-h3">ACTIVE_STACK</h3>
           <div className="stack-grid">
-            <div className="stack-item"><span className="text-accent">Compute:</span> Snowflake, Spark, DuckDB</div>
-            <div className="stack-item"><span className="text-accent">Orchestration:</span> Airflow (MWAA), Dagster</div>
-            <div className="stack-item"><span className="text-accent">Transformation:</span> dbt Core, Python, SQL</div>
-            <div className="stack-item"><span className="text-accent">Interface:</span> React, Vite, D3.js</div>
+            <div className="stack-item"><span className="text-accent">Compute:</span> Snowflake, Python (Pandas)</div>
+            <div className="stack-item"><span className="text-accent">Orchestration:</span> Airflow (MWAA)</div>
+            <div className="stack-item"><span className="text-accent">Transformation:</span> dbt Core, SQL</div>
+            <div className="stack-item"><span className="text-accent">Interface:</span> React, Vite, Plotly.js</div>
           </div>
 
           <div className="manual-divider" style={{ margin: '20px 0' }} />
