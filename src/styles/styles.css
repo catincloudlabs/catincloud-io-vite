@@ -707,10 +707,11 @@ html, body {
     margin-bottom: 0;
   }
 
-  /* 4. System Status Ribbon - Strict Cleanup */
+  /* 4. System Status Ribbon - Strict Cleanup 
   .status-section-right {
     display: none !important;
   }
+  */
 
   .status-ribbon-container {
     justify-content: center;
