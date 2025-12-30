@@ -91,7 +91,7 @@ const BioModal = ({ isOpen, onClose }) => {
               <Linkedin size={18} />
               <span>LinkedIn</span>
             </a>
-            <a href="mailto:hello@catincloud.io" className="contact-btn">
+            <a href="mailto:dave@catincloudlabs.com" className="contact-btn">
               <Mail size={18} />
               <span>Email</span>
             </a>
