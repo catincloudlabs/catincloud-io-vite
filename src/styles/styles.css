@@ -706,8 +706,14 @@ html, body {
     height: 550px; 
     margin-bottom: 0;
   }
+  
+  /* 4. OPTIMIZE MODAL FOR PHONE (NEW) */
+  .modal-box {
+    width: 95%; /* Use almost full width on phone */
+    padding: 15px;
+  }
 
-  /* 4. System Status Ribbon - Strict Cleanup */
+  /* 5. System Status Ribbon - Strict Cleanup */
   .mobile-hide {
     display: none !important;
   }
@@ -716,7 +722,7 @@ html, body {
     justify-content: center;
   }
 
-  /* 5. Header Fixes */
+  /* 6. Header Fixes */
   .app-header {
     flex-direction: column;
     align-items: flex-start;
@@ -743,17 +749,17 @@ html, body {
     color: var(--accent);
   }
 
-  /* 6. Table Scroll Fix */
+  /* 7. Table Scroll Fix */
   .table-view-container {
     max-width: 100vw;
   }
 
-  /* 7. HIDE PLOTLY LEGEND/COLORBAR */
+  /* 8. HIDE PLOTLY LEGEND/COLORBAR */
   .js-plotly-plot .colorbar {
     display: none !important;
   }
 
-  /* 8. ARCHITECTURE MODAL INTERACTION (NEW) */
+  /* 9. ARCHITECTURE MODAL INTERACTION (NEW) */
   .arch-flow {
     flex-direction: column;
     align-items: center;
@@ -1082,6 +1088,15 @@ html, body {
   display: flex;
   background: #252526; /* VS Code Header Gray */
   border-bottom: 1px solid #1e1e1e;
+  /* MOBILE SCROLL POLISH START */
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch; /* Smooth scroll on iOS */
+  scrollbar-width: none; /* Hide scrollbar Firefox */
+}
+/* Hide scrollbar Chrome/Safari */
+.logic-tabs::-webkit-scrollbar {
+  display: none; 
 }
 
 /* INDIVIDUAL TAB */
@@ -1097,6 +1112,8 @@ html, body {
   cursor: pointer;
   border-top: 2px solid transparent; /* Reserve space for active border */
   transition: background 0.2s;
+  /* MOBILE SCROLL POLISH START */
+  flex-shrink: 0; /* Prevents tabs from squishing */
 }
 
 .logic-tab:hover {
