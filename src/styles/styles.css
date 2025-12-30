@@ -708,8 +708,7 @@ html, body {
   }
 
   /* 4. System Status Ribbon - Strict Cleanup */
-  .status-section-right, 
-  .mobile-hide {
+  .status-section-right {
     display: none !important;
   }
 
