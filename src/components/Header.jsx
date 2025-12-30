@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import ArchitectureModal from './ArchitectureModal';
 import ManualModal from './ManualModal';
+import BioModal from './BioModal';
 import { Network, BookOpen } from 'lucide-react';
 
 const Header = () => {
   const [isArchOpen, setArchOpen] = useState(false);
   const [isManualOpen, setManualOpen] = useState(false);
+  const [isBioOpen, setBioOpen] = useState(false);
 
   return (
     <>
@@ -45,10 +47,14 @@ const Header = () => {
 
           <span className="nav-separator">/</span>
 
-          {/* Exit Link */}
-          <a href="https://catincloudlabs.com" className="nav-link">
+          {/* BIO TRIGGER (Formerly an external link) */}
+          <button 
+            onClick={() => setBioOpen(true)}
+            className="nav-link icon-link"
+            style={{ fontWeight: 'normal' }}
+          >
             Built by CatInCloud Labs &rarr;
-          </a>
+          </button>
         </div>
       </header>
 
@@ -61,6 +67,11 @@ const Header = () => {
       <ManualModal 
         isOpen={isManualOpen} 
         onClose={() => setManualOpen(false)} 
+      />
+
+      <BioModal 
+        isOpen={isBioOpen} 
+        onClose={() => setBioOpen(false)} 
       />
     </>
   );

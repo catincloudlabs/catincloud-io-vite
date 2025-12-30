@@ -72,11 +72,11 @@ const BioModal = ({ isOpen, onClose }) => {
           {/* CONTACT LINKS */}
           <h3 className="bio-h3">CONNECT</h3>
           <div className="contact-row">
-            <a href="https://github.com/yourusername" target="_blank" rel="noreferrer" className="contact-btn">
+            <a href="https://github.com/catincloudlabs" target="_blank" rel="noreferrer" className="contact-btn">
               <Github size={18} />
               <span>GitHub</span>
             </a>
-            <a href="https://linkedin.com/in/yourusername" target="_blank" rel="noreferrer" className="contact-btn">
+            <a href="https://linkedin.com/in/dave-anaya/" target="_blank" rel="noreferrer" className="contact-btn">
               <Linkedin size={18} />
               <span>LinkedIn</span>
             </a>
