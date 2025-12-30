@@ -23,7 +23,7 @@ const BioModal = ({ isOpen, onClose }) => {
         <div className="modal-header bio-header">
           <div className="modal-title-wrapper">
             <Terminal size={16} className="text-green mr-2" />
-            <span className="modal-title">user@catincloud:~$ whoami</span>
+            <span className="modal-title">dave@catincloud:~$ whoami</span>
           </div>
           <button className="panel-toggle-btn" onClick={onClose}>
             <X size={20} />
@@ -51,8 +51,8 @@ const BioModal = ({ isOpen, onClose }) => {
             </div>
             
             <div className="bio-details">
-              <h2 className="bio-name">CatInCloud Labs</h2>
-              <div className="bio-role">Lead Cloud & Data Engineer</div>
+              <h2 className="bio-name">Dave Anaya</h2>
+              <div className="bio-role">Lead Cloud & Data Engineer // Founder // CatInCloud Labs </div>
               
               <div className="bio-text">
                 <p>
