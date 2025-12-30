@@ -5,7 +5,7 @@ import MetricCard from './components/MetricCard';
 import InspectorCard from './components/InspectorCard';
 import { SystemStatusRibbon } from './components/SystemStatusRibbon';
 import TimeSlider from './components/TimeSlider';
-import { Activity, Zap, Server, ArrowUpRight, ArrowDownRight, Radio } from 'lucide-react';
+import { Activity, Zap, Server, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { useSystemHeartbeat } from './hooks/useSystemHeartbeat';
 import { getHealthColor, getSentimentColor, getRiskColor, getMomentumColor } from './utils/statusHelpers';
 
@@ -100,7 +100,6 @@ function App() {
 
     return {
         value: formattedTotal,
-        // CHANGED: Show the dominant percentage
         sub: isBullish ? `${bullPct}% Bullish Flow` : `${bearPct}% Bearish Flow`,
         isBullish: isBullish
     };
@@ -274,6 +273,7 @@ function App() {
              plotLayout={lineLayout}
              sqlCode={magMeta?.inspector.sql_logic} 
              dbtCode={magMeta?.inspector.dbt_logic}
+             dbtYml={magMeta?.inspector.dbt_yml} // Added dbtYml prop
            >
              <div className="ticker-controls-container">
                {Object.keys(MAG7_CONFIG).map(ticker => (
@@ -301,6 +301,7 @@ function App() {
              plotLayout={scatterLayout}
              sqlCode={chaosMeta?.inspector.sql_logic}
              dbtCode={chaosMeta?.inspector.dbt_logic}
+             dbtYml={chaosMeta?.inspector.dbt_yml} // Added dbtYml prop
            >
              <div className="chaos-controls-container">
                <div className="pill-group">
@@ -338,6 +339,7 @@ function App() {
              tableData={whaleData?.data}
              sqlCode={whaleData?.meta.inspector.sql_logic}
              dbtCode={whaleData?.meta.inspector.dbt_logic}
+             dbtYml={whaleData?.meta.inspector.dbt_yml} // Added dbtYml prop
            />
         </div>
 

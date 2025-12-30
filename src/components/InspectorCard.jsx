@@ -7,12 +7,16 @@ const InspectorCard = ({
   title, tag, desc, chartType, isLoading, 
   plotData, plotLayout, tableData, 
   sqlCode, // This is the DAG code passed from App.js
-  dbtCode, // This is the dbt code passed from App.js
+  dbtCode, // This is the dbt SQL code passed from App.js
+  dbtYml,  // This is the dbt YAML docs passed from App.js
   children 
 }) => {
   
   const [showLogic, setShowLogic] = useState(false);
   const isCall = (type) => ['C', 'CALL', 'Call'].includes(type);
+
+  // Check if we have any code to show to determine if button is enabled
+  const hasLogic = sqlCode || dbtCode || dbtYml;
 
   return (
     <div className="panel panel-flex-column">
@@ -25,7 +29,7 @@ const InspectorCard = ({
         </div>
         
         {/* LOGIC TRIGGER BUTTON */}
-        {(sqlCode || dbtCode) && (
+        {hasLogic && (
           <button 
             className="nav-link panel-toggle-btn"
             onClick={() => setShowLogic(true)}
@@ -78,7 +82,7 @@ const InspectorCard = ({
                         <th className="table-cell-padding">TYPE</th>
                         <th className="table-cell-padding text-right">PREMIUM</th>
                         <th className="table-cell-padding text-right">SENTIMENT</th>
-                     </tr>
+                      </tr>
                    </thead>
                    <tbody>
                      {tableData.map((row, i) => (
@@ -115,6 +119,7 @@ const InspectorCard = ({
         title={title}
         dagCode={sqlCode} 
         dbtCode={dbtCode}
+        dbtYml={dbtYml}
       />
     </div>
   );
