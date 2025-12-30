@@ -1380,6 +1380,10 @@ html, body {
   margin: 0 0 8px 0;
 }
 
+.bio-divider {
+  margin: 20px 0;
+}
+
 /* Stack Grid */
 .bio-h3 {
   font-size: 0.8rem;

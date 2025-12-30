@@ -56,7 +56,7 @@ const BioModal = ({ isOpen, onClose }) => {
             </div>
           </div>
 
-          <div className="manual-divider" style={{ margin: '20px 0' }} />
+          <div className="manual-divider bio-divider" />
 
           {/* TECH STACK */}
           <h3 className="bio-h3">ACTIVE_STACK</h3>
@@ -67,7 +67,7 @@ const BioModal = ({ isOpen, onClose }) => {
             <div className="stack-item"><span className="text-accent">Interface:</span> React, Vite, Plotly.js</div>
           </div>
 
-          <div className="manual-divider" style={{ margin: '20px 0' }} />
+          <div className="manual-divider bio-divider" />
 
           {/* CONTACT LINKS */}
           <h3 className="bio-h3">CONNECT</h3>
