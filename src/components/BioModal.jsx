@@ -52,7 +52,7 @@ const BioModal = ({ isOpen, onClose }) => {
             
             <div className="bio-details">
               <h2 className="bio-name">Dave Anaya</h2>
-              <div className="bio-role">Lead Cloud & Data Engineer // Founder // CatInCloud Labs </div>
+              <div className="bio-role">Lead Cloud & Data Engineer // CatInCloud Labs </div>
               
               <div className="bio-text">
                 <p>
