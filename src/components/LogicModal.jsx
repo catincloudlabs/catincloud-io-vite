@@ -32,7 +32,7 @@ const LogicModal = ({ isOpen, onClose, title, dagCode, dbtCode }) => {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box logic-modal" onClick={e => e.stopPropagation()}>
         
-        {/* Header */}
+        {/* Editor Header */}
         <div className="modal-header logic-header">
           <div className="modal-title-wrapper">
             <Terminal size={16} className="text-accent mr-2" />

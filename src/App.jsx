@@ -191,6 +191,7 @@ function App() {
              plotData={getMag7PlotData()}
              plotLayout={lineLayout}
              sqlCode={magMeta?.inspector.sql_logic} 
+             dbtCode={magMeta?.inspector.dbt_logic}
            >
              <div className="ticker-controls-container">
                {Object.keys(MAG7_CONFIG).map(ticker => (
@@ -218,6 +219,7 @@ function App() {
              plotData={getFilteredChaosPlot()}
              plotLayout={scatterLayout}
              sqlCode={chaosMeta?.inspector.sql_logic}
+             dbtCode={chaosMeta?.inspector.dbt_logic}
            >
              {/* FOOTER CONTROLS */}
              <div className="chaos-controls-container">
@@ -259,6 +261,7 @@ function App() {
              chartType="table"
              tableData={whaleData?.data}
              sqlCode={whaleData?.meta.inspector.sql_logic}
+             dbtCode={whaleData?.meta.inspector.dbt_logic}
            />
         </div>
       </main>

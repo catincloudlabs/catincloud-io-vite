@@ -6,8 +6,8 @@ import LogicModal from './LogicModal';
 const InspectorCard = ({ 
   title, tag, desc, chartType, isLoading, 
   plotData, plotLayout, tableData, 
-  sqlCode,
-  dbtCode,
+  sqlCode, // This is the DAG code passed from App.js
+  dbtCode, // This is the dbt code passed from App.js
   children 
 }) => {
   
