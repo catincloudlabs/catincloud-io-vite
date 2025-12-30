@@ -34,7 +34,7 @@ const InspectorCard = ({
           >
             <div className="logic-btn-inner">
               <FileCode size={14} />
-              <span className="mobile-hide">View Logic</span>
+              <span>View Logic</span>
             </div>
           </button>
         )}
