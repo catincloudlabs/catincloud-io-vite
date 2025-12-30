@@ -5,10 +5,12 @@ import MetricCard from './components/MetricCard';
 import InspectorCard from './components/InspectorCard';
 import { SystemStatusRibbon } from './components/SystemStatusRibbon';
 import TimeSlider from './components/TimeSlider';
-import { Activity, Zap, TrendingUp, Server, ArrowUpRight, ArrowDownRight } from 'lucide-react'; // Added Icons
+import { Activity, Zap, Server, ArrowUpRight, ArrowDownRight, Radio } from 'lucide-react';
 import { useSystemHeartbeat } from './hooks/useSystemHeartbeat';
+import { getHealthColor, getSentimentColor, getRiskColor, getMomentumColor } from './utils/statusHelpers';
 
 // --- CONFIGURATION ---
+// We keep color codes here specifically for Plotly (Canvas requires Hex codes, not CSS classes)
 const MAG7_CONFIG = {
   NVDA: { color: '#4ade80', label: 'NVDA' },
   TSLA: { color: '#f87171', label: 'TSLA' },
@@ -46,7 +48,7 @@ function App() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // --- FETCHING (Same as before) ---
+  // --- FETCHING ---
   useEffect(() => {
     fetch('/data/chaos.json')
       .then(res => res.json())
@@ -76,9 +78,9 @@ function App() {
 
   }, []);
 
-  // --- SMART METRICS (THE UPGRADE) ---
+  // --- SMART METRICS ---
 
-  // 1. Whale Sentiment (Bull vs Bear Ratio)
+  // 1. Whale Sentiment
   const whaleMetric = useMemo(() => {
     if (!whaleData?.data) return { value: "$0M", sub: "No Data" };
     
@@ -101,15 +103,13 @@ function App() {
     };
   }, [whaleData]);
 
-  // 2. Max Chaos (Highest IV Ticker)
+  // 2. Max Chaos
   const chaosMetric = useMemo(() => {
     if (!chaosRaw.length || !selectedDate) return { value: "--", sub: "Low Volatility" };
     
-    // Filter for current date only
     const todayData = chaosRaw.filter(d => d.trade_date === selectedDate);
     if (!todayData.length) return { value: "--", sub: "No Data" };
 
-    // Find Max IV
     const maxIVRow = todayData.reduce((prev, current) => (prev.iv > current.iv) ? prev : current);
     
     return {
@@ -119,18 +119,16 @@ function App() {
     };
   }, [chaosRaw, selectedDate]);
 
-  // 3. Mag 7 Leader (Top Momentum)
+  // 3. Mag 7 Leader
   const magLeaderMetric = useMemo(() => {
     if (!magRaw.length) return { value: "--", sub: "Flat" };
 
-    // Get latest date in the dataset
     const dates = [...new Set(magRaw.map(d => d.trade_date))].sort();
     const latestDate = dates[dates.length - 1];
     
     const todayStats = magRaw.filter(d => d.trade_date === latestDate);
     if (!todayStats.length) return { value: "--", sub: "Flat" };
 
-    // Sort by absolute sentiment flow to find the biggest mover
     const leader = todayStats.reduce((prev, current) => 
         (Math.abs(prev.net_sentiment_flow) > Math.abs(current.net_sentiment_flow)) ? prev : current
     );
@@ -145,14 +143,7 @@ function App() {
     };
   }, [magRaw]);
 
-  // 4. System Status Color
-  const getStatusColor = (status) => {
-    if (status === 'Healthy') return 'green';
-    if (status === 'Degraded' || status === 'Stale') return 'yellow';
-    return 'red';
-  };
-
-  // --- CHART HELPERS (UNCHANGED) ---
+  // --- CHART LOGIC ---
   const getMag7PlotData = () => {
     if (!magRaw || magRaw.length === 0) return [];
     return visibleTickers.map(ticker => {
@@ -178,10 +169,12 @@ function App() {
 
   const getFilteredChaosPlot = () => {
     if (!selectedDate || chaosRaw.length === 0) return [];
+    
     const dailyData = chaosRaw.filter(d => 
       d.trade_date?.startsWith(selectedDate) && 
       d.ticker === selectedChaosTicker
     );
+
     return [{
        x: dailyData.map(d => d.dte),
        y: dailyData.map(d => d.moneyness),
@@ -236,40 +229,37 @@ function App() {
       
       <main className="bento-grid">
         
-        {/* --- CARD 1: PIPELINE HEALTH --- */}
+        {/* ROW 1: KPI CARDS */}
         <MetricCard 
           title="Pipeline State" 
           value={heartbeat?.system_status || "OFFLINE"} 
-          subValue={heartbeat ? `${(heartbeat.metrics.total_rows_managed / 1000000).toFixed(1)}M Data Points` : "Connecting..."} 
-          icon={<Server size={16} className={getStatusColor(heartbeat?.system_status) === 'green' ? "text-green" : "text-red"} />} 
-          statusColor={getStatusColor(heartbeat?.system_status)}
+          subValue={heartbeat ? `${(heartbeat.metrics.total_rows_managed / 1000000).toFixed(1)}M Rows` : "Connecting..."} 
+          icon={<Server size={16} className={getHealthColor(heartbeat?.system_status)} />} 
+          statusColor={heartbeat?.system_status === 'Healthy' ? 'green' : 'red'}
         />
         
-        {/* --- CARD 2: WHALE SENTIMENT --- */}
         <MetricCard 
           title="Whale Flow" 
           value={whaleMetric.value} 
           subValue={whaleMetric.sub} 
-          icon={<Activity size={16} className={whaleMetric.isBullish ? "text-green" : "text-red"} />}
+          icon={<Activity size={16} className={getSentimentColor(whaleMetric.isBullish)} />}
         />
         
-        {/* --- CARD 3: HIGHEST VOLATILITY --- */}
         <MetricCard 
           title="Max Volatility" 
           value={chaosMetric.value} 
           subValue={chaosMetric.sub} 
-          icon={<Zap size={16} className={chaosMetric.isExtreme ? "text-red" : "text-yellow"} />}
+          icon={<Zap size={16} className={getRiskColor(chaosMetric.isExtreme)} />}
         />
 
-        {/* --- CARD 4: TOP MOMENTUM LEADER --- */}
         <MetricCard 
           title="Mag 7 Leader" 
           value={magLeaderMetric.value} 
           subValue={magLeaderMetric.sub} 
-          icon={magLeaderMetric.isPositive ? <ArrowUpRight size={16} className="text-green"/> : <ArrowDownRight size={16} className="text-red"/>} 
+          icon={magLeaderMetric.isPositive ? <ArrowUpRight size={16} className={getMomentumColor(true)}/> : <ArrowDownRight size={16} className={getMomentumColor(false)}/>} 
         />
 
-        {/* --- INSPECTORS (UNCHANGED) --- */}
+        {/* ROW 2: MAG 7 */}
         <div className="span-2">
            <InspectorCard 
              title={magMeta?.title || "Mag 7 Momentum"} 
@@ -287,8 +277,7 @@ function App() {
                  <button
                    key={ticker}
                    onClick={() => toggleTicker(ticker)}
-                   className={`ticker-pill ${visibleTickers.includes(ticker) ? 'active' : ''}`}
-                   style={{ '--pill-color': MAG7_CONFIG[ticker].color }}
+                   className={`ticker-pill ticker-${ticker} ${visibleTickers.includes(ticker) ? 'active' : ''}`}
                  >
                    {ticker}
                  </button>
@@ -297,6 +286,7 @@ function App() {
            </InspectorCard>
         </div>
 
+        {/* ROW 2: CHAOS */}
         <div className="span-2">
            <InspectorCard 
              title={chaosMeta?.title || "Chaos Engine"} 
@@ -322,7 +312,7 @@ function App() {
                  ))}
                </div>
                {!chaosLoading && chaosMeta?.available_dates && (
-                  <div style={{ flex: 1 }}> 
+                  <div className="time-slider-wrapper"> 
                     <TimeSlider 
                       dates={chaosMeta.available_dates}
                       selectedDate={selectedDate}
@@ -334,6 +324,7 @@ function App() {
            </InspectorCard>
         </div>
 
+        {/* ROW 3: WHALES */}
         <div className="span-4">
            <InspectorCard 
              title={whaleData?.meta.title || "Whale Hunter"}

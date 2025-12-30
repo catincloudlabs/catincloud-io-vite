@@ -1476,3 +1476,26 @@ html, body {
     justify-content: center;
   }
 }
+
+/* ==================================================================== */
+/* 23. NEW UTILITIES (Status & Tickers)                                 */
+/* ==================================================================== */
+
+/* 1. Missing Semantic Color */
+.text-purple { color: #c084fc; } /* For Extreme Risk */
+
+/* 2. Flex Utility for TimeSlider */
+.time-slider-wrapper {
+  flex: 1;
+  min-width: 0; /* Prevents flex items from overflowing */
+}
+
+/* 3. Mag 7 Ticker Colors (Replaces inline styles) */
+/* These define the CSS variable used by .ticker-pill */
+.ticker-NVDA  { --pill-color: #4ade80; }
+.ticker-TSLA  { --pill-color: #f87171; }
+.ticker-AAPL  { --pill-color: #94a3b8; }
+.ticker-MSFT  { --pill-color: #38bdf8; }
+.ticker-AMZN  { --pill-color: #fbbf24; }
+.ticker-GOOGL { --pill-color: #818cf8; }
+.ticker-META  { --pill-color: #c084fc; }
