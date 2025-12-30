@@ -17,6 +17,7 @@ const ManualModal = ({ isOpen, onClose }) => {
 
   const sections = [
     { id: 'synopsis', label: 'SYNOPSIS' },
+    { id: 'metrics', label: 'METRIC CARDS' }, // NEW SECTION
     { id: 'mag7', label: 'MAG 7 MOMENTUM' },
     { id: 'chaos', label: 'CHAOS INDEX' },
     { id: 'whales', label: 'WHALE HUNTER' },
@@ -75,9 +76,31 @@ const ManualModal = ({ isOpen, onClose }) => {
 
             <div className="manual-divider" />
 
-            {/* 2. MAG 7 MOMENTUM (Now Second) */}
+            {/* 2. METRIC CARDS (NEW) */}
+            <section id="sec-metrics" className="manual-section">
+              <h3 className="manual-h3">2. METRIC CARDS</h3>
+              <p className="manual-p">
+                Top-level KPIs providing instant situational awareness.
+              </p>
+              <ul className="manual-list">
+                <li><strong>Pipeline State:</strong>
+                  <ul style={{marginTop: '4px', marginBottom: '8px'}}>
+                    <li><span className="text-green">GREEN</span> :: All Systems Operational.</li>
+                    <li><span className="text-yellow">YELLOW</span> :: Data Stale ( &gt; 26h ) or Degraded.</li>
+                    <li><span className="text-red">RED</span> :: System Offline / Connectivity Lost.</li>
+                  </ul>
+                </li>
+                <li><strong>Whale Flow:</strong> Total Net Premium traded by institutional blocks today.</li>
+                <li><strong>Max Volatility:</strong> The single contract with the highest Implied Volatility (IV) in the Chaos dataset. <span className="text-purple">Purple</span> indicates extreme risk (&gt;100% IV).</li>
+                <li><strong>Mag 7 Leader:</strong> The mega-cap ticker with the highest absolute sentiment flow (bullish or bearish) for the day.</li>
+              </ul>
+            </section>
+
+            <div className="manual-divider" />
+
+            {/* 3. MAG 7 MOMENTUM */}
             <section id="sec-mag7" className="manual-section">
-              <h3 className="manual-h3">2. MAG 7 MOMENTUM (Time Series)</h3>
+              <h3 className="manual-h3">3. MAG 7 MOMENTUM (Time Series)</h3>
               <p className="manual-p">
                 <span className="text-accent">Purpose:</span> Tracks aggregated option sentiment flow for mega-cap tech.
               </p>
@@ -89,9 +112,9 @@ const ManualModal = ({ isOpen, onClose }) => {
 
             <div className="manual-divider" />
 
-            {/* 3. CHAOS INDEX (Now Third) */}
+            {/* 4. CHAOS INDEX */}
             <section id="sec-chaos" className="manual-section">
-              <h3 className="manual-h3">3. CHAOS INDEX (Scatter Plot)</h3>
+              <h3 className="manual-h3">4. CHAOS INDEX (Scatter Plot)</h3>
               <p className="manual-p">
                 <span className="text-accent">Purpose:</span> Identifies gamma exposure risk.
               </p>
@@ -104,9 +127,9 @@ const ManualModal = ({ isOpen, onClose }) => {
 
             <div className="manual-divider" />
 
-            {/* 4. WHALE HUNTER */}
+            {/* 5. WHALE HUNTER */}
             <section id="sec-whales" className="manual-section">
-              <h3 className="manual-h3">4. WHALE HUNTER (Flow Tape)</h3>
+              <h3 className="manual-h3">5. WHALE HUNTER (Flow Tape)</h3>
               <p className="manual-p">
                 Filters for institutional block trades exceeding <span className="text-green">$1M premium</span>.
               </p>
@@ -117,9 +140,9 @@ const ManualModal = ({ isOpen, onClose }) => {
 
             <div className="manual-divider" />
 
-            {/* 5. CONTROLS */}
+            {/* 6. CONTROLS */}
             <section id="sec-controls" className="manual-section">
-              <h3 className="manual-h3">5. CONTROLS</h3>
+              <h3 className="manual-h3">6. CONTROLS</h3>
               <ul className="manual-list">
                 <li><span className="key-cap">Scroll</span> :: Zoom Chart Axes</li>
                 <li><span className="key-cap">Click + Drag</span> :: Pan Chart Area</li>
