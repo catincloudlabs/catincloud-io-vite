@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Mag 7 Momentum",
-    "generated_at": "2025-12-30T01:10:10.665043",
+    "generated_at": "2025-12-30T18:18:04.785302",
     "inspector": {
       "tag": "Trend",
       "description": "Net Sentiment Flow (Call Delta - Put Delta) over the last 30 days.",
@@ -12,8 +12,8 @@
   "data": [
     {
       "trade_date": "2025-12-01",
-      "ticker": "GOOGL",
-      "net_sentiment_flow": 150107418.0
+      "ticker": "AMZN",
+      "net_sentiment_flow": 131049433.0
     },
     {
       "trade_date": "2025-12-01",
@@ -22,13 +22,13 @@
     },
     {
       "trade_date": "2025-12-01",
-      "ticker": "MSFT",
-      "net_sentiment_flow": 64435474.0
+      "ticker": "TSLA",
+      "net_sentiment_flow": 581467437.0
     },
     {
       "trade_date": "2025-12-01",
-      "ticker": "TSLA",
-      "net_sentiment_flow": 581467437.0
+      "ticker": "GOOGL",
+      "net_sentiment_flow": 150107418.0
     },
     {
       "trade_date": "2025-12-01",
@@ -37,8 +37,8 @@
     },
     {
       "trade_date": "2025-12-01",
-      "ticker": "AMZN",
-      "net_sentiment_flow": 131049433.0
+      "ticker": "MSFT",
+      "net_sentiment_flow": 64435474.0
     },
     {
       "trade_date": "2025-12-01",
@@ -47,8 +47,8 @@
     },
     {
       "trade_date": "2025-12-02",
-      "ticker": "AAPL",
-      "net_sentiment_flow": 363867929.0
+      "ticker": "NVDA",
+      "net_sentiment_flow": 418910486.0
     },
     {
       "trade_date": "2025-12-02",
@@ -57,8 +57,8 @@
     },
     {
       "trade_date": "2025-12-02",
-      "ticker": "NVDA",
-      "net_sentiment_flow": 418910486.0
+      "ticker": "AAPL",
+      "net_sentiment_flow": 363867929.0
     },
     {
       "trade_date": "2025-12-02",
@@ -67,8 +67,8 @@
     },
     {
       "trade_date": "2025-12-02",
-      "ticker": "TSLA",
-      "net_sentiment_flow": 620860092.0
+      "ticker": "GOOGL",
+      "net_sentiment_flow": 171539809.0
     },
     {
       "trade_date": "2025-12-02",
@@ -77,33 +77,8 @@
     },
     {
       "trade_date": "2025-12-02",
-      "ticker": "GOOGL",
-      "net_sentiment_flow": 171539809.0
-    },
-    {
-      "trade_date": "2025-12-03",
-      "ticker": "MSFT",
-      "net_sentiment_flow": 104981566.0
-    },
-    {
-      "trade_date": "2025-12-03",
-      "ticker": "GOOGL",
-      "net_sentiment_flow": 140249696.0
-    },
-    {
-      "trade_date": "2025-12-03",
-      "ticker": "META",
-      "net_sentiment_flow": 29300727.0
-    },
-    {
-      "trade_date": "2025-12-03",
-      "ticker": "AMZN",
-      "net_sentiment_flow": 82233813.0
-    },
-    {
-      "trade_date": "2025-12-03",
-      "ticker": "NVDA",
-      "net_sentiment_flow": 307836682.0
+      "ticker": "TSLA",
+      "net_sentiment_flow": 620860092.0
     },
     {
       "trade_date": "2025-12-03",
@@ -112,13 +87,33 @@
     },
     {
       "trade_date": "2025-12-03",
+      "ticker": "NVDA",
+      "net_sentiment_flow": 307836682.0
+    },
+    {
+      "trade_date": "2025-12-03",
+      "ticker": "META",
+      "net_sentiment_flow": 29300727.0
+    },
+    {
+      "trade_date": "2025-12-03",
       "ticker": "TSLA",
       "net_sentiment_flow": 1814360244.0
     },
     {
-      "trade_date": "2025-12-04",
+      "trade_date": "2025-12-03",
       "ticker": "GOOGL",
-      "net_sentiment_flow": 207541027.0
+      "net_sentiment_flow": 140249696.0
+    },
+    {
+      "trade_date": "2025-12-03",
+      "ticker": "MSFT",
+      "net_sentiment_flow": 104981566.0
+    },
+    {
+      "trade_date": "2025-12-03",
+      "ticker": "AMZN",
+      "net_sentiment_flow": 82233813.0
     },
     {
       "trade_date": "2025-12-04",
@@ -132,13 +127,13 @@
     },
     {
       "trade_date": "2025-12-04",
-      "ticker": "MSFT",
-      "net_sentiment_flow": 10246980.0
+      "ticker": "AAPL",
+      "net_sentiment_flow": 100451563.0
     },
     {
       "trade_date": "2025-12-04",
-      "ticker": "NVDA",
-      "net_sentiment_flow": 369421810.0
+      "ticker": "GOOGL",
+      "net_sentiment_flow": 207541027.0
     },
     {
       "trade_date": "2025-12-04",
@@ -147,13 +142,13 @@
     },
     {
       "trade_date": "2025-12-04",
-      "ticker": "AAPL",
-      "net_sentiment_flow": 100451563.0
+      "ticker": "NVDA",
+      "net_sentiment_flow": 369421810.0
     },
     {
-      "trade_date": "2025-12-05",
+      "trade_date": "2025-12-04",
       "ticker": "MSFT",
-      "net_sentiment_flow": 51363094.0
+      "net_sentiment_flow": 10246980.0
     },
     {
       "trade_date": "2025-12-05",
@@ -162,8 +157,8 @@
     },
     {
       "trade_date": "2025-12-05",
-      "ticker": "TSLA",
-      "net_sentiment_flow": 720291534.0
+      "ticker": "AAPL",
+      "net_sentiment_flow": 115218396.0
     },
     {
       "trade_date": "2025-12-05",
@@ -172,43 +167,23 @@
     },
     {
       "trade_date": "2025-12-05",
-      "ticker": "NVDA",
-      "net_sentiment_flow": 342849719.0
-    },
-    {
-      "trade_date": "2025-12-05",
       "ticker": "GOOGL",
       "net_sentiment_flow": 399525044.0
     },
     {
       "trade_date": "2025-12-05",
-      "ticker": "AAPL",
-      "net_sentiment_flow": 115218396.0
+      "ticker": "NVDA",
+      "net_sentiment_flow": 342849719.0
     },
     {
-      "trade_date": "2025-12-08",
-      "ticker": "META",
-      "net_sentiment_flow": 148545185.0
+      "trade_date": "2025-12-05",
+      "ticker": "TSLA",
+      "net_sentiment_flow": 720291534.0
     },
     {
-      "trade_date": "2025-12-08",
-      "ticker": "GOOGL",
-      "net_sentiment_flow": 234966403.0
-    },
-    {
-      "trade_date": "2025-12-08",
-      "ticker": "AMZN",
-      "net_sentiment_flow": 72300575.0
-    },
-    {
-      "trade_date": "2025-12-08",
-      "ticker": "AAPL",
-      "net_sentiment_flow": 149213597.0
-    },
-    {
-      "trade_date": "2025-12-08",
+      "trade_date": "2025-12-05",
       "ticker": "MSFT",
-      "net_sentiment_flow": 59386698.0
+      "net_sentiment_flow": 51363094.0
     },
     {
       "trade_date": "2025-12-08",
@@ -217,13 +192,33 @@
     },
     {
       "trade_date": "2025-12-08",
+      "ticker": "AMZN",
+      "net_sentiment_flow": 72300575.0
+    },
+    {
+      "trade_date": "2025-12-08",
+      "ticker": "META",
+      "net_sentiment_flow": 148545185.0
+    },
+    {
+      "trade_date": "2025-12-08",
+      "ticker": "MSFT",
+      "net_sentiment_flow": 59386698.0
+    },
+    {
+      "trade_date": "2025-12-08",
       "ticker": "TSLA",
       "net_sentiment_flow": 454297121.0
     },
     {
-      "trade_date": "2025-12-09",
+      "trade_date": "2025-12-08",
+      "ticker": "AAPL",
+      "net_sentiment_flow": 149213597.0
+    },
+    {
+      "trade_date": "2025-12-08",
       "ticker": "GOOGL",
-      "net_sentiment_flow": 151372783.0
+      "net_sentiment_flow": 234966403.0
     },
     {
       "trade_date": "2025-12-09",
@@ -237,13 +232,13 @@
     },
     {
       "trade_date": "2025-12-09",
-      "ticker": "AAPL",
-      "net_sentiment_flow": 96715399.0
+      "ticker": "AMZN",
+      "net_sentiment_flow": 72647805.0
     },
     {
       "trade_date": "2025-12-09",
-      "ticker": "AMZN",
-      "net_sentiment_flow": 72647805.0
+      "ticker": "GOOGL",
+      "net_sentiment_flow": 151372783.0
     },
     {
       "trade_date": "2025-12-09",
@@ -252,23 +247,18 @@
     },
     {
       "trade_date": "2025-12-09",
+      "ticker": "AAPL",
+      "net_sentiment_flow": 96715399.0
+    },
+    {
+      "trade_date": "2025-12-09",
       "ticker": "MSFT",
       "net_sentiment_flow": 78890673.0
     },
     {
       "trade_date": "2025-12-10",
-      "ticker": "TSLA",
-      "net_sentiment_flow": 855364215.0
-    },
-    {
-      "trade_date": "2025-12-10",
-      "ticker": "META",
-      "net_sentiment_flow": 211865934.0
-    },
-    {
-      "trade_date": "2025-12-10",
-      "ticker": "NVDA",
-      "net_sentiment_flow": 375059522.0
+      "ticker": "AAPL",
+      "net_sentiment_flow": 99110375.0
     },
     {
       "trade_date": "2025-12-10",
@@ -277,8 +267,18 @@
     },
     {
       "trade_date": "2025-12-10",
+      "ticker": "NVDA",
+      "net_sentiment_flow": 375059522.0
+    },
+    {
+      "trade_date": "2025-12-10",
       "ticker": "GOOGL",
       "net_sentiment_flow": 128881371.0
+    },
+    {
+      "trade_date": "2025-12-10",
+      "ticker": "TSLA",
+      "net_sentiment_flow": 855364215.0
     },
     {
       "trade_date": "2025-12-10",
@@ -287,8 +287,8 @@
     },
     {
       "trade_date": "2025-12-10",
-      "ticker": "AAPL",
-      "net_sentiment_flow": 99110375.0
+      "ticker": "META",
+      "net_sentiment_flow": 211865934.0
     },
     {
       "trade_date": "2025-12-11",
@@ -297,13 +297,8 @@
     },
     {
       "trade_date": "2025-12-11",
-      "ticker": "MSFT",
-      "net_sentiment_flow": -33181465.0
-    },
-    {
-      "trade_date": "2025-12-11",
-      "ticker": "NVDA",
-      "net_sentiment_flow": 111994874.0
+      "ticker": "AMZN",
+      "net_sentiment_flow": 67210041.0
     },
     {
       "trade_date": "2025-12-11",
@@ -312,13 +307,13 @@
     },
     {
       "trade_date": "2025-12-11",
-      "ticker": "TSLA",
-      "net_sentiment_flow": 368671464.0
+      "ticker": "NVDA",
+      "net_sentiment_flow": 111994874.0
     },
     {
       "trade_date": "2025-12-11",
-      "ticker": "AMZN",
-      "net_sentiment_flow": 67210041.0
+      "ticker": "MSFT",
+      "net_sentiment_flow": -33181465.0
     },
     {
       "trade_date": "2025-12-11",
@@ -326,24 +321,24 @@
       "net_sentiment_flow": 155782096.0
     },
     {
-      "trade_date": "2025-12-12",
-      "ticker": "NVDA",
-      "net_sentiment_flow": 263701516.0
-    },
-    {
-      "trade_date": "2025-12-12",
+      "trade_date": "2025-12-11",
       "ticker": "TSLA",
-      "net_sentiment_flow": 2198954464.0
+      "net_sentiment_flow": 368671464.0
     },
     {
       "trade_date": "2025-12-12",
-      "ticker": "MSFT",
-      "net_sentiment_flow": -79101869.0
+      "ticker": "AAPL",
+      "net_sentiment_flow": 244868890.0
     },
     {
       "trade_date": "2025-12-12",
       "ticker": "AMZN",
       "net_sentiment_flow": 81843909.0
+    },
+    {
+      "trade_date": "2025-12-12",
+      "ticker": "MSFT",
+      "net_sentiment_flow": -79101869.0
     },
     {
       "trade_date": "2025-12-12",
@@ -357,18 +352,13 @@
     },
     {
       "trade_date": "2025-12-12",
-      "ticker": "AAPL",
-      "net_sentiment_flow": 244868890.0
+      "ticker": "NVDA",
+      "net_sentiment_flow": 263701516.0
     },
     {
-      "trade_date": "2025-12-15",
-      "ticker": "GOOGL",
-      "net_sentiment_flow": 133666037.0
-    },
-    {
-      "trade_date": "2025-12-15",
-      "ticker": "AAPL",
-      "net_sentiment_flow": 219650501.0
+      "trade_date": "2025-12-12",
+      "ticker": "TSLA",
+      "net_sentiment_flow": 2198954464.0
     },
     {
       "trade_date": "2025-12-15",
@@ -377,13 +367,13 @@
     },
     {
       "trade_date": "2025-12-15",
-      "ticker": "MSFT",
-      "net_sentiment_flow": -189236566.0
+      "ticker": "AAPL",
+      "net_sentiment_flow": 219650501.0
     },
     {
       "trade_date": "2025-12-15",
-      "ticker": "TSLA",
-      "net_sentiment_flow": 1772494863.0
+      "ticker": "MSFT",
+      "net_sentiment_flow": -189236566.0
     },
     {
       "trade_date": "2025-12-15",
@@ -392,13 +382,28 @@
     },
     {
       "trade_date": "2025-12-15",
+      "ticker": "GOOGL",
+      "net_sentiment_flow": 133666037.0
+    },
+    {
+      "trade_date": "2025-12-15",
+      "ticker": "TSLA",
+      "net_sentiment_flow": 1772494863.0
+    },
+    {
+      "trade_date": "2025-12-15",
       "ticker": "AMZN",
       "net_sentiment_flow": 69552147.0
     },
     {
       "trade_date": "2025-12-16",
-      "ticker": "META",
-      "net_sentiment_flow": 29474697.0
+      "ticker": "NVDA",
+      "net_sentiment_flow": 461450860.0
+    },
+    {
+      "trade_date": "2025-12-16",
+      "ticker": "GOOGL",
+      "net_sentiment_flow": 96797334.0
     },
     {
       "trade_date": "2025-12-16",
@@ -412,16 +417,6 @@
     },
     {
       "trade_date": "2025-12-16",
-      "ticker": "GOOGL",
-      "net_sentiment_flow": 96797334.0
-    },
-    {
-      "trade_date": "2025-12-16",
-      "ticker": "NVDA",
-      "net_sentiment_flow": 461450860.0
-    },
-    {
-      "trade_date": "2025-12-16",
       "ticker": "AAPL",
       "net_sentiment_flow": 80060300.0
     },
@@ -431,19 +426,29 @@
       "net_sentiment_flow": 48588635.0
     },
     {
+      "trade_date": "2025-12-16",
+      "ticker": "META",
+      "net_sentiment_flow": 29474697.0
+    },
+    {
+      "trade_date": "2025-12-17",
+      "ticker": "TSLA",
+      "net_sentiment_flow": 338946904.0
+    },
+    {
       "trade_date": "2025-12-17",
       "ticker": "NVDA",
       "net_sentiment_flow": 176423016.0
     },
     {
       "trade_date": "2025-12-17",
-      "ticker": "GOOGL",
-      "net_sentiment_flow": 70679456.0
+      "ticker": "META",
+      "net_sentiment_flow": -83112707.0
     },
     {
       "trade_date": "2025-12-17",
-      "ticker": "AAPL",
-      "net_sentiment_flow": 37434982.0
+      "ticker": "GOOGL",
+      "net_sentiment_flow": 70679456.0
     },
     {
       "trade_date": "2025-12-17",
@@ -457,13 +462,18 @@
     },
     {
       "trade_date": "2025-12-17",
-      "ticker": "META",
-      "net_sentiment_flow": -83112707.0
+      "ticker": "AAPL",
+      "net_sentiment_flow": 37434982.0
     },
     {
-      "trade_date": "2025-12-17",
-      "ticker": "TSLA",
-      "net_sentiment_flow": 338946904.0
+      "trade_date": "2025-12-18",
+      "ticker": "META",
+      "net_sentiment_flow": -154502622.0
+    },
+    {
+      "trade_date": "2025-12-18",
+      "ticker": "GOOGL",
+      "net_sentiment_flow": 87168612.0
     },
     {
       "trade_date": "2025-12-18",
@@ -477,6 +487,11 @@
     },
     {
       "trade_date": "2025-12-18",
+      "ticker": "MSFT",
+      "net_sentiment_flow": 11360873.0
+    },
+    {
+      "trade_date": "2025-12-18",
       "ticker": "TSLA",
       "net_sentiment_flow": 1221025829.0
     },
@@ -486,24 +501,24 @@
       "net_sentiment_flow": 4855106.0
     },
     {
-      "trade_date": "2025-12-18",
-      "ticker": "GOOGL",
-      "net_sentiment_flow": 87168612.0
-    },
-    {
-      "trade_date": "2025-12-18",
+      "trade_date": "2025-12-19",
       "ticker": "MSFT",
-      "net_sentiment_flow": 11360873.0
-    },
-    {
-      "trade_date": "2025-12-18",
-      "ticker": "META",
-      "net_sentiment_flow": -154502622.0
+      "net_sentiment_flow": 146208917.0
     },
     {
       "trade_date": "2025-12-19",
       "ticker": "NVDA",
       "net_sentiment_flow": 767367498.0
+    },
+    {
+      "trade_date": "2025-12-19",
+      "ticker": "AMZN",
+      "net_sentiment_flow": 174124266.0
+    },
+    {
+      "trade_date": "2025-12-19",
+      "ticker": "META",
+      "net_sentiment_flow": 76109757.0
     },
     {
       "trade_date": "2025-12-19",
@@ -517,48 +532,8 @@
     },
     {
       "trade_date": "2025-12-19",
-      "ticker": "AMZN",
-      "net_sentiment_flow": 174124266.0
-    },
-    {
-      "trade_date": "2025-12-19",
-      "ticker": "MSFT",
-      "net_sentiment_flow": 146208917.0
-    },
-    {
-      "trade_date": "2025-12-19",
-      "ticker": "META",
-      "net_sentiment_flow": 76109757.0
-    },
-    {
-      "trade_date": "2025-12-19",
       "ticker": "GOOGL",
       "net_sentiment_flow": 185342493.0
-    },
-    {
-      "trade_date": "2025-12-22",
-      "ticker": "GOOGL",
-      "net_sentiment_flow": 141100831.0
-    },
-    {
-      "trade_date": "2025-12-22",
-      "ticker": "MSFT",
-      "net_sentiment_flow": 20229460.0
-    },
-    {
-      "trade_date": "2025-12-22",
-      "ticker": "TSLA",
-      "net_sentiment_flow": 967872116.0
-    },
-    {
-      "trade_date": "2025-12-22",
-      "ticker": "META",
-      "net_sentiment_flow": 273672262.0
-    },
-    {
-      "trade_date": "2025-12-22",
-      "ticker": "AAPL",
-      "net_sentiment_flow": 66473846.0
     },
     {
       "trade_date": "2025-12-22",
@@ -567,8 +542,33 @@
     },
     {
       "trade_date": "2025-12-22",
+      "ticker": "GOOGL",
+      "net_sentiment_flow": 141100831.0
+    },
+    {
+      "trade_date": "2025-12-22",
       "ticker": "AMZN",
       "net_sentiment_flow": 90438768.0
+    },
+    {
+      "trade_date": "2025-12-22",
+      "ticker": "TSLA",
+      "net_sentiment_flow": 967872116.0
+    },
+    {
+      "trade_date": "2025-12-22",
+      "ticker": "AAPL",
+      "net_sentiment_flow": 66473846.0
+    },
+    {
+      "trade_date": "2025-12-22",
+      "ticker": "MSFT",
+      "net_sentiment_flow": 20229460.0
+    },
+    {
+      "trade_date": "2025-12-22",
+      "ticker": "META",
+      "net_sentiment_flow": 273672262.0
     },
     {
       "trade_date": "2025-12-23",
@@ -577,8 +577,8 @@
     },
     {
       "trade_date": "2025-12-23",
-      "ticker": "GOOGL",
-      "net_sentiment_flow": 123876668.0
+      "ticker": "MSFT",
+      "net_sentiment_flow": -56873168.0
     },
     {
       "trade_date": "2025-12-23",
@@ -587,8 +587,8 @@
     },
     {
       "trade_date": "2025-12-23",
-      "ticker": "TSLA",
-      "net_sentiment_flow": 492764689.0
+      "ticker": "GOOGL",
+      "net_sentiment_flow": 123876668.0
     },
     {
       "trade_date": "2025-12-23",
@@ -597,13 +597,18 @@
     },
     {
       "trade_date": "2025-12-23",
-      "ticker": "MSFT",
-      "net_sentiment_flow": -56873168.0
+      "ticker": "AMZN",
+      "net_sentiment_flow": 131581329.0
     },
     {
       "trade_date": "2025-12-23",
-      "ticker": "AMZN",
-      "net_sentiment_flow": 131581329.0
+      "ticker": "TSLA",
+      "net_sentiment_flow": 492764689.0
+    },
+    {
+      "trade_date": "2025-12-24",
+      "ticker": "NVDA",
+      "net_sentiment_flow": 227633981.0
     },
     {
       "trade_date": "2025-12-24",
@@ -612,23 +617,8 @@
     },
     {
       "trade_date": "2025-12-24",
-      "ticker": "MSFT",
-      "net_sentiment_flow": -66966410.0
-    },
-    {
-      "trade_date": "2025-12-24",
       "ticker": "AMZN",
       "net_sentiment_flow": 61760510.0
-    },
-    {
-      "trade_date": "2025-12-24",
-      "ticker": "GOOGL",
-      "net_sentiment_flow": 61745169.0
-    },
-    {
-      "trade_date": "2025-12-24",
-      "ticker": "NVDA",
-      "net_sentiment_flow": 227633981.0
     },
     {
       "trade_date": "2025-12-24",
@@ -639,6 +629,86 @@
       "trade_date": "2025-12-24",
       "ticker": "AAPL",
       "net_sentiment_flow": -15674395.0
+    },
+    {
+      "trade_date": "2025-12-24",
+      "ticker": "MSFT",
+      "net_sentiment_flow": -66966410.0
+    },
+    {
+      "trade_date": "2025-12-24",
+      "ticker": "GOOGL",
+      "net_sentiment_flow": 61745169.0
+    },
+    {
+      "trade_date": "2025-12-26",
+      "ticker": "NVDA",
+      "net_sentiment_flow": 640367836.0
+    },
+    {
+      "trade_date": "2025-12-26",
+      "ticker": "META",
+      "net_sentiment_flow": 74252954.0
+    },
+    {
+      "trade_date": "2025-12-26",
+      "ticker": "GOOGL",
+      "net_sentiment_flow": 76079933.0
+    },
+    {
+      "trade_date": "2025-12-26",
+      "ticker": "TSLA",
+      "net_sentiment_flow": 240605151.0
+    },
+    {
+      "trade_date": "2025-12-26",
+      "ticker": "AMZN",
+      "net_sentiment_flow": 74735934.0
+    },
+    {
+      "trade_date": "2025-12-26",
+      "ticker": "MSFT",
+      "net_sentiment_flow": -6199377.0
+    },
+    {
+      "trade_date": "2025-12-26",
+      "ticker": "AAPL",
+      "net_sentiment_flow": 98219659.0
+    },
+    {
+      "trade_date": "2025-12-29",
+      "ticker": "AAPL",
+      "net_sentiment_flow": 59782752.0
+    },
+    {
+      "trade_date": "2025-12-29",
+      "ticker": "TSLA",
+      "net_sentiment_flow": 367036272.0
+    },
+    {
+      "trade_date": "2025-12-29",
+      "ticker": "GOOGL",
+      "net_sentiment_flow": 174838874.0
+    },
+    {
+      "trade_date": "2025-12-29",
+      "ticker": "AMZN",
+      "net_sentiment_flow": 81620411.0
+    },
+    {
+      "trade_date": "2025-12-29",
+      "ticker": "META",
+      "net_sentiment_flow": -101626058.0
+    },
+    {
+      "trade_date": "2025-12-29",
+      "ticker": "MSFT",
+      "net_sentiment_flow": -12200749.0
+    },
+    {
+      "trade_date": "2025-12-29",
+      "ticker": "NVDA",
+      "net_sentiment_flow": 443463567.0
     }
   ]
 }
