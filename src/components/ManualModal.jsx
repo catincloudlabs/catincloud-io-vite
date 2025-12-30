@@ -17,7 +17,7 @@ const ManualModal = ({ isOpen, onClose }) => {
 
   const sections = [
     { id: 'synopsis', label: 'SYNOPSIS' },
-    { id: 'metrics', label: 'METRIC CARDS' }, // NEW SECTION
+    { id: 'metrics', label: 'METRIC CARDS' },
     { id: 'mag7', label: 'MAG 7 MOMENTUM' },
     { id: 'chaos', label: 'CHAOS INDEX' },
     { id: 'whales', label: 'WHALE HUNTER' },
@@ -76,7 +76,7 @@ const ManualModal = ({ isOpen, onClose }) => {
 
             <div className="manual-divider" />
 
-            {/* 2. METRIC CARDS (NEW) */}
+            {/* 2. METRIC CARDS */}
             <section id="sec-metrics" className="manual-section">
               <h3 className="manual-h3">2. METRIC CARDS</h3>
               <p className="manual-p">
@@ -84,7 +84,7 @@ const ManualModal = ({ isOpen, onClose }) => {
               </p>
               <ul className="manual-list">
                 <li><strong>Pipeline State:</strong>
-                  <ul style={{marginTop: '4px', marginBottom: '8px'}}>
+                  <ul className="manual-list-nested">
                     <li><span className="text-green">GREEN</span> :: All Systems Operational.</li>
                     <li><span className="text-yellow">YELLOW</span> :: Data Stale ( &gt; 26h ) or Degraded.</li>
                     <li><span className="text-red">RED</span> :: System Offline / Connectivity Lost.</li>
