@@ -5,8 +5,8 @@ import MetricCard from './components/MetricCard';
 import InspectorCard from './components/InspectorCard';
 import { SystemStatusRibbon } from './components/SystemStatusRibbon';
 import TimeSlider from './components/TimeSlider';
-import { Activity, Zap, Radio, Server } from 'lucide-react';
-import { useSystemHeartbeat } from './hooks/useSystemHeartbeat'; // <--- 1. IMPORT HOOK
+import { Activity, Zap, TrendingUp, Server, ArrowUpRight, ArrowDownRight } from 'lucide-react'; // Added Icons
+import { useSystemHeartbeat } from './hooks/useSystemHeartbeat';
 
 // --- CONFIGURATION ---
 const MAG7_CONFIG = {
@@ -22,8 +22,7 @@ const MAG7_CONFIG = {
 function App() {
   
   // --- STATE ---
-  // 2. USE THE HEARTBEAT HOOK
-  const { data: heartbeat, loading: heartbeatLoading } = useSystemHeartbeat();
+  const { data: heartbeat } = useSystemHeartbeat();
 
   const [chaosRaw, setChaosRaw] = useState([]); 
   const [chaosMeta, setChaosMeta] = useState(null);
@@ -47,9 +46,8 @@ function App() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // --- FETCHING ---
+  // --- FETCHING (Same as before) ---
   useEffect(() => {
-    // 1. Chaos Scatter
     fetch('/data/chaos.json')
       .then(res => res.json())
       .then(json => {
@@ -62,13 +60,11 @@ function App() {
       })
       .catch(err => { console.error("Chaos Error:", err); setChaosLoading(false); });
 
-    // 2. Whale Table
     fetch('/data/whales.json')
       .then(res => res.json())
       .then(json => { setWhaleData(json); setWhaleLoading(false); })
       .catch(err => { console.error("Whale Error:", err); setWhaleLoading(false); });
 
-    // 3. Mag 7 Momentum
     fetch('/data/mag7.json')
       .then(res => res.json())
       .then(json => {
@@ -80,32 +76,83 @@ function App() {
 
   }, []);
 
-  // --- DYNAMIC CALCULATIONS (NEW) ---
+  // --- SMART METRICS (THE UPGRADE) ---
 
-  // A. Calculate Total Whale Premium on the fly
-  const totalWhalePremium = useMemo(() => {
-    if (!whaleData?.data) return "$0M";
-    // Sum premium, divide by million, fix to 1 decimal
-    const total = whaleData.data.reduce((acc, row) => acc + (row.premium || 0), 0);
-    return `$${(total / 1000000).toFixed(1)}M`;
+  // 1. Whale Sentiment (Bull vs Bear Ratio)
+  const whaleMetric = useMemo(() => {
+    if (!whaleData?.data) return { value: "$0M", sub: "No Data" };
+    
+    let bullTotal = 0;
+    let total = 0;
+
+    whaleData.data.forEach(row => {
+        const premium = row.premium || 0;
+        total += premium;
+        if (row.sentiment === 'Bullish') bullTotal += premium;
+    });
+
+    const bullPct = total > 0 ? Math.round((bullTotal / total) * 100) : 0;
+    const formattedTotal = `$${(total / 1000000).toFixed(1)}M`;
+    
+    return {
+        value: formattedTotal,
+        sub: `${bullPct}% Bullish Flow`,
+        isBullish: bullPct > 50
+    };
   }, [whaleData]);
 
-  // B. Calculate Chaos "Intensity" (e.g., number of high IV contracts)
+  // 2. Max Chaos (Highest IV Ticker)
   const chaosMetric = useMemo(() => {
-    if (!chaosRaw.length) return "0";
-    // Just a fun metric: count contracts with IV > 50%
-    const highVol = chaosRaw.filter(c => c.iv > 50).length;
-    return `${highVol} Events`;
-  }, [chaosRaw]);
+    if (!chaosRaw.length || !selectedDate) return { value: "--", sub: "Low Volatility" };
+    
+    // Filter for current date only
+    const todayData = chaosRaw.filter(d => d.trade_date === selectedDate);
+    if (!todayData.length) return { value: "--", sub: "No Data" };
 
-  // C. Determine Pipeline Status Color
+    // Find Max IV
+    const maxIVRow = todayData.reduce((prev, current) => (prev.iv > current.iv) ? prev : current);
+    
+    return {
+        value: `${maxIVRow.ticker}`,
+        sub: `Max IV: ${maxIVRow.iv.toFixed(0)}%`,
+        isExtreme: maxIVRow.iv > 100
+    };
+  }, [chaosRaw, selectedDate]);
+
+  // 3. Mag 7 Leader (Top Momentum)
+  const magLeaderMetric = useMemo(() => {
+    if (!magRaw.length) return { value: "--", sub: "Flat" };
+
+    // Get latest date in the dataset
+    const dates = [...new Set(magRaw.map(d => d.trade_date))].sort();
+    const latestDate = dates[dates.length - 1];
+    
+    const todayStats = magRaw.filter(d => d.trade_date === latestDate);
+    if (!todayStats.length) return { value: "--", sub: "Flat" };
+
+    // Sort by absolute sentiment flow to find the biggest mover
+    const leader = todayStats.reduce((prev, current) => 
+        (Math.abs(prev.net_sentiment_flow) > Math.abs(current.net_sentiment_flow)) ? prev : current
+    );
+
+    const flowM = (leader.net_sentiment_flow / 1000000).toFixed(1);
+    const sign = leader.net_sentiment_flow > 0 ? "+" : "";
+
+    return {
+        value: leader.ticker,
+        sub: `Net Flow: ${sign}$${flowM}M`,
+        isPositive: leader.net_sentiment_flow > 0
+    };
+  }, [magRaw]);
+
+  // 4. System Status Color
   const getStatusColor = (status) => {
     if (status === 'Healthy') return 'green';
-    if (status === 'Degraded') return 'yellow';
+    if (status === 'Degraded' || status === 'Stale') return 'yellow';
     return 'red';
   };
 
-  // --- CHART HELPERS ---
+  // --- CHART HELPERS (UNCHANGED) ---
   const getMag7PlotData = () => {
     if (!magRaw || magRaw.length === 0) return [];
     return visibleTickers.map(ticker => {
@@ -131,12 +178,10 @@ function App() {
 
   const getFilteredChaosPlot = () => {
     if (!selectedDate || chaosRaw.length === 0) return [];
-    
     const dailyData = chaosRaw.filter(d => 
       d.trade_date?.startsWith(selectedDate) && 
       d.ticker === selectedChaosTicker
     );
-
     return [{
        x: dailyData.map(d => d.dte),
        y: dailyData.map(d => d.moneyness),
@@ -191,37 +236,40 @@ function App() {
       
       <main className="bento-grid">
         
-        {/* ROW 1: KPI CARDS (DYNAMICALLY WIRED) */}
+        {/* --- CARD 1: PIPELINE HEALTH --- */}
         <MetricCard 
           title="Pipeline State" 
-          value={heartbeat?.system_status || "CONNECTING..."} 
-          subValue={heartbeat ? `${heartbeat.metrics.total_rows_managed.toLocaleString()} Rows` : "Waiting for heartbeat"} 
+          value={heartbeat?.system_status || "OFFLINE"} 
+          subValue={heartbeat ? `${(heartbeat.metrics.total_rows_managed / 1000000).toFixed(1)}M Data Points` : "Connecting..."} 
           icon={<Server size={16} className={getStatusColor(heartbeat?.system_status) === 'green' ? "text-green" : "text-red"} />} 
           statusColor={getStatusColor(heartbeat?.system_status)}
         />
         
-        <MetricCard 
-          title="Chaos Events" 
-          value={chaosMetric} 
-          subValue="High IV Contracts (>50%)" 
-          icon={<Zap size={16} className="text-yellow" />}
-        />
-        
+        {/* --- CARD 2: WHALE SENTIMENT --- */}
         <MetricCard 
           title="Whale Flow" 
-          value={totalWhalePremium} 
-          subValue="Total Premium (Day)" 
-          icon={<Activity size={16} className="text-accent" />}
+          value={whaleMetric.value} 
+          subValue={whaleMetric.sub} 
+          icon={<Activity size={16} className={whaleMetric.isBullish ? "text-green" : "text-red"} />}
         />
         
+        {/* --- CARD 3: HIGHEST VOLATILITY --- */}
         <MetricCard 
-          title="Last Build" 
-          value={heartbeat ? new Date(heartbeat.last_updated_utc).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "--:--"} 
-          subValue={heartbeat ? new Date(heartbeat.last_updated_utc).toLocaleDateString() : "No Data"} 
-          icon={<Radio size={16} className="text-muted" />}
+          title="Max Volatility" 
+          value={chaosMetric.value} 
+          subValue={chaosMetric.sub} 
+          icon={<Zap size={16} className={chaosMetric.isExtreme ? "text-red" : "text-yellow"} />}
         />
 
-        {/* ROW 2: MAG 7 (WITH TOGGLES) */}
+        {/* --- CARD 4: TOP MOMENTUM LEADER --- */}
+        <MetricCard 
+          title="Mag 7 Leader" 
+          value={magLeaderMetric.value} 
+          subValue={magLeaderMetric.sub} 
+          icon={magLeaderMetric.isPositive ? <ArrowUpRight size={16} className="text-green"/> : <ArrowDownRight size={16} className="text-red"/>} 
+        />
+
+        {/* --- INSPECTORS (UNCHANGED) --- */}
         <div className="span-2">
            <InspectorCard 
              title={magMeta?.title || "Mag 7 Momentum"} 
@@ -249,7 +297,6 @@ function App() {
            </InspectorCard>
         </div>
 
-        {/* ROW 2: CHAOS (WITH PILLS & TIME TRAVEL) */}
         <div className="span-2">
            <InspectorCard 
              title={chaosMeta?.title || "Chaos Engine"} 
@@ -262,10 +309,7 @@ function App() {
              sqlCode={chaosMeta?.inspector.sql_logic}
              dbtCode={chaosMeta?.inspector.dbt_logic}
            >
-             {/* FOOTER CONTROLS */}
              <div className="chaos-controls-container">
-               
-               {/* 1. PILL SELECTOR (Vertical) */}
                <div className="pill-group">
                  {availableChaosTickers.map(ticker => (
                    <button
@@ -277,8 +321,6 @@ function App() {
                    </button>
                  ))}
                </div>
-
-               {/* 2. TIME SLIDER (Flex Grow to fill remaining space) */}
                {!chaosLoading && chaosMeta?.available_dates && (
                   <div style={{ flex: 1 }}> 
                     <TimeSlider 
@@ -292,7 +334,6 @@ function App() {
            </InspectorCard>
         </div>
 
-        {/* ROW 3: WHALES */}
         <div className="span-4">
            <InspectorCard 
              title={whaleData?.meta.title || "Whale Hunter"}
@@ -305,6 +346,7 @@ function App() {
              dbtCode={whaleData?.meta.inspector.dbt_logic}
            />
         </div>
+
       </main>
       <Footer />
     </div>
