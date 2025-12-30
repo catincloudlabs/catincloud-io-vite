@@ -17,8 +17,8 @@ const ManualModal = ({ isOpen, onClose }) => {
 
   const sections = [
     { id: 'synopsis', label: 'SYNOPSIS' },
-    { id: 'chaos', label: 'CHAOS INDEX' },
     { id: 'mag7', label: 'MAG 7 MOMENTUM' },
+    { id: 'chaos', label: 'CHAOS INDEX' },
     { id: 'whales', label: 'WHALE HUNTER' },
     { id: 'controls', label: 'CONTROLS' },
   ];
@@ -75,9 +75,23 @@ const ManualModal = ({ isOpen, onClose }) => {
 
             <div className="manual-divider" />
 
-            {/* 2. CHAOS INDEX */}
+            {/* 2. MAG 7 MOMENTUM (Now Second) */}
+            <section id="sec-mag7" className="manual-section">
+              <h3 className="manual-h3">2. MAG 7 MOMENTUM (Time Series)</h3>
+              <p className="manual-p">
+                <span className="text-accent">Purpose:</span> Tracks aggregated option sentiment flow for mega-cap tech.
+              </p>
+              <ul className="manual-list">
+                <li><strong>Metric (Y-Axis):</strong> Net Sentiment Flow. Calculated as <code>(Call Premium - Put Premium)</code> adjusted for delta.</li>
+                <li><strong>Multi-Select:</strong> Toggle individual tickers (NVDA, TSLA, etc.) using the control pills in the chart footer.</li>
+              </ul>
+            </section>
+
+            <div className="manual-divider" />
+
+            {/* 3. CHAOS INDEX (Now Third) */}
             <section id="sec-chaos" className="manual-section">
-              <h3 className="manual-h3">2. CHAOS INDEX (Scatter Plot)</h3>
+              <h3 className="manual-h3">3. CHAOS INDEX (Scatter Plot)</h3>
               <p className="manual-p">
                 <span className="text-accent">Purpose:</span> Identifies gamma exposure risk.
               </p>
@@ -85,20 +99,6 @@ const ManualModal = ({ isOpen, onClose }) => {
                 <li><strong>X-Axis (DTE):</strong> Days to Expiration. Closer to 0 = Higher Gamma Risk.</li>
                 <li><strong>Y-Axis (Moneyness):</strong> Strike Price / Current Price. 1.0 = ATM.</li>
                 <li><strong>Bubble Size:</strong> Relative Volume (Log Scale).</li>
-              </ul>
-            </section>
-
-            <div className="manual-divider" />
-
-            {/* 3. MAG 7 MOMENTUM */}
-            <section id="sec-mag7" className="manual-section">
-              <h3 className="manual-h3">3. MAG 7 MOMENTUM (Time Series)</h3>
-              <p className="manual-p">
-                <span className="text-accent">Purpose:</span> Tracks aggregated option sentiment flow for mega-cap tech.
-              </p>
-              <ul className="manual-list">
-                <li><strong>Metric (Y-Axis):</strong> Net Sentiment Flow. Calculated as <code>(Call Premium - Put Premium)</code> adjusted for delta.</li>
-                <li><strong>Multi-Select:</strong> Toggle individual tickers (NVDA, TSLA, etc.) using the control pills in the chart footer.</li>
               </ul>
             </section>
 
