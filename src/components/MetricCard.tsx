@@ -1,21 +1,27 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 
-const MetricCard = ({ title, value, subValue, icon, statusColor }) => {
+interface MetricCardProps {
+  title: string;
+  value: string | number;
+  subValue?: string;
+  icon?: ReactNode;
+  statusColor?: 'green' | 'red' | 'yellow' | 'gray';
+}
+
+const MetricCard: React.FC<MetricCardProps> = ({ title, value, subValue, icon, statusColor }) => {
   return (
     <div className="panel span-1">
       <div className="panel-header">
         <span className="panel-title">{title}</span>
-        {/* Clean class for icon wrapper */}
         {icon && <span className="panel-icon-wrapper">{icon}</span>}
       </div>
       
-      {/* Dynamic Status Dot */}
       {statusColor && (
          <div className={`metric-status-dot status-${statusColor}`}></div>
       )}
 
       <div className="metric-big">{value}</div>
-      <div className="metric-sub">{subValue}</div>
+      {subValue && <div className="metric-sub">{subValue}</div>}
     </div>
   );
 };

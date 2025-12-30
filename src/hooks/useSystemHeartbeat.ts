@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 
 // Define the shape of our metadata based on the Airflow DAG
-interface SystemMetadata {
-  system_status: 'Healthy' | 'Degraded' | 'Maintenance';
+export interface SystemMetadata {
+  system_status: 'Healthy' | 'Degraded' | 'Maintenance' | 'Stale'; // Added 'Stale'
   last_updated_utc: string;
   pipeline_version: string;
   metrics: {
@@ -27,7 +27,22 @@ export const useSystemHeartbeat = () => {
           throw new Error(`Status Code: ${response.status}`);
         }
         
-        const result = await response.json();
+        const result: SystemMetadata = await response.json();
+
+        // --- CLIENT-SIDE FRESHNESS CHECK ---
+        // If Airflow dies, the file won't update. We must catch this in the browser.
+        const lastUpdate = new Date(result.last_updated_utc).getTime();
+        const now = Date.now();
+        const hoursDiff = (now - lastUpdate) / (1000 * 60 * 60);
+
+        if (hoursDiff > 26) {
+           console.warn(`System Heartbeat is stale by ${hoursDiff.toFixed(1)} hours.`);
+           // Override status to warn the user
+           result.system_status = 'Stale'; 
+           result.notices.push("Data stream has stopped updating.");
+        }
+        // -----------------------------------
+
         setData(result);
       } catch (err) {
         console.error("Failed to fetch system heartbeat:", err);
@@ -39,7 +54,7 @@ export const useSystemHeartbeat = () => {
 
     fetchHeartbeat();
     
-    // Optional: Poll every 5 minutes
+    // Poll every 5 minutes
     const interval = setInterval(fetchHeartbeat, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
