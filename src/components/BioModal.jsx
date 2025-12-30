@@ -1,7 +1,9 @@
-import React, { useEffect } from 'react';
-import { X, Terminal, Github, Linkedin, Mail, Globe } from 'lucide-react'; // Added Globe icon
+import React, { useEffect, useState } from 'react';
+import { X, Terminal, Github, Linkedin, Mail, Globe, Bot } from 'lucide-react'; // Added Bot icon
 
 const BioModal = ({ isOpen, onClose }) => {
+  const [imgError, setImgError] = useState(false);
+
   // Close on Escape
   useEffect(() => {
     const handleEsc = (e) => {
@@ -34,14 +36,23 @@ const BioModal = ({ isOpen, onClose }) => {
           {/* PROFILE SECTION */}
           <div className="bio-grid">
             <div className="bio-avatar">
-              <div className="avatar-placeholder">
-                <span className="avatar-text">ME</span>
-              </div>
+              {!imgError ? (
+                <img 
+                  src="/avatar.jpg" 
+                  alt="Profile" 
+                  className="bio-profile-img" 
+                  onError={() => setImgError(true)}
+                />
+              ) : (
+                <div className="avatar-placeholder">
+                  <Bot size={48} />
+                </div>
+              )}
             </div>
             
             <div className="bio-details">
               <h2 className="bio-name">CatInCloud Labs</h2>
-              <div className="bio-role">Lead Cloud & Data Engineer</div>
+              <div className="bio-role">Senior Data Engineer // Full Stack Data</div>
               
               <div className="bio-text">
                 <p>
@@ -49,14 +60,13 @@ const BioModal = ({ isOpen, onClose }) => {
                   interactive analytics applications.
                 </p>
                 <p>
-                  I bridge the gap between Back-End Data Engineering (Snowflake, dbt, Airflow) 
-                  and Front-End Delivery (React, Visualization).
+                  I bridge the gap between <strong>Back-End Data Engineering</strong> (Snowflake, dbt, Airflow) 
+                  and <strong>Front-End Delivery</strong> (React, Visualization).
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Divider Class from styles.css */}
           <div className="manual-divider bio-divider" />
 
           {/* TECH STACK */}
@@ -81,12 +91,12 @@ const BioModal = ({ isOpen, onClose }) => {
               <Linkedin size={18} />
               <span>LinkedIn</span>
             </a>
-            <a href="mailto:dave@catincloudlabs.com" className="contact-btn">
+            <a href="mailto:hello@catincloud.io" className="contact-btn">
               <Mail size={18} />
               <span>Email</span>
             </a>
             
-            {/* UPDATED: Main Site Link */}
+            {/* Main Site Link */}
             <a href="https://catincloudlabs.com" target="_blank" rel="noreferrer" className="contact-btn btn-primary">
               <Globe size={18} />
               <span>Main Site</span>

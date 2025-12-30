@@ -1344,6 +1344,28 @@ html, body {
   flex-shrink: 0;
 }
 
+.bio-profile-img {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--accent); /* Blue border to match theme */
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+}
+
+/* Fallback Placeholder (Modified) */
+.avatar-placeholder {
+  width: 100px;
+  height: 100px;
+  background: #1e293b;
+  border: 2px dashed var(--text-muted); /* Dashed to indicate missing file */
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
 .avatar-placeholder {
   width: 100px;
   height: 100px;
