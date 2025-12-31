@@ -79,7 +79,7 @@ function App() {
 
   // --- SMART METRICS ---
 
-  // 1. Whale Sentiment (Dynamic Label Update)
+  // 1. Whale Sentiment (Dynamic Label Update with $B formatting)
   const whaleMetric = useMemo(() => {
     if (!whaleData?.data) return { value: "$0M", sub: "No Data" };
     
@@ -93,9 +93,16 @@ function App() {
     });
 
     const bullPct = total > 0 ? Math.round((bullTotal / total) * 100) : 0;
-    const bearPct = 100 - bullPct; // Calculate the inverse
+    const bearPct = 100 - bullPct; 
     
-    const formattedTotal = `$${(total / 1000000).toFixed(1)}M`;
+    // Auto-format Billions vs Millions
+    let formattedTotal;
+    if (Math.abs(total) >= 1000000000) {
+        formattedTotal = `$${(total / 1000000000).toFixed(2)}B`;
+    } else {
+        formattedTotal = `$${(total / 1000000).toFixed(1)}M`;
+    }
+
     const isBullish = bullPct > 50;
 
     return {
