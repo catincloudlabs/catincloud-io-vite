@@ -9,6 +9,12 @@ export interface SystemMetadata {
     total_rows_managed: number;
     modules_active: string[];
   };
+  // NEW: Added support for dbt test results
+  tests?: {
+    passed: number;
+    failed: number;
+    total: number;
+  };
   notices: string[];
 }
 

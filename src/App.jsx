@@ -242,9 +242,19 @@ function App() {
         <MetricCard 
           title="Pipeline State" 
           value={heartbeat?.system_status || "OFFLINE"} 
-          subValue={heartbeat ? `${(heartbeat.metrics.total_rows_managed / 1000000).toFixed(1)}M Rows` : "Connecting..."} 
+          // UPDATED: Shows test results if available, falls back to row count
+          subValue={
+             heartbeat?.tests 
+             ? `${heartbeat.tests.passed}/${heartbeat.tests.total} Tests Passed` 
+             : (heartbeat ? `${(heartbeat.metrics.total_rows_managed / 1000000).toFixed(1)}M Rows` : "Connecting...")
+          }
           icon={<Server size={16} className={getHealthColor(heartbeat?.system_status)} />} 
-          statusColor={heartbeat?.system_status === 'Healthy' ? 'green' : 'red'}
+          // UPDATED: Turns Yellow if tests failed, otherwise Standard Red/Green
+          statusColor={
+            heartbeat?.tests?.failed > 0 
+            ? 'yellow' 
+            : (heartbeat?.system_status === 'Healthy' ? 'green' : 'red')
+          }
         />
         
         <MetricCard 
