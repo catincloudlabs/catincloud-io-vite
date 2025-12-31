@@ -51,7 +51,7 @@ const Header = () => {
             className="nav-link icon-link"
           >
             <User size={14} className="mr-2" />
-            <span>CatInCloud Labs</span>
+            <span>CatInCloud</span>
           </button>
         </nav>
       </header>
