@@ -755,27 +755,39 @@ html, body {
   .app-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
+    gap: 8px; /* Reduced gap since subtitle is gone */
+    margin-bottom: 16px; /* Pulls the charts up higher */
   }
 
-  /* Stack the navigation links vertically on mobile */
+  /* Force navigation to be a horizontal row on mobile */
   .header-nav {
-    flex-direction: column;
-    align-items: flex-start;
+    display: flex;
+    flex-direction: row; 
+    align-items: center;
     gap: 12px;
     width: 100%;
-    padding-top: 12px;
+    padding-top: 8px;
     border-top: 1px solid rgba(255,255,255,0.05);
+    flex-wrap: wrap; /* Prevents breaking on very small screens */
   }
 
+  /* Make separators visible again */
   .nav-separator {
-    display: none; 
+    display: inline-block !important; 
+    color: #334155;
+    font-size: 0.8rem;
   }
 
   .nav-link {
-    align-self: flex-start;
+    /* Reset alignment for horizontal flow */
+    align-self: auto; 
     font-size: 0.75rem;
-    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  /* Adjust brand size slightly for mobile context */
+  .brand-title {
+    font-size: 1.25rem;
   }
 
   /* 7. Table Scroll Fix */

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import ArchitectureModal from './ArchitectureModal';
 import ManualModal from './ManualModal';
 import BioModal from './BioModal';
-import { Network, BookOpen } from 'lucide-react';
+import { Network, BookOpen, User } from 'lucide-react';
 
 const Header = () => {
   const [isArchOpen, setArchOpen] = useState(false);
@@ -13,49 +13,47 @@ const Header = () => {
     <>
       <header className="app-header">
         {/* LEFT: BRANDING */}
-        <div>
+        <div className="brand-container">
           <h1 className="brand-title">
             CatInCloud<span className="text-accent">.io</span>
           </h1>
-          <div className="brand-sub">
-            QUANT_PIPELINE :: LIVE_MODE
-          </div>
+          {/* Subtitle removed to save vertical space on mobile */}
         </div>
 
         {/* RIGHT: NAVIGATION */}
-        <div className="header-nav">
+        <nav className="header-nav">
           
-          {/* Operator Manual Trigger */}
+          {/* Manual */}
           <button 
             onClick={() => setManualOpen(true)}
             className="nav-link icon-link"
           >
-            <BookOpen size={14} style={{ marginRight: '6px' }} />
-            Operator Manual
+            <BookOpen size={14} className="mr-2" />
+            <span>Manual</span>
           </button>
 
           <span className="nav-separator">/</span>
 
-          {/* Architecture Trigger */}
+          {/* Architecture */}
           <button 
             onClick={() => setArchOpen(true)}
             className="nav-link icon-link"
           >
-            <Network size={14} style={{ marginRight: '6px' }} />
-            Architecture
+            <Network size={14} className="mr-2" />
+            <span>Architecture</span>
           </button>
 
           <span className="nav-separator">/</span>
 
-          {/* BIO TRIGGER (Formerly an external link) */}
+          {/* Bio */}
           <button 
             onClick={() => setBioOpen(true)}
             className="nav-link icon-link"
-            style={{ fontWeight: 'normal' }}
           >
-            CatInCloud Labs &rarr;
+            <User size={14} className="mr-2" />
+            <span>CatInCloud Labs</span>
           </button>
-        </div>
+        </nav>
       </header>
 
       {/* MODALS */}
