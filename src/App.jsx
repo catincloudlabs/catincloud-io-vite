@@ -37,7 +37,7 @@ function App() {
   const [magRaw, setMagRaw] = useState([]); 
   const [magMeta, setMagMeta] = useState(null);
   const [magLoading, setMagLoading] = useState(true);
-  const [visibleTickers, setVisibleTickers] = useState(['NVDA', 'TSLA']);
+  const [visibleTickers, setVisibleTickers] = useState(['NVDA', 'TSLA', 'AAPL']);
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
