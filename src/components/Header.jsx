@@ -53,7 +53,7 @@ const Header = () => {
             className="nav-link icon-link"
             style={{ fontWeight: 'normal' }}
           >
-            Built by CatInCloud Labs &rarr;
+            CatInCloud Labs &rarr;
           </button>
         </div>
       </header>
