@@ -245,7 +245,7 @@ function App() {
           // UPDATED: Shows test results if available, falls back to row count
           subValue={
              heartbeat?.tests 
-             ? `${heartbeat.tests.passed}/${heartbeat.tests.total} Tests Passed` 
+             ? `${heartbeat.tests.passed}/${heartbeat.tests.total} dbt Tests Passed` 
              : (heartbeat ? `${(heartbeat.metrics.total_rows_managed / 1000000).toFixed(1)}M Rows` : "Connecting...")
           }
           icon={<Server size={16} className={getHealthColor(heartbeat?.system_status)} />} 
