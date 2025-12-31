@@ -141,10 +141,11 @@ html, body {
 }
 
 /* ==================================================================== */
-/* 5. GRID SPANS                                                        */
+/* 5. GRID SPANS (UPDATED)                                              */
 /* ==================================================================== */
 
 .span-1 { grid-column: span 1; }
+
 .span-2 { 
   grid-column: span 2; 
   height: 500px; 
@@ -152,7 +153,24 @@ html, body {
   flex-direction: column;
 }
 
-.span-4 { grid-column: span 4; }
+/* Updated .span-4 to support flex layout like .span-2 */
+.span-4 { 
+  grid-column: span 4;
+  display: flex;
+  flex-direction: column;
+}
+
+/* NEW: A utility class to make the Chaos chart taller */
+.h-tall {
+  height: 600px; 
+}
+
+/* Mobile: Ensure height resets or stays manageable */
+@media (max-width: 1024px) {
+    .h-tall {
+        height: 500px; 
+    }
+}
 
 /* ==================================================================== */
 /* 6. TYPOGRAPHY & METRICS                                              */

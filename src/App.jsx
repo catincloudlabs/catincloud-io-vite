@@ -261,36 +261,8 @@ function App() {
           icon={magLeaderMetric.isPositive ? <ArrowUpRight size={16} className={getMomentumColor(true)}/> : <ArrowDownRight size={16} className={getMomentumColor(false)}/>} 
         />
 
-        {/* ROW 2: MAG 7 */}
-        <div className="span-2">
-           <InspectorCard 
-             title={magMeta?.title || "Mag 7 Momentum"} 
-             tag="Trend"
-             desc={magMeta?.inspector.description || "Loading..."}
-             isLoading={magLoading}
-             chartType="line"
-             plotData={getMag7PlotData()}
-             plotLayout={lineLayout}
-             sqlCode={magMeta?.inspector.sql_logic} 
-             dbtCode={magMeta?.inspector.dbt_logic}
-             dbtYml={magMeta?.inspector.dbt_yml} // Added dbtYml prop
-           >
-             <div className="ticker-controls-container">
-               {Object.keys(MAG7_CONFIG).map(ticker => (
-                 <button
-                   key={ticker}
-                   onClick={() => toggleTicker(ticker)}
-                   className={`ticker-pill ticker-${ticker} ${visibleTickers.includes(ticker) ? 'active' : ''}`}
-                 >
-                   {ticker}
-                 </button>
-               ))}
-             </div>
-           </InspectorCard>
-        </div>
-
-        {/* ROW 2: CHAOS */}
-        <div className="span-2">
+        {/* ROW 2: CHAOS (Full Width, Taller) */}
+        <div className="span-4 h-tall">
            <InspectorCard 
              title={chaosMeta?.title || "Chaos Engine"} 
              tag="Risk"
@@ -301,7 +273,7 @@ function App() {
              plotLayout={scatterLayout}
              sqlCode={chaosMeta?.inspector.sql_logic}
              dbtCode={chaosMeta?.inspector.dbt_logic}
-             dbtYml={chaosMeta?.inspector.dbt_yml} // Added dbtYml prop
+             dbtYml={chaosMeta?.inspector.dbt_yml} 
            >
              <div className="chaos-controls-container">
                <div className="pill-group">
@@ -328,8 +300,36 @@ function App() {
            </InspectorCard>
         </div>
 
-        {/* ROW 3: WHALES */}
-        <div className="span-4">
+        {/* ROW 3 LEFT: MAG 7 (Half Width) */}
+        <div className="span-2">
+           <InspectorCard 
+             title={magMeta?.title || "Mag 7 Momentum"} 
+             tag="Trend"
+             desc={magMeta?.inspector.description || "Loading..."}
+             isLoading={magLoading}
+             chartType="line"
+             plotData={getMag7PlotData()}
+             plotLayout={lineLayout}
+             sqlCode={magMeta?.inspector.sql_logic} 
+             dbtCode={magMeta?.inspector.dbt_logic}
+             dbtYml={magMeta?.inspector.dbt_yml} 
+           >
+             <div className="ticker-controls-container">
+               {Object.keys(MAG7_CONFIG).map(ticker => (
+                 <button
+                   key={ticker}
+                   onClick={() => toggleTicker(ticker)}
+                   className={`ticker-pill ticker-${ticker} ${visibleTickers.includes(ticker) ? 'active' : ''}`}
+                 >
+                   {ticker}
+                 </button>
+               ))}
+             </div>
+           </InspectorCard>
+        </div>
+
+        {/* ROW 3 RIGHT: WHALES (Half Width) */}
+        <div className="span-2">
            <InspectorCard 
              title={whaleData?.meta.title || "Whale Hunter"}
              tag="Flow"
@@ -339,7 +339,7 @@ function App() {
              tableData={whaleData?.data}
              sqlCode={whaleData?.meta.inspector.sql_logic}
              dbtCode={whaleData?.meta.inspector.dbt_logic}
-             dbtYml={whaleData?.meta.inspector.dbt_yml} // Added dbtYml prop
+             dbtYml={whaleData?.meta.inspector.dbt_yml} 
            />
         </div>
 
