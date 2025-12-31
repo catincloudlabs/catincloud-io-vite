@@ -1,9 +1,9 @@
 {
   "system_status": "Healthy",
-  "last_updated_utc": "2025-12-30T22:26:10.343692+00:00",
+  "last_updated_utc": "2025-12-31T20:32:20.491075+00:00",
   "pipeline_version": "v2.2.0",
   "metrics": {
-    "total_rows_managed": 1926288,
+    "total_rows_managed": 4597816,
     "modules_active": [
       "Chaos",
       "Mag7",
