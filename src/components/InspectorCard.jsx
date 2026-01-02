@@ -77,7 +77,7 @@ const InspectorCard = ({
                    <thead className="table-header">
                      <tr className="table-header-row">
                         <th className="table-cell-padding">TICKER</th>
-                        <th className="table-cell-padding">CONTRACT</th>
+                        <th className="table-cell-padding">STRIKE</th>
                         <th className="table-cell-padding">EXPIRY</th>
                         <th className="table-cell-padding">TYPE</th>
                         <th className="table-cell-padding text-right">PREMIUM</th>
@@ -88,7 +88,7 @@ const InspectorCard = ({
                      {tableData.map((row, i) => (
                        <tr key={i} className="table-row-divider">
                          <td className="table-cell-padding font-bold text-accent">{row.ticker}</td>
-                         <td className="table-cell-padding">{row.contract}</td>
+                         <td className="table-cell-padding">{row.strike}</td>
                          <td className="table-cell-padding text-muted">{row.expiry}</td>
                          <td className={`table-cell-padding ${isCall(row.type) ? 'text-green' : 'text-red'}`}>{row.type}</td>
                          <td className="table-cell-padding text-right">${(row.premium / 1000000).toFixed(1)}M</td>
