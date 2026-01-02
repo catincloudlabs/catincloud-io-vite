@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Whale Hunter",
-    "generated_at": "2026-01-02T21:42:49.322521",
+    "generated_at": "2026-01-02T22:20:16.789507",
     "inspector": {
       "tag": "Flow",
       "description": "Top Institutional Options Blocks by Premium Traded (> $500k).",
@@ -14,7 +14,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "TSLA",
-      "strike": 10.0,
+      "strike": "10",
       "expiry": "2026-01-16",
       "type": "C",
       "premium": 236573190.0,
@@ -23,7 +23,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "SPY",
-      "strike": 685.0,
+      "strike": "685",
       "expiry": "2025-12-31",
       "type": "P",
       "premium": 141984726.0,
@@ -32,7 +32,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "SPY",
-      "strike": 686.0,
+      "strike": "686",
       "expiry": "2025-12-31",
       "type": "P",
       "premium": 95061681.0,
@@ -41,7 +41,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "QQQ",
-      "strike": 660.0,
+      "strike": "660",
       "expiry": "2026-01-16",
       "type": "P",
       "premium": 93371211.0,
@@ -50,7 +50,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "QQQ",
-      "strike": 650.0,
+      "strike": "650",
       "expiry": "2026-01-16",
       "type": "P",
       "premium": 82212273.0,
@@ -59,7 +59,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "SPY",
-      "strike": 684.0,
+      "strike": "684",
       "expiry": "2025-12-31",
       "type": "P",
       "premium": 75205458.0,
@@ -68,7 +68,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "QQQ",
-      "strike": 617.0,
+      "strike": "617",
       "expiry": "2025-12-31",
       "type": "P",
       "premium": 71875065.0,
@@ -77,7 +77,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "QQQ",
-      "strike": 618.0,
+      "strike": "618",
       "expiry": "2025-12-31",
       "type": "P",
       "premium": 68592089.0,
@@ -86,7 +86,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "QQQ",
-      "strike": 630.0,
+      "strike": "630",
       "expiry": "2026-01-02",
       "type": "P",
       "premium": 66612348.0,
@@ -95,7 +95,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "META",
-      "strike": 750.0,
+      "strike": "750",
       "expiry": "2026-01-16",
       "type": "P",
       "premium": 61380000.0,
@@ -104,7 +104,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "META",
-      "strike": 730.0,
+      "strike": "730",
       "expiry": "2026-01-16",
       "type": "P",
       "premium": 60031090.0,
@@ -113,7 +113,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "SPY",
-      "strike": 760.0,
+      "strike": "760",
       "expiry": "2026-12-18",
       "type": "P",
       "premium": 59782970.0,
@@ -122,7 +122,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "AAPL",
-      "strike": 290.0,
+      "strike": "290",
       "expiry": "2026-01-02",
       "type": "P",
       "premium": 58120425.0,
@@ -131,7 +131,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "META",
-      "strike": 765.0,
+      "strike": "765",
       "expiry": "2026-01-16",
       "type": "P",
       "premium": 57141000.0,
@@ -140,7 +140,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "SPY",
-      "strike": 750.0,
+      "strike": "750",
       "expiry": "2026-12-18",
       "type": "P",
       "premium": 56845140.0,
@@ -149,7 +149,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "MSFT",
-      "strike": 525.0,
+      "strike": "525",
       "expiry": "2026-01-16",
       "type": "P",
       "premium": 52455084.0,
@@ -158,7 +158,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "TSLA",
-      "strike": 470.0,
+      "strike": "470",
       "expiry": "2026-01-02",
       "type": "P",
       "premium": 51478385.0,
@@ -167,7 +167,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "TSLA",
-      "strike": 440.0,
+      "strike": "440",
       "expiry": "2026-01-02",
       "type": "C",
       "premium": 49783275.0,
@@ -176,7 +176,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "SPY",
-      "strike": 687.0,
+      "strike": "687",
       "expiry": "2025-12-31",
       "type": "P",
       "premium": 48851800.0,
@@ -185,7 +185,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "SPY",
-      "strike": 740.0,
+      "strike": "740",
       "expiry": "2026-12-18",
       "type": "P",
       "premium": 48390000.0,
@@ -194,7 +194,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "SPY",
-      "strike": 730.0,
+      "strike": "730",
       "expiry": "2026-12-18",
       "type": "P",
       "premium": 46837854.0,
@@ -203,7 +203,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "TSLA",
-      "strike": 5.0,
+      "strike": "5",
       "expiry": "2026-01-16",
       "type": "C",
       "premium": 46476560.0,
@@ -212,7 +212,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "META",
-      "strike": 800.0,
+      "strike": "800",
       "expiry": "2026-01-16",
       "type": "P",
       "premium": 44215560.0,
@@ -221,7 +221,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "TSLA",
-      "strike": 455.0,
+      "strike": "455",
       "expiry": "2026-01-02",
       "type": "P",
       "premium": 43889768.0,
@@ -230,7 +230,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "MSFT",
-      "strike": 520.0,
+      "strike": "520",
       "expiry": "2026-01-16",
       "type": "P",
       "premium": 37646400.0,
@@ -239,7 +239,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "TSLA",
-      "strike": 460.0,
+      "strike": "460",
       "expiry": "2026-01-02",
       "type": "P",
       "premium": 36423535.0,
@@ -248,7 +248,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "SPY",
-      "strike": 550.0,
+      "strike": "550",
       "expiry": "2027-01-15",
       "type": "C",
       "premium": 36139756.0,
@@ -257,7 +257,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "META",
-      "strike": 740.0,
+      "strike": "740",
       "expiry": "2026-01-16",
       "type": "P",
       "premium": 36033465.0,
@@ -266,7 +266,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "TSLA",
-      "strike": 452.5,
+      "strike": "452.5",
       "expiry": "2026-01-02",
       "type": "P",
       "premium": 35066490.0,
@@ -275,7 +275,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "SPY",
-      "strike": 535.0,
+      "strike": "535",
       "expiry": "2026-03-20",
       "type": "C",
       "premium": 34531938.0,
@@ -284,7 +284,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "TSLA",
-      "strike": 450.0,
+      "strike": "450",
       "expiry": "2026-01-02",
       "type": "P",
       "premium": 34373150.0,
@@ -293,7 +293,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "SPY",
-      "strike": 750.0,
+      "strike": "750",
       "expiry": "2026-02-20",
       "type": "P",
       "premium": 34277984.0,
@@ -302,7 +302,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "MSFT",
-      "strike": 535.0,
+      "strike": "535",
       "expiry": "2026-01-16",
       "type": "P",
       "premium": 32412996.0,
@@ -311,7 +311,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "AAPL",
-      "strike": 295.0,
+      "strike": "295",
       "expiry": "2026-01-16",
       "type": "P",
       "premium": 31965115.0,
@@ -320,7 +320,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "MSFT",
-      "strike": 530.0,
+      "strike": "530",
       "expiry": "2026-01-16",
       "type": "P",
       "premium": 30332840.0,
@@ -329,7 +329,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "TSLA",
-      "strike": 480.0,
+      "strike": "480",
       "expiry": "2026-01-02",
       "type": "P",
       "premium": 29027924.0,
@@ -338,7 +338,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "QQQ",
-      "strike": 619.0,
+      "strike": "619",
       "expiry": "2025-12-31",
       "type": "P",
       "premium": 28899000.0,
@@ -347,7 +347,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "SPY",
-      "strike": 710.0,
+      "strike": "710",
       "expiry": "2026-12-18",
       "type": "P",
       "premium": 28839610.0,
@@ -356,7 +356,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "SPY",
-      "strike": 685.0,
+      "strike": "685",
       "expiry": "2026-01-02",
       "type": "P",
       "premium": 27315387.0,
@@ -365,7 +365,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "SPY",
-      "strike": 684.0,
+      "strike": "684",
       "expiry": "2026-01-02",
       "type": "P",
       "premium": 26929749.0,
@@ -374,7 +374,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "QQQ",
-      "strike": 616.0,
+      "strike": "616",
       "expiry": "2025-12-31",
       "type": "P",
       "premium": 26324088.0,
@@ -383,7 +383,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "TSLA",
-      "strike": 455.0,
+      "strike": "455",
       "expiry": "2026-01-02",
       "type": "C",
       "premium": 25871734.0,
@@ -392,7 +392,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "META",
-      "strike": 760.0,
+      "strike": "760",
       "expiry": "2026-01-16",
       "type": "P",
       "premium": 25867060.0,
@@ -401,7 +401,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "TSLA",
-      "strike": 507.5,
+      "strike": "507.5",
       "expiry": "2026-01-02",
       "type": "P",
       "premium": 24882520.0,
@@ -410,7 +410,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "META",
-      "strike": 780.0,
+      "strike": "780",
       "expiry": "2026-01-16",
       "type": "P",
       "premium": 24840000.0,
@@ -419,7 +419,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "SPY",
-      "strike": 710.0,
+      "strike": "710",
       "expiry": "2026-12-18",
       "type": "C",
       "premium": 23921655.0,
@@ -428,7 +428,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "META",
-      "strike": 600.0,
+      "strike": "600",
       "expiry": "2026-02-20",
       "type": "C",
       "premium": 22998296.0,
@@ -437,7 +437,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "META",
-      "strike": 745.0,
+      "strike": "745",
       "expiry": "2026-01-16",
       "type": "P",
       "premium": 22522175.0,
@@ -446,7 +446,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "TSLA",
-      "strike": 450.0,
+      "strike": "450",
       "expiry": "2026-01-02",
       "type": "C",
       "premium": 22371830.0,
@@ -455,7 +455,7 @@
     {
       "trade_date": "2025-12-31",
       "ticker": "AAPL",
-      "strike": 295.0,
+      "strike": "295",
       "expiry": "2026-01-02",
       "type": "P",
       "premium": 22220000.0,

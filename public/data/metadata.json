@@ -1,9 +1,9 @@
 {
   "system_status": "Healthy",
-  "last_updated_utc": "2025-12-31T22:52:25.922220+00:00",
+  "last_updated_utc": "2026-01-02T22:20:30.263748+00:00",
   "pipeline_version": "v2.2.0",
   "metrics": {
-    "total_rows_managed": 4597816,
+    "total_rows_managed": 4045086,
     "modules_active": [
       "Chaos",
       "Mag7",
@@ -11,10 +11,10 @@
     ]
   },
   "tests": {
-    "passed": 20,
+    "passed": 28,
     "failed": 0,
-    "total": 20,
-    "generated_at": "2025-12-31T22:51:42.330946+00:00"
+    "total": 28,
+    "generated_at": "2026-01-02T22:20:02.253078+00:00"
   },
   "notices": []
 }
