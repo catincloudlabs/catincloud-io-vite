@@ -1,0 +1,195 @@
+{
+  "meta": {
+    "title": "Risk Radar: Sentiment vs. Volatility",
+    "generated_at": "2026-01-02T21:10:38.044217",
+    "inspector": {
+      "tag": "Alpha",
+      "description": "Visualizes the disconnect between News Sentiment (X-Axis) and Option Market Fear (Y-Axis). Top-Left = Fear, Bottom-Right = Growth.",
+      "sql_logic": "\nSELECT \n    daily_id,\n    trade_date,\n    ticker,\n    sentiment_signal,\n    news_volume,\n    sentiment_std_dev,\n    high_impact_story_count,\n    avg_vol_risk_premium,\n    avg_iv,\n    avg_rv\nFROM STOCKS_ELT_DB.PREP.int_newsapi__market_news_options_joined\nWHERE trade_date >= DATEADD('day', -7, CURRENT_DATE())\nORDER BY trade_date DESC, news_volume DESC\n",
+      "dbt_logic": "-- models/intermediate/int_newsapi__market_news_options_joined.sql\n\n{{ config(\n    materialized='incremental',\n    unique_key='daily_id',\n    schema='PREP',\n    tags=['news', 'signal', 'joined', 'incremental']\n) }}\n\n-- 1. NEWS HISTORY\nWITH history AS (\n    SELECT * FROM {{ ref('int_newsapi__market_news') }}\n    {% if is_incremental() %}\n      WHERE published_at >= DATEADD(day, -3, (SELECT MAX(trade_date) FROM {{ this }}))\n    {% endif %}\n),\n\n-- 2. CALCULATE DAILY SENTIMENT\nsignal_calc AS (\n    SELECT\n        {{ dbt_utils.generate_surrogate_key(['ticker', 'DATE(published_at)']) }} as daily_id,\n        ticker,\n        DATE(published_at) as trade_date,\n        AVG(sentiment_score) as sentiment_signal,\n        COUNT(*) as news_volume,\n        STDDEV(sentiment_score) as sentiment_std_dev,\n        COUNT_IF(ABS(sentiment_score) > 0.5) as high_impact_story_count\n    FROM history\n    GROUP BY 1, 2, 3\n),\n\n-- 3. OPTIONS DATA\noptions_daily AS (\n    SELECT \n        trade_date,\n        underlying_ticker as ticker,\n        AVG(vol_risk_premium) as avg_vol_risk_premium,\n        AVG(implied_volatility_calc) as avg_iv,\n        AVG(realized_volatility_20d) as avg_rv\n    FROM {{ ref('int_massive__stocks_options_joined') }}\n    WHERE ticker_category = 'Mag 7'\n    {% if is_incremental() %}\n      AND trade_date >= DATEADD(day, -3, (SELECT MAX(trade_date) FROM {{ this }}))\n    {% endif %}\n    GROUP BY 1, 2\n)\n\n-- 4. JOIN SENTIMENT + OPTIONS\nSELECT\n    t1.daily_id,\n    t1.trade_date,\n    t1.ticker,\n    t1.sentiment_signal,\n    t1.news_volume,\n    t1.sentiment_std_dev,\n    t1.high_impact_story_count,\n    t2.avg_vol_risk_premium,\n    t2.avg_iv,\n    t2.avg_rv\nFROM signal_calc t1\nLEFT JOIN options_daily t2 \n    ON t1.ticker = t2.ticker \n    AND t1.trade_date = t2.trade_date\n",
+      "dbt_yml": "\n  - name: int_newsapi__market_news\n    description: >\n      [INCREMENTAL TABLE]: The persistent history layer for Market News.\n      Reads from the ephemeral Staging View and persists records to history, ensuring no duplicates.\n      Contains vector embeddings for RAG applications.\n    tags: [\"intermediate\", \"news\", \"history\", \"rag\", \"incremental\"]\n    columns:\n      - name: news_id\n        description: \"Unique Hash ID (MD5 of URL + Ticker). Primary Key.\"\n        tests:\n          - unique\n          - not_null\n      - name: ticker\n        description: \"Stock Ticker (Mag 7).\"\n      - name: published_at\n        description: \"Article publication timestamp.\"\n      - name: title\n        description: \"Article headline.\"\n      - name: summary_embedding\n        description: \"1536-dim vector embedding of the article summary/title.\"\n      - name: dbt_inserted_at\n        description: \"Audit timestamp of when this record was added to history.\"\n\n  - name: int_newsapi__market_news_options_joined\n    description: >\n      [INCREMENTAL TABLE]: The \"Feature Store\" for Sentiment Analysis.\n      Joins daily aggregated News Sentiment (t1) with daily aggregated Options/Volatility metrics (t2).\n      Used to analyze if Sentiment predicts Volatility.\n    tags: [\"intermediate\", \"news\", \"signal\", \"joined\", \"incremental\"]\n    columns:\n      - name: daily_id\n        description: \"Surrogate Key: hash(ticker, trade_date)\"\n        tests:\n          - unique\n          - not_null\n      - name: ticker\n        description: \"Stock Ticker.\"\n      - name: trade_date\n        description: \"Date of the signal.\"\n      - name: sentiment_signal\n        description: \"Average Sentiment Score (-1.0 to 1.0). The primary alpha signal.\"\n      - name: news_volume\n        description: \"Number of articles contributing to the signal.\"\n      - name: sentiment_std_dev\n        description: \"Standard Deviation of sentiment scores. High values = Mixed/Controversial news.\"\n      - name: high_impact_story_count\n        description: \"Count of stories with strong sentiment (|score| > 0.5).\"\n      - name: avg_vol_risk_premium\n        description: \"Daily average Volatility Risk Premium (IV - RV).\"\n      - name: avg_iv\n        description: \"Daily average Implied Volatility.\"\n      - name: total_options_volume\n        description: \"Total options contracts traded that day.\"\n"
+    }
+  },
+  "data": [
+    {
+      "daily_id": "50079f26eb531bed456dfabe84a47b5d",
+      "trade_date": "2026-01-01",
+      "ticker": "META",
+      "sentiment_signal": 0.146484375,
+      "news_volume": 20,
+      "sentiment_std_dev": 0.26917942808566003,
+      "high_impact_story_count": 1,
+      "avg_vol_risk_premium": null,
+      "avg_iv": null,
+      "avg_rv": null
+    },
+    {
+      "daily_id": "94b2192272deb9482337b4522955e4f2",
+      "trade_date": "2026-01-01",
+      "ticker": "NVDA",
+      "sentiment_signal": 0.18638392857142858,
+      "news_volume": 7,
+      "sentiment_std_dev": 0.34582789860546104,
+      "high_impact_story_count": 1,
+      "avg_vol_risk_premium": null,
+      "avg_iv": null,
+      "avg_rv": null
+    },
+    {
+      "daily_id": "3756ee0dfa92cce40b5a0e99b796e354",
+      "trade_date": "2026-01-01",
+      "ticker": "TSLA",
+      "sentiment_signal": -0.059375,
+      "news_volume": 5,
+      "sentiment_std_dev": 0.2493797236786328,
+      "high_impact_story_count": 0,
+      "avg_vol_risk_premium": null,
+      "avg_iv": null,
+      "avg_rv": null
+    },
+    {
+      "daily_id": "31dbebb8346a9aa434c716ff2ab7cc3e",
+      "trade_date": "2026-01-01",
+      "ticker": "AMZN",
+      "sentiment_signal": 0.304402175,
+      "news_volume": 4,
+      "sentiment_std_dev": 0.10948563291972686,
+      "high_impact_story_count": 0,
+      "avg_vol_risk_premium": null,
+      "avg_iv": null,
+      "avg_rv": null
+    },
+    {
+      "daily_id": "b4da456da0c54ef488a590276ad8f24e",
+      "trade_date": "2026-01-01",
+      "ticker": "AAPL",
+      "sentiment_signal": -0.19140625,
+      "news_volume": 2,
+      "sentiment_std_dev": 0.12705824974445776,
+      "high_impact_story_count": 0,
+      "avg_vol_risk_premium": null,
+      "avg_iv": null,
+      "avg_rv": null
+    },
+    {
+      "daily_id": "5aa0304f48461354aecd07a801a9ca1c",
+      "trade_date": "2025-12-31",
+      "ticker": "AMZN",
+      "sentiment_signal": 0.1373743225,
+      "news_volume": 16,
+      "sentiment_std_dev": 0.18812350011125406,
+      "high_impact_story_count": 0,
+      "avg_vol_risk_premium": 19.094418167202722,
+      "avg_iv": 36.6351178133836,
+      "avg_rv": 0.1754069964618088
+    },
+    {
+      "daily_id": "591a096e7237c67327c55222294824f8",
+      "trade_date": "2025-12-31",
+      "ticker": "GOOGL",
+      "sentiment_signal": 0.185030075,
+      "news_volume": 16,
+      "sentiment_std_dev": 0.32171503173397376,
+      "high_impact_story_count": 2,
+      "avg_vol_risk_premium": 14.927707057927915,
+      "avg_iv": 37.391224152191896,
+      "avg_rv": 0.2246351709426398
+    },
+    {
+      "daily_id": "577f83d20e1ce3cf5b3ba794d5c47161",
+      "trade_date": "2025-12-31",
+      "ticker": "MSFT",
+      "sentiment_signal": 0.24427083333333333,
+      "news_volume": 15,
+      "sentiment_std_dev": 0.27555725972185285,
+      "high_impact_story_count": 2,
+      "avg_vol_risk_premium": 10.923841865647441,
+      "avg_iv": 28.731230158730156,
+      "avg_rv": 0.17807388293082715
+    },
+    {
+      "daily_id": "0c67833c2b2e05ecba83d5d1e4be4b5c",
+      "trade_date": "2025-12-31",
+      "ticker": "TSLA",
+      "sentiment_signal": 0.10755208333333334,
+      "news_volume": 15,
+      "sentiment_std_dev": 0.20116708919989307,
+      "high_impact_story_count": 0,
+      "avg_vol_risk_premium": 17.546600950962834,
+      "avg_iv": 57.053784104389095,
+      "avg_rv": 0.39507183153426256
+    },
+    {
+      "daily_id": "5cfc496d99d9bc7022adb692036160a4",
+      "trade_date": "2025-12-31",
+      "ticker": "NVDA",
+      "sentiment_signal": 0.1622596153846154,
+      "news_volume": 13,
+      "sentiment_std_dev": 0.2819346384573547,
+      "high_impact_story_count": 2,
+      "avg_vol_risk_premium": 18.998717172065955,
+      "avg_iv": 49.66059466019418,
+      "avg_rv": 0.3066187748812822
+    },
+    {
+      "daily_id": "2d4e6ab0d7ac1ad7be0cbbc8c5fa2832",
+      "trade_date": "2025-12-31",
+      "ticker": "AAPL",
+      "sentiment_signal": 0.10369318181818182,
+      "news_volume": 11,
+      "sentiment_std_dev": 0.30203353168375796,
+      "high_impact_story_count": 0,
+      "avg_vol_risk_premium": 19.664866546195746,
+      "avg_iv": 29.44751238850347,
+      "avg_rv": 0.09782645842307724
+    },
+    {
+      "daily_id": "83fe0d7adc127e78128f8c80f6205134",
+      "trade_date": "2025-12-30",
+      "ticker": "AAPL",
+      "sentiment_signal": 0.059895833333333336,
+      "news_volume": 6,
+      "sentiment_std_dev": 0.34778935888126544,
+      "high_impact_story_count": 1,
+      "avg_vol_risk_premium": 16.898139951291718,
+      "avg_iv": 27.74059855521156,
+      "avg_rv": 0.10842458603919841
+    },
+    {
+      "daily_id": "e5f155203871a256fb7ca8240e13c7e0",
+      "trade_date": "2025-12-30",
+      "ticker": "MSFT",
+      "sentiment_signal": 0.159375,
+      "news_volume": 5,
+      "sentiment_std_dev": 0.36408261746992265,
+      "high_impact_story_count": 1,
+      "avg_vol_risk_premium": 10.43326395114009,
+      "avg_iv": 28.202750210260724,
+      "avg_rv": 0.17769486259120634
+    },
+    {
+      "daily_id": "1ccd7c0b2097fedf7a5c679898a41b9a",
+      "trade_date": "2025-12-30",
+      "ticker": "GOOGL",
+      "sentiment_signal": 0.09191435499999999,
+      "news_volume": 4,
+      "sentiment_std_dev": 0.3698713610977637,
+      "high_impact_story_count": 1,
+      "avg_vol_risk_premium": 14.64657662465464,
+      "avg_iv": 37.12367895545315,
+      "avg_rv": 0.2247710233079851
+    },
+    {
+      "daily_id": "d4d18870cc56b36d03fa43f1ba9fed25",
+      "trade_date": "2025-12-29",
+      "ticker": "AAPL",
+      "sentiment_signal": -0.36328125,
+      "news_volume": 1,
+      "sentiment_std_dev": null,
+      "high_impact_story_count": 0,
+      "avg_vol_risk_premium": 15.588842337255372,
+      "avg_iv": 27.976162324649298,
+      "avg_rv": 0.12387319987393927
+    }
+  ]
+}
