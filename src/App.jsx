@@ -210,7 +210,7 @@ function App() {
     return [{
        x: dailyData.map(d => d.dte),
        y: dailyData.map(d => d.moneyness),
-       text: dailyData.map(d => d.contract),
+       text: dailyData.map(d => d.strike),
        mode: 'markers',
        type: 'scatter',
        marker: {

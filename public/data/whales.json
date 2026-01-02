@@ -1,464 +1,464 @@
 {
   "meta": {
     "title": "Whale Hunter",
-    "generated_at": "2025-12-31T22:51:59.626433",
+    "generated_at": "2026-01-02T21:42:49.322521",
     "inspector": {
       "tag": "Flow",
       "description": "Top Institutional Options Blocks by Premium Traded (> $500k).",
-      "sql_logic": "\nSELECT \n    TRADE_DATE,\n    TICKER,\n    CONTRACT,\n    EXPIRY,\n    TYPE,\n    PREMIUM_TRADED as premium,\n    SENTIMENT\nFROM STOCKS_ELT_DB.PREP.int_massive__whale_hunter\nWHERE TRADE_DATE = (\n    SELECT MAX(TRADE_DATE) \n    FROM STOCKS_ELT_DB.PREP.int_massive__whale_hunter\n)\nORDER BY PREMIUM_TRADED DESC\nLIMIT 50\n",
-      "dbt_logic": "-- models/intermediate/int_massive__whale_hunter.sql\n\n{{ config(\n    materialized = 'incremental',\n    unique_key = 'id',\n    cluster_by = ['trade_date']\n) }}\n\nwith source as (\n    select * from {{ ref('int_massive__stocks_options_joined') }}\n    \n    {% if is_incremental() %}\n      -- CRITICAL: Only process rows added since the last run.\n      where trade_date >= (select max(trade_date) from {{ this }})\n    {% endif %}\n)\n\nselect\n    id,\n    trade_date,\n    underlying_ticker as ticker,\n    option_symbol as contract,\n    expiration_date as expiry,\n    option_type as type,\n    (option_close_price * option_volume * 100) as premium_traded,\n    case \n        when option_type = 'C' then 'Bullish'\n        else 'Bearish'\n    end as sentiment\nfrom source\nwhere \n    (option_close_price * option_volume * 100) > 500000\n",
-      "dbt_yml": "\n  - name: int_massive__stocks_options_joined\n    description: >\n      The Central Truth. Joins de-duped Options data with de-duped Underlying Stock data.\n      [INCREMENTAL TABLE]: Materializes the join daily to prevent massive history scans.\n    tags: [\"intermediate\", \"joined\", \"core\", \"incremental\"]\n    columns:\n      - name: id\n        tests: [unique, not_null]\n      - name: moneyness\n        description: \"Ratio of Strike / Underlying Price.\"\n      - name: vol_risk_premium\n        description: \"Alpha Signal: Spread between IV and 20-day Realized Volatility.\"\n\n  - name: int_massive__whale_hunter\n    description: >\n      Feeds the 'Whale Hunter' Flow Tape.\n      [INCREMENTAL]: Filters for high-premium block trades (>$500k) to detect institutional activity.\n    tags: [\"dashboard\", \"flow\", \"whales\", \"incremental\"]\n    columns:\n      - name: id\n        tests: [unique, not_null]\n      - name: premium_traded\n        description: \"Total Notional Value (Price * Volume * 100). Filtered for > $500k.\"\n      - name: sentiment\n        description: \"Simple logic: Call = 'Bullish', Put = 'Bearish'.\"\n"
+      "sql_logic": "\nSELECT \n    TRADE_DATE,\n    TICKER,\n    STRIKE,\n    EXPIRY,\n    TYPE,\n    PREMIUM_TRADED as premium,\n    SENTIMENT\nFROM STOCKS_ELT_DB.PREP.int_massive__whale_hunter\nWHERE TRADE_DATE = (\n    SELECT MAX(TRADE_DATE) \n    FROM STOCKS_ELT_DB.PREP.int_massive__whale_hunter\n)\nORDER BY PREMIUM_TRADED DESC\nLIMIT 50\n",
+      "dbt_logic": "-- models/intermediate/int_massive__whale_hunter.sql\n\n{{ config(\n    materialized = 'incremental',\n    unique_key = 'id',\n    cluster_by = ['trade_date']\n) }}\n\nwith source as (\n    select * from {{ ref('int_massive__stocks_options_joined') }}\n    \n    {% if is_incremental() %}\n      -- CRITICAL: Only process rows added since the last run.\n      where trade_date >= (select max(trade_date) from {{ this }})\n    {% endif %}\n)\n\nselect\n    id,\n    trade_date,\n    underlying_ticker as ticker,\n    strike,\n    expiration_date as expiry,\n    option_type as type,\n    (option_close_price * option_volume * 100) as premium_traded,\n    case \n        when option_type = 'C' then 'Bullish'\n        else 'Bearish'\n    end as sentiment\nfrom source\nwhere \n    (option_close_price * option_volume * 100) > 500000\n",
+      "dbt_yml": "\n  - name: int_massive__stocks_options_joined\n    description: >\n      The Central Truth. Joins de-duped Options data with de-duped Underlying Stock data.\n      [INCREMENTAL TABLE]: Materializes the join daily to prevent massive history scans.\n    tags: [\"intermediate\", \"joined\", \"core\", \"incremental\"]\n    columns:\n      - name: id\n        tests: [unique, not_null]\n      - name: moneyness\n        description: \"Ratio of Strike / Underlying Price.\"\n      - name: vol_risk_premium\n        description: \"Alpha Signal: Spread between IV and 20-day Realized Volatility.\"\n\n  - name: int_massive__whale_hunter\n    description: >\n      Feeds the 'Whale Hunter' Flow Tape.\n      [INCREMENTAL]: Filters for high-premium block trades (>$500k) to detect institutional activity.\n    tags: [\"dashboard\", \"flow\", \"whales\", \"incremental\"]\n    columns:\n      - name: id\n        tests: [unique, not_null]\n      - name: strike\n        description: \"The Strike Price of the option contract.\"\n      - name: premium_traded\n        description: \"Total Notional Value (Price * Volume * 100). Filtered for > $500k.\"\n      - name: sentiment\n        description: \"Simple logic: Call = 'Bullish', Put = 'Bearish'.\"\n"
     }
   },
   "data": [
     {
-      "trade_date": "2025-12-30",
+      "trade_date": "2025-12-31",
       "ticker": "TSLA",
-      "contract": "O:TSLA260102P00460000",
-      "expiry": "2026-01-02",
-      "type": "P",
-      "premium": 66503439.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "NVDA",
-      "contract": "O:NVDA260116C00000500",
+      "strike": 10.0,
       "expiry": "2026-01-16",
       "type": "C",
-      "premium": 58703119.0,
+      "premium": 236573190.0,
       "sentiment": "Bullish"
     },
     {
-      "trade_date": "2025-12-30",
-      "ticker": "META",
-      "contract": "O:META260116P00730000",
-      "expiry": "2026-01-16",
-      "type": "P",
-      "premium": 58237585.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "TSLA",
-      "contract": "O:TSLA260102C00440000",
-      "expiry": "2026-01-02",
-      "type": "C",
-      "premium": 53453400.0,
-      "sentiment": "Bullish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "TSLA",
-      "contract": "O:TSLA260102P00510000",
-      "expiry": "2026-01-02",
-      "type": "P",
-      "premium": 52928028.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "TSLA",
-      "contract": "O:TSLA260116C00005000",
-      "expiry": "2026-01-16",
-      "type": "C",
-      "premium": 49887840.0,
-      "sentiment": "Bullish"
-    },
-    {
-      "trade_date": "2025-12-30",
+      "trade_date": "2025-12-31",
       "ticker": "SPY",
-      "contract": "O:SPY251230P00688000",
-      "expiry": "2025-12-30",
+      "strike": 685.0,
+      "expiry": "2025-12-31",
       "type": "P",
-      "premium": 49554440.0,
+      "premium": 141984726.0,
       "sentiment": "Bearish"
     },
     {
-      "trade_date": "2025-12-30",
-      "ticker": "META",
-      "contract": "O:META260116P00765000",
-      "expiry": "2026-01-16",
-      "type": "P",
-      "premium": 47476250.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "NVDA",
-      "contract": "O:NVDA280121C00140000",
-      "expiry": "2028-01-21",
-      "type": "C",
-      "premium": 47309340.0,
-      "sentiment": "Bullish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "MSFT",
-      "contract": "O:MSFT260116P00525000",
-      "expiry": "2026-01-16",
-      "type": "P",
-      "premium": 45387000.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "TSLA",
-      "contract": "O:TSLA260102P00455000",
-      "expiry": "2026-01-02",
-      "type": "P",
-      "premium": 43495445.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "TSLA",
-      "contract": "O:TSLA260102C00450000",
-      "expiry": "2026-01-02",
-      "type": "C",
-      "premium": 43086670.0,
-      "sentiment": "Bullish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "META",
-      "contract": "O:META260116P00760000",
-      "expiry": "2026-01-16",
-      "type": "P",
-      "premium": 39538275.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "RDDT",
-      "contract": "O:RDDT280616P00150000",
-      "expiry": "2028-06-16",
-      "type": "P",
-      "premium": 37850000.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "QQQ",
-      "contract": "O:QQQ260116P00660000",
-      "expiry": "2026-01-16",
-      "type": "P",
-      "premium": 37672920.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "META",
-      "contract": "O:META260116P00800000",
-      "expiry": "2026-01-16",
-      "type": "P",
-      "premium": 37219500.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "TSLA",
-      "contract": "O:TSLA260102C00460000",
-      "expiry": "2026-01-02",
-      "type": "C",
-      "premium": 36710955.0,
-      "sentiment": "Bullish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "TSLA",
-      "contract": "O:TSLA260102P00480000",
-      "expiry": "2026-01-02",
-      "type": "P",
-      "premium": 36644400.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "AAPL",
-      "contract": "O:AAPL260102P00290000",
-      "expiry": "2026-01-02",
-      "type": "P",
-      "premium": 35059800.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "TSLA",
-      "contract": "O:TSLA260102P00470000",
-      "expiry": "2026-01-02",
-      "type": "P",
-      "premium": 34993350.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "QQQ",
-      "contract": "O:QQQ251230P00621000",
-      "expiry": "2025-12-30",
-      "type": "P",
-      "premium": 34400837.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "QQQ",
-      "contract": "O:QQQ260116P00650000",
-      "expiry": "2026-01-16",
-      "type": "P",
-      "premium": 33242770.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "NVDA",
-      "contract": "O:NVDA260116C00001000",
-      "expiry": "2026-01-16",
-      "type": "C",
-      "premium": 32126160.0,
-      "sentiment": "Bullish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "RDDT",
-      "contract": "O:RDDT280616C00350000",
-      "expiry": "2028-06-16",
-      "type": "C",
-      "premium": 31326960.0,
-      "sentiment": "Bullish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "META",
-      "contract": "O:META260116P00750000",
-      "expiry": "2026-01-16",
-      "type": "P",
-      "premium": 30646980.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "TSLA",
-      "contract": "O:TSLA260102P00457500",
-      "expiry": "2026-01-02",
-      "type": "P",
-      "premium": 29638853.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2025-12-30",
+      "trade_date": "2025-12-31",
       "ticker": "SPY",
-      "contract": "O:SPY260116P00705000",
+      "strike": 686.0,
+      "expiry": "2025-12-31",
+      "type": "P",
+      "premium": 95061681.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "QQQ",
+      "strike": 660.0,
       "expiry": "2026-01-16",
       "type": "P",
-      "premium": 26620140.0,
+      "premium": 93371211.0,
       "sentiment": "Bearish"
     },
     {
-      "trade_date": "2025-12-30",
-      "ticker": "TSLA",
-      "contract": "O:TSLA260102P00450000",
+      "trade_date": "2025-12-31",
+      "ticker": "QQQ",
+      "strike": 650.0,
+      "expiry": "2026-01-16",
+      "type": "P",
+      "premium": 82212273.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "SPY",
+      "strike": 684.0,
+      "expiry": "2025-12-31",
+      "type": "P",
+      "premium": 75205458.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "QQQ",
+      "strike": 617.0,
+      "expiry": "2025-12-31",
+      "type": "P",
+      "premium": 71875065.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "QQQ",
+      "strike": 618.0,
+      "expiry": "2025-12-31",
+      "type": "P",
+      "premium": 68592089.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "QQQ",
+      "strike": 630.0,
       "expiry": "2026-01-02",
       "type": "P",
-      "premium": 25696500.0,
+      "premium": 66612348.0,
       "sentiment": "Bearish"
     },
     {
-      "trade_date": "2025-12-30",
-      "ticker": "TSLA",
-      "contract": "O:TSLA261218P00480000",
+      "trade_date": "2025-12-31",
+      "ticker": "META",
+      "strike": 750.0,
+      "expiry": "2026-01-16",
+      "type": "P",
+      "premium": 61380000.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "META",
+      "strike": 730.0,
+      "expiry": "2026-01-16",
+      "type": "P",
+      "premium": 60031090.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "SPY",
+      "strike": 760.0,
       "expiry": "2026-12-18",
       "type": "P",
-      "premium": 25557700.0,
+      "premium": 59782970.0,
       "sentiment": "Bearish"
     },
     {
-      "trade_date": "2025-12-30",
+      "trade_date": "2025-12-31",
+      "ticker": "AAPL",
+      "strike": 290.0,
+      "expiry": "2026-01-02",
+      "type": "P",
+      "premium": 58120425.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "META",
+      "strike": 765.0,
+      "expiry": "2026-01-16",
+      "type": "P",
+      "premium": 57141000.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "SPY",
+      "strike": 750.0,
+      "expiry": "2026-12-18",
+      "type": "P",
+      "premium": 56845140.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "MSFT",
+      "strike": 525.0,
+      "expiry": "2026-01-16",
+      "type": "P",
+      "premium": 52455084.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2025-12-31",
       "ticker": "TSLA",
-      "contract": "O:TSLA260109C00450000",
-      "expiry": "2026-01-09",
+      "strike": 470.0,
+      "expiry": "2026-01-02",
+      "type": "P",
+      "premium": 51478385.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "TSLA",
+      "strike": 440.0,
+      "expiry": "2026-01-02",
       "type": "C",
-      "premium": 24720720.0,
+      "premium": 49783275.0,
       "sentiment": "Bullish"
     },
     {
-      "trade_date": "2025-12-30",
-      "ticker": "TSLA",
-      "contract": "O:TSLA260109P00470000",
-      "expiry": "2026-01-09",
+      "trade_date": "2025-12-31",
+      "ticker": "SPY",
+      "strike": 687.0,
+      "expiry": "2025-12-31",
       "type": "P",
-      "premium": 24680600.0,
+      "premium": 48851800.0,
       "sentiment": "Bearish"
     },
     {
-      "trade_date": "2025-12-30",
-      "ticker": "TSLA",
-      "contract": "O:TSLA260918P00480000",
-      "expiry": "2026-09-18",
+      "trade_date": "2025-12-31",
+      "ticker": "SPY",
+      "strike": 740.0,
+      "expiry": "2026-12-18",
       "type": "P",
-      "premium": 23036163.0,
+      "premium": 48390000.0,
       "sentiment": "Bearish"
     },
     {
-      "trade_date": "2025-12-30",
+      "trade_date": "2025-12-31",
+      "ticker": "SPY",
+      "strike": 730.0,
+      "expiry": "2026-12-18",
+      "type": "P",
+      "premium": 46837854.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2025-12-31",
       "ticker": "TSLA",
-      "contract": "O:TSLA260102P00465000",
+      "strike": 5.0,
+      "expiry": "2026-01-16",
+      "type": "C",
+      "premium": 46476560.0,
+      "sentiment": "Bullish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "META",
+      "strike": 800.0,
+      "expiry": "2026-01-16",
+      "type": "P",
+      "premium": 44215560.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "TSLA",
+      "strike": 455.0,
       "expiry": "2026-01-02",
       "type": "P",
-      "premium": 22027208.0,
+      "premium": 43889768.0,
       "sentiment": "Bearish"
     },
     {
-      "trade_date": "2025-12-30",
-      "ticker": "META",
-      "contract": "O:META270115C00700000",
+      "trade_date": "2025-12-31",
+      "ticker": "MSFT",
+      "strike": 520.0,
+      "expiry": "2026-01-16",
+      "type": "P",
+      "premium": 37646400.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "TSLA",
+      "strike": 460.0,
+      "expiry": "2026-01-02",
+      "type": "P",
+      "premium": 36423535.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "SPY",
+      "strike": 550.0,
       "expiry": "2027-01-15",
       "type": "C",
-      "premium": 21995556.0,
+      "premium": 36139756.0,
       "sentiment": "Bullish"
     },
     {
-      "trade_date": "2025-12-30",
-      "ticker": "SPY",
-      "contract": "O:SPY260102C00678000",
-      "expiry": "2026-01-02",
-      "type": "C",
-      "premium": 21983145.0,
-      "sentiment": "Bullish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "AAPL",
-      "contract": "O:AAPL260102P00295000",
-      "expiry": "2026-01-02",
-      "type": "P",
-      "premium": 21680000.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "MSFT",
-      "contract": "O:MSFT260116P00530000",
-      "expiry": "2026-01-16",
-      "type": "P",
-      "premium": 21231000.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "TSLA",
-      "contract": "O:TSLA260102C00455000",
-      "expiry": "2026-01-02",
-      "type": "C",
-      "premium": 21027600.0,
-      "sentiment": "Bullish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "MSFT",
-      "contract": "O:MSFT260220C00460000",
-      "expiry": "2026-02-20",
-      "type": "C",
-      "premium": 19568212.0,
-      "sentiment": "Bullish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "NVDA",
-      "contract": "O:NVDA260116C00002000",
-      "expiry": "2026-01-16",
-      "type": "C",
-      "premium": 19125475.0,
-      "sentiment": "Bullish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "SPY",
-      "contract": "O:SPY260430P00655000",
-      "expiry": "2026-04-30",
-      "type": "P",
-      "premium": 18140121.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "SPY",
-      "contract": "O:SPY251230P00689000",
-      "expiry": "2025-12-30",
-      "type": "P",
-      "premium": 17769024.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "SPY",
-      "contract": "O:SPY260109P00700000",
-      "expiry": "2026-01-09",
-      "type": "P",
-      "premium": 17442170.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "TSLA",
-      "contract": "O:TSLA260109P00460000",
-      "expiry": "2026-01-09",
-      "type": "P",
-      "premium": 17371039.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "AAPL",
-      "contract": "O:AAPL270115C00220000",
-      "expiry": "2027-01-15",
-      "type": "C",
-      "premium": 17231890.0,
-      "sentiment": "Bullish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "TSLA",
-      "contract": "O:TSLA260102P00462500",
-      "expiry": "2026-01-02",
-      "type": "P",
-      "premium": 17131490.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2025-12-30",
-      "ticker": "SPY",
-      "contract": "O:SPY260220P00750000",
-      "expiry": "2026-02-20",
-      "type": "P",
-      "premium": 16970800.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2025-12-30",
+      "trade_date": "2025-12-31",
       "ticker": "META",
-      "contract": "O:META260116P00780000",
+      "strike": 740.0,
       "expiry": "2026-01-16",
       "type": "P",
-      "premium": 16768875.0,
+      "premium": 36033465.0,
       "sentiment": "Bearish"
     },
     {
-      "trade_date": "2025-12-30",
-      "ticker": "NVDA",
-      "contract": "O:NVDA260320C00160000",
+      "trade_date": "2025-12-31",
+      "ticker": "TSLA",
+      "strike": 452.5,
+      "expiry": "2026-01-02",
+      "type": "P",
+      "premium": 35066490.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "SPY",
+      "strike": 535.0,
       "expiry": "2026-03-20",
       "type": "C",
-      "premium": 16521869.0,
+      "premium": 34531938.0,
       "sentiment": "Bullish"
     },
     {
-      "trade_date": "2025-12-30",
+      "trade_date": "2025-12-31",
       "ticker": "TSLA",
-      "contract": "O:TSLA260102P00500000",
+      "strike": 450.0,
       "expiry": "2026-01-02",
       "type": "P",
-      "premium": 16465588.0,
+      "premium": 34373150.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "SPY",
+      "strike": 750.0,
+      "expiry": "2026-02-20",
+      "type": "P",
+      "premium": 34277984.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "MSFT",
+      "strike": 535.0,
+      "expiry": "2026-01-16",
+      "type": "P",
+      "premium": 32412996.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "AAPL",
+      "strike": 295.0,
+      "expiry": "2026-01-16",
+      "type": "P",
+      "premium": 31965115.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "MSFT",
+      "strike": 530.0,
+      "expiry": "2026-01-16",
+      "type": "P",
+      "premium": 30332840.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "TSLA",
+      "strike": 480.0,
+      "expiry": "2026-01-02",
+      "type": "P",
+      "premium": 29027924.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "QQQ",
+      "strike": 619.0,
+      "expiry": "2025-12-31",
+      "type": "P",
+      "premium": 28899000.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "SPY",
+      "strike": 710.0,
+      "expiry": "2026-12-18",
+      "type": "P",
+      "premium": 28839610.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "SPY",
+      "strike": 685.0,
+      "expiry": "2026-01-02",
+      "type": "P",
+      "premium": 27315387.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "SPY",
+      "strike": 684.0,
+      "expiry": "2026-01-02",
+      "type": "P",
+      "premium": 26929749.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "QQQ",
+      "strike": 616.0,
+      "expiry": "2025-12-31",
+      "type": "P",
+      "premium": 26324088.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "TSLA",
+      "strike": 455.0,
+      "expiry": "2026-01-02",
+      "type": "C",
+      "premium": 25871734.0,
+      "sentiment": "Bullish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "META",
+      "strike": 760.0,
+      "expiry": "2026-01-16",
+      "type": "P",
+      "premium": 25867060.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "TSLA",
+      "strike": 507.5,
+      "expiry": "2026-01-02",
+      "type": "P",
+      "premium": 24882520.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "META",
+      "strike": 780.0,
+      "expiry": "2026-01-16",
+      "type": "P",
+      "premium": 24840000.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "SPY",
+      "strike": 710.0,
+      "expiry": "2026-12-18",
+      "type": "C",
+      "premium": 23921655.0,
+      "sentiment": "Bullish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "META",
+      "strike": 600.0,
+      "expiry": "2026-02-20",
+      "type": "C",
+      "premium": 22998296.0,
+      "sentiment": "Bullish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "META",
+      "strike": 745.0,
+      "expiry": "2026-01-16",
+      "type": "P",
+      "premium": 22522175.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "TSLA",
+      "strike": 450.0,
+      "expiry": "2026-01-02",
+      "type": "C",
+      "premium": 22371830.0,
+      "sentiment": "Bullish"
+    },
+    {
+      "trade_date": "2025-12-31",
+      "ticker": "AAPL",
+      "strike": 295.0,
+      "expiry": "2026-01-02",
+      "type": "P",
+      "premium": 22220000.0,
       "sentiment": "Bearish"
     }
   ]
