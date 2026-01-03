@@ -398,7 +398,7 @@ html, body {
   padding: 12px 24px;
   gap: 40px;
   position: sticky;
-  top: 32px; /* Height of the SystemStatusRibbon */
+  top: 0px;
   z-index: 900; 
   margin-bottom: 24px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.4);
