@@ -128,14 +128,43 @@ function App() {
 
   const getFilteredChaosPlot = () => {
     if (!selectedDate || chaosRaw.length === 0) return [];
+    
     const dailyData = chaosRaw.filter(d => d.trade_date?.startsWith(selectedDate) && d.ticker === selectedTicker);
+    
     return [{
-       x: dailyData.map(d => d.dte), y: dailyData.map(d => d.moneyness),
+       x: dailyData.map(d => d.dte), 
+       y: dailyData.map(d => d.moneyness),
        text: dailyData.map(d => `Strike: ${d.strike}<br>IV: ${d.iv.toFixed(1)}%`),
-       mode: 'markers', type: 'scatter',
+       mode: 'markers', 
+       type: 'scatter',
        marker: {
          size: dailyData.map(d => Math.log(d.chaos_score || d.volume) * 3),
-         color: dailyData.map(d => d.iv), colorscale: 'Viridis', showscale: !isMobile, opacity: 0.8, line: { color: 'white', width: 0.5 }
+         color: dailyData.map(d => d.iv), 
+         colorscale: 'Viridis', 
+         showscale: !isMobile, 
+         opacity: 0.8, 
+         line: { color: 'white', width: 0.5 },
+         // --- NEW CONFIGURATION HERE ---
+         colorbar: {
+            title: 'IV%',
+            titleside: 'right',
+            titlefont: { size: 10, color: '#94a3b8' },
+            tickfont: { size: 10, color: '#94a3b8' },
+            // Horizontal orientation
+            orientation: 'h', 
+            // Position: Top (1) Right (1)
+            x: 1,
+            y: 1,
+            xanchor: 'right',
+            yanchor: 'top',
+            // Dimensions: 30% of chart width, 12px thick
+            len: 0.3,
+            thickness: 12,
+            // Slight background to ensure text is readable over dots
+            bgcolor: 'rgba(15, 23, 42, 0.8)',
+            bordercolor: '#334155',
+            borderwidth: 1
+         }
        }
     }];
   };
