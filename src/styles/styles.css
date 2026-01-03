@@ -98,10 +98,8 @@ html, body {
   border-color: var(--accent-dim);
 }
 
-/* Terminal Panel Variant */
-.panel-terminal {
-  background: var(--bg-black);
-  border: none;
+.panel-min-height {
+  min-height: 320px;
 }
 
 .panel-header {
@@ -124,6 +122,18 @@ html, body {
   gap: 8px;
 }
 
+.panel-title-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+.panel-header-actions {
+  display: flex;
+  align-items: center;
+}
+
 .panel-desc {
   font-size: 0.8rem;
   color: var(--text-muted);
@@ -140,8 +150,11 @@ html, body {
   font-weight: 500;
 }
 
+.tag-red { color: var(--red); border: 1px solid rgba(239, 68, 68, 0.2); }
+.tag-blue { color: var(--accent); border: 1px solid rgba(56, 189, 248, 0.2); }
+
 /* ==================================================================== */
-/* 5. GRID SPANS (UPDATED)                                              */
+/* 5. GRID SPANS & LAYOUT UTILITIES                                     */
 /* ==================================================================== */
 
 .span-1 { 
@@ -152,7 +165,12 @@ html, body {
 
 .span-2 { 
   grid-column: span 2; 
-  height: 500px; 
+  display: flex;
+  flex-direction: column;
+}
+
+.span-3 {
+  grid-column: span 3;
   display: flex;
   flex-direction: column;
 }
@@ -166,13 +184,6 @@ html, body {
 /* UTILITY: Hero Height */
 .h-tall {
   height: 600px; 
-}
-
-/* Mobile: Reset height */
-@media (max-width: 1024px) {
-    .h-tall {
-        height: 500px; 
-    }
 }
 
 /* ==================================================================== */
@@ -217,59 +228,14 @@ html, body {
   font-size: 0.85rem;
 }
 
-/* System Status Dot */
-.status-dot {
-  width: 8px;
-  height: 8px;
-  background: var(--green);
-  border-radius: 50%;
-  box-shadow: 0 0 8px var(--green);
-}
-
-.system-metrics {
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  color: var(--text-muted);
-}
-
 /* ==================================================================== */
 /* 7. CONTROLS & CHARTS                                                 */
 /* ==================================================================== */
-
-.controls-bar {
-  display: flex;
-  gap: 12px;
-  background: rgba(0,0,0,0.2);
-  padding: 8px;
-  border-radius: 6px;
-  margin-bottom: 12px;
-}
-
-.controls-bar select {
-  background: var(--bg-app);
-  color: var(--text-main);
-  border: 1px solid var(--border);
-  padding: 6px 12px;
-  border-radius: 4px;
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  cursor: pointer;
-}
-
-.helper-text {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  align-self: center;
-}
 
 .chart-box {
   flex: 1;
   width: 100%;
   min-height: 0;
-}
-
-.chart-box-sm {
-  height: 350px;
 }
 
 .loading-state {
@@ -278,46 +244,43 @@ html, body {
   padding: 20px;
 }
 
-/* Animation State */
-.fade-in-section {
-  opacity: 0;
-  transition: opacity 0.5s;
+.loading-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(15, 23, 42, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
 }
 
-/* Terminal Log Area */
-.term-header {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  color: var(--accent-dim);
-  margin-bottom: 8px;
+.scan-line {
+  width: 100%;
+  height: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+  animation: scan 2s linear infinite;
 }
 
-.term-output {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  color: var(--green);
-  overflow-x: auto;
-  white-space: pre-wrap;
-  max-height: 100px;
-  margin: 0;
+@keyframes scan {
+  0% { transform: translateY(-100px); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translateY(100px); opacity: 0; }
 }
 
 /* ==================================================================== */
-/* 8. MODAL                                                             */
+/* 8. MODALS (Logic, Bio, etc)                                          */
 /* ==================================================================== */
 
 .modal-overlay {
   display: flex; 
   position: fixed;
   z-index: 1000;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
   background: rgba(0,0,0,0.8);
   backdrop-filter: blur(4px);
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
   align-items: flex-start; 
   justify-content: center;
   padding: 20px 0;
@@ -333,52 +296,11 @@ html, body {
   border: 1px solid var(--border);
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
   animation: modalSlide 0.3s ease-out;
-  position: relative;
 }
 
 @keyframes modalSlide {
   from { opacity: 0; transform: translateY(-20px); }
   to { opacity: 1; transform: translateY(0); }
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 10px;
-  margin-bottom: 10px;
-  /* Ensure header doesn't break on small screens */
-  min-width: 0; 
-}
-
-/* UPDATED: Title truncation styles */
-.modal-title {
-  margin: 0;
-  color: var(--text-main);
-  font-size: 1.1rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* NEW: Icon shrink prevention */
-.modal-title-icon {
-  flex-shrink: 0;
-}
-
-.modal-close {
-  cursor: pointer;
-  font-size: 1.5rem;
-  color: var(--text-muted);
-  line-height: 1;
-  flex-shrink: 0; /* Don't squash the close button */
-}
-
-.modal-close:hover { color: var(--red); }
-
-.modal-chart-container {
-  height: 450px;
-  width: 100%;
 }
 
 /* ==================================================================== */
@@ -416,12 +338,11 @@ html, body {
   border-top: 1px solid var(--border);
 }
 
-.code-view-container {
-  height: 100%;
-  overflow: auto;
-  font-size: 0.8rem;
+.border-top-subtle {
+  border-top: 1px solid rgba(255,255,255,0.05);
 }
 
+/* TABLE STYLES */
 .table-view-container {
   overflow: auto;
   height: 100%;
@@ -430,7 +351,8 @@ html, body {
 
 .table-standard {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate; /* Required for custom spacing */
+  border-spacing: 0 2px;
   font-size: 0.8rem;
   font-family: var(--font-mono);
 }
@@ -443,7 +365,6 @@ html, body {
 }
 
 .table-header-row {
-  border-bottom: 1px solid var(--border);
   text-align: left;
   color: var(--text-muted);
 }
@@ -452,446 +373,30 @@ html, body {
   padding: 8px;
 }
 
-.table-row-divider {
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+/* NEW: Contextual Row Colors */
+.row-bullish {
+  background-color: rgba(34, 197, 94, 0.04);
+  border-left: 3px solid var(--green);
+}
+
+.row-bearish {
+  background-color: rgba(239, 68, 68, 0.04);
+  border-left: 3px solid var(--red);
 }
 
 /* ==================================================================== */
-/* 10. TIME SLIDER COMPONENT                                            */
-/* ==================================================================== */
-
-.time-slider-container {
-  padding: 12px 16px;
-  background-color: transparent;
-  width: 100%;
-  box-sizing: border-box; /* Ensures padding doesn't overflow width */
-}
-
-.time-slider-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-  font-size: 11px;
-  color: var(--text-muted);
-  font-family: var(--font-mono);
-}
-
-.time-slider-label {
-  display: flex;
-  align-items: center;
-  font-weight: bold;
-}
-
-.time-slider-date {
-  color: #e2e8f0;
-  font-weight: bold;
-}
-
-.time-slider-input {
-  width: 100%;
-  cursor: pointer;
-  accent-color: var(--accent);
-  height: 24px; /* Optimized touch target for mobile */
-  margin-top: 8px;
-  margin-bottom: 8px;
-}
-
-.time-slider-ticks {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 4px;
-  padding: 0 4px;
-}
-
-.time-slider-tick {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background-color: #475569; /* Default inactive color */
-  transition: background-color 0.2s;
-}
-
-.time-slider-tick.active {
-  background-color: var(--accent); /* Active color */
-}
-
-/* ==================================================================== */
-/* 11. SYSTEM STATUS RIBBON                                             */
-/* ==================================================================== */
-
-.status-ribbon-container {
-  width: 100%;
-  height: 32px;
-  background-color: #0f172a; /* Slate-900 */
-  border-bottom: 1px solid #1e293b; /* Slate-800 */
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 20px;
-  font-size: 11px;
-  font-family: var(--font-mono);
-  color: var(--text-muted);
-  box-sizing: border-box;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-}
-
-/* Dynamic Status Colors via Variables */
-.status-ribbon-container.status-healthy {
-  --status-color: #10B981; /* Green */
-}
-.status-ribbon-container.status-warning {
-  --status-color: #F59E0B; /* Amber */
-}
-
-.status-section-left, 
-.status-section-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  white-space: nowrap; /* Prevents text wrapping */
-}
-
-.status-separator {
-  color: #334155;
-  margin: 0 4px;
-}
-
-.status-text-main {
-  font-weight: 700;
-  color: #e2e8f0;
-}
-
-.status-metric-text {
-  letter-spacing: 0.05em;
-}
-
-.status-value {
-  color: #e2e8f0;
-  font-weight: 600;
-}
-
-/* Indicator Animation */
-.status-indicator-wrapper {
-  position: relative;
-  width: 8px;
-  height: 8px;
-  margin-right: 6px;
-}
-
-.status-dot-static {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background-color: var(--status-color);
-}
-
-.status-dot-ping {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background-color: var(--status-color);
-  opacity: 0.75;
-  animation: statusPing 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
-}
-
-@keyframes statusPing {
-  75%, 100% {
-    transform: scale(2);
-    opacity: 0;
-  }
-}
-
-/* ==================================================================== */
-/* 12. METRIC CARD UTILITIES                                            */
-/* ==================================================================== */
-
-.panel-icon-wrapper {
-  background: transparent;
-  padding: 0;
-  display: flex;
-  align-items: center;
-}
-
-.metric-status-dot {
-  position: absolute;
-  top: 24px;
-  right: 50px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-.metric-status-dot.status-green {
-  background-color: var(--green);
-  box-shadow: 0 0 8px var(--green);
-}
-
-.metric-status-dot.status-yellow {
-  background-color: var(--yellow);
-  box-shadow: 0 0 8px var(--yellow);
-}
-
-.metric-status-dot.status-red {
-  background-color: var(--red);
-  box-shadow: 0 0 8px var(--red);
-}
-
-/* ==================================================================== */
-/* 13. MAG 7 TICKER CONTROLS (New)                                      */
-/* ==================================================================== */
-
-.ticker-controls-container {
-  display: flex;
-  flex-wrap: wrap; /* Allows pills to wrap on small mobile screens */
-  gap: 8px;
-  padding: 12px 16px;
-  border-top: 1px solid rgba(255,255,255,0.05);
-  margin-top: auto; /* Pushes to bottom of card */
-}
-
-.ticker-pill {
-  background: transparent;
-  border: 1px solid #334155; /* Default inactive border */
-  color: #64748b; /* Default inactive text */
-  padding: 4px 10px;
-  border-radius: 9999px; /* Pill shape */
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.ticker-pill:hover {
-  background: rgba(255,255,255,0.05);
-  color: var(--text-muted);
-}
-
-/* Active State (Dynamic Color via inline CSS var) */
-/* The --pill-color var is passed from React style prop */
-.ticker-pill.active {
-  border-color: var(--pill-color);
-  color: var(--pill-color);
-  background: rgba(0,0,0,0.2); /* Subtle dim background */
-  box-shadow: 0 0 5px rgba(0,0,0,0.5); /* Slight lift */
-}
-
-/* ==================================================================== */
-/* 14. MOBILE OPTIMIZATION (TABLET & DESKTOP)                           */
-/* ==================================================================== */
-
-@media (max-width: 1024px) {
-  /* 1. Gain screen real estate by reducing outer padding */
-  .app-container {
-    padding: 12px;
-  }
-
-  /* 2. Use a 2-column grid instead of 1-column stack */
-  .bento-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px; 
-  }
-
-  /* 3. Force Charts to take full width (span both columns) */
-  .span-2, .span-4, .span-3 {
-    grid-column: span 2; /* In a 2-column grid, this means Full Width */
-    height: 400px; 
-    margin-bottom: 12px;
-  }
-  
-  .panel {
-    padding: 16px; 
-  }
-
-  .metric-big {
-    font-size: 1.5rem; 
-  }
-}
-
-/* ==================================================================== */
-/* 15. MOBILE OPTIMIZATION (STRICT PHONE)                               */
-/* ==================================================================== */
-
-@media (max-width: 768px) {
-  /* 1. Bento Grid - KEEP 2 COLUMNS */
-  .bento-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px; /* Reduced gap from 12px to 8px for more space */
-  }
-
-  /* 2. MAXIMIZE SCREEN WIDTH */
-  .app-container {
-    padding: 8px; 
-  }
-
-  .panel {
-    padding: 12px 8px; 
-  }
-
-  /* 3. INCREASED HEIGHT FOR CHARTS */
-  .span-2, .span-4 {
-    grid-column: span 2;
-    height: 550px; 
-    margin-bottom: 0;
-  }
-  
-  /* 4. OPTIMIZE MODAL FOR PHONE (NEW) */
-  .modal-box {
-    width: 95%; /* Use almost full width on phone */
-    padding: 15px;
-  }
-
-  /* 5. System Status Ribbon - Strict Cleanup */
-  .mobile-hide {
-    display: none !important;
-  }
-
-  .status-ribbon-container {
-    justify-content: center;
-  }
-
-  /* 6. Header Fixes */
-  .app-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px; /* Reduced gap since subtitle is gone */
-    margin-bottom: 16px; /* Pulls the charts up higher */
-  }
-
-  /* Force navigation to be a horizontal row on mobile */
-  .header-nav {
-    display: flex;
-    flex-direction: row; 
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-    padding-top: 8px;
-    border-top: 1px solid rgba(255,255,255,0.05);
-    flex-wrap: wrap; /* Prevents breaking on very small screens */
-  }
-
-  /* Make separators visible again */
-  .nav-separator {
-    display: inline-block !important; 
-    color: #334155;
-    font-size: 0.8rem;
-  }
-
-  .nav-link {
-    /* Reset alignment for horizontal flow */
-    align-self: auto; 
-    font-size: 0.75rem;
-    white-space: nowrap;
-  }
-
-  /* Adjust brand size slightly for mobile context */
-  .brand-title {
-    font-size: 1.25rem;
-  }
-
-  /* 7. Table Scroll Fix */
-  .table-view-container {
-    max-width: 100vw;
-  }
-
-  /* 8. HIDE PLOTLY LEGEND/COLORBAR */
-  .js-plotly-plot .colorbar {
-    display: none !important;
-  }
-
-  /* 9. ARCHITECTURE MODAL INTERACTION (NEW) */
-  .arch-flow {
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .arch-node {
-    width: 100%;
-    display: block; /* Reset flex for internal block layout */
-    text-align: left;
-    padding: 12px;
-    cursor: pointer;
-    border-color: rgba(255,255,255,0.1);
-  }
-
-  /* Header Container for Icon + Text + Chevron */
-  .arch-node-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-  }
-  
-  .arch-node .arch-icon-box {
-    margin-bottom: 0;
-    width: 40px;
-    height: 40px;
-    flex-shrink: 0;
-  }
-  
-  .arch-meta {
-    flex: 1; /* Pushes chevron to the right */
-  }
-
-  /* Hide Description by default */
-  .arch-node .arch-desc {
-    display: none;
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid rgba(255,255,255,0.05);
-    font-size: 0.8rem;
-    line-height: 1.4;
-    color: var(--text-muted);
-    animation: fadeIn 0.3s ease;
-  }
-
-  /* Show Description when Active */
-  .arch-node.active .arch-desc {
-    display: block;
-  }
-
-  /* Active Card Styling */
-  .arch-node.active {
-    background: rgba(255,255,255,0.08);
-    border-color: var(--accent);
-  }
-
-  /* Chevron Animation */
-  .mobile-chevron {
-    color: var(--text-muted);
-    transition: transform 0.2s;
-  }
-  
-  .arch-node.active .mobile-chevron {
-    transform: rotate(180deg);
-    color: var(--accent);
-  }
-
-  /* Arrows */
-  .desktop-arrow { display: none; }
-  .mobile-arrow { display: block; opacity: 0.3; }
-}
-
-/* ==================================================================== */
-/* 16. GLOBAL CONTROL BAR (STICKY HEADER)                               */
+/* 10. GLOBAL CONTROL BAR (STICKY HEADER)                               */
 /* ==================================================================== */
 
 .global-control-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(15, 23, 42, 0.95); /* Deep Navy with slight transparency */
+  background: rgba(15, 23, 42, 0.95);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid #1e293b;
   padding: 12px 24px;
   gap: 40px;
-  
-  /* STICKY POSITIONING */
   position: sticky;
   top: 32px; /* Height of the SystemStatusRibbon */
   z-index: 900; 
@@ -910,7 +415,7 @@ html, body {
   letter-spacing: 1px;
 }
 
-/* --- LEFT: TICKER PILLS --- */
+/* Ticker Pills */
 .ticker-selector-group {
   display: flex;
   flex-direction: column;
@@ -923,8 +428,7 @@ html, body {
   flex-wrap: nowrap;
 }
 
-.ticker-pills-row .ticker-pill {
-  /* Overrides for the global bar specific look */
+.ticker-pill {
   background: rgba(30, 41, 59, 0.5);
   border: 1px solid #334155;
   color: #94a3b8;
@@ -932,22 +436,24 @@ html, body {
   border-radius: 4px; 
   font-family: var(--font-mono);
   font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.ticker-pills-row .ticker-pill:hover {
+.ticker-pill:hover {
   background: #334155;
   color: #fff;
 }
 
-.ticker-pills-row .ticker-pill.active {
-  background: rgba(14, 165, 233, 0.15); /* Cyan Glow */
+.ticker-pill.active {
+  background: rgba(14, 165, 233, 0.15);
   border-color: #0ea5e9;
   color: #38bdf8;
   box-shadow: 0 0 10px rgba(14, 165, 233, 0.2);
   font-weight: bold;
 }
 
-/* --- RIGHT: TIME SLIDER --- */
+/* Time Slider */
 .time-travel-group {
   flex-grow: 1;
   display: flex;
@@ -974,6 +480,7 @@ html, body {
 
 .time-slider-input::-webkit-slider-thumb {
   -webkit-appearance: none;
+  appearance: none;
   width: 16px;
   height: 16px;
   background: #38bdf8;
@@ -1003,305 +510,104 @@ html, body {
 }
 
 /* ==================================================================== */
-/* 17. ARCHITECTURE MODAL UTILITIES (New)                               */
+/* 11. SYSTEM STATUS RIBBON                                             */
 /* ==================================================================== */
 
-.architecture-modal {
-  max-width: 1000px; 
-}
-
-/* Wrapper logic to handle overflow */
-.modal-title-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  overflow: hidden; /* Essential for ellipsis to work */
-  min-width: 0;     /* Allows flex child to shrink below content size */
-}
-
-.ml-2 { margin-left: 8px; }
-
-.arch-container {
-  padding: 10px 0;
-}
-
-.arch-intro {
-  text-align: center;
-  color: var(--text-muted);
-  font-family: var(--font-mono);
-  font-size: 0.9rem;
-  margin-bottom: 32px;
-  font-style: italic;
-}
-
-/* THE FLOW GRID */
-.arch-flow {
+.status-ribbon-container {
+  width: 100%;
+  height: 32px;
+  background-color: #0f172a;
+  border-bottom: 1px solid #1e293b;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-}
-
-/* NODES */
-.arch-node {
-  flex: 1;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 20px 16px;
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  text-align: center;
-  transition: border-color 0.2s;
+  padding: 0 20px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  box-sizing: border-box;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
-.arch-node:hover {
-  border-color: var(--accent);
+.status-ribbon-container.status-healthy { --status-color: #10B981; }
+.status-ribbon-container.status-warning { --status-color: #F59E0B; }
+
+/* ==================================================================== */
+/* 12. TABBED HEADER UTILITIES (New)                                    */
+/* ==================================================================== */
+
+.header-tabs-wrapper {
+  margin-right: 8px;
+  border-right: 1px solid var(--border);
+  padding-right: 8px;
+}
+
+.header-tabs {
+  display: flex;
+  gap: 4px;
+  background: rgba(0,0,0,0.2);
+  padding: 2px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.header-tab-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+
+.header-tab-btn:hover {
+  color: var(--text-main);
   background: rgba(255,255,255,0.05);
 }
 
-.arch-icon-box {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: #1e293b;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 12px;
-  border: 1px solid var(--border);
-  color: inherit; /* Allows the icon to take the border color */
-}
-
-.color-yellow { border-color: var(--yellow); color: var(--yellow); }
-.color-blue { border-color: var(--accent); color: var(--accent); }
-.color-orange { border-color: #f97316; color: #f97316; }
-.color-green { border-color: var(--green); color: var(--green); }
-
-.arch-label {
-  font-size: 0.8rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  color: var(--text-main);
-  margin-bottom: 4px;
-}
-
-.arch-tech {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
+.header-tab-btn.active {
+  background: var(--bg-app);
   color: var(--accent);
-  margin-bottom: 8px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.05);
 }
 
-.arch-desc {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  line-height: 1.4;
-}
-
-/* ARROWS */
-.arch-arrow {
-  align-self: center;
-  color: var(--text-muted);
-  font-size: 1.5rem;
-  font-weight: bold;
-  opacity: 0.5;
-}
-
-.desktop-arrow { display: block; }
-.mobile-arrow { display: none; }
-
-/* FOOTER */
-.arch-footer {
-  margin-top: 32px;
-  padding-top: 20px;
-  border-top: 1px solid var(--border);
-  text-align: center;
-}
-
-.arch-cicd {
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  background: rgba(0,0,0,0.3);
-  display: inline-block;
-  padding: 8px 16px;
-  border-radius: 4px;
-  border: 1px solid var(--border);
-}
-
-/* RESPONSIVE FLOW (Vertical on Mobile) */
-@media (max-width: 768px) {
-  .arch-flow {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .arch-node {
-    width: 100%; /* Full width cards */
-    flex-direction: row; /* Horizontal interior layout for cards */
-    text-align: left;
-    gap: 16px;
-  }
-  
-  .arch-node .arch-icon-box {
-    margin-bottom: 0;
-    flex-shrink: 0;
-  }
-
-  .arch-node .arch-desc {
-    display: none; /* Hide description to save vertical space on phone */
-  }
-
-  /* Swap Arrows */
-  .desktop-arrow { display: none; }
-  .mobile-arrow { display: block; }
-}
-
-/* ==================================================================== */
-/* 18. HEADER NAVIGATION (Updated)                                      */
-/* ==================================================================== */
-
-.header-nav {
+/* Compact Ticker Controls (Sidebar) */
+.ticker-controls-compact {
+  padding: 8px;
+  gap: 4px;
   display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.nav-separator {
-  color: var(--border);
-}
-
-.icon-link {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  color: var(--accent); 
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.icon-link:hover {
-  text-decoration: underline;
-  opacity: 0.8;
+  justify-content: center;
 }
 
 /* ==================================================================== */
-/* 19. LOGIC MODAL (Code Viewer)                                        */
+/* 13. UTILITIES                                                        */
 /* ==================================================================== */
 
-.logic-modal {
-  max-width: 800px;
-  background: #1e1e1e;
-  border: 1px solid #333;
-}
-
-.logic-header {
-  border-bottom: 1px solid #333;
-  background: #252526;
-  padding: 12px 16px;
-  margin-bottom: 0;
-}
-
-/* UPDATED: Scrollable Tabs for Mobile */
-.logic-tabs {
-  display: flex;
-  background: #252526;
-  border-bottom: 1px solid #1e1e1e;
-  overflow-x: auto; /* Enable horizontal scroll */
-  white-space: nowrap;
-  -webkit-overflow-scrolling: touch; /* Smooth iOS scrolling */
-  scrollbar-width: none; /* Hide Firefox scrollbar */
-}
-
-.logic-tabs::-webkit-scrollbar {
-  display: none; /* Hide Chrome/Safari scrollbar */
-}
-
-/* UPDATED: Tab item */
-.logic-tab {
-  display: flex;
-  align-items: center;
-  padding: 10px 16px;
-  background: transparent;
-  border: none;
-  color: #9ca3af;
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  cursor: pointer;
-  border-top: 2px solid transparent;
-  transition: background 0.2s;
-  flex-shrink: 0; /* Prevent tabs from shrinking/wrapping */
-}
-
-.logic-tab:hover {
-  background: #2d2d2d;
-  color: #f8fafc;
-}
-
-.logic-tab.active {
-  background: #1e1e1e;
-  color: #f8fafc;
-  border-top-color: var(--accent);
-}
-
-.icon-blue { color: #4fc1ff; }
-.icon-orange { color: #ce9178; }
-
-.logic-content {
-  padding: 0;
-  background: #1e1e1e;
-}
-
-.code-block-wrapper {
-  padding: 20px;
-  overflow-x: auto;
-  max-height: 500px;
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  line-height: 1.5;
-  color: #d4d4d4;
-  white-space: pre-wrap;
-}
-
-.sql-code { margin: 0; }
-
-.logic-footer {
-  padding: 8px 16px;
-  background: #007acc;
-  color: white;
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  display: flex;
-  justify-content: flex-end;
-}
-
-/* ==================================================================== */
-/* 20. UTILITIES                                                        */
-/* ==================================================================== */
-
-/* Spacing */
 .mr-2 { margin-right: 8px; }
+.ml-1 { margin-left: 4px; }
 .ml-2 { margin-left: 8px; }
-
-/* Typography & Alignment */
+.pr-2 { padding-right: 8px; }
 .text-right { text-align: right; }
 .font-bold { font-weight: 700; }
+.font-mono { font-family: var(--font-mono); }
+.text-white { color: #fff; }
 .text-muted { color: var(--text-muted); }
-
-/* Color Utilities (Ensures these work globally) */
 .text-green { color: var(--green); }
 .text-red { color: var(--red); }
-.text-yellow { color: var(--yellow); } /* <--- ADDED THIS LINE */
+.text-yellow { color: var(--yellow); }
 .text-accent { color: var(--accent); }
+.text-sm { font-size: 0.75rem; }
 
-/* Logic Button Layout */
+.border-right { border-right: 1px solid var(--border); }
+
 .logic-btn-inner {
   display: flex;
   align-items: center;
@@ -1309,339 +615,37 @@ html, body {
   font-size: 0.75rem;
 }
 
-/* Chart Sizing */
 .plotly-fill {
   width: 100%;
   height: 100%;
 }
 
 /* ==================================================================== */
-/* 21. MANUAL MODAL (The "man" Page)                                    */
+/* 14. MOBILE OPTIMIZATION                                              */
 /* ==================================================================== */
 
-.manual-modal {
-  max-width: 900px;
-  height: 80vh; /* Fixed height to allow internal scrolling */
-  display: flex;
-  flex-direction: column;
-  padding: 0; /* Remove default padding for split layout */
+@media (max-width: 1024px) {
+  /* Collapse layout */
+  .app-container { padding: 12px; }
+  .bento-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  
+  /* Reset spans for 2-column grid */
+  .span-1, .span-2, .span-3, .span-4 {
+    grid-column: span 2; 
+    height: auto;
+    margin-bottom: 12px;
+  }
+  
+  .h-tall { height: 420px; }
+  .metric-big { font-size: 1.5rem; }
+  .desktop-only { display: none; }
 }
 
-.manual-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 0;
-}
-
-.manual-body {
-  display: flex;
-  flex: 1;
-  overflow: hidden; /* Contains the scroll areas */
-}
-
-/* Sidebar Navigation */
-.manual-sidebar {
-  width: 200px;
-  border-right: 1px solid var(--border);
-  padding: 20px 0;
-  background: rgba(0,0,0,0.2);
-  display: flex;
-  flex-direction: column;
-}
-
-.manual-nav-btn {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  text-align: left;
-  padding: 10px 20px;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  cursor: pointer;
-  border-left: 2px solid transparent;
-  transition: all 0.2s;
-}
-
-.manual-nav-btn:hover {
-  color: var(--text-main);
-  background: rgba(255,255,255,0.05);
-}
-
-.manual-nav-btn.active {
-  color: var(--accent);
-  border-left-color: var(--accent);
-  background: rgba(56, 189, 248, 0.1);
-  font-weight: bold;
-}
-
-/* Right Content Area */
-.manual-content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 30px;
-  scroll-behavior: smooth;
-}
-
-.manual-h3 {
-  font-size: 1rem;
-  color: var(--accent);
-  margin-top: 0;
-  margin-bottom: 16px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border-bottom: 1px dashed var(--border);
-  padding-bottom: 8px;
-}
-
-.manual-p {
-  font-size: 0.85rem;
-  line-height: 1.6;
-  color: #e2e8f0;
-  margin-bottom: 16px;
-}
-
-/* Nested List Styling */
-.manual-list-nested {
-  margin-top: 4px;
-  margin-bottom: 8px;
-  padding-left: 20px; 
-  list-style-type: disc; 
-}
-
-.manual-list {
-  font-size: 0.85rem;
-  line-height: 1.6;
-  color: var(--text-muted);
-  padding-left: 20px;
-}
-
-.manual-list li {
-  margin-bottom: 8px;
-}
-
-.manual-divider {
-  height: 1px;
-  background: var(--border);
-  margin: 40px 0;
-  opacity: 0.5;
-}
-
-/* Keyboard Key styling */
-.key-cap {
-  border: 1px solid var(--text-muted);
-  border-radius: 4px;
-  padding: 2px 6px;
-  font-size: 0.7rem;
-  background: rgba(255,255,255,0.1);
-}
-
-/* Mobile Tweak: Stack columns */
 @media (max-width: 768px) {
-  .manual-body {
-    flex-direction: column;
-  }
-  .manual-sidebar {
-    width: 100%;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-    flex-direction: row;
-    overflow-x: auto;
-    padding: 10px;
-  }
-  .manual-nav-btn {
-    white-space: nowrap;
-    border-left: none;
-    border-bottom: 2px solid transparent;
-  }
-  .manual-nav-btn.active {
-    border-left: none;
-    border-bottom-color: var(--accent);
-  }
+  .bento-grid { grid-template-columns: 1fr; }
+  .span-1, .span-2, .span-3, .span-4 { grid-column: span 1; }
+  .status-ribbon-container { justify-content: center; }
+  .global-control-bar { flex-direction: column; gap: 16px; align-items: stretch; top: 0; }
+  .ticker-selector-group { width: 100%; overflow-x: auto; padding-bottom: 4px; }
+  .modal-box { width: 95%; }
 }
-
-/* ==================================================================== */
-/* 22. BIO MODAL (The "Who Am I")                                       */
-/* ==================================================================== */
-
-.bio-modal {
-  max-width: 600px;
-  background: #0f172a; /* Darker Slate */
-  border: 1px solid var(--accent); /* Highlight Border */
-  box-shadow: 0 0 20px rgba(56, 189, 248, 0.15);
-}
-
-.bio-header {
-  background: rgba(56, 189, 248, 0.1);
-  border-bottom: 1px solid var(--accent);
-}
-
-.bio-content {
-  padding: 10px;
-}
-
-/* Profile Grid */
-.bio-grid {
-  display: flex;
-  gap: 24px;
-  align-items: center;
-}
-
-.bio-avatar {
-  flex-shrink: 0;
-}
-
-.bio-profile-img {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid var(--accent); /* Blue border to match theme */
-  box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
-}
-
-/* Fallback Placeholder (Modified) */
-.avatar-placeholder {
-  width: 100px;
-  height: 100px;
-  background: #1e293b;
-  border: 2px dashed var(--text-muted); /* Dashed to indicate missing file */
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-}
-
-.avatar-placeholder {
-  width: 100px;
-  height: 100px;
-  background: #1e293b;
-  border: 2px solid var(--text-muted);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  font-weight: bold;
-  font-size: 1.5rem;
-}
-
-.bio-name {
-  margin: 0 0 4px 0;
-  font-size: 1.5rem;
-  color: var(--text-main);
-  letter-spacing: -0.02em;
-}
-
-.bio-role {
-  color: var(--accent);
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  margin-bottom: 12px;
-}
-
-.bio-text p {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  line-height: 1.5;
-  margin: 0 0 8px 0;
-}
-
-.bio-divider {
-  margin: 20px 0;
-}
-
-/* Stack Grid */
-.bio-h3 {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-bottom: 12px;
-}
-
-.stack-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 8px;
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  color: #e2e8f0;
-}
-
-/* Contact Row */
-.contact-row {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.contact-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  text-decoration: none;
-  color: var(--text-main);
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  transition: all 0.2s;
-  background: rgba(255,255,255,0.03);
-}
-
-.contact-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: rgba(56, 189, 248, 0.1);
-}
-
-.contact-btn.btn-primary {
-  background: var(--accent);
-  color: #0f172a;
-  border-color: var(--accent);
-  font-weight: bold;
-}
-
-.contact-btn.btn-primary:hover {
-  background: var(--accent-dim);
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
-}
-
-/* Mobile Tweak */
-@media (max-width: 600px) {
-  .bio-grid {
-    flex-direction: column;
-    text-align: center;
-  }
-  .bio-role {
-    margin-bottom: 16px;
-  }
-  .contact-row {
-    justify-content: center;
-  }
-}
-
-/* ==================================================================== */
-/* 23. NEW UTILITIES (Status & Tickers)                                 */
-/* ==================================================================== */
-
-/* 1. Missing Semantic Color */
-.text-purple { color: #c084fc; } /* For Extreme Risk */
-
-/* 2. Flex Utility for TimeSlider */
-.time-slider-wrapper {
-  flex: 1;
-  min-width: 0; /* Prevents flex items from overflowing */
-}
-
-/* 3. Mag 7 Ticker Colors (Replaces inline styles) */
-/* These define the CSS variable used by .ticker-pill */
-.ticker-NVDA  { --pill-color: #4ade80; }
-.ticker-TSLA  { --pill-color: #f87171; }
-.ticker-AAPL  { --pill-color: #94a3b8; }
-.ticker-MSFT  { --pill-color: #38bdf8; }
-.ticker-AMZN  { --pill-color: #fbbf24; }
-.ticker-GOOGL { --pill-color: #818cf8; }
-.ticker-META  { --pill-color: #c084fc; }

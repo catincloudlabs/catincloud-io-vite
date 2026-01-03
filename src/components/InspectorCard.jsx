@@ -1,80 +1,90 @@
 import React, { useState } from 'react';
 import Plot from 'react-plotly.js';
-import { FileCode } from 'lucide-react'; 
+import { FileCode, Activity } from 'lucide-react'; 
 import LogicModal from './LogicModal';
 
 const InspectorCard = ({ 
   title, tag, desc, chartType, isLoading, 
   plotData, plotLayout, tableData, 
-  sqlCode, // This is the DAG code passed from App.js
-  dbtCode, // This is the dbt SQL code passed from App.js
-  dbtYml,  // This is the dbt YAML docs passed from App.js
+  sqlCode, dbtCode, dbtYml,
+  headerControls, 
   children 
 }) => {
   
   const [showLogic, setShowLogic] = useState(false);
   const isCall = (type) => ['C', 'CALL', 'Call'].includes(type);
-
-  // Check if we have any code to show to determine if button is enabled
   const hasLogic = sqlCode || dbtCode || dbtYml;
-
+  
   return (
-    <div className="panel panel-flex-column">
+    <div className="panel panel-flex-column panel-min-height">
       
-      {/* HEADER */}
+      {/* --- HEADER --- */}
       <div className="panel-header">
-        <div className="panel-title">
-          <span>{title}</span>
-          {tag && <span className="tag ml-2">{tag}</span>}
+        <div className="panel-title panel-header-actions">
+          {isLoading ? <Activity className="spin-slow mr-2" size={16} color="#64748b"/> : null}
+          <span className="panel-title-text">{title}</span>
+          {tag && <span className={`tag ml-2 ${tag === 'RISK' ? 'tag-red' : 'tag-blue'}`}>{tag}</span>}
         </div>
         
-        {/* LOGIC TRIGGER BUTTON */}
-        {hasLogic && (
-          <button 
-            className="nav-link panel-toggle-btn"
-            onClick={() => setShowLogic(true)}
-            disabled={isLoading}
-            title="View Logic"
-          >
-            <div className="logic-btn-inner">
-              <FileCode size={14} />
-              <span>View Logic</span>
-            </div>
-          </button>
-        )}
+        <div className="panel-header-actions">
+            {headerControls && (
+                <div className="header-tabs-wrapper">
+                    {headerControls}
+                </div>
+            )}
+
+            {hasLogic && (
+            <button 
+                className="nav-link panel-toggle-btn"
+                onClick={() => setShowLogic(true)}
+                disabled={isLoading}
+                title="Inspect Data Pipeline"
+            >
+                <div className="logic-btn-inner">
+                <FileCode size={14} />
+                <span className="ml-1 desktop-only">Logic</span>
+                </div>
+            </button>
+            )}
+        </div>
       </div>
 
       <p className="panel-desc">{desc}</p>
 
-      {/* CONTENT AREA */}
+      {/* --- CONTENT AREA --- */}
       <div className="chart-box chart-content-area">
-        {isLoading && <div className="loading-state">Fetching pipeline artifacts...</div>}
+        
+        {isLoading && (
+            <div className="loading-overlay">
+                <div className="scan-line"></div>
+            </div>
+        )}
 
         {!isLoading && (
            <>
-             {/* SCATTER / LINE */}
              {chartType !== 'table' && plotData && (
                 <Plot 
                   data={plotData} 
                   layout={{
                     ...plotLayout,
                     autosize: true,
-                    margin: plotLayout.margin || { l: 40, r: 20, t: 20, b: 40 },
+                    margin: plotLayout.margin || { l: 40, r: 20, t: 20, b: 30 },
                     paper_bgcolor: 'rgba(0,0,0,0)',
                     plot_bgcolor: 'rgba(0,0,0,0)',
-                    font: { color: '#94a3b8', family: 'JetBrains Mono, monospace' }
+                    font: { color: '#cbd5e1', family: 'JetBrains Mono, monospace' },
+                    xaxis: { ...plotLayout.xaxis, gridcolor: '#334155' },
+                    yaxis: { ...plotLayout.yaxis, gridcolor: '#334155' }
                   }}
                   useResizeHandler={true} 
                   className="plotly-fill"
-                  config={{ displayModeBar: false }}
+                  config={{ displayModeBar: false, responsive: true }}
                 />
              )}
 
-             {/* TABLE */}
              {chartType === 'table' && tableData && (
-               <div className="table-view-container">
+               <div className="table-view-container custom-scrollbar">
                  <table className="table-standard">
-                   <thead className="table-header">
+                   <thead className="table-header sticky-header">
                      <tr className="table-header-row">
                         <th className="table-cell-padding">TICKER</th>
                         <th className="table-cell-padding">STRIKE</th>
@@ -86,13 +96,17 @@ const InspectorCard = ({
                    </thead>
                    <tbody>
                      {tableData.map((row, i) => (
-                       <tr key={i} className="table-row-divider">
+                       <tr key={i} className={row.sentiment === 'Bullish' ? 'row-bullish' : 'row-bearish'}>
                          <td className="table-cell-padding font-bold text-accent">{row.ticker}</td>
                          <td className="table-cell-padding">{row.strike}</td>
-                         <td className="table-cell-padding text-muted">{row.expiry}</td>
-                         <td className={`table-cell-padding ${isCall(row.type) ? 'text-green' : 'text-red'}`}>{row.type}</td>
-                         <td className="table-cell-padding text-right">${(row.premium / 1000000).toFixed(1)}M</td>
-                         <td className={`table-cell-padding text-right ${row.sentiment === 'Bullish' ? 'text-green' : 'text-red'}`}>
+                         <td className="table-cell-padding text-muted text-sm">{row.expiry}</td>
+                         <td className={`table-cell-padding font-bold ${isCall(row.type) ? 'text-green' : 'text-red'}`}>
+                            {row.type}
+                         </td>
+                         <td className="table-cell-padding text-right font-mono text-white">
+                            ${(row.premium / 1000000).toFixed(1)}M
+                         </td>
+                         <td className={`table-cell-padding text-right font-bold ${row.sentiment === 'Bullish' ? 'text-green' : 'text-red'}`}>
                            {row.sentiment}
                          </td>
                        </tr>
@@ -105,21 +119,16 @@ const InspectorCard = ({
         )}
       </div>
 
-      {/* FOOTER CONTROLS */}
+      {/* --- FOOTER --- */}
       {children && (
-        <div className="chart-footer-area">
+        <div className="chart-footer-area border-top-subtle">
           {children}
         </div>
       )}
 
-      {/* THE LOGIC MODAL */}
       <LogicModal 
-        isOpen={showLogic} 
-        onClose={() => setShowLogic(false)}
-        title={title}
-        dagCode={sqlCode} 
-        dbtCode={dbtCode}
-        dbtYml={dbtYml}
+        isOpen={showLogic} onClose={() => setShowLogic(false)} title={title}
+        dagCode={sqlCode} dbtCode={dbtCode} dbtYml={dbtYml}
       />
     </div>
   );
