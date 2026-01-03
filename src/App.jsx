@@ -85,7 +85,7 @@ function App() {
       }).catch(err => { console.error("Sent/Vol Error:", err); setSentVolLoading(false); });
   }, []);
 
-  // --- METRICS & PLOTTING LOGIC (Minified for brevity, logic unchanged) ---
+  // --- METRICS & PLOTTING LOGIC ---
   const whaleMetric = useMemo(() => {
     if (!whaleData?.data) return { value: "$0M", sub: "No Data" };
     let bullTotal = 0, total = 0;
@@ -144,26 +144,22 @@ function App() {
          showscale: !isMobile, 
          opacity: 0.8, 
          line: { color: 'white', width: 0.5 },
-         // --- NEW CONFIGURATION HERE ---
+         // --- UPDATED COLORBAR: Horizontal, Top Right Header ---
          colorbar: {
             title: 'IV%',
             titleside: 'right',
-            titlefont: { size: 10, color: '#94a3b8' },
-            tickfont: { size: 10, color: '#94a3b8' },
-            // Horizontal orientation
+            titlefont: { size: 10, color: '#94a3b8', family: 'JetBrains Mono' },
+            tickfont: { size: 10, color: '#94a3b8', family: 'JetBrains Mono' },
             orientation: 'h', 
-            // Position: Top (1) Right (1)
+            // Position just above the chart area (y > 1)
             x: 1,
-            y: 1,
+            y: 1.02,
             xanchor: 'right',
-            yanchor: 'top',
-            // Dimensions: 30% of chart width, 12px thick
-            len: 0.3,
-            thickness: 12,
-            // Slight background to ensure text is readable over dots
-            bgcolor: 'rgba(15, 23, 42, 0.8)',
-            bordercolor: '#334155',
-            borderwidth: 1
+            yanchor: 'bottom',
+            len: 0.35,
+            thickness: 10,
+            bgcolor: 'rgba(0,0,0,0)',
+            outlinecolor: 'rgba(0,0,0,0)'
          }
        }
     }];
@@ -186,7 +182,9 @@ function App() {
     xaxis: { title: 'DTE (Days to Expiration)', gridcolor: '#334155', zerolinecolor: '#334155' },
     yaxis: { title: 'Moneyness (Strike / Price)', gridcolor: '#334155', zerolinecolor: '#334155', range: [0.5, 1.8] },
     showlegend: false, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
-    font: { color: '#94a3b8' }, margin: isMobile ? { t: 0, b: 40, l: 30, r: 0 } : { t: 10, b: 40, l: 40, r: 20 }
+    font: { color: '#94a3b8' }, 
+    // UPDATED MARGINS: Increased top (t) margin to 40 to fit the floating bar
+    margin: isMobile ? { t: 40, b: 40, l: 30, r: 0 } : { t: 40, b: 40, l: 40, r: 20 }
   };
 
   const lineLayout = {
