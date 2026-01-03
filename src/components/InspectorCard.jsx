@@ -4,16 +4,27 @@ import { FileCode, Activity } from 'lucide-react';
 import LogicModal from './LogicModal';
 
 const InspectorCard = ({ 
-  title, tag, desc, chartType, isLoading, 
-  plotData, plotLayout, tableData, 
-  sqlCode, dbtCode, dbtYml,
+  title, 
+  tag, 
+  desc, 
+  chartType, 
+  isLoading, 
+  plotData, 
+  plotLayout, 
+  tableData, 
+  // Logic Props (Passed from Dashboard JSON)
+  sqlCode, 
+  dbtCode, 
+  dbtYml,
   headerControls, 
   children 
 }) => {
   
   const [showLogic, setShowLogic] = useState(false);
   const isCall = (type) => ['C', 'CALL', 'Call'].includes(type);
-  const hasLogic = sqlCode || dbtCode || dbtYml;
+  
+  // Only show the code button if we actually have code to show
+  const hasLogic = Boolean(sqlCode || dbtCode || dbtYml);
   
   return (
     <div className="panel panel-flex-column panel-min-height">
@@ -27,18 +38,20 @@ const InspectorCard = ({
         </div>
         
         <div className="panel-header-actions">
+            {/* Custom Controls (e.g. Ticker Selector specific to this card) */}
             {headerControls && (
                 <div className="header-tabs-wrapper">
                     {headerControls}
                 </div>
             )}
 
+            {/* Inspector Button */}
             {hasLogic && (
             <button 
                 className="nav-link panel-toggle-btn"
                 onClick={() => setShowLogic(true)}
                 disabled={isLoading}
-                title="Inspect Data Pipeline"
+                title="Inspect Data Pipeline Logic"
             >
                 <div className="logic-btn-inner">
                 <FileCode size={14} />
@@ -62,6 +75,7 @@ const InspectorCard = ({
 
         {!isLoading && (
            <>
+             {/* PLOTLY CHART */}
              {chartType !== 'table' && plotData && (
                 <Plot 
                   data={plotData} 
@@ -81,6 +95,7 @@ const InspectorCard = ({
                 />
              )}
 
+             {/* DATA TABLE */}
              {chartType === 'table' && tableData && (
                <div className="table-view-container custom-scrollbar">
                  <table className="table-standard">
@@ -104,7 +119,7 @@ const InspectorCard = ({
                             {row.type}
                          </td>
                          <td className="table-cell-padding text-right font-mono text-white">
-                            ${(row.premium / 1000000).toFixed(1)}M
+                           ${(row.premium / 1000000).toFixed(1)}M
                          </td>
                          <td className={`table-cell-padding text-right font-bold ${row.sentiment === 'Bullish' ? 'text-green' : 'text-red'}`}>
                            {row.sentiment}
@@ -126,9 +141,15 @@ const InspectorCard = ({
         </div>
       )}
 
+      {/* --- LOGIC MODAL --- */}
       <LogicModal 
-        isOpen={showLogic} onClose={() => setShowLogic(false)} title={title}
-        dagCode={sqlCode} dbtCode={dbtCode} dbtYml={dbtYml}
+        isOpen={showLogic} 
+        onClose={() => setShowLogic(false)} 
+        title={title}
+        // Map the props directly to the modal
+        dagCode={sqlCode} 
+        dbtCode={dbtCode} 
+        dbtYml={dbtYml}
       />
     </div>
   );

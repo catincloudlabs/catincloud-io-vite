@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-// Define the shape of our metadata based on the Airflow DAG
+// Matches the JSON payload from the Airflow DAG
 export interface SystemMetadata {
   system_status: 'Healthy' | 'Degraded' | 'Maintenance' | 'Stale';
   last_updated_utc: string;
@@ -9,11 +9,12 @@ export interface SystemMetadata {
     total_rows_managed: number;
     modules_active: string[];
   };
-  // NEW: Added support for dbt test results
+  // NEW: Matches the S3 'tests' object
   tests?: {
     passed: number;
     failed: number;
     total: number;
+    error?: string; // Handle edge case where S3 fetch fails in DAG
   };
   notices: string[];
 }
@@ -26,7 +27,7 @@ export const useSystemHeartbeat = () => {
   useEffect(() => {
     const fetchHeartbeat = async () => {
       try {
-        // Cache Busting: ?t=timestamp forces a fresh fetch from CloudFront/S3
+        // Cache Busting: Forces fresh fetch from CloudFront/S3
         const response = await fetch(`/data/metadata.json?t=${Date.now()}`);
         
         if (!response.ok) {
@@ -35,34 +36,34 @@ export const useSystemHeartbeat = () => {
         
         const result: SystemMetadata = await response.json();
 
-        // --- CLIENT-SIDE FRESHNESS CHECK ---
-        // Verify if data is stale based on the last update time
+        // --- CLIENT-SIDE CHECKS ---
+        
+        // 1. Freshness Check
         const lastUpdate = new Date(result.last_updated_utc).getTime();
         const now = Date.now();
         const hoursDiff = (now - lastUpdate) / (1000 * 60 * 60);
 
-        // 1. Detect Weekend Window (UTC)
-        // 0=Sun, 1=Mon, ..., 6=Sat
-        // We include Monday (1) because new data usually arrives Tuesday morning.
-        const currentDay = new Date().getUTCDay();
+        // Weekend Window: Friday PM to Tuesday AM allow for 72h gap
+        const currentDay = new Date().getUTCDay(); // 0=Sun, 6=Sat
         const isWeekendWindow = [0, 1, 6].includes(currentDay);
-
-        // 2. Set Dynamic Threshold
-        // Weekends: 72h (Friday Data -> Tuesday Run)
-        // Weekdays: 26h (Daily Run + Buffer)
         const stalenessThreshold = isWeekendWindow ? 72 : 26;
 
         if (hoursDiff > stalenessThreshold) {
-           console.warn(`System Heartbeat is stale by ${hoursDiff.toFixed(1)} hours (Threshold: ${stalenessThreshold}h).`);
-           
-           // Override status to warn the user
-           result.system_status = 'Stale'; 
-           
-           // Add a helpful notice explaining why
-           const reason = isWeekendWindow ? "Market Closed" : "Pipeline Delay";
-           result.notices.push(`Data stream paused (${reason}). Last update: ${hoursDiff.toFixed(0)}h ago.`);
+           console.warn(`Heartbeat stale: ${hoursDiff.toFixed(1)}h (Limit: ${stalenessThreshold}h)`);
+           result.system_status = 'Stale';
+           const reason = isWeekendWindow ? "Market Closed" : "Pipeline Latency";
+           result.notices.push(`Data Stream Paused (${reason}).`);
         }
-        // -----------------------------------
+
+        // 2. Test Integrity Check (Client-side Backup)
+        if (result.tests && result.tests.failed > 0) {
+            console.error(`Data Quality Alert: ${result.tests.failed} tests failed.`);
+            // Optional: Force degraded state if not already set by DAG
+            if (result.system_status === 'Healthy') {
+                result.system_status = 'Degraded';
+                result.notices.push(`Data Integrity Warning: ${result.tests.failed} validation tests failed.`);
+            }
+        }
 
         setData(result);
       } catch (err) {
@@ -75,8 +76,8 @@ export const useSystemHeartbeat = () => {
 
     fetchHeartbeat();
     
-    // Poll every 5 minutes to keep the UI fresh without refreshing page
-    const interval = setInterval(fetchHeartbeat, 5 * 60 * 1000);
+    // Poll every 2 minutes
+    const interval = setInterval(fetchHeartbeat, 2 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 
