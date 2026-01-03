@@ -649,3 +649,174 @@ html, body {
   .ticker-selector-group { width: 100%; overflow-x: auto; padding-bottom: 4px; }
   .modal-box { width: 95%; }
 }
+
+/* ==================================================================== */
+/* 15. HEADER UTILITY CLUSTER (Top Right)                               */
+/* ==================================================================== */
+
+/* 1. Base Header Layout (3-Column) */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  margin-bottom: 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  gap: 24px;
+}
+
+.brand-section {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 2. Center Navigation */
+.header-nav-center {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(0,0,0,0.2);
+  padding: 8px 24px;
+  border-radius: 99px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.nav-separator {
+  color: var(--border);
+  font-size: 0.8rem;
+}
+
+.icon-link {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.icon-link:hover { color: var(--accent); }
+
+/* 3. Right Utility Cluster */
+.utility-cluster {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(30, 41, 59, 0.5); /* Subtle container bg */
+  padding: 6px 16px;
+  border-radius: 99px; /* Pill shape */
+  border: 1px solid var(--border);
+}
+
+/* Search Bar */
+.search-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+}
+
+.search-input {
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  width: 120px;
+  outline: none;
+}
+
+.search-input::placeholder { color: #475569; }
+
+/* Icon Buttons */
+.icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  transition: color 0.2s;
+}
+
+.icon-btn:hover { color: var(--accent); }
+
+.notification-dot {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 6px;
+  height: 6px;
+  background-color: var(--red);
+  border-radius: 50%;
+  border: 1px solid var(--bg-panel);
+}
+
+/* User Profile */
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding-left: 4px;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.1;
+}
+
+.user-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.user-role {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.05em;
+}
+
+.user-avatar-placeholder {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #334155;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+}
+
+/* Vertical Divider */
+.divider-vertical {
+  width: 1px;
+  height: 20px;
+  background-color: rgba(255,255,255,0.1);
+}
+
+/* Mobile Tweak */
+@media (max-width: 768px) {
+  .app-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+  .header-nav-center {
+    justify-content: center;
+  }
+  .utility-cluster {
+    justify-content: space-between;
+  }
+}
