@@ -52,7 +52,7 @@ const GlobalControlBar = ({
       <div className="time-travel-group">
         <div className="control-label" style={{ justifyContent: 'flex-end' }}>
           <span>TIME TRAVEL</span>
-          <Clock size={14} className="ml-2 text-blue" />
+          <Clock size={14} className="ml-2 text-accent" />
         </div>
 
         <div className="slider-wrapper">

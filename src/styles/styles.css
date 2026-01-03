@@ -144,7 +144,18 @@ html, body {
 /* 5. GRID SPANS (UPDATED)                                              */
 /* ==================================================================== */
 
-.span-1 { grid-column: span 1; }
+.span-1 { 
+  grid-column: span 1; 
+  display: flex;
+  flex-direction: column;
+}
+
+/* NEW: The 75% width container for the Chaos Map */
+.span-3 {
+  grid-column: span 3;
+  display: flex;
+  flex-direction: column;
+}
 
 .span-2 { 
   grid-column: span 2; 
@@ -153,19 +164,18 @@ html, body {
   flex-direction: column;
 }
 
-/* Updated .span-4 to support flex layout like .span-2 */
 .span-4 { 
   grid-column: span 4;
   display: flex;
   flex-direction: column;
 }
 
-/* NEW: A utility class to make the Chaos chart taller */
+/* UTILITY: Hero Height */
 .h-tall {
   height: 600px; 
 }
 
-/* Mobile: Ensure height resets or stays manageable */
+/* Mobile: Reset height */
 @media (max-width: 1024px) {
     .h-tall {
         height: 500px; 
@@ -694,8 +704,8 @@ html, body {
   }
 
   /* 3. Force Charts to take full width (span both columns) */
-  .span-2, .span-4 {
-    grid-column: span 2;
+  .span-2, .span-4, .span-3 {
+    grid-column: span 2; /* In a 2-column grid, this means Full Width */
     height: 400px; 
     margin-bottom: 12px;
   }
@@ -875,49 +885,128 @@ html, body {
 }
 
 /* ==================================================================== */
-/* 16. CHAOS CONTROLS (Vertical Stack Update)                           */
+/* 16. GLOBAL CONTROL BAR (STICKY HEADER)                               */
 /* ==================================================================== */
 
-.chaos-controls-container {
+.global-control-bar {
   display: flex;
   align-items: center;
-  gap: 20px; 
-  padding: 12px 16px;
-  border-top: 1px solid rgba(255,255,255,0.05);
-  margin-top: auto;
-  background: rgba(0,0,0,0.1);
-  /* Optional: Add min-height if you want the footer to feel substantial */
-  min-height: 80px; 
+  justify-content: space-between;
+  background: rgba(15, 23, 42, 0.95); /* Deep Navy with slight transparency */
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid #1e293b;
+  padding: 12px 24px;
+  gap: 40px;
+  
+  /* STICKY POSITIONING */
+  position: sticky;
+  top: 32px; /* Height of the SystemStatusRibbon */
+  z-index: 900; 
+  margin-bottom: 24px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
 }
 
-.pill-group {
+.control-label {
   display: flex;
-  flex-direction: column; /* CHANGED: Stacks items vertically */
-  gap: 6px;               /* Tighter gap for vertical list */
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+/* --- LEFT: TICKER PILLS --- */
+.ticker-selector-group {
+  display: flex;
+  flex-direction: column;
   flex-shrink: 0;
-  width: 70px;            /* Fixed width for the column */
 }
 
-/* Specific styling for pills inside the vertical Chaos group */
-.pill-group .ticker-pill {
-  width: 100%;            /* Force button to fill the column width */
-  text-align: center;
-  padding: 4px 0;         /* Adjust padding for vertical density */
+.ticker-pills-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
 }
 
-/* Re-using .ticker-pill base styles, but adding specific active state for Chaos */
-.ticker-pill.active-chaos {
-  border-color: var(--accent);       
-  color: var(--bg-app);              
-  background: var(--accent);         
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.4); 
-  font-weight: 700;
+.ticker-pills-row .ticker-pill {
+  /* Overrides for the global bar specific look */
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid #334155;
+  color: #94a3b8;
+  padding: 6px 16px;
+  border-radius: 4px; 
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
 }
 
-/* Hover state for non-active pills */
-.ticker-pill:not(.active-chaos):hover {
-  border-color: var(--text-muted);
-  color: var(--text-main);
+.ticker-pills-row .ticker-pill:hover {
+  background: #334155;
+  color: #fff;
+}
+
+.ticker-pills-row .ticker-pill.active {
+  background: rgba(14, 165, 233, 0.15); /* Cyan Glow */
+  border-color: #0ea5e9;
+  color: #38bdf8;
+  box-shadow: 0 0 10px rgba(14, 165, 233, 0.2);
+  font-weight: bold;
+}
+
+/* --- RIGHT: TIME SLIDER --- */
+.time-travel-group {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.slider-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+}
+
+.time-slider-input {
+  flex-grow: 1;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 4px;
+  background: #334155;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.time-slider-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #38bdf8;
+  border: 2px solid #0f172a;
+  border-radius: 50%;
+  cursor: grab;
+  box-shadow: 0 0 10px #0ea5e9;
+  transition: transform 0.1s;
+}
+
+.time-slider-input::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.current-date-badge {
+  background: #0ea5e9;
+  color: #0f172a;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-weight: bold;
+  font-size: 0.8rem;
+  min-width: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ==================================================================== */

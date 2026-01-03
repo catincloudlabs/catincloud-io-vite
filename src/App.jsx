@@ -330,7 +330,7 @@ function App() {
           title="Market Sentiment" 
           value={(Math.random() * 100).toFixed(0)} // Placeholder or calculate from sentVolRaw
           subValue="Fear / Greed Index"
-          icon={<TrendingUp size={16} className="text-blue" />}
+          icon={<TrendingUp size={16} className="text-accent" />}
         />
         
         <MetricCard 
