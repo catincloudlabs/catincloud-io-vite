@@ -126,7 +126,7 @@ function App() {
     });
   };
 
-// B. Chaos Scatter (Updated with Horizontal Legend)
+  // B. Chaos Scatter (Updated with Horizontal Legend)
   const getFilteredChaosPlot = () => {
     if (!selectedDate || chaosRaw.length === 0) return [];
     
@@ -142,21 +142,21 @@ function App() {
        mode: 'markers',
        type: 'scatter',
        marker: {
-         // Size bubbles by Chaos Score (or Volume)
+         // Size: Log scale based on Chaos Score
          size: dailyData.map(d => Math.log(d.chaos_score || d.volume) * 3),
          
-         // Color mapping
+         // Color: Based on IV 
          color: dailyData.map(d => d.iv),
          colorscale: 'Viridis',
          opacity: 0.8,
          line: { color: 'white', width: 0.5 },
 
-         // --- NEW: HORIZONTAL LEGEND CONFIG ---
-         showscale: !isMobile, // Hide on phone to save space
+         // --- HORIZONTAL COLOR BAR CONFIG ---
+         showscale: !isMobile, 
          colorbar: {
-            orientation: 'h',       // Horizontal
-            thickness: 10,          // Very thin (10px)
-            len: 0.3,               // Short (30% of chart width)
+            orientation: 'h',       // Horizontal layout
+            thickness: 10,          // Sleek, thin bar (10px)
+            len: 0.3,               // Short length (30% of chart width)
             x: 1,                   // Align to right edge
             xanchor: 'right',
             y: 1.02,                // Position just ABOVE the chart area
@@ -189,14 +189,15 @@ function App() {
   };
 
   // --- CHART LAYOUTS ---
-const scatterLayout = {
+  const scatterLayout = {
     xaxis: { title: 'DTE (Days to Expiration)', gridcolor: '#334155', zerolinecolor: '#334155' },
     yaxis: { title: 'Moneyness (Strike / Price)', gridcolor: '#334155', zerolinecolor: '#334155', range: [0.5, 1.8] },
     showlegend: false,
     paper_bgcolor: 'rgba(0,0,0,0)', 
     plot_bgcolor: 'rgba(0,0,0,0)',
     font: { color: '#94a3b8' },
-    margin: isMobile ? { t: 0, b: 40, l: 30, r: 0 } : { t: 20, b: 40, l: 40, r: 20 }
+    // UPDATE: Increase top margin (t) to 25px to fit the new horizontal bar
+    margin: isMobile ? { t: 0, b: 40, l: 30, r: 0 } : { t: 25, b: 40, l: 40, r: 20 }
   };
 
   const lineLayout = {
