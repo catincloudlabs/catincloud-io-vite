@@ -150,13 +150,6 @@ html, body {
   flex-direction: column;
 }
 
-/* NEW: The 75% width container for the Chaos Map */
-.span-3 {
-  grid-column: span 3;
-  display: flex;
-  flex-direction: column;
-}
-
 .span-2 { 
   grid-column: span 2; 
   height: 500px; 

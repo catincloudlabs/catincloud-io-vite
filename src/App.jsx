@@ -356,8 +356,8 @@ function App() {
 
         {/* ROW 2: THE HERO SPLIT (Chaos + Risk) */}
         
-        {/* Chaos Map: 3/4 Width */}
-        <div className="span-3 h-tall">
+        {/* Chaos Map: 1/2 Width */}
+        <div className="span-2 h-tall">
            <InspectorCard 
              title={`Chaos Map: ${selectedTicker}`}
              tag="Gamma"
@@ -372,8 +372,8 @@ function App() {
            />
         </div>
 
-        {/* Risk Radar: 1/4 Width */}
-        <div className="span-1 h-tall">
+        {/* Risk Radar: 1/2 Width */}
+        <div className="span-2 h-tall">
             <InspectorCard 
               title="Risk Radar"
               tag="Alpha"
