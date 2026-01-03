@@ -10,14 +10,13 @@ const Header = () => {
   const [isManualOpen, setManualOpen] = useState(false);
   const [isBioOpen, setBioOpen] = useState(false);
 
-  // 1. Fetch Health Data
   const { data: heartbeat, loading } = useSystemHeartbeat();
 
-  // 2. Determine Visuals based on status
+  // Status Logic
   const status = heartbeat?.system_status || 'Loading';
   let StatusIcon = Activity;
   let statusColor = "text-muted";
-  let statusBg = "rgba(148, 163, 184, 0.1)"; // slate-400
+  let statusBg = "rgba(148, 163, 184, 0.1)";
   let statusBorder = "rgba(148, 163, 184, 0.2)";
 
   if (!loading && heartbeat) {
@@ -43,7 +42,7 @@ const Header = () => {
     <>
       <header className="app-header">
         
-        {/* LEFT: BRANDING + STATUS */}
+        {/* LEFT: LOGO + STATUS (Horizontal Group) */}
         <div className="brand-group">
           <h1 className="brand-title">
             CatInCloud<span className="text-accent">.io</span>
@@ -56,14 +55,14 @@ const Header = () => {
             style={{ backgroundColor: statusBg, borderColor: statusBorder }}
             title={heartbeat?.notices.join('\n') || "All Systems Operational"}
           >
-            <StatusIcon size={12} className={statusColor} />
+            <StatusIcon size={14} className={statusColor} />
             <span className={`status-text ${statusColor}`}>
                 {loading ? "INIT..." : status.toUpperCase()}
             </span>
           </div>
         </div>
 
-        {/* RIGHT: NAVIGATION PILL */}
+        {/* RIGHT: NAVIGATION PILL (Horizontal Group) */}
         <nav className="header-nav-pill">
           <button onClick={() => setManualOpen(true)} className="nav-link icon-link">
             <BookOpen size={14} className="mr-2" />
@@ -87,7 +86,7 @@ const Header = () => {
 
       </header>
 
-      {/* --- MODALS --- */}
+      {/* MODALS */}
       <ArchitectureModal isOpen={isArchOpen} onClose={() => setArchOpen(false)} />
       <ManualModal isOpen={isManualOpen} onClose={() => setManualOpen(false)} />
       <BioModal isOpen={isBioOpen} onClose={() => setBioOpen(false)} />
