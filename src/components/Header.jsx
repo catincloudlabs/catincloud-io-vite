@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import ArchitectureModal from './ArchitectureModal';
 import ManualModal from './ManualModal';
 import BioModal from './BioModal';
-// Added Search, Bell, HelpCircle for the utility cluster
-import { Network, BookOpen, User, Search, Bell, HelpCircle } from 'lucide-react';
+import { Network, BookOpen, User } from 'lucide-react';
 
 const Header = () => {
   const [isArchOpen, setArchOpen] = useState(false);
@@ -14,7 +13,7 @@ const Header = () => {
     <>
       <header className="app-header">
         
-        {/* 1. LEFT: BRANDING */}
+        {/* LEFT: BRANDING */}
         <div className="brand-section">
           <h1 className="brand-title">
             CatInCloud<span className="text-accent">.io</span>
@@ -22,8 +21,8 @@ const Header = () => {
           <span className="brand-sub desktop-only">QUANTITATIVE INTELLIGENCE</span>
         </div>
 
-        {/* 2. CENTER: CONTENT NAVIGATION (Your Existing Modals) */}
-        <nav className="header-nav-center">
+        {/* RIGHT: NAVIGATION PILL */}
+        <nav className="header-nav-pill">
           <button onClick={() => setManualOpen(true)} className="nav-link icon-link">
             <BookOpen size={14} className="mr-2" />
             <span className="desktop-only">Manual</span>
@@ -44,40 +43,6 @@ const Header = () => {
           </button>
         </nav>
 
-        {/* 3. RIGHT: UTILITY CLUSTER (New "Control Center") */}
-        <div className="utility-cluster">
-            {/* Search */}
-            <div className="search-wrapper desktop-only">
-               <Search size={14} className="search-icon" />
-               <input type="text" placeholder="Search..." className="search-input" />
-            </div>
-            
-            <div className="divider-vertical desktop-only"></div>
-
-            {/* Notifications */}
-            <button className="icon-btn">
-               <Bell size={16} />
-               <span className="notification-dot"></span>
-            </button>
-            
-            {/* Help */}
-            <button className="icon-btn">
-               <HelpCircle size={16} />
-            </button>
-
-            <div className="divider-vertical"></div>
-
-            {/* Admin Profile (Static for now) */}
-            <div className="user-profile">
-               <div className="user-info desktop-only">
-                  <span className="user-name">Guest</span>
-                  <span className="user-role">VIEWER</span>
-               </div>
-               <div className="user-avatar-placeholder">
-                  <User size={16} color="#cbd5e1"/>
-               </div>
-            </div>
-         </div>
       </header>
 
       {/* --- MODALS --- */}
