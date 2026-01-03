@@ -651,72 +651,71 @@ html, body {
 }
 
 /* ==================================================================== */
-/* 15. HEADER NAVIGATION (Updated)                                      */
+/* 15. COMPACT HEADER (Consolidated)                                    */
 /* ==================================================================== */
 
-/* 1. Base Header Layout */
 .app-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 0;
-  margin-bottom: 24px;
+  padding: 12px 0;   /* Reduced padding for compact feel */
+  margin-bottom: 20px;
   border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
-.brand-section {
-  display: flex;
-  flex-direction: column;
-}
-
-/* 2. Navigation Pill (Right Side) */
-/* This reuses the "Utility Cluster" styling but for nav links */
-.header-nav-pill {
+/* Grouping the Logo and Status */
+.brand-group {
   display: flex;
   align-items: center;
   gap: 16px;
-  background: rgba(30, 41, 59, 0.5); /* Subtle container bg */
-  padding: 8px 20px;
-  border-radius: 99px; /* Pill shape */
-  border: 1px solid var(--border);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-.nav-separator {
-  color: var(--border);
-  font-size: 0.8rem;
-  user-select: none;
+.brand-title {
+  font-size: 1.25rem; /* Slightly smaller for 14" screens */
+  margin: 0;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
 }
 
-.icon-link {
+/* The vertical line between Logo and Status */
+.brand-divider {
+  width: 1px;
+  height: 20px;
+  background-color: var(--border);
+}
+
+/* The new Compact Status Badge */
+.status-badge-compact {
   display: flex;
   align-items: center;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--text-muted);
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 99px;
+  border: 1px solid transparent; /* Set via inline style dynamically */
+  transition: all 0.3s ease;
+  cursor: help; /* Shows tooltip on hover */
+}
+
+.status-text {
   font-family: var(--font-mono);
-  font-size: 0.8rem;
-  padding: 0;
-  transition: color 0.2s;
-  font-weight: 500;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
 }
 
-.icon-link:hover {
-  color: var(--accent);
+/* The Right Side Nav (Keep existing, just ensure height matches) */
+.header-nav-pill {
+  /* Existing styles apply... */
+  padding: 6px 16px; /* Slightly tighter */
 }
 
-/* Mobile Tweak */
-@media (max-width: 768px) {
-  .app-header {
+/* Mobile Tweak: Stack them if screen is tiny */
+@media (max-width: 600px) {
+  .brand-group {
     flex-direction: column;
-    gap: 16px;
     align-items: flex-start;
+    gap: 8px;
   }
-  
-  .header-nav-pill {
-    width: 100%;
-    justify-content: space-between;
-    padding: 12px 20px;
-  }
+  .brand-divider { display: none; }
 }

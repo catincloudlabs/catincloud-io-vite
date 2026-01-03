@@ -2,23 +2,65 @@ import React, { useState } from 'react';
 import ArchitectureModal from './ArchitectureModal';
 import ManualModal from './ManualModal';
 import BioModal from './BioModal';
-import { Network, BookOpen, User } from 'lucide-react';
+import { Network, BookOpen, User, CheckCircle, AlertTriangle, XCircle, Activity } from 'lucide-react';
+import { useSystemHeartbeat } from '../hooks/useSystemHeartbeat';
 
 const Header = () => {
   const [isArchOpen, setArchOpen] = useState(false);
   const [isManualOpen, setManualOpen] = useState(false);
   const [isBioOpen, setBioOpen] = useState(false);
 
+  // 1. Fetch Health Data
+  const { data: heartbeat, loading } = useSystemHeartbeat();
+
+  // 2. Determine Visuals based on status
+  const status = heartbeat?.system_status || 'Loading';
+  let StatusIcon = Activity;
+  let statusColor = "text-muted";
+  let statusBg = "rgba(148, 163, 184, 0.1)"; // slate-400
+  let statusBorder = "rgba(148, 163, 184, 0.2)";
+
+  if (!loading && heartbeat) {
+      if (status === 'Healthy') {
+          StatusIcon = CheckCircle;
+          statusColor = "text-green";
+          statusBg = "rgba(34, 197, 94, 0.1)";
+          statusBorder = "rgba(34, 197, 94, 0.2)";
+      } else if (status === 'Degraded' || status === 'Stale') {
+          StatusIcon = AlertTriangle;
+          statusColor = "text-yellow";
+          statusBg = "rgba(234, 179, 8, 0.1)";
+          statusBorder = "rgba(234, 179, 8, 0.2)";
+      } else {
+          StatusIcon = XCircle;
+          statusColor = "text-red";
+          statusBg = "rgba(239, 68, 68, 0.1)";
+          statusBorder = "rgba(239, 68, 68, 0.2)";
+      }
+  }
+
   return (
     <>
       <header className="app-header">
         
-        {/* LEFT: BRANDING */}
-        <div className="brand-section">
+        {/* LEFT: BRANDING + STATUS */}
+        <div className="brand-group">
           <h1 className="brand-title">
             CatInCloud<span className="text-accent">.io</span>
           </h1>
-          <span className="brand-sub desktop-only">QUANTITATIVE INTELLIGENCE</span>
+
+          <div className="brand-divider"></div>
+
+          <div 
+            className="status-badge-compact"
+            style={{ backgroundColor: statusBg, borderColor: statusBorder }}
+            title={heartbeat?.notices.join('\n') || "All Systems Operational"}
+          >
+            <StatusIcon size={12} className={statusColor} />
+            <span className={`status-text ${statusColor}`}>
+                {loading ? "INIT..." : status.toUpperCase()}
+            </span>
+          </div>
         </div>
 
         {/* RIGHT: NAVIGATION PILL */}

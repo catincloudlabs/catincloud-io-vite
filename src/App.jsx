@@ -3,7 +3,6 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import MetricCard from './components/MetricCard';
 import InspectorCard from './components/InspectorCard';
-import { SystemStatusRibbon } from './components/SystemStatusRibbon';
 import GlobalControlBar from './components/GlobalControlBar'; 
 import { Activity, Zap, ArrowUpRight, ArrowDownRight, TrendingUp } from 'lucide-react';
 import { useSystemHeartbeat } from './hooks/useSystemHeartbeat';
@@ -145,19 +144,19 @@ function App() {
          opacity: 0.8, 
          line: { color: 'white', width: 0.5 },
          colorbar: {
-            title: 'IV%',
-            titleside: 'right',
-            titlefont: { size: 10, color: '#94a3b8', family: 'JetBrains Mono' },
-            tickfont: { size: 10, color: '#94a3b8', family: 'JetBrains Mono' },
-            orientation: 'h', 
-            x: 1,
-            y: 1, 
-            xanchor: 'right',
-            yanchor: 'top',
-            len: 0.3,
-            thickness: 12,
-            bgcolor: 'rgba(0,0,0,0)',
-            outlinecolor: 'rgba(0,0,0,0)'
+           title: 'IV%',
+           titleside: 'right',
+           titlefont: { size: 10, color: '#94a3b8', family: 'JetBrains Mono' },
+           tickfont: { size: 10, color: '#94a3b8', family: 'JetBrains Mono' },
+           orientation: 'h', 
+           x: 1,
+           y: 1, 
+           xanchor: 'right',
+           yanchor: 'top',
+           len: 0.3,
+           thickness: 12,
+           bgcolor: 'rgba(0,0,0,0)',
+           outlinecolor: 'rgba(0,0,0,0)'
          }
        }
     }];
@@ -221,8 +220,11 @@ function App() {
 
   return (
     <div className="app-container">
-      <SystemStatusRibbon />
+      
+      {/* 1. Header (Includes System Status + Nav) */}
       <Header />
+
+      {/* 2. Global Controls */}
       <GlobalControlBar 
         dates={chaosMeta?.available_dates || []} selectedDate={selectedDate} onDateChange={setSelectedDate}
         availableTickers={WATCHLIST} selectedTicker={selectedTicker} onTickerChange={setSelectedTicker}
@@ -235,7 +237,7 @@ function App() {
         <MetricCard title="Max Volatility" value={chaosMetric.value} subValue={chaosMetric.sub} icon={<Zap size={16} className={getRiskColor(chaosMetric.isExtreme)} />} />
         <MetricCard title="Mag 7 Leader" value={magLeaderMetric.value} subValue={magLeaderMetric.sub} icon={magLeaderMetric.isPositive ? <ArrowUpRight size={16} className={getMomentumColor(true)}/> : <ArrowDownRight size={16} className={getMomentumColor(false)}/>} />
 
-        {/* ROW 2: SPLIT VIEW (3/4 Chaos + 1/4 Sidebar) */}
+        {/* ROW 2: SPLIT VIEW */}
         <div className="span-3 h-tall">
            <InspectorCard 
              title={`Chaos Map: ${selectedTicker}`} tag="Gamma" desc={chaosMeta?.inspector.description}
