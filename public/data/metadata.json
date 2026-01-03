@@ -1,9 +1,9 @@
 {
   "system_status": "Healthy",
-  "last_updated_utc": "2026-01-02T22:20:30.263748+00:00",
+  "last_updated_utc": "2026-01-03T16:32:30.997203+00:00",
   "pipeline_version": "v2.2.0",
   "metrics": {
-    "total_rows_managed": 4045086,
+    "total_rows_managed": 1839750,
     "modules_active": [
       "Chaos",
       "Mag7",
@@ -14,7 +14,7 @@
     "passed": 28,
     "failed": 0,
     "total": 28,
-    "generated_at": "2026-01-02T22:20:02.253078+00:00"
+    "generated_at": "2026-01-03T09:45:31.590872+00:00"
   },
   "notices": []
 }
