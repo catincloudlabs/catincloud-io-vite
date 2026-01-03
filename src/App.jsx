@@ -20,7 +20,7 @@ const MAG7_CONFIG = {
   META: { color: '#c084fc', label: 'META' } 
 };
 
-const WATCHLIST = ['AAPL', 'AMZN', 'GME', 'GOOGL', 'MSFT', 'NVDA', 'TSLA'];
+const WATCHLIST = ['AAPL', 'AMZN', 'GOOGL', 'META', 'MSFT', 'NVDA', 'TSLA'];
 
 function App() {
   
