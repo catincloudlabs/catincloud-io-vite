@@ -144,16 +144,16 @@ function App() {
          showscale: !isMobile, 
          opacity: 0.8, 
          line: { color: 'white', width: 0.5 },
-         // --- UPDATED COLORBAR: Horizontal, Top Right Header ---
+         // --- UPDATED COLORBAR ---
+         // Horizontal bar docked right above the chart area
          colorbar: {
             title: 'IV%',
             titleside: 'right',
             titlefont: { size: 10, color: '#94a3b8', family: 'JetBrains Mono' },
             tickfont: { size: 10, color: '#94a3b8', family: 'JetBrains Mono' },
             orientation: 'h', 
-            // Position just above the chart area (y > 1)
             x: 1,
-            y: 1.02,
+            y: 1.02, 
             xanchor: 'right',
             yanchor: 'bottom',
             len: 0.35,
@@ -183,8 +183,8 @@ function App() {
     yaxis: { title: 'Moneyness (Strike / Price)', gridcolor: '#334155', zerolinecolor: '#334155', range: [0.5, 1.8] },
     showlegend: false, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
     font: { color: '#94a3b8' }, 
-    // UPDATED MARGINS: Increased top (t) margin to 40 to fit the floating bar
-    margin: isMobile ? { t: 40, b: 40, l: 30, r: 0 } : { t: 40, b: 40, l: 40, r: 20 }
+    // UPDATED MARGINS: Reduced top (t) margin to 25 to reduce empty space
+    margin: isMobile ? { t: 25, b: 40, l: 30, r: 0 } : { t: 25, b: 40, l: 40, r: 20 }
   };
 
   const lineLayout = {
