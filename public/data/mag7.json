@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Mag 7 Momentum",
-    "generated_at": "2026-01-03T16:32:07.118346",
+    "generated_at": "2026-01-03T22:23:31.974929",
     "inspector": {
       "tag": "Trend",
       "description": "Net Sentiment Flow (Call Delta - Put Delta) over the last 30 days.",
