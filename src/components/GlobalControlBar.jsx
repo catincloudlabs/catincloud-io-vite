@@ -16,6 +16,11 @@ const GlobalControlBar = ({
   if (!dates || dates.length === 0) return null;
 
   const currentIndex = dates.indexOf(selectedDate);
+  const maxIndex = dates.length - 1;
+
+  // Calculate progress % for the "Fill" effect
+  // If only 1 date exists, fill it 100%
+  const progressPercent = maxIndex > 0 ? (currentIndex / maxIndex) * 100 : 100;
 
   const handleRangeChange = (e) => {
     const index = parseInt(e.target.value, 10);
@@ -56,21 +61,23 @@ const GlobalControlBar = ({
         </div>
 
         <div className="slider-wrapper">
-          {/* Slider Input */}
+          {/* Date Badge (Moved Left for better flow) */}
+          <div className="current-date-badge mr-4">
+             <Calendar size={12} className="mr-2"/>
+             {selectedDate}
+          </div>
+
+          {/* Interactive Slider */}
           <input
             type="range"
             min="0"
-            max={dates.length - 1}
-            value={currentIndex === -1 ? dates.length - 1 : currentIndex}
+            max={maxIndex}
+            value={currentIndex === -1 ? maxIndex : currentIndex}
             onChange={handleRangeChange}
             className="time-slider-input"
+            // Pass the dynamic value as a CSS Variable
+            style={{ '--progress': `${progressPercent}%` }}
           />
-          
-          {/* Date Badge */}
-          <div className="current-date-badge">
-             <Calendar size={12} className="mr-1"/>
-             {selectedDate}
-          </div>
         </div>
       </div>
 

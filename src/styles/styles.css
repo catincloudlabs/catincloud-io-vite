@@ -453,60 +453,83 @@ html, body {
   font-weight: bold;
 }
 
-/* Time Slider */
+/* Time Slider Group */
 .time-travel-group {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
+  max-width: 600px; 
+  margin-left: auto;
 }
 
 .slider-wrapper {
   display: flex;
   align-items: center;
-  gap: 16px;
   position: relative;
+  height: 32px; 
 }
 
+/* The Track */
 .time-slider-input {
   flex-grow: 1;
   appearance: none;
   -webkit-appearance: none;
-  height: 4px;
-  background: #334155;
-  border-radius: 2px;
+  height: 6px; 
+  border-radius: 4px;
   outline: none;
   cursor: pointer;
+  transition: height 0.2s ease;
+  
+  /* UPDATED: Uses the CSS variable passed from React */
+  background: linear-gradient(to right, #38bdf8 var(--progress), #334155 var(--progress));
 }
 
+.time-slider-input:hover {
+  height: 8px;
+}
+
+/* The Handle (Thumb) */
 .time-slider-input::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px;
-  height: 16px;
-  background: #38bdf8;
-  border: 2px solid #0f172a;
+  width: 20px;
+  height: 20px;
+  background: #0f172a; 
+  border: 2px solid #38bdf8;
   border-radius: 50%;
   cursor: grab;
-  box-shadow: 0 0 10px #0ea5e9;
-  transition: transform 0.1s;
+  box-shadow: 0 0 0 0 rgba(56, 189, 248, 0);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-top: -1px; 
 }
 
-.time-slider-input::-webkit-slider-thumb:hover {
+.time-slider-input:hover::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.2);
+  transform: scale(1.1);
+  background: #38bdf8;
+}
+
+.time-slider-input:active::-webkit-slider-thumb {
+  cursor: grabbing;
   transform: scale(1.2);
+  box-shadow: 0 0 0 6px rgba(56, 189, 248, 0.3);
 }
 
+/* Date Badge */
 .current-date-badge {
-  background: #0ea5e9;
-  color: #0f172a;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
   padding: 4px 12px;
   border-radius: 4px;
   font-family: var(--font-mono);
   font-weight: bold;
   font-size: 0.8rem;
-  min-width: 110px;
+  min-width: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
+  user-select: none; 
 }
 
 /* ==================================================================== */
