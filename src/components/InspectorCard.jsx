@@ -11,7 +11,8 @@ const InspectorCard = ({
   isLoading, 
   plotData, 
   plotLayout, 
-  tableData, 
+  tableData,
+  customChart,
   // Logic Props (Passed from Dashboard JSON)
   sqlCode, 
   dbtCode, 
@@ -75,7 +76,7 @@ const InspectorCard = ({
 
         {!isLoading && (
            <>
-             {/* PLOTLY CHART */}
+             {/* 1. PLOTLY CHART */}
              {chartType !== 'table' && plotData && (
                 <Plot 
                   data={plotData} 
@@ -95,7 +96,7 @@ const InspectorCard = ({
                 />
              )}
 
-             {/* DATA TABLE */}
+             {/* 2. DATA TABLE */}
              {chartType === 'table' && tableData && (
                <div className="table-view-container custom-scrollbar">
                  <table className="table-standard">
@@ -129,6 +130,13 @@ const InspectorCard = ({
                    </tbody>
                  </table>
                </div>
+             )}
+
+             {/* 3. CUSTOM CHART (RECHARTS) - ADDED THIS BLOCK */}
+             {customChart && (
+                <div className="custom-chart-wrapper">
+                    {customChart}
+                </div>
              )}
            </>
         )}
