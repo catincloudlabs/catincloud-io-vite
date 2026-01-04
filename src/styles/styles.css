@@ -91,7 +91,7 @@ html, body {
   flex-direction: column;
   position: relative;
   overflow: hidden;
-  transition: border-color 0.2s;
+  transition: all 0.2s ease;
 }
 
 .panel:hover {
@@ -152,6 +152,24 @@ html, body {
 
 .tag-red { color: var(--red); border: 1px solid rgba(239, 68, 68, 0.2); }
 .tag-blue { color: var(--accent); border: 1px solid rgba(56, 189, 248, 0.2); }
+
+/* --- AI HERO VARIANT (Market Psychology Map) --- */
+.ai-hero-card {
+  border-color: rgba(192, 132, 252, 0.3) !important; 
+  box-shadow: 0 0 40px -10px rgba(192, 132, 252, 0.15);
+  transition: all 0.4s ease;
+}
+
+.ai-hero-card:hover {
+  border-color: rgba(192, 132, 252, 0.6) !important;
+  box-shadow: 0 0 50px -5px rgba(192, 132, 252, 0.25);
+}
+
+.ai-hero-card .tag {
+  background: rgba(192, 132, 252, 0.15);
+  color: #e879f9;
+  border: 1px solid rgba(192, 132, 252, 0.3);
+}
 
 /* ==================================================================== */
 /* 5. GRID SPANS & LAYOUT UTILITIES                                     */
@@ -433,6 +451,7 @@ html, body {
   flex-wrap: nowrap;
 }
 
+/* --- UPDATED: Tactile Buttons --- */
 .ticker-pill {
   background: rgba(30, 41, 59, 0.5);
   border: 1px solid #334155;
@@ -442,20 +461,28 @@ html, body {
   font-family: var(--font-mono);
   font-size: 0.85rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
 }
 
 .ticker-pill:hover {
   background: #334155;
   color: #fff;
+  transform: translateY(-1px);
 }
 
 .ticker-pill.active {
-  background: rgba(14, 165, 233, 0.15);
-  border-color: #0ea5e9;
+  /* Darker background to simulate a pressed button */
+  background: rgba(15, 23, 42, 0.8);
+  /* Glowing border */
+  border: 1px solid #38bdf8;
+  /* Text Glow */
+  text-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
   color: #38bdf8;
-  box-shadow: 0 0 10px rgba(14, 165, 233, 0.2);
+  /* Inset shadow to make it look "pressed in" */
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
   font-weight: bold;
+  transform: translateY(1px); /* Physical press movement */
 }
 
 /* Time Slider Group */
@@ -484,8 +511,6 @@ html, body {
   outline: none;
   cursor: pointer;
   transition: height 0.2s ease;
-  
-  /* UPDATED: Uses the CSS variable passed from React */
   background: linear-gradient(to right, #38bdf8 var(--progress), #334155 var(--progress));
 }
 
@@ -563,7 +588,7 @@ html, body {
 .status-ribbon-container.status-warning { --status-color: #F59E0B; }
 
 /* ==================================================================== */
-/* 12. TABBED HEADER UTILITIES (New)                                    */
+/* 12. TABBED HEADER UTILITIES                                          */
 /* ==================================================================== */
 
 .header-tabs-wrapper {
@@ -616,13 +641,13 @@ html, body {
 }
 
 /* ==================================================================== */
-/* 13. UTILITIES (Updated)                                              */
+/* 13. UTILITIES                                                        */
 /* ==================================================================== */
 
 .mr-2 { margin-right: 8px; }
 .ml-1 { margin-left: 4px; }
 .ml-2 { margin-left: 8px; }
-.ml-4 { margin-left: 16px; } /* Added for Date Badge spacing */
+.ml-4 { margin-left: 16px; } 
 .pr-2 { padding-right: 8px; }
 .text-right { text-align: right; }
 .font-bold { font-weight: 700; }
@@ -712,7 +737,7 @@ html, body {
 
   .brand-title { font-size: 1.1rem; }
   
-  /* Hide the status text on tiny screens, keep just the icon */
+  /* Hide the status text on tiny screens */
   .status-text { display: none; } 
   .status-badge-compact { padding: 4px; border-radius: 50%; }
 
@@ -728,7 +753,7 @@ html, body {
     width: 100%;
     overflow-x: auto; /* Allow horizontal scrolling for tickers */
     padding-bottom: 4px;
-    mask-image: linear-gradient(to right, black 90%, transparent 100%); /* Fade out effect */
+    mask-image: linear-gradient(to right, black 90%, transparent 100%);
     -webkit-mask-image: linear-gradient(to right, black 90%, transparent 100%);
   }
 
@@ -873,6 +898,32 @@ html, body {
   gap: var(--spacing);
   width: 100%;
 }
+
+/* --- UPDATED: Active Monitor Effect for Metrics --- */
+.metric-strip .panel {
+  background: linear-gradient(
+    145deg, 
+    rgba(30, 41, 59, 1) 0%, 
+    rgba(15, 23, 42, 1) 100%
+  );
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.metric-strip .panel::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.4), transparent);
+  opacity: 0.6;
+}
+
+.metric-strip .panel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.3);
+  border-color: rgba(56, 189, 248, 0.3);
+  transition: all 0.3s ease;
+}
+
 
 /* Mobile: Horizontal Scroll Snap */
 @media (max-width: 768px) {
