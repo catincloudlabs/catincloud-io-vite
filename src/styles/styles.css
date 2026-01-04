@@ -1075,13 +1075,12 @@ html, body {
   /* 4. Controls: Stacked & Compacted */
   .global-control-bar {
     flex-direction: column;
-    gap: 8px;           /* Slightly more breathing room between rows */
+    gap: 8px;
     padding: 8px 12px;
     align-items: stretch;
     min-height: auto;
   }
 
-  /* Hide labels to save space */
   .global-control-bar .control-label {
     display: none;
   }
@@ -1090,9 +1089,8 @@ html, body {
   .ticker-pill {
     padding: 4px 10px;
     font-size: 0.7rem;
-    /* Ensure pills don't trigger vertical expansion */
     line-height: 1.2; 
-    height: 26px; /* Explicit height ensures consistent container fit */
+    height: 26px; 
     display: flex;
     align-items: center;
   }
@@ -1100,25 +1098,23 @@ html, body {
   .ticker-selector-group {
     width: 100%;
     overflow-x: auto; 
-    overflow-y: hidden; /* <--- CRITICAL FIX: Kill vertical scroll */
-    padding-bottom: 0; 
+    overflow-y: hidden; /* Keep scroll locked */
+    
+    /* FIX: Add padding to catch the active button's downward shift/border */
+    padding-bottom: 4px; /* <--- CHANGED from 0 */
     margin-bottom: 0;
     
-    /* Ensure single line layout */
     white-space: nowrap; 
     display: flex;
     align-items: center;
     
-    /* Clean scrollbar hiding */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE/Edge */
+    scrollbar-width: none; 
+    -ms-overflow-style: none; 
     
-    /* Visual Fade */
     mask-image: linear-gradient(to right, black 90%, transparent 100%);
     -webkit-mask-image: linear-gradient(to right, black 90%, transparent 100%);
   }
   
-  /* Chrome/Safari Scrollbar Hide */
   .ticker-selector-group::-webkit-scrollbar {
     display: none;
   }
@@ -1128,7 +1124,6 @@ html, body {
     margin: 0;
   }
   
-  /* Compact Slider Wrapper */
   .slider-wrapper {
     height: 24px; 
     min-height: 24px;
