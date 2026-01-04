@@ -162,15 +162,34 @@ function App() {
     }];
   };
 
+  // --- UPDATED: CLEAN FIX FOR SENTIMENT CHART ---
   const getSentimentPlotData = () => {
     if (!sentVolRaw || sentVolRaw.length === 0 || !selectedDate) return [];
     const dailyData = sentVolRaw.filter(d => d.trade_date === selectedDate);
     if (dailyData.length === 0) return [];
+    
     return dailyData.map(row => ({
-      x: [row.sentiment_signal], y: [row.avg_iv], mode: 'markers+text', type: 'scatter',
-      name: row.ticker, text: [row.ticker], textposition: 'top center',
-      marker: { size: [Math.max(15, Math.log(row.news_volume || 1) * 8)], color: MAG7_CONFIG[row.ticker]?.color || '#94a3b8', opacity: 0.9, line: { color: 'white', width: 1 } },
-      hovertemplate: `<b>${row.ticker}</b><br>Sentiment: %{x:.2f}<br>Implied Vol: %{y:.1f}%<br><extra></extra>`
+      x: [row.sentiment_signal], 
+      y: [row.avg_iv], 
+      mode: 'markers', // REMOVED '+text' to remove cluttered labels
+      name: row.ticker, 
+      marker: { 
+         // Reduced min size from 15 to 6 to prevent crowding
+         size: [Math.max(6, Math.log(row.news_volume || 1) * 10)], 
+         color: MAG7_CONFIG[row.ticker]?.color || '#94a3b8', 
+         opacity: 0.8, 
+         line: { color: 'white', width: 1 },
+         sizemode: 'area', 
+         sizeref: 0.2
+      },
+      // Rich Tooltip replaces the static labels
+      hovertemplate: `
+        <b>${row.ticker}</b><br>
+        Sentiment: %{x:.2f}<br>
+        Implied Vol: %{y:.1f}%<br>
+        News Vol: ${row.news_volume || 0}
+        <extra></extra>
+      `
     }));
   };
 
