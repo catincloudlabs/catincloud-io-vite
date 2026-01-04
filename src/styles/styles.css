@@ -1072,23 +1072,67 @@ html, body {
   .status-text { display: none; } 
   .status-badge-compact { padding: 4px; border-radius: 50%; }
 
-  /* 4. Controls: Stacked */
+  /* 4. Controls: Stacked & Compacted */
   .global-control-bar {
     flex-direction: column;
-    gap: 12px;
-    padding: 0 0 16px 0;
+    gap: 8px;           /* Slightly more breathing room between rows */
+    padding: 8px 12px;
     align-items: stretch;
+    min-height: auto;
+  }
+
+  /* Hide labels to save space */
+  .global-control-bar .control-label {
+    display: none;
+  }
+
+  /* Compact Ticker Pills */
+  .ticker-pill {
+    padding: 4px 10px;
+    font-size: 0.7rem;
+    /* Ensure pills don't trigger vertical expansion */
+    line-height: 1.2; 
+    height: 26px; /* Explicit height ensures consistent container fit */
+    display: flex;
+    align-items: center;
   }
 
   .ticker-selector-group {
     width: 100%;
     overflow-x: auto; 
-    padding-bottom: 4px;
+    overflow-y: hidden; /* <--- CRITICAL FIX: Kill vertical scroll */
+    padding-bottom: 0; 
+    margin-bottom: 0;
+    
+    /* Ensure single line layout */
+    white-space: nowrap; 
+    display: flex;
+    align-items: center;
+    
+    /* Clean scrollbar hiding */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+    
+    /* Visual Fade */
     mask-image: linear-gradient(to right, black 90%, transparent 100%);
     -webkit-mask-image: linear-gradient(to right, black 90%, transparent 100%);
   }
+  
+  /* Chrome/Safari Scrollbar Hide */
+  .ticker-selector-group::-webkit-scrollbar {
+    display: none;
+  }
 
-  .time-travel-group { width: 100%; margin: 0; }
+  .time-travel-group {
+    width: 100%;
+    margin: 0;
+  }
+  
+  /* Compact Slider Wrapper */
+  .slider-wrapper {
+    height: 24px; 
+    min-height: 24px;
+  }
 
   /* 5. CHART & CARD ADJUSTMENTS */
   .span-1, .span-2, .span-3, .span-4 { 
@@ -1117,7 +1161,7 @@ html, body {
     margin-right: -12px; 
     padding-right: 12px; 
   }
-  
+
   .metric-strip::-webkit-scrollbar { display: none; }
   .metric-strip .panel { min-width: 150px; width: 150px; flex-shrink: 0; scroll-snap-align: start; padding: 10px; min-height: 0; }
   .metric-strip .panel::after { display: none !important; }
