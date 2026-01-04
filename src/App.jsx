@@ -140,15 +140,15 @@ function App() {
          showscale: !isMobile, 
          opacity: 0.8, 
          line: { color: 'white', width: 0.5 },
-         // --- UPDATED: THINNER VERTICAL BAR ---
+         // --- UPDATED: THINNER VERTICAL BAR + NO STANDOFF ---
          colorbar: { 
             orientation: 'v',      
-            x: 1.01,               // Nudge closer
+            x: 1.01,               
             y: 0.5,                
             yanchor: 'middle',     
-            len: 0.9,              // 90% Height (floats nicer)
-            thickness: 10,         // Thinner (from 12 to 10)
-            title: { text: 'IV%', side: 'bottom', standoff: 0, font: { size: 9, color: '#94a3b8', family: 'JetBrains Mono' } },
+            len: 0.9,              
+            thickness: 10,         
+            // No native title here, we handle it via annotations below
             tickfont: { size: 9, color: '#94a3b8', family: 'JetBrains Mono' },
             bgcolor: 'rgba(0,0,0,0)', 
             outlinecolor: 'rgba(0,0,0,0)' 
@@ -160,6 +160,7 @@ function App() {
   const getSentimentPlotData = () => {
     if (!sentVolRaw || sentVolRaw.length === 0 || !selectedDate) return [];
     
+    // Filter by Date AND strictly match the Mag7 Watchlist
     const dailyData = sentVolRaw
         .filter(d => d.trade_date === selectedDate && WATCHLIST.includes(d.ticker))
         .sort((a, b) => a.ticker.localeCompare(b.ticker));
@@ -190,7 +191,6 @@ function App() {
   };
 
   // --- LAYOUTS ---
-  // UPDATED: Right margin (r: 50) accommodates the thinner bar perfectly
   const scatterLayout = { 
       xaxis: { title: 'DTE', gridcolor: '#334155' }, 
       yaxis: { title: 'Moneyness', gridcolor: '#334155', range: [0.5, 1.8] }, 
@@ -198,7 +198,21 @@ function App() {
       paper_bgcolor: 'rgba(0,0,0,0)', 
       plot_bgcolor: 'rgba(0,0,0,0)', 
       font: { color: '#94a3b8' }, 
-      margin: isMobile ? { t: 10, b: 40, l: 30, r: 10 } : { t: 10, b: 40, l: 40, r: 50 } 
+      margin: isMobile ? { t: 10, b: 40, l: 30, r: 10 } : { t: 10, b: 40, l: 40, r: 50 },
+      // --- MANUAL IV% LABEL ---
+      annotations: [
+        {
+          text: 'IV%',
+          x: 1.037,
+          y: 0.04, // Tucked tight below the bar
+          xref: 'paper',
+          yref: 'paper',
+          showarrow: false,
+          xanchor: 'center', // Center text at this x-point
+          yanchor: 'top',
+          font: { size: 9, color: '#94a3b8', family: 'JetBrains Mono' }
+        }
+      ]
   };
   
   const lineLayout = { xaxis: { title: 'Trend', gridcolor: '#334155' }, yaxis: { title: 'Flow', gridcolor: '#334155' }, showlegend: false, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: '#94a3b8' }, margin: isMobile ? { t: 10, b: 40, l: 30, r: 5 } : { t: 10, b: 40, l: 40, r: 10 } };
@@ -231,7 +245,8 @@ function App() {
         isLoading: magLoading, chartType: "line", plotData: getMag7PlotData(), 
         plotLayout: lineLayout, sqlCode: magMeta?.inspector.sql_logic, dbtCode: magMeta?.inspector.dbt_logic, dbtYml: magMeta?.inspector.dbt_yml
     } : {
-        title: "Risk Radar", tag: "AI Model", desc: "Sentiment vs Volatility",
+        // Updated Tag to "AI MODEL"
+        title: "Risk Radar", tag: "AI MODEL", desc: "Sentiment vs Volatility",
         isLoading: sentVolLoading, chartType: "scatter", plotData: getSentimentPlotData(),
         plotLayout: sentimentLayout, sqlCode: sentVolMeta?.inspector.sql_logic, dbtCode: sentVolMeta?.inspector.dbt_logic, dbtYml: sentVolMeta?.inspector.dbt_yml
     };
