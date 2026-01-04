@@ -883,3 +883,81 @@ html, body {
     width: 260px; /* Explicit width helps some browsers */
   }
 }
+
+/* ==================================================================== */
+/* 20. CUSTOM CHART CONTAINER (For Recharts/Maps)                       */
+/* ==================================================================== */
+
+.custom-chart-wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  min-height: 300px; /* Ensure visibility on small screens */
+}
+
+/* Flex container for the map to ensure it fills the card body */
+.map-container {
+  height: 100%;
+  width: 100%;
+  min-height: 300px;
+}
+
+/* ==================================================================== */
+/* 21. CUSTOM TOOLTIP (Recharts)                                        */
+/* ==================================================================== */
+
+.custom-tooltip {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border);
+  padding: 12px;
+  border-radius: var(--radius);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  max-width: 320px;
+  z-index: 50;
+}
+
+.tooltip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.tooltip-ticker {
+  font-weight: 700;
+  color: var(--text-main);
+  background-color: var(--bg-app);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+}
+
+.tooltip-date {
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.tooltip-title {
+  color: #cbd5e1; /* Ideally move to var(--text-secondary) */
+  font-style: italic;
+  font-size: 12px;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.tooltip-footer {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+  font-size: 12px;
+}
+
+.tooltip-label {
+  /* Color is dynamic via JS, but base style is here */
+  font-weight: 500;
+}
+
+/* Utility for text colors used in tooltips */
+.text-green { color: var(--green); }
+.text-red { color: var(--red); }
