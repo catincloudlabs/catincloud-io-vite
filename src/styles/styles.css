@@ -611,12 +611,13 @@ html, body {
 }
 
 /* ==================================================================== */
-/* 13. UTILITIES                                                        */
+/* 13. UTILITIES (Updated)                                              */
 /* ==================================================================== */
 
 .mr-2 { margin-right: 8px; }
 .ml-1 { margin-left: 4px; }
 .ml-2 { margin-left: 8px; }
+.ml-4 { margin-left: 16px; } /* Added for Date Badge spacing */
 .pr-2 { padding-right: 8px; }
 .text-right { text-align: right; }
 .font-bold { font-weight: 700; }
