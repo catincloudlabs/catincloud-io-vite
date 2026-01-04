@@ -1041,7 +1041,7 @@ html, body {
   /* FIX: Negative margins to pull charts closer to the bar */
   .control-bar-spacing {
     margin-top: -12px !important;    /* Pulls Chaos Map closer */
-    margin-bottom: -12px !important; /* Pulls Risk Radar closer */
+    margin-bottom: -24px !important; /* Pulls Risk Radar closer */
     z-index: 20; 
     position: relative;
   }
