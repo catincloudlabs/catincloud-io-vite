@@ -644,33 +644,98 @@ html, body {
 }
 
 /* ==================================================================== */
-/* 14. MOBILE OPTIMIZATION                                              */
+/* 14. MOBILE OPTIMIZATION (Refined)                                    */
 /* ==================================================================== */
 
 @media (max-width: 1024px) {
-  /* Collapse layout */
   .app-container { padding: 12px; }
   .bento-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
   
-  /* Reset spans for 2-column grid */
+  /* Reset spans for 2-column tablet layout */
   .span-1, .span-2, .span-3, .span-4 {
     grid-column: span 2; 
     height: auto;
     margin-bottom: 12px;
   }
   
-  .h-tall { height: 420px; }
+  .h-tall { height: 450px; }
   .metric-big { font-size: 1.5rem; }
   .desktop-only { display: none; }
 }
 
 @media (max-width: 768px) {
-  .bento-grid { grid-template-columns: 1fr; }
-  .span-1, .span-2, .span-3, .span-4 { grid-column: span 1; }
-  .status-ribbon-container { justify-content: center; }
-  .global-control-bar { flex-direction: column; gap: 16px; align-items: stretch; top: 0; }
-  .ticker-selector-group { width: 100%; overflow-x: auto; padding-bottom: 4px; }
-  .modal-box { width: 95%; }
+  /* 1. Layout Basics */
+  .app-container { 
+    padding: 12px; /* Add breathing room back on mobile edges */
+  }
+  
+  .bento-grid { 
+    grid-template-columns: 1fr; 
+    gap: 16px;
+  }
+
+  /* 2. Unstick the Header Group */
+  /* On phones, screen real estate is precious. Let the header scroll away. */
+  .sticky-header-group {
+    position: relative; 
+    top: auto;
+    margin: 0 -12px 16px -12px; /* Pull to edges, add bottom space */
+    padding: 0 12px;
+    box-shadow: none; /* Simplify look */
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* 3. Compact Header Elements */
+  .app-header {
+    flex-direction: row; /* Keep logo and nav side-by-side if possible */
+    align-items: center;
+    gap: 12px;
+    height: auto;
+    padding: 12px 0;
+    flex-wrap: wrap; /* Allow wrapping if really narrow */
+  }
+
+  .brand-title { font-size: 1.1rem; }
+  
+  /* Hide the status text on tiny screens, keep just the icon */
+  .status-text { display: none; } 
+  .status-badge-compact { padding: 4px; border-radius: 50%; }
+
+  /* 4. Controls: Stacked but Compact */
+  .global-control-bar {
+    flex-direction: column;
+    gap: 12px;
+    padding: 0 0 16px 0;
+    align-items: stretch;
+  }
+
+  .ticker-selector-group {
+    width: 100%;
+    overflow-x: auto; /* Allow horizontal scrolling for tickers */
+    padding-bottom: 4px;
+    mask-image: linear-gradient(to right, black 90%, transparent 100%); /* Fade out effect */
+    -webkit-mask-image: linear-gradient(to right, black 90%, transparent 100%);
+  }
+
+  .time-travel-group {
+    width: 100%;
+    margin: 0;
+  }
+
+  /* 5. Chart Adjustments */
+  .span-1, .span-2, .span-3, .span-4 { 
+    grid-column: span 1; 
+  }
+  
+  /* Reduce chart height so they aren't huge vertical blocks */
+  .h-tall { 
+    height: 350px; 
+  }
+  
+  /* Adjust margins for Plotly charts */
+  .main-svg { 
+    border-radius: var(--radius); 
+  }
 }
 
 /* ==================================================================== */
