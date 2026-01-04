@@ -10,7 +10,7 @@ interface MetricCardProps {
 
 const MetricCard: React.FC<MetricCardProps> = ({ title, value, subValue, icon, statusColor }) => {
   return (
-    <div className="panel span-1">
+    <div className="panel">
       <div className="panel-header">
         <span className="panel-title">{title}</span>
         {icon && <span className="panel-icon-wrapper">{icon}</span>}

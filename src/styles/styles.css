@@ -843,3 +843,43 @@ html, body {
     padding: 6px 12px;
   }
 }
+
+/* ==================================================================== */
+/* 16. METRIC STRIP (Horizontal Scroll Layout)                          */
+/* ==================================================================== */
+
+/* Desktop: Standard 4-column grid */
+.metric-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing);
+  width: 100%;
+}
+
+/* Mobile: Horizontal Scroll Snap */
+@media (max-width: 768px) {
+  .metric-strip {
+    display: flex;
+    flex-direction: row;    /* <--- FORCE ROW TO OVERRIDE SPAN-4 */
+    overflow-x: auto;       /* Enable horizontal scrolling */
+    scroll-snap-type: x mandatory; /* Snap to cards */
+    gap: 12px;
+    padding-bottom: 4px;    /* Tiny space for scrollbar */
+    
+    /* Hide Scrollbar for cleaner UI */
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  .metric-strip::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+
+  /* Force cards to stay fixed width and not shrink */
+  .metric-strip > * {
+    min-width: 260px; /* Wide enough to read, small enough to peek next card */
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    width: 260px; /* Explicit width helps some browsers */
+  }
+}

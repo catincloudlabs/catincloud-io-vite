@@ -48,7 +48,7 @@ function App() {
 
   // UI State
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [sidebarTab, setSidebarTab] = useState('risk'); // 'risk' | 'momentum'
+  const [sidebarTab, setSidebarTab] = useState('risk'); 
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -58,7 +58,6 @@ function App() {
 
   // --- FETCHING ---
   useEffect(() => {
-    // 1. Chaos Data
     fetch('/data/chaos.json').then(res => res.json()).then(json => {
         setChaosRaw(json.data); 
         setChaosMeta(json.meta);
@@ -68,23 +67,20 @@ function App() {
         setChaosLoading(false);
       }).catch(err => { console.error("Chaos Error:", err); setChaosLoading(false); });
 
-    // 2. Whale Data
     fetch('/data/whales.json').then(res => res.json()).then(json => { 
         setWhaleData(json); setWhaleLoading(false); 
     }).catch(err => { console.error("Whale Error:", err); setWhaleLoading(false); });
 
-    // 3. Mag 7 Momentum
     fetch('/data/mag7.json').then(res => res.json()).then(json => {
         setMagRaw(json.data); setMagMeta(json.meta); setMagLoading(false);
       }).catch(err => { console.error("Mag 7 Error:", err); setMagLoading(false); });
 
-    // 4. Sentiment vs Volatility
     fetch('/data/sentiment_volatility.json').then(res => res.json()).then(json => {
         setSentVolRaw(json.data); setSentVolMeta(json.meta); setSentVolLoading(false);
       }).catch(err => { console.error("Sent/Vol Error:", err); setSentVolLoading(false); });
   }, []);
 
-  // --- METRICS & PLOTTING LOGIC ---
+  // --- METRICS ---
   const whaleMetric = useMemo(() => {
     if (!whaleData?.data) return { value: "$0M", sub: "No Data" };
     let bullTotal = 0, total = 0;
@@ -114,6 +110,7 @@ function App() {
     return { value: leader.ticker, sub: `Net Flow: ${leader.net_sentiment_flow > 0 ? "+" : ""}$${flowM}M`, isPositive: leader.net_sentiment_flow > 0 };
   }, [magRaw, selectedDate]);
 
+  // --- PLOT HELPERS ---
   const getMag7PlotData = () => {
     if (!magRaw || magRaw.length === 0) return [];
     return Object.keys(MAG7_CONFIG).map(ticker => {
@@ -127,42 +124,19 @@ function App() {
 
   const getFilteredChaosPlot = () => {
     if (!selectedDate || chaosRaw.length === 0) return [];
-    
     const dailyData = chaosRaw.filter(d => d.trade_date?.startsWith(selectedDate) && d.ticker === selectedTicker);
-    
     return [{
-       x: dailyData.map(d => d.dte), 
-       y: dailyData.map(d => d.moneyness),
+       x: dailyData.map(d => d.dte), y: dailyData.map(d => d.moneyness),
        text: dailyData.map(d => `Strike: ${d.strike}<br>IV: ${d.iv.toFixed(1)}%`),
-       mode: 'markers', 
-       type: 'scatter',
+       mode: 'markers', type: 'scatter',
        marker: {
          size: dailyData.map(d => Math.log(d.chaos_score || d.volume) * 3),
-         color: dailyData.map(d => d.iv), 
-         colorscale: 'Viridis', 
-         showscale: !isMobile, 
-         opacity: 0.8, 
-         line: { color: 'white', width: 0.5 },
-         colorbar: {
-           title: 'IV%',
-           titleside: 'right',
-           titlefont: { size: 10, color: '#94a3b8', family: 'JetBrains Mono' },
-           tickfont: { size: 10, color: '#94a3b8', family: 'JetBrains Mono' },
-           orientation: 'h', 
-           x: 1,
-           y: 1, 
-           xanchor: 'right',
-           yanchor: 'top',
-           len: 0.3,
-           thickness: 12,
-           bgcolor: 'rgba(0,0,0,0)',
-           outlinecolor: 'rgba(0,0,0,0)'
-         }
+         color: dailyData.map(d => d.iv), colorscale: 'Viridis', showscale: !isMobile, opacity: 0.8, line: { color: 'white', width: 0.5 },
+         colorbar: { title: 'IV%', titleside: 'right', titlefont: { size: 10, color: '#94a3b8', family: 'JetBrains Mono' }, tickfont: { size: 10, color: '#94a3b8', family: 'JetBrains Mono' }, x: 1, thickness: 12, bgcolor: 'rgba(0,0,0,0)', outlinecolor: 'rgba(0,0,0,0)' }
        }
     }];
   };
 
-  // --- UPDATED: CLEAN FIX FOR SENTIMENT CHART ---
   const getSentimentPlotData = () => {
     if (!sentVolRaw || sentVolRaw.length === 0 || !selectedDate) return [];
     const dailyData = sentVolRaw.filter(d => d.trade_date === selectedDate);
@@ -171,10 +145,9 @@ function App() {
     return dailyData.map(row => ({
       x: [row.sentiment_signal], 
       y: [row.avg_iv], 
-      mode: 'markers', // REMOVED '+text' to remove cluttered labels
+      mode: 'markers', 
       name: row.ticker, 
       marker: { 
-         // Reduced min size from 15 to 6 to prevent crowding
          size: [Math.max(6, Math.log(row.news_volume || 1) * 10)], 
          color: MAG7_CONFIG[row.ticker]?.color || '#94a3b8', 
          opacity: 0.8, 
@@ -182,7 +155,6 @@ function App() {
          sizemode: 'area', 
          sizeref: 0.2
       },
-      // Rich Tooltip replaces the static labels
       hovertemplate: `
         <b>${row.ticker}</b><br>
         Sentiment: %{x:.2f}<br>
@@ -193,68 +165,41 @@ function App() {
     }));
   };
 
-  // --- CHART LAYOUTS ---
-  const scatterLayout = {
-    xaxis: { title: 'DTE (Days to Expiration)', gridcolor: '#334155', zerolinecolor: '#334155' },
-    yaxis: { title: 'Moneyness (Strike / Price)', gridcolor: '#334155', zerolinecolor: '#334155', range: [0.5, 1.8] },
-    showlegend: false, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
-    font: { color: '#94a3b8' }, 
-    margin: isMobile ? { t: 10, b: 40, l: 30, r: 0 } : { t: 10, b: 40, l: 40, r: 20 }
-  };
+  // --- LAYOUTS ---
+  const scatterLayout = { xaxis: { title: 'DTE', gridcolor: '#334155' }, yaxis: { title: 'Moneyness', gridcolor: '#334155', range: [0.5, 1.8] }, showlegend: false, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: '#94a3b8' }, margin: isMobile ? { t: 10, b: 40, l: 30, r: 0 } : { t: 10, b: 40, l: 40, r: 20 } };
+  const lineLayout = { xaxis: { title: 'Trend', gridcolor: '#334155' }, yaxis: { title: 'Flow', gridcolor: '#334155' }, showlegend: false, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: '#94a3b8' }, margin: isMobile ? { t: 10, b: 40, l: 30, r: 5 } : { t: 10, b: 40, l: 40, r: 10 } };
+  const sentimentLayout = { xaxis: { title: 'Sentiment', gridcolor: '#334155', range: [-1, 1], zeroline: true }, yaxis: { title: 'IV', gridcolor: '#334155' }, showlegend: false, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: '#94a3b8' }, margin: isMobile ? { t: 10, b: 40, l: 30, r: 10 } : { t: 20, b: 40, l: 50, r: 20 }, shapes: [{ type: 'rect', xref: 'x', yref: 'paper', x0: -1, y0: 0.5, x1: 0, y1: 1, fillcolor: '#ef4444', opacity: 0.05, line: { width: 0 }}, { type: 'rect', xref: 'x', yref: 'paper', x0: 0, y0: 0, x1: 1, y1: 0.5, fillcolor: '#22c55e', opacity: 0.05, line: { width: 0 }}] };
 
-  const lineLayout = {
-    xaxis: { title: '30 Day Trend', gridcolor: '#334155' },
-    yaxis: { title: 'Net Sentiment Flow', gridcolor: '#334155', zerolinecolor: '#334155' },
-    showlegend: false, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
-    font: { color: '#94a3b8' }, margin: isMobile ? { t: 10, b: 40, l: 30, r: 5 } : { t: 10, b: 40, l: 40, r: 10 }
-  };
-
-  const sentimentLayout = {
-    xaxis: { title: 'News Sentiment', gridcolor: '#334155', zerolinecolor: '#94a3b8', range: [-1, 1], zeroline: true },
-    yaxis: { title: 'Implied Volatility', gridcolor: '#334155', zerolinecolor: '#334155', autorange: true },
-    showlegend: false, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
-    font: { color: '#94a3b8' }, margin: isMobile ? { t: 10, b: 40, l: 30, r: 10 } : { t: 20, b: 40, l: 50, r: 20 },
-    shapes: [
-      { type: 'rect', xref: 'x', yref: 'paper', x0: -1, y0: 0.5, x1: 0, y1: 1, fillcolor: '#ef4444', opacity: 0.05, line: { width: 0 }},
-      { type: 'rect', xref: 'x', yref: 'paper', x0: 0, y0: 0, x1: 1, y1: 0.5, fillcolor: '#22c55e', opacity: 0.05, line: { width: 0 }}
-    ],
-    annotations: [
-      { x: 0.8, y: 10, text: "Healthy Growth", showarrow: false, font: {color: '#4ade80', size: 12} },
-      { x: -0.8, y: 80, text: "Fear Zone", showarrow: false, font: {color: '#f87171', size: 12} }
-    ]
-  };
-
-  // --- DYNAMIC SIDEBAR PROPS ---
   const sidebarProps = sidebarTab === 'momentum' ? {
         title: "Mag 7 Momentum", tag: "Trend", desc: magMeta?.inspector.description || "Net Sentiment Flow",
         isLoading: magLoading, chartType: "line", plotData: getMag7PlotData(), 
-        plotLayout: { ...lineLayout, margin: { t: 10, b: 30, l: 30, r: 10 } },
-        sqlCode: magMeta?.inspector.sql_logic, dbtCode: magMeta?.inspector.dbt_logic, dbtYml: magMeta?.inspector.dbt_yml
+        plotLayout: lineLayout, sqlCode: magMeta?.inspector.sql_logic, dbtCode: magMeta?.inspector.dbt_logic, dbtYml: magMeta?.inspector.dbt_yml
     } : {
         title: "Risk Radar", tag: "Alpha", desc: "Sentiment vs Volatility",
         isLoading: sentVolLoading, chartType: "scatter", plotData: getSentimentPlotData(),
-        plotLayout: { ...sentimentLayout, margin: { t: 10, b: 30, l: 30, r: 10 }, annotations: [] },
-        sqlCode: sentVolMeta?.inspector.sql_logic, dbtCode: sentVolMeta?.inspector.dbt_logic, dbtYml: sentVolMeta?.inspector.dbt_yml
+        plotLayout: sentimentLayout, sqlCode: sentVolMeta?.inspector.sql_logic, dbtCode: sentVolMeta?.inspector.dbt_logic, dbtYml: sentVolMeta?.inspector.dbt_yml
     };
 
   return (
     <div className="app-container">
       
-      {/* 1. Header (Includes System Status + Nav) */}
-      <Header />
-
-      {/* 2. Global Controls */}
-      <GlobalControlBar 
-        dates={chaosMeta?.available_dates || []} selectedDate={selectedDate} onDateChange={setSelectedDate}
-        availableTickers={WATCHLIST} selectedTicker={selectedTicker} onTickerChange={setSelectedTicker}
-      />
+      <div className="sticky-header-group">
+        <Header />
+        <GlobalControlBar 
+          dates={chaosMeta?.available_dates || []} selectedDate={selectedDate} onDateChange={setSelectedDate}
+          availableTickers={WATCHLIST} selectedTicker={selectedTicker} onTickerChange={setSelectedTicker}
+        />
+      </div>
 
       <main className="bento-grid">
-        {/* ROW 1: KPI CARDS */}
-        <MetricCard title="Market Sentiment" value={(Math.random() * 100).toFixed(0)} subValue="Fear / Greed Index" icon={<TrendingUp size={16} className="text-accent" />} />
-        <MetricCard title="Whale Flow" value={whaleMetric.value} subValue={whaleMetric.sub} icon={<Activity size={16} className={getSentimentColor(whaleMetric.isBullish)} />} />
-        <MetricCard title="Max Volatility" value={chaosMetric.value} subValue={chaosMetric.sub} icon={<Zap size={16} className={getRiskColor(chaosMetric.isExtreme)} />} />
-        <MetricCard title="Mag 7 Leader" value={magLeaderMetric.value} subValue={magLeaderMetric.sub} icon={magLeaderMetric.isPositive ? <ArrowUpRight size={16} className={getMomentumColor(true)}/> : <ArrowDownRight size={16} className={getMomentumColor(false)}/>} />
+        
+        {/* ROW 1: KPI STRIP (Horizontal Scroll on Mobile) */}
+        <div className="span-4 metric-strip">
+           <MetricCard title="Market Sentiment" value={(Math.random() * 100).toFixed(0)} subValue="Fear / Greed Index" icon={<TrendingUp size={16} className="text-accent" />} />
+           <MetricCard title="Whale Flow" value={whaleMetric.value} subValue={whaleMetric.sub} icon={<Activity size={16} className={getSentimentColor(whaleMetric.isBullish)} />} />
+           <MetricCard title="Max Volatility" value={chaosMetric.value} subValue={chaosMetric.sub} icon={<Zap size={16} className={getRiskColor(chaosMetric.isExtreme)} />} />
+           <MetricCard title="Mag 7 Leader" value={magLeaderMetric.value} subValue={magLeaderMetric.sub} icon={magLeaderMetric.isPositive ? <ArrowUpRight size={16} className={getMomentumColor(true)}/> : <ArrowDownRight size={16} className={getMomentumColor(false)}/>} />
+        </div>
 
         {/* ROW 2: SPLIT VIEW */}
         <div className="span-3 h-tall">
@@ -265,7 +210,7 @@ function App() {
            />
         </div>
 
-        <div className="span-1 h-tall">
+        <div className="h-tall">
             <InspectorCard 
               {...sidebarProps} 
               headerControls={
