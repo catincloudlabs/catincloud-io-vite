@@ -4,6 +4,7 @@ import Footer from './components/Footer';
 import MetricCard from './components/MetricCard';
 import InspectorCard from './components/InspectorCard';
 import GlobalControlBar from './components/GlobalControlBar'; 
+import MarketPsychologyMap from './components/MarketPsychologyMap'; // <--- NEW IMPORT
 import { Activity, Zap, ArrowUpRight, ArrowDownRight, TrendingUp } from 'lucide-react';
 import { useSystemHeartbeat } from './hooks/useSystemHeartbeat';
 import { getSentimentColor, getRiskColor, getMomentumColor } from './utils/statusHelpers';
@@ -28,7 +29,7 @@ function App() {
 
   // Global State
   const [selectedDate, setSelectedDate] = useState('');
-  const [selectedTicker, setSelectedTicker] = useState('NVDA'); 
+  const [selectedTicker, setSelectedTicker] = useState('AAPL'); 
 
   // Data State
   const [chaosRaw, setChaosRaw] = useState([]); 
@@ -45,6 +46,9 @@ function App() {
   const [sentVolRaw, setSentVolRaw] = useState([]);
   const [sentVolMeta, setSentVolMeta] = useState(null);
   const [sentVolLoading, setSentVolLoading] = useState(true);
+
+  // New: Map Metadata State (Bubbled up from Child)
+  const [mapMeta, setMapMeta] = useState(null);
 
   // UI State
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -236,6 +240,28 @@ function App() {
              sqlCode={whaleData?.meta.inspector.sql_logic} dbtCode={whaleData?.meta.inspector.dbt_logic} dbtYml={whaleData?.meta.inspector.dbt_yml} 
            />
         </div>
+
+        {/* ROW 4: MARKET PSYCHOLOGY MAP (NEW) */}
+        <div className="span-4 h-tall">
+           <InspectorCard 
+             title="Market Psychology Map"
+             tag="AI MODEL"
+             desc={mapMeta 
+                 ? `t-SNE Clustering of ${mapMeta.inspector?.description || 'Market News'}` 
+                 : "Loading AI Model..."
+             }
+             // Pass logic strings from the loaded JSON to the Inspector Modal
+             sqlCode={mapMeta?.inspector?.sql_logic}
+             dbtCode={mapMeta?.inspector?.dbt_logic}
+             dbtYml={mapMeta?.inspector?.dbt_yml}
+             
+             // Render the Custom Map
+             customChart={
+                 <MarketPsychologyMap onMetaLoaded={setMapMeta} />
+             }
+           />
+        </div>
+
       </main>
       <Footer />
     </div>

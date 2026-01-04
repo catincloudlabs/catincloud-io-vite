@@ -885,7 +885,7 @@ html, body {
 }
 
 /* ==================================================================== */
-/* 20. CUSTOM CHART CONTAINER (For Recharts/Maps)                       */
+/* 17. CUSTOM CHART CONTAINER (For Recharts/Maps)                       */
 /* ==================================================================== */
 
 .custom-chart-wrapper {
@@ -903,7 +903,7 @@ html, body {
 }
 
 /* ==================================================================== */
-/* 21. CUSTOM TOOLTIP (Recharts)                                        */
+/* 18. CUSTOM TOOLTIP (Recharts)                                        */
 /* ==================================================================== */
 
 .custom-tooltip {
@@ -913,7 +913,9 @@ html, body {
   border-radius: var(--radius);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
   max-width: 320px;
-  z-index: 50;
+  position: relative; 
+  z-index: 9999;
+  pointer-events: none;
 }
 
 .tooltip-header {
