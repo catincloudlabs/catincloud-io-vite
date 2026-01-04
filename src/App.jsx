@@ -209,6 +209,7 @@ function App() {
         {/* We give this full width (span-4) because t-SNE maps are dense and need space to breathe */}
         <div className="span-4 h-tall">
            <InspectorCard 
+             className="ai-hero-card"
              title="Market Psychology Map"
              tag="AI MODEL"
              // Updated Description as requested
