@@ -1012,7 +1012,6 @@ html, body {
     margin-bottom: 12px;
   }
   
-  /* Reduce heights slightly for tablet */
   .h-tall { height: 450px; }
   .h-standard { height: 400px; }
   
@@ -1030,17 +1029,16 @@ html, body {
     gap: 16px;
   }
 
-  /* 2. Unstick Header to save space */
+  /* 2. HEADER CLEANUP */
   .sticky-header-group {
     position: relative; 
     top: auto;
     margin: 0 -12px 16px -12px; 
     padding: 0 12px;
-    box-shadow: none; 
-    border-bottom: 1px solid var(--border);
+    box-shadow: none !important; 
+    border-bottom: none !important; 
   }
 
-  /* 3. Compact Header Elements */
   .app-header {
     flex-direction: row; 
     align-items: center;
@@ -1048,10 +1046,12 @@ html, body {
     height: auto;
     padding: 12px 0;
     flex-wrap: wrap; 
+    border-bottom: none !important; 
+    margin-bottom: 0 !important;
   }
 
+  /* 3. Compact Header Elements */
   .brand-title { font-size: 1.1rem; }
-  
   .status-text { display: none; } 
   .status-badge-compact { padding: 4px; border-radius: 50%; }
 
@@ -1065,7 +1065,7 @@ html, body {
 
   .ticker-selector-group {
     width: 100%;
-    overflow-x: auto; /* Horizontal scroll for tickers */
+    overflow-x: auto; 
     padding-bottom: 4px;
     mask-image: linear-gradient(to right, black 90%, transparent 100%);
     -webkit-mask-image: linear-gradient(to right, black 90%, transparent 100%);
@@ -1076,63 +1076,89 @@ html, body {
     margin: 0;
   }
 
-  /* 5. Chart Adjustments */
+  /* 5. CHART & CARD ADJUSTMENTS */
+  
   .span-1, .span-2, .span-3, .span-4 { 
     grid-column: span 1 !important; 
   }
   
-  /* Reduce chart heights significantly for mobile to reduce scrolling */
   .h-tall { height: 350px; }
   .h-standard { height: 350px; }
 
-  /* 6. COMPACT METRIC CAROUSEL (The "Squashed" Tiles) */
+  /* --- HEADER LAYOUT FIX: Title ... Tag Button --- */
+  
+  .panel-header {
+    gap: 8px; /* Space between Tag and Logic Button */
+  }
+
+  /* Make the title container fill the space */
+  .panel-title {
+    flex: 1; 
+    min-width: 0; /* Allow shrinking */
+    padding-right: 4px;
+  }
+
+  /* Unlock text width so "Psychology" isn't cut off */
+  .panel-title-text {
+    max-width: none !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Push the Pill/Tag to the far right */
+  .panel-title .tag {
+    margin-left: auto !important; 
+    white-space: nowrap;
+  }
+
+  /* Hide Hero Description */
+  .ai-hero-card .panel-desc {
+    display: none !important;
+  }
+
+  /* 6. COMPACT METRIC CAROUSEL */
   .metric-strip {
-    display: flex !important; /* Override 'display: grid' */
+    display: flex !important; 
     flex-direction: row;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     gap: 12px;
-    padding-bottom: 4px; /* Tiny padding for scrollbar */
-    margin-right: -12px; /* Bleed to edge */
-    padding-right: 12px; /* Padding for last item */
+    padding-bottom: 4px; 
+    margin-right: -12px; 
+    padding-right: 12px; 
   }
   
   .metric-strip::-webkit-scrollbar {
     display: none; 
   }
 
-  /* Force cards to be small tiles */
+  /* Tile Styling */
   .metric-strip .panel {
     min-width: 150px; 
     width: 150px;
     flex-shrink: 0;
     scroll-snap-align: start;
-    padding: 10px; /* Reduces padding from 20px to 10px */
+    padding: 10px;
     min-height: 0; 
   }
 
-  /* --- SQUASHING THE HEIGHT --- */
-  
-  /* Remove the big gap under the title */
+  /* Remove Lines */
+  .metric-strip .panel::after {
+    display: none !important;
+  }
+
   .metric-strip .panel-header {
-    margin-bottom: 4px !important; /* Was 16px */
-    padding-bottom: 4px !important; /* Was 12px */
-    border-bottom: none !important; /* Remove line to save space */
+    border-bottom: none !important; 
+    margin-bottom: 4px !important; 
+    padding-bottom: 0 !important; 
     min-height: 0 !important;
   }
 
-  /* Shrink Title */
-  .metric-strip .panel-title {
-    font-size: 0.65rem;
-  }
-
-  /* Shrink Big Number */
-  .metric-strip .metric-big {
-    font-size: 1.2rem; /* Was 2rem */
-    line-height: 1.1;
-  }
-
-  /* Shrink Subtitle */
+  /* Typography */
+  .metric-strip .panel-title { font-size: 0.65rem; }
+  .metric-strip .metric-big { font-size: 1.2rem; line-height: 1.1; }
+  
   .metric-strip .metric-sub {
     font-size: 0.6rem;
     margin-top: 2px;
@@ -1141,9 +1167,5 @@ html, body {
     text-overflow: ellipsis;
   }
   
-  /* Hide or shrink icons if needed */
-  .metric-strip svg {
-    width: 14px;
-    height: 14px;
-  }
+  .metric-strip svg { width: 14px; height: 14px; }
 }
