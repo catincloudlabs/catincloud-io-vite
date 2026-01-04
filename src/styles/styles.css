@@ -1085,7 +1085,7 @@ html, body {
   .h-tall { height: 350px; }
   .h-standard { height: 350px; }
 
-  /* 6. COMPACT METRIC CAROUSEL (The "Engine Room" Ticker) */
+  /* 6. COMPACT METRIC CAROUSEL (The "Squashed" Tiles) */
   .metric-strip {
     display: flex !important; /* Override 'display: grid' */
     flex-direction: row;
@@ -1093,44 +1093,55 @@ html, body {
     scroll-snap-type: x mandatory;
     gap: 12px;
     padding-bottom: 4px; /* Tiny padding for scrollbar */
-    
-    /* Bleed effect: allows cards to touch the screen edge */
-    margin-right: -12px; 
-    padding-right: 12px; 
+    margin-right: -12px; /* Bleed to edge */
+    padding-right: 12px; /* Padding for last item */
   }
   
   .metric-strip::-webkit-scrollbar {
     display: none; 
   }
 
-  /* Force cards to be small tiles (160px width) */
+  /* Force cards to be small tiles */
   .metric-strip .panel {
-    min-width: 160px; 
-    width: 160px;
+    min-width: 150px; 
+    width: 150px;
     flex-shrink: 0;
     scroll-snap-align: start;
-    padding: 12px; /* Tighter padding than desktop */
-    min-height: 0; /* Remove default min-height */
+    padding: 10px; /* Reduces padding from 20px to 10px */
+    min-height: 0; 
   }
 
-  /* Compact Typography for Tiles */
+  /* --- SQUASHING THE HEIGHT --- */
+  
+  /* Remove the big gap under the title */
+  .metric-strip .panel-header {
+    margin-bottom: 4px !important; /* Was 16px */
+    padding-bottom: 4px !important; /* Was 12px */
+    border-bottom: none !important; /* Remove line to save space */
+    min-height: 0 !important;
+  }
+
+  /* Shrink Title */
   .metric-strip .panel-title {
-    font-size: 0.7rem;
-    margin-bottom: 4px;
-  }
-
-  .metric-strip .metric-big {
-    font-size: 1.25rem; /* Smaller numbers */
-  }
-
-  .metric-strip .metric-sub {
     font-size: 0.65rem;
-    white-space: nowrap; /* Prevent wrapping */
+  }
+
+  /* Shrink Big Number */
+  .metric-strip .metric-big {
+    font-size: 1.2rem; /* Was 2rem */
+    line-height: 1.1;
+  }
+
+  /* Shrink Subtitle */
+  .metric-strip .metric-sub {
+    font-size: 0.6rem;
+    margin-top: 2px;
+    white-space: nowrap; 
     overflow: hidden;
     text-overflow: ellipsis;
   }
   
-  /* Scale down icons inside the metric strip */
+  /* Hide or shrink icons if needed */
   .metric-strip svg {
     width: 14px;
     height: 14px;
