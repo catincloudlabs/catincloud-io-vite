@@ -148,7 +148,7 @@ function App() {
             yanchor: 'middle',     
             len: 0.9,              // 90% Height (floats nicer)
             thickness: 10,         // Thinner (from 12 to 10)
-            title: { text: 'IV%', side: 'top', font: { size: 9, color: '#94a3b8', family: 'JetBrains Mono' } },
+            title: { text: 'IV%', side: 'bottom', standoff: 0, font: { size: 9, color: '#94a3b8', family: 'JetBrains Mono' } },
             tickfont: { size: 9, color: '#94a3b8', family: 'JetBrains Mono' },
             bgcolor: 'rgba(0,0,0,0)', 
             outlinecolor: 'rgba(0,0,0,0)' 
@@ -231,7 +231,7 @@ function App() {
         isLoading: magLoading, chartType: "line", plotData: getMag7PlotData(), 
         plotLayout: lineLayout, sqlCode: magMeta?.inspector.sql_logic, dbtCode: magMeta?.inspector.dbt_logic, dbtYml: magMeta?.inspector.dbt_yml
     } : {
-        title: "Risk Radar", tag: "Alpha", desc: "Sentiment vs Volatility",
+        title: "Risk Radar", tag: "AI Model", desc: "Sentiment vs Volatility",
         isLoading: sentVolLoading, chartType: "scatter", plotData: getSentimentPlotData(),
         plotLayout: sentimentLayout, sqlCode: sentVolMeta?.inspector.sql_logic, dbtCode: sentVolMeta?.inspector.dbt_logic, dbtYml: sentVolMeta?.inspector.dbt_yml
     };
