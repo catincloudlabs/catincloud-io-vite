@@ -342,11 +342,45 @@ html, body {
   cursor: pointer;
   font-size: 0.75rem;
   color: var(--text-muted); 
+  transition: color 0.2s ease;
 }
 
 .panel-toggle-btn:hover {
   color: var(--text-main);
 }
+
+/* --- LOGIC BUTTON STYLES --- */
+
+/* 1. Default (Blue - Matches Alpha/Gamma tags) */
+.logic-inspector-btn {
+  /* Soft Sky Blue - slightly muted to keep it subtle like grey */
+  color: #93c5fd !important; 
+  transition: all 0.2s ease;
+}
+
+.logic-inspector-btn:hover {
+  /* Full Accent Blue + Glow */
+  color: #38bdf8 !important;
+  text-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
+}
+
+/* 2. AI Hero Variant (Purple - Matches AI Map Glow) */
+/* This targets .logic-inspector-btn ONLY when it is inside .ai-hero-card */
+.ai-hero-card .logic-inspector-btn {
+  color: #b19cd9 !important; /* Soft Purple */
+}
+
+.ai-hero-card .logic-inspector-btn:hover {
+  color: #d1c4e9 !important; /* Bright Purple */
+  text-shadow: 0 0 8px rgba(177, 156, 217, 0.4);
+}
+
+/* Ensure the icon inside inherits the transitions */
+.logic-inspector-btn .logic-btn-inner {
+    transition: inherit;
+}
+
+/* --- END LOGIC BUTTON STYLES --- */
 
 .chart-content-area {
   flex: 1;
@@ -396,7 +430,6 @@ html, body {
   padding: 8px;
 }
 
-/* NEW: Contextual Row Colors */
 .row-bullish {
   background-color: rgba(34, 197, 94, 0.04);
   border-left: 3px solid var(--green);

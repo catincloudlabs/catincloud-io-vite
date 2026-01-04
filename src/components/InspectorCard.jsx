@@ -49,7 +49,7 @@ const InspectorCard = ({
             {/* Inspector Button */}
             {hasLogic && (
             <button 
-                className="nav-link panel-toggle-btn"
+                className="nav-link panel-toggle-btn logic-inspector-btn"
                 onClick={() => setShowLogic(true)}
                 disabled={isLoading}
                 title="Inspect Data Pipeline Logic"
