@@ -698,18 +698,20 @@ html, body {
 .ml-2 { margin-left: 8px; }
 .ml-4 { margin-left: 16px; } 
 .pr-2 { padding-right: 8px; }
+
 .text-right { text-align: right; }
 .font-bold { font-weight: 700; }
-.font-mono { font-family: var(--font-mono); }
+.font-mono { font-family: "JetBrains Mono", "Fira Code", monospace; }
+
 .text-white { color: #fff; }
-.text-muted { color: var(--text-muted); }
-.text-green { color: var(--green); }
-.text-red { color: var(--red); }
-.text-yellow { color: var(--yellow); }
-.text-accent { color: var(--accent); }
+.text-muted { color: #94a3b8; }
+.text-green { color: #22c55e; }
+.text-red { color: #ef4444; }
+.text-yellow { color: #eab308; }
+.text-accent { color: #38bdf8; }
 .text-sm { font-size: 0.75rem; }
 
-.border-right { border-right: 1px solid var(--border); }
+.border-right { border-right: 1px solid #334155; }
 
 .logic-btn-inner {
   display: flex;
@@ -721,6 +723,22 @@ html, body {
 .plotly-fill {
   width: 100%;
   height: 100%;
+}
+
+/* --- Control Bar Spacing Utility --- */
+.control-bar-spacing {
+  margin-top: 24px;
+  margin-bottom: -12px; /* Pulls the bottom charts closer */
+  position: relative;
+  z-index: 5;
+}
+
+/* Mobile Reset: Removes negative margins to prevent overlap on small screens */
+@media (max-width: 768px) {
+  .control-bar-spacing {
+    margin-top: 16px;
+    margin-bottom: 0;
+  }
 }
 
 /* ==================================================================== */

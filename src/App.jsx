@@ -235,7 +235,7 @@ function App() {
         </div>
 
         {/* 4. CONTROLS (Moved Below Map) */}
-        <div className="span-4">
+        <div className="span-4 control-bar-spacing">
             <GlobalControlBar 
               dates={chaosMeta?.available_dates || []} selectedDate={selectedDate} onDateChange={setSelectedDate}
               availableTickers={WATCHLIST} selectedTicker={selectedTicker} onTickerChange={setSelectedTicker}
