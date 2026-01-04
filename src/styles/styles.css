@@ -621,7 +621,7 @@ html, body {
 .status-ribbon-container.status-warning { --status-color: #F59E0B; }
 
 /* ==================================================================== */
-/* 12. TABBED HEADER UTILITIES                                          */
+/* 12. TABBED HEADER UTILITIES (New)                                    */
 /* ==================================================================== */
 
 .header-tabs-wrapper {
@@ -642,7 +642,8 @@ html, body {
 .header-tab-btn {
   background: transparent;
   border: none;
-  color: var(--text-muted);
+  /* CHANGED: Use accent color instead of text-muted for default state */
+  color: var(--accent); 
   font-family: var(--font-mono);
   font-size: 0.7rem;
   font-weight: 600;
@@ -651,18 +652,23 @@ html, body {
   cursor: pointer;
   transition: all 0.2s;
   text-transform: uppercase;
+  /* Optional: Add a subtle border or background to make them pop more like buttons */
+  border: 1px solid rgba(56, 189, 248, 0.2); 
+  background: rgba(56, 189, 248, 0.05);
 }
 
 .header-tab-btn:hover {
-  color: var(--text-main);
-  background: rgba(255,255,255,0.05);
+  /* Brighter on hover */
+  color: #fff;
+  background: rgba(56, 189, 248, 0.2);
+  border-color: var(--accent);
 }
 
 .header-tab-btn.active {
-  background: var(--bg-app);
-  color: var(--accent);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-  border: 1px solid rgba(255,255,255,0.05);
+  background: var(--accent); /* Full fill for active state if needed */
+  color: #0f172a; /* Dark text on bright background */
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+  border: 1px solid var(--accent);
 }
 
 /* Compact Ticker Controls (Sidebar) */
