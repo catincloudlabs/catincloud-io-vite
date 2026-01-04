@@ -655,9 +655,16 @@ html, body {
 
 @media (max-width: 1024px) {
   .app-container { padding: 12px; }
-  .bento-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
   
-  /* Reset spans for 2-column tablet layout */
+  /* Tablet: 2 columns */
+  .bento-grid { 
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 12px; 
+  }
+  
+  /* CRITICAL: Force all spans to fill the 2-column row on tablet.
+     This ensures the split-view (Chaos/Risk) stacks vertically 
+     instead of being squashed side-by-side. */
   .span-1, .span-2, .span-3, .span-4 {
     grid-column: span 2; 
     height: auto;
@@ -666,6 +673,7 @@ html, body {
   
   .h-tall { height: 450px; }
   .h-standard { height: 400px; } /* Keep tables readable on tablet */
+  
   .metric-big { font-size: 1.5rem; }
   .desktop-only { display: none; }
 }
@@ -676,6 +684,7 @@ html, body {
     padding: 12px; /* Add breathing room back on mobile edges */
   }
   
+  /* Mobile: Single column */
   .bento-grid { 
     grid-template-columns: 1fr; 
     gap: 16px;

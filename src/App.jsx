@@ -197,7 +197,7 @@ function App() {
 
       <main className="bento-grid">
         
-        {/* ROW 1: KPI STRIP (Horizontal Scroll on Mobile) */}
+        {/* --- ROW 1: KPI STRIP --- */}
         <div className="span-4 metric-strip">
            <MetricCard title="Market Sentiment" value={(Math.random() * 100).toFixed(0)} subValue="Fear / Greed Index" icon={<TrendingUp size={16} className="text-accent" />} />
            <MetricCard title="Whale Flow" value={whaleMetric.value} subValue={whaleMetric.sub} icon={<Activity size={16} className={getSentimentColor(whaleMetric.isBullish)} />} />
@@ -205,8 +205,31 @@ function App() {
            <MetricCard title="Mag 7 Leader" value={magLeaderMetric.value} subValue={magLeaderMetric.sub} icon={magLeaderMetric.isPositive ? <ArrowUpRight size={16} className={getMomentumColor(true)}/> : <ArrowDownRight size={16} className={getMomentumColor(false)}/>} />
         </div>
 
-        {/* ROW 2: SPLIT VIEW */}
-        <div className="span-3 h-tall">
+        {/* --- ROW 2: MARKET PSYCHOLOGY HERO (The Narrative) --- */}
+        {/* We give this full width (span-4) because t-SNE maps are dense and need space to breathe */}
+        <div className="span-4 h-tall">
+           <InspectorCard 
+             title="Market Psychology Map"
+             tag="AI MODEL"
+             // Updated Description as requested
+             desc="t-SNE Clustering of Uses OpenAI Embeddings + t-SNE (Dimensionality Reduction) to map 1,536 dimensions of news context into 2D space. Bubbles are colored by Market Impact (Bull Trap vs Justified Optimism)."
+             
+             // Pass logic metadata
+             sqlCode={mapMeta?.inspector?.sql_logic}
+             dbtCode={mapMeta?.inspector?.dbt_logic}
+             dbtYml={mapMeta?.inspector?.dbt_yml}
+             
+             // Render the Custom Map
+             customChart={
+                 <MarketPsychologyMap onMetaLoaded={setMapMeta} />
+             }
+           />
+        </div>
+
+        {/* --- ROW 3: STRUCTURE & TREND (The Analysis) --- */}
+        {/* Split view: Chaos (Specific Ticker) vs Market Risk (Broad Context) */}
+        
+        <div className="span-2 h-standard">
            <InspectorCard 
              title={`Chaos Map: ${selectedTicker}`} tag="Gamma" desc={chaosMeta?.inspector.description}
              isLoading={chaosLoading} chartType="scatter" plotData={getFilteredChaosPlot()} plotLayout={scatterLayout}
@@ -214,7 +237,7 @@ function App() {
            />
         </div>
 
-        <div className="h-tall">
+        <div className="span-2 h-standard">
             <InspectorCard 
               {...sidebarProps} 
               headerControls={
@@ -232,33 +255,12 @@ function App() {
             </InspectorCard>
         </div>
 
-        {/* ROW 3: WHALE HUNTER */}
+        {/* --- ROW 4: WHALE HUNTER (The Flow) --- */}
         <div className="span-4">
            <InspectorCard 
              title={whaleData?.meta.title || "Whale Hunter"} tag="Flow" desc={whaleData?.meta.inspector.description}
              isLoading={whaleLoading} chartType="table" tableData={whaleData?.data}
              sqlCode={whaleData?.meta.inspector.sql_logic} dbtCode={whaleData?.meta.inspector.dbt_logic} dbtYml={whaleData?.meta.inspector.dbt_yml} 
-           />
-        </div>
-
-        {/* ROW 4: MARKET PSYCHOLOGY MAP (NEW) */}
-        <div className="span-4 h-tall">
-           <InspectorCard 
-             title="Market Psychology Map"
-             tag="AI MODEL"
-             desc={mapMeta 
-                 ? `t-SNE Clustering of ${mapMeta.inspector?.description || 'Market News'}` 
-                 : "Loading AI Model..."
-             }
-             // Pass logic strings from the loaded JSON to the Inspector Modal
-             sqlCode={mapMeta?.inspector?.sql_logic}
-             dbtCode={mapMeta?.inspector?.dbt_logic}
-             dbtYml={mapMeta?.inspector?.dbt_yml}
-             
-             // Render the Custom Map
-             customChart={
-                 <MarketPsychologyMap onMetaLoaded={setMapMeta} />
-             }
            />
         </div>
 
