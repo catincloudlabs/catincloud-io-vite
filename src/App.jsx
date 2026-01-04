@@ -274,7 +274,7 @@ function App() {
         </div>
 
         {/* 6. WHALE HUNTER (The Flow) */}
-        <div className="span-4">
+        <div className="span-4 h-tall">
            <InspectorCard 
              title={whaleData?.meta.title || "Whale Hunter"} tag="Flow" desc={whaleData?.meta.inspector.description}
              isLoading={whaleLoading} chartType="table" tableData={whaleData?.data}
