@@ -24,7 +24,6 @@ const CustomTooltip = ({ active, payload }) => {
         </div>
         <p className="tooltip-title">"{data.title}"</p>
         <div className="tooltip-footer">
-            {/* Note: Color logic remains in JS for dynamic labels, or you can map classes */}
             <span className="tooltip-label" style={{ color: COLORS[data.label] || '#fff' }}>
                 {data.label}
             </span>
@@ -38,17 +37,21 @@ const CustomTooltip = ({ active, payload }) => {
   return null;
 };
 
-// Accept 'onMetaLoaded' to pass timestamp info back to the parent Card
 export default function MarketPsychologyMap({ onMetaLoaded }) {
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('https://cdn.catincloud.io/data/market_psychology_map.json')
-      .then(res => res.json())
+    // 1. POINT TO LOCAL FILE (Changed from CDN)
+    fetch('/data/market_psychology_map.json')
+      .then(res => {
+        if (!res.ok) throw new Error("File not found");
+        return res.json();
+      })
       .then(payload => {
         setChartData(payload.data || []);
         setLoading(false);
+        // 2. SUCCESS: Pass metadata up to parent
         if (onMetaLoaded && payload.meta) {
             onMetaLoaded(payload.meta);
         }
@@ -56,15 +59,23 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
       .catch(err => {
         console.error("Failed to load map:", err);
         setLoading(false);
+        // 3. FAILURE: Tell parent we are done loading (so it stops saying "Loading...")
+        if (onMetaLoaded) {
+            onMetaLoaded({
+                inspector: { description: "⚠ Error loading data. Check public/data/ folder." },
+                generated_at: new Date().toISOString()
+            });
+        }
       });
   }, [onMetaLoaded]);
 
-  if (loading) return <div className="loading-state">Loading Neural Map...</div>; // Add .loading-state to CSS if needed
+  if (loading) return <div className="loading-state">Loading Neural Map...</div>;
 
   return (
     <div className="map-container">
         <ResponsiveContainer width="100%" height="100%">
           <ScatterChart margin={{ top: 20, right: 20, bottom: 40, left: 20 }}>
+            {/* Hide Axes for a pure "Map" feel */}
             <XAxis type="number" dataKey="x" hide domain={['auto', 'auto']} />
             <YAxis type="number" dataKey="y" hide domain={['auto', 'auto']} />
             
