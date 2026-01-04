@@ -181,9 +181,14 @@ html, body {
   flex-direction: column;
 }
 
-/* UTILITY: Hero Height */
+/* UTILITY: Hero Height (For Complex Charts like Maps) */
 .h-tall {
-  height: 600px; 
+  height: 550px; 
+}
+
+/* UTILITY: Standard Height (For Tables & Simple Scatters) */
+.h-standard {
+  height: 400px;
 }
 
 /* ==================================================================== */
@@ -660,6 +665,7 @@ html, body {
   }
   
   .h-tall { height: 450px; }
+  .h-standard { height: 400px; } /* Keep tables readable on tablet */
   .metric-big { font-size: 1.5rem; }
   .desktop-only { display: none; }
 }
@@ -676,7 +682,6 @@ html, body {
   }
 
   /* 2. Unstick the Header Group */
-  /* On phones, screen real estate is precious. Let the header scroll away. */
   .sticky-header-group {
     position: relative; 
     top: auto;
@@ -733,6 +738,10 @@ html, body {
     height: 350px; 
   }
   
+  .h-standard {
+    height: 350px;
+  }
+
   /* Adjust margins for Plotly charts */
   .main-svg { 
     border-radius: var(--radius); 
