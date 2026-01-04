@@ -135,8 +135,23 @@ function App() {
        mode: 'markers', type: 'scatter',
        marker: {
          size: dailyData.map(d => Math.log(d.chaos_score || d.volume) * 3),
-         color: dailyData.map(d => d.iv), colorscale: 'Viridis', showscale: !isMobile, opacity: 0.8, line: { color: 'white', width: 0.5 },
-         colorbar: { title: 'IV%', titleside: 'right', titlefont: { size: 10, color: '#94a3b8', family: 'JetBrains Mono' }, tickfont: { size: 10, color: '#94a3b8', family: 'JetBrains Mono' }, x: 1, thickness: 12, bgcolor: 'rgba(0,0,0,0)', outlinecolor: 'rgba(0,0,0,0)' }
+         color: dailyData.map(d => d.iv), 
+         colorscale: 'Viridis', 
+         showscale: !isMobile, 
+         opacity: 0.8, 
+         line: { color: 'white', width: 0.5 },
+         // --- UPDATED: Horizontal Colorbar at Bottom ---
+         colorbar: { 
+            orientation: 'h',      // Horizontal
+            x: 0.5,                // Center horizontally
+            y: -0.3,               // Push below the axis labels
+            thickness: 10,         // Keep it thin and sleek
+            len: 0.6,              // Width relative to plot (60%)
+            title: { text: 'IV%', side: 'right', font: { size: 10, color: '#94a3b8', family: 'JetBrains Mono' } },
+            tickfont: { size: 10, color: '#94a3b8', family: 'JetBrains Mono' },
+            bgcolor: 'rgba(0,0,0,0)', 
+            outlinecolor: 'rgba(0,0,0,0)' 
+         }
        }
     }];
   };
@@ -144,18 +159,17 @@ function App() {
   const getSentimentPlotData = () => {
     if (!sentVolRaw || sentVolRaw.length === 0 || !selectedDate) return [];
     
-    // 1. Filter by Date AND strictly match the Mag7 Watchlist
-    const dailyData = sentVolRaw.filter(d => 
-        d.trade_date === selectedDate && WATCHLIST.includes(d.ticker)
-    );
-    
+    const dailyData = sentVolRaw
+        .filter(d => d.trade_date === selectedDate && WATCHLIST.includes(d.ticker))
+        .sort((a, b) => a.ticker.localeCompare(b.ticker));
+
     if (dailyData.length === 0) return [];
     
     return dailyData.map(row => ({
       x: [row.sentiment_signal], 
       y: [row.avg_iv], 
       mode: 'markers', 
-      name: row.ticker, // This name generates the Legend Item
+      name: row.ticker, 
       marker: { 
          size: [Math.max(6, Math.log(row.news_volume || 1) * 10)], 
          color: MAG7_CONFIG[row.ticker]?.color || '#94a3b8', 
@@ -175,14 +189,23 @@ function App() {
   };
 
   // --- LAYOUTS ---
-  const scatterLayout = { xaxis: { title: 'DTE', gridcolor: '#334155' }, yaxis: { title: 'Moneyness', gridcolor: '#334155', range: [0.5, 1.8] }, showlegend: false, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: '#94a3b8' }, margin: isMobile ? { t: 10, b: 40, l: 30, r: 0 } : { t: 10, b: 40, l: 40, r: 20 } };
+  // UPDATED: Increased bottom margin (b: 80) to allow space for the horizontal Colorbar
+  const scatterLayout = { 
+      xaxis: { title: 'DTE', gridcolor: '#334155' }, 
+      yaxis: { title: 'Moneyness', gridcolor: '#334155', range: [0.5, 1.8] }, 
+      showlegend: false, 
+      paper_bgcolor: 'rgba(0,0,0,0)', 
+      plot_bgcolor: 'rgba(0,0,0,0)', 
+      font: { color: '#94a3b8' }, 
+      // Larger bottom margin for the new colorbar position
+      margin: isMobile ? { t: 10, b: 80, l: 30, r: 0 } : { t: 10, b: 80, l: 40, r: 20 } 
+  };
   
   const lineLayout = { xaxis: { title: 'Trend', gridcolor: '#334155' }, yaxis: { title: 'Flow', gridcolor: '#334155' }, showlegend: false, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: '#94a3b8' }, margin: isMobile ? { t: 10, b: 40, l: 30, r: 5 } : { t: 10, b: 40, l: 40, r: 10 } };
   
   const sentimentLayout = { 
       xaxis: { title: 'Sentiment', gridcolor: '#334155', range: [-1, 1], zeroline: true }, 
       yaxis: { title: 'IV', gridcolor: '#334155' }, 
-      // LEGEND: Strictly Mag7 (via data filter) + Bottom Horizontal Layout
       showlegend: true, 
       legend: {
         orientation: "h",
@@ -264,7 +287,7 @@ function App() {
         {/* RIGHT: Risk/Trend (AI/Sentiment = Purple) */}
         <div className="span-2 h-standard">
             <InspectorCard 
-              className="ai-hero-card"
+              className="ai-hero-card" 
               {...sidebarProps} 
               headerControls={
                   <div className="header-tabs">
