@@ -37,6 +37,11 @@
 /* 2. GLOBAL RESET & BASE                                               */
 /* ==================================================================== */
 
+/* Ensure padding doesn't expand width */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 html, body {
   height: 100%;
   margin: 0;
@@ -175,28 +180,33 @@ html, body {
 /* 5. GRID SPANS & LAYOUT UTILITIES                                     */
 /* ==================================================================== */
 
+/* min-width: 0 prevents charts from forcing the grid to overflow horizontally.  */
 .span-1 { 
   grid-column: span 1; 
   display: flex;
   flex-direction: column;
+  min-width: 0; 
 }
 
 .span-2 { 
   grid-column: span 2; 
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .span-3 {
   grid-column: span 3;
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .span-4 { 
   grid-column: span 4;
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 /* UTILITY: Hero Height (For Complex Charts like Maps) */
@@ -714,141 +724,7 @@ html, body {
 }
 
 /* ==================================================================== */
-/* 14. MOBILE OPTIMIZATION (Refined)                                    */
-/* ==================================================================== */
-
-@media (max-width: 1024px) {
-  .app-container { padding: 12px; }
-  
-  /* Tablet: 2 columns */
-  .bento-grid { 
-    grid-template-columns: repeat(2, 1fr); 
-    gap: 12px; 
-  }
-  
-  /* CRITICAL: Force all spans to fill the 2-column row on tablet.
-     This ensures the split-view (Chaos/Risk) stacks vertically 
-     instead of being squashed side-by-side. */
-  .span-1, .span-2, .span-3, .span-4 {
-    grid-column: span 2; 
-    height: auto;
-    margin-bottom: 12px;
-  }
-  
-  .h-tall { height: 450px; }
-  .h-standard { height: 400px; } /* Keep tables readable on tablet */
-  
-  .metric-big { font-size: 1.5rem; }
-  .desktop-only { display: none; }
-}
-
-@media (max-width: 768px) {
-  /* 1. Layout Basics */
-  .app-container { 
-    padding: 12px; /* Add breathing room back on mobile edges */
-  }
-  
-  /* Mobile: Single column */
-  .bento-grid { 
-    grid-template-columns: 1fr; 
-    gap: 16px;
-  }
-
-  /* 2. Unstick the Header Group */
-  .sticky-header-group {
-    position: relative; 
-    top: auto;
-    margin: 0 -12px 16px -12px; /* Pull to edges, add bottom space */
-    padding: 0 12px;
-    box-shadow: none; /* Simplify look */
-    border-bottom: 1px solid var(--border);
-  }
-
-  /* 3. Compact Header Elements */
-  .app-header {
-    flex-direction: row; /* Keep logo and nav side-by-side if possible */
-    align-items: center;
-    gap: 12px;
-    height: auto;
-    padding: 12px 0;
-    flex-wrap: wrap; /* Allow wrapping if really narrow */
-  }
-
-  .brand-title { font-size: 1.1rem; }
-  
-  /* Hide the status text on tiny screens */
-  .status-text { display: none; } 
-  .status-badge-compact { padding: 4px; border-radius: 50%; }
-
-  /* 4. Controls: Stacked but Compact */
-  .global-control-bar {
-    flex-direction: column;
-    gap: 12px;
-    padding: 0 0 16px 0;
-    align-items: stretch;
-  }
-
-  .ticker-selector-group {
-    width: 100%;
-    overflow-x: auto; /* Allow horizontal scrolling for tickers */
-    padding-bottom: 4px;
-    mask-image: linear-gradient(to right, black 90%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to right, black 90%, transparent 100%);
-  }
-
-  .time-travel-group {
-    width: 100%;
-    margin: 0;
-  }
-
-  /* 5. Chart Adjustments */
-  .span-1, .span-2, .span-3, .span-4 { 
-    grid-column: span 1; 
-  }
-  
-  /* Reduce chart height so they aren't huge vertical blocks */
-  .h-tall { 
-    height: 350px; 
-  }
-  
-  .h-standard {
-    height: 350px;
-  }
-
-  /* Adjust margins for Plotly charts */
-  .main-svg { 
-    border-radius: var(--radius); 
-  }
-  
-  /* Make metric strip horizontally scrollable on mobile */
-  .metric-strip {
-    display: flex;
-    flex-direction: row;    /* <--- FORCE ROW TO OVERRIDE SPAN-4 */
-    overflow-x: auto;       /* Enable horizontal scrolling */
-    scroll-snap-type: x mandatory; /* Snap to cards */
-    gap: 12px;
-    padding-bottom: 4px;    /* Tiny space for scrollbar */
-    
-    /* Hide Scrollbar for cleaner UI */
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
-  }
-  
-  .metric-strip::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Opera */
-  }
-
-  /* Force cards to stay fixed width and not shrink */
-  .metric-strip > * {
-    min-width: 260px; /* Wide enough to read, small enough to peek next card */
-    flex-shrink: 0;
-    scroll-snap-align: start;
-    width: 260px; /* Explicit width helps some browsers */
-  }
-}
-
-/* ==================================================================== */
-/* 15. COMPACT HEADER (Single Line)                                     */
+/* 14. COMPACT HEADER (Single Line)                                     */
 /* ==================================================================== */
 
 .app-header {
@@ -953,7 +829,7 @@ html, body {
 }
 
 /* ==================================================================== */
-/* 16. METRIC STRIP (Horizontal Scroll Layout)                          */
+/* 15. METRIC STRIP (Horizontal Scroll Layout)                          */
 /* ==================================================================== */
 
 /* Desktop: Standard 4-column grid */
@@ -1019,7 +895,7 @@ html, body {
 }
 
 /* ==================================================================== */
-/* 17. CUSTOM CHART CONTAINER (For Recharts/Maps)                       */
+/* 16. CUSTOM CHART CONTAINER (For Recharts/Maps)                       */
 /* ==================================================================== */
 
 .custom-chart-wrapper {
@@ -1037,7 +913,7 @@ html, body {
 }
 
 /* ==================================================================== */
-/* 18. CUSTOM TOOLTIP (Recharts)                                        */
+/* 17. CUSTOM TOOLTIP (Recharts)                                        */
 /* ==================================================================== */
 
 .custom-tooltip {
@@ -1097,3 +973,119 @@ html, body {
 /* Utility for text colors used in tooltips */
 .text-green { color: var(--green); }
 .text-red { color: var(--red); }
+
+/* ==================================================================== */
+/* 18. MOBILE OVERRIDES                                                 */
+/* ==================================================================== */
+
+@media (max-width: 1024px) {
+  .app-container { padding: 12px; }
+  
+  /* Tablet: 2 columns */
+  .bento-grid { 
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 12px; 
+  }
+  
+  /* Force all spans to fill the 2-column row on tablet */
+  .span-1, .span-2, .span-3, .span-4 {
+    grid-column: span 2; 
+    height: auto;
+    margin-bottom: 12px;
+  }
+  
+  /* Reduce heights slightly for tablet */
+  .h-tall { height: 450px; }
+  .h-standard { height: 400px; }
+  
+  .metric-big { font-size: 1.5rem; }
+  .desktop-only { display: none; }
+}
+
+@media (max-width: 768px) {
+  /* 1. Layout Basics */
+  .app-container { padding: 12px; }
+  
+  /* Mobile: Force Single column */
+  .bento-grid { 
+    grid-template-columns: 1fr !important; 
+    gap: 16px;
+  }
+
+  /* 2. Unstick Header to save space */
+  .sticky-header-group {
+    position: relative; 
+    top: auto;
+    margin: 0 -12px 16px -12px; 
+    padding: 0 12px;
+    box-shadow: none; 
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* 3. Compact Header Elements */
+  .app-header {
+    flex-direction: row; 
+    align-items: center;
+    gap: 12px;
+    height: auto;
+    padding: 12px 0;
+    flex-wrap: wrap; 
+  }
+
+  .brand-title { font-size: 1.1rem; }
+  
+  .status-text { display: none; } 
+  .status-badge-compact { padding: 4px; border-radius: 50%; }
+
+  /* 4. Controls: Stacked */
+  .global-control-bar {
+    flex-direction: column;
+    gap: 12px;
+    padding: 0 0 16px 0;
+    align-items: stretch;
+  }
+
+  .ticker-selector-group {
+    width: 100%;
+    overflow-x: auto; /* Horizontal scroll for tickers */
+    padding-bottom: 4px;
+    /* Fade out edges to hint scrolling */
+    mask-image: linear-gradient(to right, black 90%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, black 90%, transparent 100%);
+  }
+
+  .time-travel-group {
+    width: 100%;
+    margin: 0;
+  }
+
+  /* 5. Chart Adjustments */
+  .span-1, .span-2, .span-3, .span-4 { 
+    grid-column: span 1 !important; 
+  }
+  
+  /* Reduce heights significantly for mobile to reduce scrolling */
+  .h-tall { height: 350px; }
+  .h-standard { height: 350px; }
+
+  /* 6. Metric Strip: Horizontal Carousel (Overrides Grid) */
+  .metric-strip {
+    display: flex !important; /* Override 'display: grid' */
+    flex-direction: row;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 12px;
+    padding-bottom: 8px;
+  }
+  
+  .metric-strip::-webkit-scrollbar {
+    display: none; 
+  }
+
+  /* Force cards to have a fixed width in the carousel */
+  .metric-strip > * {
+    min-width: 260px; 
+    flex-shrink: 0;
+    scroll-snap-align: start;
+  }
+}
