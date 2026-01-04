@@ -143,14 +143,19 @@ function App() {
 
   const getSentimentPlotData = () => {
     if (!sentVolRaw || sentVolRaw.length === 0 || !selectedDate) return [];
-    const dailyData = sentVolRaw.filter(d => d.trade_date === selectedDate);
+    
+    // 1. Filter by Date AND strictly match the Mag7 Watchlist
+    const dailyData = sentVolRaw.filter(d => 
+        d.trade_date === selectedDate && WATCHLIST.includes(d.ticker)
+    );
+    
     if (dailyData.length === 0) return [];
     
     return dailyData.map(row => ({
       x: [row.sentiment_signal], 
       y: [row.avg_iv], 
       mode: 'markers', 
-      name: row.ticker, 
+      name: row.ticker, // This name generates the Legend Item
       marker: { 
          size: [Math.max(6, Math.log(row.news_volume || 1) * 10)], 
          color: MAG7_CONFIG[row.ticker]?.color || '#94a3b8', 
@@ -177,12 +182,12 @@ function App() {
   const sentimentLayout = { 
       xaxis: { title: 'Sentiment', gridcolor: '#334155', range: [-1, 1], zeroline: true }, 
       yaxis: { title: 'IV', gridcolor: '#334155' }, 
-      // LEGEND UPDATE: Added visual legend to avoid messy text labels on bubbles
+      // LEGEND: Strictly Mag7 (via data filter) + Bottom Horizontal Layout
       showlegend: true, 
       legend: {
         orientation: "h",
         yanchor: "bottom",
-        y: -0.5, // Push legend below chart
+        y: -0.5, 
         xanchor: "center",
         x: 0.5,
         font: {
