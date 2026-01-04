@@ -4,7 +4,7 @@ import Footer from './components/Footer';
 import MetricCard from './components/MetricCard';
 import InspectorCard from './components/InspectorCard';
 import GlobalControlBar from './components/GlobalControlBar'; 
-import MarketPsychologyMap from './components/MarketPsychologyMap'; // <--- NEW IMPORT
+import MarketPsychologyMap from './components/MarketPsychologyMap';
 import { Activity, Zap, ArrowUpRight, ArrowDownRight, TrendingUp } from 'lucide-react';
 import { useSystemHeartbeat } from './hooks/useSystemHeartbeat';
 import { getSentimentColor, getRiskColor, getMomentumColor } from './utils/statusHelpers';
@@ -171,8 +171,32 @@ function App() {
 
   // --- LAYOUTS ---
   const scatterLayout = { xaxis: { title: 'DTE', gridcolor: '#334155' }, yaxis: { title: 'Moneyness', gridcolor: '#334155', range: [0.5, 1.8] }, showlegend: false, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: '#94a3b8' }, margin: isMobile ? { t: 10, b: 40, l: 30, r: 0 } : { t: 10, b: 40, l: 40, r: 20 } };
+  
   const lineLayout = { xaxis: { title: 'Trend', gridcolor: '#334155' }, yaxis: { title: 'Flow', gridcolor: '#334155' }, showlegend: false, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: '#94a3b8' }, margin: isMobile ? { t: 10, b: 40, l: 30, r: 5 } : { t: 10, b: 40, l: 40, r: 10 } };
-  const sentimentLayout = { xaxis: { title: 'Sentiment', gridcolor: '#334155', range: [-1, 1], zeroline: true }, yaxis: { title: 'IV', gridcolor: '#334155' }, showlegend: false, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: '#94a3b8' }, margin: isMobile ? { t: 10, b: 40, l: 30, r: 10 } : { t: 20, b: 40, l: 50, r: 20 }, shapes: [{ type: 'rect', xref: 'x', yref: 'paper', x0: -1, y0: 0.5, x1: 0, y1: 1, fillcolor: '#ef4444', opacity: 0.05, line: { width: 0 }}, { type: 'rect', xref: 'x', yref: 'paper', x0: 0, y0: 0, x1: 1, y1: 0.5, fillcolor: '#22c55e', opacity: 0.05, line: { width: 0 }}] };
+  
+  const sentimentLayout = { 
+      xaxis: { title: 'Sentiment', gridcolor: '#334155', range: [-1, 1], zeroline: true }, 
+      yaxis: { title: 'IV', gridcolor: '#334155' }, 
+      // LEGEND UPDATE: Added visual legend to avoid messy text labels on bubbles
+      showlegend: true, 
+      legend: {
+        orientation: "h",
+        yanchor: "bottom",
+        y: -0.5, // Push legend below chart
+        xanchor: "center",
+        x: 0.5,
+        font: {
+            family: 'JetBrains Mono, monospace',
+            size: 10,
+            color: '#94a3b8'
+        }
+      },
+      paper_bgcolor: 'rgba(0,0,0,0)', 
+      plot_bgcolor: 'rgba(0,0,0,0)', 
+      font: { color: '#94a3b8' }, 
+      margin: isMobile ? { t: 10, b: 60, l: 30, r: 10 } : { t: 20, b: 60, l: 50, r: 20 }, 
+      shapes: [{ type: 'rect', xref: 'x', yref: 'paper', x0: -1, y0: 0.5, x1: 0, y1: 1, fillcolor: '#ef4444', opacity: 0.05, line: { width: 0 }}, { type: 'rect', xref: 'x', yref: 'paper', x0: 0, y0: 0, x1: 1, y1: 0.5, fillcolor: '#22c55e', opacity: 0.05, line: { width: 0 }}] 
+  };
 
   const sidebarProps = sidebarTab === 'momentum' ? {
         title: "Mag 7 Momentum", tag: "Trend", desc: magMeta?.inspector.description || "Net Sentiment Flow",
@@ -206,21 +230,15 @@ function App() {
         </div>
 
         {/* --- ROW 2: MARKET PSYCHOLOGY HERO (The Narrative) --- */}
-        {/* We give this full width (span-4) because t-SNE maps are dense and need space to breathe */}
         <div className="span-4 h-tall">
            <InspectorCard 
              className="ai-hero-card"
              title="Market Psychology Map"
              tag="AI MODEL"
-             // Updated Description as requested
              desc="t-SNE Clustering of Uses OpenAI Embeddings + t-SNE (Dimensionality Reduction) to map 1,536 dimensions of news context into 2D space. Bubbles are colored by Market Impact (Bull Trap vs Justified Optimism)."
-             
-             // Pass logic metadata
              sqlCode={mapMeta?.inspector?.sql_logic}
              dbtCode={mapMeta?.inspector?.dbt_logic}
              dbtYml={mapMeta?.inspector?.dbt_yml}
-             
-             // Render the Custom Map
              customChart={
                  <MarketPsychologyMap onMetaLoaded={setMapMeta} />
              }
@@ -228,8 +246,8 @@ function App() {
         </div>
 
         {/* --- ROW 3: STRUCTURE & TREND (The Analysis) --- */}
-        {/* Split view: Chaos (Specific Ticker) vs Market Risk (Broad Context) */}
         
+        {/* LEFT: Chaos Map (Hard Data = Blue) */}
         <div className="span-2 h-standard">
            <InspectorCard 
              title={`Chaos Map: ${selectedTicker}`} tag="Gamma" desc={chaosMeta?.inspector.description}
@@ -238,8 +256,10 @@ function App() {
            />
         </div>
 
+        {/* RIGHT: Risk/Trend (AI/Sentiment = Purple) */}
         <div className="span-2 h-standard">
             <InspectorCard 
+              className="ai-hero-card"
               {...sidebarProps} 
               headerControls={
                   <div className="header-tabs">
