@@ -210,7 +210,8 @@ function App() {
       <main className="bento-grid">
         
         {/* 2. KPI STRIP (The Ticker) */}
-        <div className="span-4 metric-strip">
+        {/* Added 'area-metrics' for mobile ordering */}
+        <div className="span-4 metric-strip area-metrics">
            <MetricCard title="Market Sentiment" value={(Math.random() * 100).toFixed(0)} subValue="Fear / Greed Index" icon={<TrendingUp size={16} className="text-accent" />} />
            <MetricCard title="Whale Flow" value={whaleMetric.value} subValue={whaleMetric.sub} icon={<Activity size={16} className={getSentimentColor(whaleMetric.isBullish)} />} />
            <MetricCard title="Max Volatility" value={chaosMetric.value} subValue={chaosMetric.sub} icon={<Zap size={16} className={getRiskColor(chaosMetric.isExtreme)} />} />
@@ -218,7 +219,8 @@ function App() {
         </div>
 
         {/* 3. MARKET PSYCHOLOGY HERO (The Narrative) */}
-        <div className="span-4 h-tall">
+        {/* Added 'area-cluster' for mobile ordering */}
+        <div className="span-4 h-tall area-cluster">
            <InspectorCard 
              className="ai-hero-card"
              title="Market Psychology Map"
@@ -227,14 +229,20 @@ function App() {
              sqlCode={mapMeta?.inspector?.sql_logic}
              dbtCode={mapMeta?.inspector?.dbt_logic}
              dbtYml={mapMeta?.inspector?.dbt_yml}
+             plotLayout={{
+                margin: { l: 0, r: 0, t: 0, b: 0 },
+                xaxis: { visible: false }, 
+                yaxis: { visible: false }, 
+             }}
              customChart={
                  <MarketPsychologyMap onMetaLoaded={setMapMeta} />
              }
            />
         </div>
 
-        {/* 4. CONTROLS (Moved Below Map) */}
-        <div className="span-4 control-bar-spacing">
+        {/* 4. CONTROLS (Desktop: Below Map) */}
+        {/* Added 'area-controls' for mobile re-ordering */}
+        <div className="span-4 control-bar-spacing area-controls">
             <GlobalControlBar 
               dates={chaosMeta?.available_dates || []} selectedDate={selectedDate} onDateChange={setSelectedDate}
               availableTickers={WATCHLIST} selectedTicker={selectedTicker} onTickerChange={setSelectedTicker}
@@ -244,7 +252,8 @@ function App() {
         {/* 5. STRUCTURE & TREND (The Analysis) */}
         
         {/* LEFT: Chaos Map (Hard Data = Blue) */}
-        <div className="span-2 h-standard">
+        {/* Added 'area-chaos' for mobile ordering */}
+        <div className="span-2 h-standard area-chaos">
            <InspectorCard 
              title={`Chaos Map: ${selectedTicker}`} tag="Gamma" desc={chaosMeta?.inspector.description}
              isLoading={chaosLoading} chartType="scatter" plotData={getFilteredChaosPlot()} plotLayout={scatterLayout}
@@ -253,7 +262,8 @@ function App() {
         </div>
 
         {/* RIGHT: Risk/Trend (AI/Sentiment = Purple) */}
-        <div className="span-2 h-standard">
+        {/* Added 'area-risk' for mobile ordering */}
+        <div className="span-2 h-standard area-risk">
             <InspectorCard 
               className="ai-hero-card" 
               {...sidebarProps} 
@@ -273,7 +283,8 @@ function App() {
         </div>
 
         {/* 6. WHALE HUNTER (The Flow) */}
-        <div className="span-4 h-tall">
+        {/* Added 'area-whale' for mobile ordering */}
+        <div className="span-4 h-tall area-whale">
            <InspectorCard 
              title={whaleData?.meta.title || "Whale Hunter"} tag="Flow" desc={whaleData?.meta.inspector.description}
              isLoading={whaleLoading} chartType="table" tableData={whaleData?.data}

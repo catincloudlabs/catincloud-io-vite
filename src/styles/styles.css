@@ -1023,10 +1023,27 @@ html, body {
   /* 1. Layout Basics */
   .app-container { padding: 12px; }
   
-  /* Mobile: Force Single column */
+  /* Mobile: REORDERING LOGIC
+     Use Flexbox column to allow 'order' property to control layout sequence. 
+  */
   .bento-grid { 
-    grid-template-columns: 1fr !important; 
+    display: flex;
+    flex-direction: column;
     gap: 16px;
+  }
+
+  /* Define the specific mobile order */
+  .area-metrics  { order: 1; }
+  .area-cluster  { order: 2; }
+  .area-chaos    { order: 3; }
+  .area-controls { order: 4; } /* <--- MOVED HERE (Between Chaos & Risk) */
+  .area-risk     { order: 5; }
+  .area-whale    { order: 6; }
+
+  /* Reset Spacing for Reordered Control Bar */
+  .control-bar-spacing {
+    margin-top: 0;
+    margin-bottom: 0;
   }
 
   /* 2. HEADER CLEANUP */
@@ -1071,46 +1088,23 @@ html, body {
     -webkit-mask-image: linear-gradient(to right, black 90%, transparent 100%);
   }
 
-  .time-travel-group {
-    width: 100%;
-    margin: 0;
-  }
+  .time-travel-group { width: 100%; margin: 0; }
 
   /* 5. CHART & CARD ADJUSTMENTS */
-  
   .span-1, .span-2, .span-3, .span-4 { 
-    grid-column: span 1 !important; 
+    /* width is handled by flex column now, but this ensures resets */
+    width: 100%; 
   }
   
   .h-tall { height: 350px; }
   .h-standard { height: 350px; }
 
   /* --- HEADER LAYOUT FIX: Title ... Tag Button --- */
-  .panel-header {
-    gap: 0px !important; 
-  }
-
-  .panel-title {
-    flex: 1; 
-    min-width: 0;
-    padding-right: 4px;
-  }
-
-  .panel-title-text {
-    max-width: none !important;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .panel-title .tag {
-    margin-left: auto !important; 
-    white-space: nowrap;
-  }
-
-  .ai-hero-card .panel-desc {
-    display: none !important;
-  }
+  .panel-header { gap: 0px !important; }
+  .panel-title { flex: 1; min-width: 0; padding-right: 4px; }
+  .panel-title-text { max-width: none !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .panel-title .tag { margin-left: auto !important; white-space: nowrap; }
+  .ai-hero-card .panel-desc { display: none !important; }
 
   /* 6. COMPACT METRIC CAROUSEL */
   .metric-strip {
@@ -1125,40 +1119,15 @@ html, body {
   }
   
   .metric-strip::-webkit-scrollbar { display: none; }
-
-  .metric-strip .panel {
-    min-width: 150px; 
-    width: 150px;
-    flex-shrink: 0;
-    scroll-snap-align: start;
-    padding: 10px;
-    min-height: 0; 
-  }
-
+  .metric-strip .panel { min-width: 150px; width: 150px; flex-shrink: 0; scroll-snap-align: start; padding: 10px; min-height: 0; }
   .metric-strip .panel::after { display: none !important; }
-
-  .metric-strip .panel-header {
-    border-bottom: none !important; 
-    margin-bottom: 4px !important; 
-    padding-bottom: 0 !important; 
-    min-height: 0 !important;
-  }
-
+  .metric-strip .panel-header { border-bottom: none !important; margin-bottom: 4px !important; padding-bottom: 0 !important; min-height: 0 !important; }
   .metric-strip .panel-title { font-size: 0.65rem; }
   .metric-strip .metric-big { font-size: 1.2rem; line-height: 1.1; }
-  
-  .metric-strip .metric-sub {
-    font-size: 0.6rem;
-    margin-top: 2px;
-    white-space: nowrap; 
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  
+  .metric-strip .metric-sub { font-size: 0.6rem; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .metric-strip svg { width: 14px; height: 14px; }
 
-  /* 7. HERO CHART: Full Width */
-  /* This ensures the chart pulls to the edge AND grows to fill the gap */
+  /* 7. HERO CHART: Full Width (FIXED) */
   .ai-hero-card .chart-content-area {
     margin-left: -20px;
     margin-right: -20px;
