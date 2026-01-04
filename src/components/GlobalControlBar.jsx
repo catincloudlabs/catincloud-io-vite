@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Calendar } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 
 const GlobalControlBar = ({ 
   dates, 
@@ -23,13 +23,7 @@ const GlobalControlBar = ({
 
   return (
     <div className="global-control-bar panel-flex-row">
-      
-      {/* 1. LEFT: WATCHLIST */}
       <div className="ticker-selector-group">
-        <div className="control-label">
-           <Search size={14} className="mr-2 text-muted"/>
-           <span>WATCHLIST</span>
-        </div>
         <div className="ticker-pills-row">
           {availableTickers.map((ticker) => {
             const isActive = selectedTicker === ticker;
