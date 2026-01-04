@@ -203,7 +203,7 @@ function App() {
       annotations: [
         {
           text: 'IV%',
-          x: 1.037,
+          x: 1.04,
           y: 0.04, // Tucked tight below the bar
           xref: 'paper',
           yref: 'paper',
