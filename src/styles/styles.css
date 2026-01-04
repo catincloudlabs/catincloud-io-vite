@@ -727,10 +727,10 @@ html, body {
 
 /* --- Control Bar Spacing Utility --- */
 .control-bar-spacing {
-  margin-top: 12px;
-  margin-bottom: -28px; /* Pulls the bottom charts closer */
+  margin-top: -8px;
+  margin-bottom: -8px; /* Pulls the bottom charts closer */
   position: relative;
-  z-index: 5;
+  z-index: 20;
 }
 
 /* Mobile Reset: Removes negative margins to prevent overlap on small screens */
@@ -1023,27 +1023,27 @@ html, body {
   /* 1. Layout Basics */
   .app-container { padding: 12px; }
   
-  /* Mobile: REORDERING LOGIC
-     Use Flexbox column to allow 'order' property to control layout sequence. 
-  */
+  /* Mobile: REORDERING LOGIC */
   .bento-grid { 
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 16px; 
   }
 
   /* Define the specific mobile order */
   .area-metrics  { order: 1; }
   .area-cluster  { order: 2; }
   .area-chaos    { order: 3; }
-  .area-controls { order: 4; } /* <--- MOVED HERE (Between Chaos & Risk) */
+  .area-controls { order: 4; } 
   .area-risk     { order: 5; }
   .area-whale    { order: 6; }
 
-  /* Reset Spacing for Reordered Control Bar */
+  /* FIX: Negative margins to pull charts closer to the bar */
   .control-bar-spacing {
-    margin-top: 0;
-    margin-bottom: 0;
+    margin-top: -12px !important;    /* Pulls Chaos Map closer */
+    margin-bottom: -12px !important; /* Pulls Risk Radar closer */
+    z-index: 20; 
+    position: relative;
   }
 
   /* 2. HEADER CLEANUP */
@@ -1098,10 +1098,9 @@ html, body {
   .ticker-selector-group {
     width: 100%;
     overflow-x: auto; 
-    overflow-y: hidden; /* Keep scroll locked */
+    overflow-y: hidden; 
     
-    /* FIX: Add padding to catch the active button's downward shift/border */
-    padding-bottom: 4px; /* <--- CHANGED from 0 */
+    padding-bottom: 4px; 
     margin-bottom: 0;
     
     white-space: nowrap; 
@@ -1131,7 +1130,6 @@ html, body {
 
   /* 5. CHART & CARD ADJUSTMENTS */
   .span-1, .span-2, .span-3, .span-4 { 
-    /* width is handled by flex column now, but this ensures resets */
     width: 100%; 
   }
   
