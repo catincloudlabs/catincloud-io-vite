@@ -4,6 +4,7 @@ import { FileCode, Activity } from 'lucide-react';
 import LogicModal from './LogicModal';
 
 const InspectorCard = ({ 
+  className,
   title, 
   tag, 
   desc, 
@@ -13,7 +14,7 @@ const InspectorCard = ({
   plotLayout, 
   tableData,
   customChart,
-  // Logic Props (Passed from Dashboard JSON)
+  // Logic Props
   sqlCode, 
   dbtCode, 
   dbtYml,
@@ -24,11 +25,10 @@ const InspectorCard = ({
   const [showLogic, setShowLogic] = useState(false);
   const isCall = (type) => ['C', 'CALL', 'Call'].includes(type);
   
-  // Only show the code button if we actually have code to show
   const hasLogic = Boolean(sqlCode || dbtCode || dbtYml);
   
   return (
-    <div className="panel panel-flex-column panel-min-height">
+    <div className={`panel panel-flex-column panel-min-height ${className || ''}`}>
       
       {/* --- HEADER --- */}
       <div className="panel-header">
@@ -39,7 +39,7 @@ const InspectorCard = ({
         </div>
         
         <div className="panel-header-actions">
-            {/* Custom Controls (e.g. Ticker Selector specific to this card) */}
+            {/* Custom Controls */}
             {headerControls && (
                 <div className="header-tabs-wrapper">
                     {headerControls}
@@ -132,7 +132,7 @@ const InspectorCard = ({
                </div>
              )}
 
-             {/* 3. CUSTOM CHART (RECHARTS) - ADDED THIS BLOCK */}
+             {/* 3. CUSTOM CHART (RECHARTS) */}
              {customChart && (
                 <div className="custom-chart-wrapper">
                     {customChart}
@@ -154,7 +154,6 @@ const InspectorCard = ({
         isOpen={showLogic} 
         onClose={() => setShowLogic(false)} 
         title={title}
-        // Map the props directly to the modal
         dagCode={sqlCode} 
         dbtCode={dbtCode} 
         dbtYml={dbtYml}
