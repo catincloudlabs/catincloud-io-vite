@@ -140,7 +140,7 @@ function App() {
          showscale: !isMobile, 
          opacity: 0.8, 
          line: { color: 'white', width: 0.5 },
-         // --- UPDATED: THINNER VERTICAL BAR + NO STANDOFF ---
+         // --- VERTICAL BAR w/ BOTTOM LABEL ---
          colorbar: { 
             orientation: 'v',      
             x: 1.01,               
@@ -148,7 +148,6 @@ function App() {
             yanchor: 'middle',     
             len: 0.9,              
             thickness: 10,         
-            // No native title here, we handle it via annotations below
             tickfont: { size: 9, color: '#94a3b8', family: 'JetBrains Mono' },
             bgcolor: 'rgba(0,0,0,0)', 
             outlinecolor: 'rgba(0,0,0,0)' 
@@ -159,34 +158,16 @@ function App() {
 
   const getSentimentPlotData = () => {
     if (!sentVolRaw || sentVolRaw.length === 0 || !selectedDate) return [];
-    
-    // Filter by Date AND strictly match the Mag7 Watchlist
-    const dailyData = sentVolRaw
-        .filter(d => d.trade_date === selectedDate && WATCHLIST.includes(d.ticker))
-        .sort((a, b) => a.ticker.localeCompare(b.ticker));
-
+    const dailyData = sentVolRaw.filter(d => d.trade_date === selectedDate && WATCHLIST.includes(d.ticker)).sort((a, b) => a.ticker.localeCompare(b.ticker));
     if (dailyData.length === 0) return [];
-    
     return dailyData.map(row => ({
-      x: [row.sentiment_signal], 
-      y: [row.avg_iv], 
-      mode: 'markers', 
-      name: row.ticker, 
+      x: [row.sentiment_signal], y: [row.avg_iv], mode: 'markers', name: row.ticker, 
       marker: { 
          size: [Math.max(6, Math.log(row.news_volume || 1) * 10)], 
-         color: MAG7_CONFIG[row.ticker]?.color || '#94a3b8', 
-         opacity: 0.8, 
-         line: { color: 'white', width: 1 },
-         sizemode: 'area', 
-         sizeref: 0.2
+         color: MAG7_CONFIG[row.ticker]?.color || '#94a3b8', opacity: 0.8, line: { color: 'white', width: 1 },
+         sizemode: 'area', sizeref: 0.2
       },
-      hovertemplate: `
-        <b>${row.ticker}</b><br>
-        Sentiment: %{x:.2f}<br>
-        Implied Vol: %{y:.1f}%<br>
-        News Vol: ${row.news_volume || 0}
-        <extra></extra>
-      `
+      hovertemplate: `<b>${row.ticker}</b><br>Sentiment: %{x:.2f}<br>Implied Vol: %{y:.1f}%<br>News Vol: ${row.news_volume || 0}<extra></extra>`
     }));
   };
 
@@ -194,48 +175,17 @@ function App() {
   const scatterLayout = { 
       xaxis: { title: 'DTE', gridcolor: '#334155' }, 
       yaxis: { title: 'Moneyness', gridcolor: '#334155', range: [0.5, 1.8] }, 
-      showlegend: false, 
-      paper_bgcolor: 'rgba(0,0,0,0)', 
-      plot_bgcolor: 'rgba(0,0,0,0)', 
-      font: { color: '#94a3b8' }, 
+      showlegend: false, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: '#94a3b8' }, 
       margin: isMobile ? { t: 10, b: 40, l: 30, r: 10 } : { t: 10, b: 40, l: 40, r: 50 },
-      // --- MANUAL IV% LABEL ---
-      annotations: [
-        {
-          text: 'IV%',
-          x: 1.04,
-          y: 0.04, // Tucked tight below the bar
-          xref: 'paper',
-          yref: 'paper',
-          showarrow: false,
-          xanchor: 'center', // Center text at this x-point
-          yanchor: 'top',
-          font: { size: 9, color: '#94a3b8', family: 'JetBrains Mono' }
-        }
-      ]
+      annotations: [{ text: 'IV%', x: 1.04, y: 0.04, xref: 'paper', yref: 'paper', showarrow: false, xanchor: 'center', yanchor: 'top', font: { size: 9, color: '#94a3b8', family: 'JetBrains Mono' } }]
   };
   
   const lineLayout = { xaxis: { title: 'Trend', gridcolor: '#334155' }, yaxis: { title: 'Flow', gridcolor: '#334155' }, showlegend: false, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: '#94a3b8' }, margin: isMobile ? { t: 10, b: 40, l: 30, r: 5 } : { t: 10, b: 40, l: 40, r: 10 } };
   
   const sentimentLayout = { 
-      xaxis: { title: 'Sentiment', gridcolor: '#334155', range: [-1, 1], zeroline: true }, 
-      yaxis: { title: 'IV', gridcolor: '#334155' }, 
-      showlegend: true, 
-      legend: {
-        orientation: "h",
-        yanchor: "bottom",
-        y: -0.5, 
-        xanchor: "center",
-        x: 0.5,
-        font: {
-            family: 'JetBrains Mono, monospace',
-            size: 10,
-            color: '#94a3b8'
-        }
-      },
-      paper_bgcolor: 'rgba(0,0,0,0)', 
-      plot_bgcolor: 'rgba(0,0,0,0)', 
-      font: { color: '#94a3b8' }, 
+      xaxis: { title: 'Sentiment', gridcolor: '#334155', range: [-1, 1], zeroline: true }, yaxis: { title: 'IV', gridcolor: '#334155' }, 
+      showlegend: true, legend: { orientation: "h", yanchor: "bottom", y: -0.5, xanchor: "center", x: 0.5, font: { family: 'JetBrains Mono, monospace', size: 10, color: '#94a3b8' } },
+      paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: '#94a3b8' }, 
       margin: isMobile ? { t: 10, b: 60, l: 30, r: 10 } : { t: 20, b: 60, l: 50, r: 20 }, 
       shapes: [{ type: 'rect', xref: 'x', yref: 'paper', x0: -1, y0: 0.5, x1: 0, y1: 1, fillcolor: '#ef4444', opacity: 0.05, line: { width: 0 }}, { type: 'rect', xref: 'x', yref: 'paper', x0: 0, y0: 0, x1: 1, y1: 0.5, fillcolor: '#22c55e', opacity: 0.05, line: { width: 0 }}] 
   };
@@ -245,7 +195,6 @@ function App() {
         isLoading: magLoading, chartType: "line", plotData: getMag7PlotData(), 
         plotLayout: lineLayout, sqlCode: magMeta?.inspector.sql_logic, dbtCode: magMeta?.inspector.dbt_logic, dbtYml: magMeta?.inspector.dbt_yml
     } : {
-        // Updated Tag to "AI MODEL"
         title: "Risk Radar", tag: "AI MODEL", desc: "Sentiment vs Volatility",
         isLoading: sentVolLoading, chartType: "scatter", plotData: getSentimentPlotData(),
         plotLayout: sentimentLayout, sqlCode: sentVolMeta?.inspector.sql_logic, dbtCode: sentVolMeta?.inspector.dbt_logic, dbtYml: sentVolMeta?.inspector.dbt_yml
@@ -254,17 +203,14 @@ function App() {
   return (
     <div className="app-container">
       
+      {/* 1. HEADER (Brand & Nav Only) */}
       <div className="sticky-header-group">
         <Header />
-        <GlobalControlBar 
-          dates={chaosMeta?.available_dates || []} selectedDate={selectedDate} onDateChange={setSelectedDate}
-          availableTickers={WATCHLIST} selectedTicker={selectedTicker} onTickerChange={setSelectedTicker}
-        />
       </div>
 
       <main className="bento-grid">
         
-        {/* --- ROW 1: KPI STRIP --- */}
+        {/* 2. KPI STRIP (The Ticker) */}
         <div className="span-4 metric-strip">
            <MetricCard title="Market Sentiment" value={(Math.random() * 100).toFixed(0)} subValue="Fear / Greed Index" icon={<TrendingUp size={16} className="text-accent" />} />
            <MetricCard title="Whale Flow" value={whaleMetric.value} subValue={whaleMetric.sub} icon={<Activity size={16} className={getSentimentColor(whaleMetric.isBullish)} />} />
@@ -272,7 +218,7 @@ function App() {
            <MetricCard title="Mag 7 Leader" value={magLeaderMetric.value} subValue={magLeaderMetric.sub} icon={magLeaderMetric.isPositive ? <ArrowUpRight size={16} className={getMomentumColor(true)}/> : <ArrowDownRight size={16} className={getMomentumColor(false)}/>} />
         </div>
 
-        {/* --- ROW 2: MARKET PSYCHOLOGY HERO (The Narrative) --- */}
+        {/* 3. MARKET PSYCHOLOGY HERO (The Narrative) */}
         <div className="span-4 h-tall">
            <InspectorCard 
              className="ai-hero-card"
@@ -288,7 +234,15 @@ function App() {
            />
         </div>
 
-        {/* --- ROW 3: STRUCTURE & TREND (The Analysis) --- */}
+        {/* 4. CONTROLS (Moved Below Map) */}
+        <div className="span-4">
+            <GlobalControlBar 
+              dates={chaosMeta?.available_dates || []} selectedDate={selectedDate} onDateChange={setSelectedDate}
+              availableTickers={WATCHLIST} selectedTicker={selectedTicker} onTickerChange={setSelectedTicker}
+            />
+        </div>
+
+        {/* 5. STRUCTURE & TREND (The Analysis) */}
         
         {/* LEFT: Chaos Map (Hard Data = Blue) */}
         <div className="span-2 h-standard">
@@ -319,7 +273,7 @@ function App() {
             </InspectorCard>
         </div>
 
-        {/* --- ROW 4: WHALE HUNTER (The Flow) --- */}
+        {/* 6. WHALE HUNTER (The Flow) */}
         <div className="span-4">
            <InspectorCard 
              title={whaleData?.meta.title || "Whale Hunter"} tag="Flow" desc={whaleData?.meta.inspector.description}
