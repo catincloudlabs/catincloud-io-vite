@@ -71,11 +71,12 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
   return (
     <div className="map-container">
         <ResponsiveContainer width="100%" height="100%">
-          {/* Margins set to 0 to remove whitespace shift */}
+          {/* margin: 0 -> Removes Recharts container padding 
+             domain: dataMin/dataMax -> Removes internal axis padding
+          */}
           <ScatterChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-            {/* Hide Axes completely for a pure "Map" feel */}
-            <XAxis type="number" dataKey="x" hide domain={['auto', 'auto']} />
-            <YAxis type="number" dataKey="y" hide domain={['auto', 'auto']} />
+            <XAxis type="number" dataKey="x" hide domain={['dataMin', 'dataMax']} />
+            <YAxis type="number" dataKey="y" hide domain={['dataMin', 'dataMax']} />
             
             <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3', stroke: '#555' }} />
             
