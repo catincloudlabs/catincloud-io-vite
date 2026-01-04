@@ -183,9 +183,9 @@ function App() {
   
   const sentimentLayout = { 
       xaxis: { title: 'Sentiment', gridcolor: '#334155', range: [-1, 1], zeroline: true }, yaxis: { title: 'IV', gridcolor: '#334155' }, 
-      showlegend: true, legend: { orientation: "h", yanchor: "bottom", y: -0.5, xanchor: "center", x: 0.5, font: { family: 'JetBrains Mono, monospace', size: 10, color: '#94a3b8' } },
+      showlegend: true, legend: { orientation: "h", yanchor: "bottom", y: -0.8, xanchor: "center", x: 0.5, font: { family: 'JetBrains Mono, monospace', size: 10, color: '#94a3b8' } },
       paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: '#94a3b8' }, 
-      margin: isMobile ? { t: 10, b: 60, l: 30, r: 10 } : { t: 20, b: 60, l: 50, r: 20 }, 
+      margin: isMobile ? { t: 10, b: 60, l: 30, r: 10 } : { t: 20, b: 130, l: 50, r: 20 }, 
       shapes: [{ type: 'rect', xref: 'x', yref: 'paper', x0: -1, y0: 0.5, x1: 0, y1: 1, fillcolor: '#ef4444', opacity: 0.05, line: { width: 0 }}, { type: 'rect', xref: 'x', yref: 'paper', x0: 0, y0: 0, x1: 1, y1: 0.5, fillcolor: '#22c55e', opacity: 0.05, line: { width: 0 }}] 
   };
 
