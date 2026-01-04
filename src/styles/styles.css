@@ -1012,6 +1012,7 @@ html, body {
     margin-bottom: 12px;
   }
   
+  /* Reduce heights slightly for tablet */
   .h-tall { height: 450px; }
   .h-standard { height: 400px; }
   
@@ -1029,7 +1030,7 @@ html, body {
     gap: 16px;
   }
 
-  /* 2. HEADER CLEANUP */
+  /* 2. HEADER CLEANUP: Remove borders/shadows */
   .sticky-header-group {
     position: relative; 
     top: auto;
@@ -1088,7 +1089,7 @@ html, body {
   /* --- HEADER LAYOUT FIX: Title ... Tag Button --- */
   
   .panel-header {
-    gap: 8px; /* Space between Tag and Logic Button */
+    gap: 0px !important; /* Tight spacing (4px) between Tag and Logic Button */
   }
 
   /* Make the title container fill the space */
@@ -1112,7 +1113,7 @@ html, body {
     white-space: nowrap;
   }
 
-  /* Hide Hero Description */
+  /* Hide Hero Description to save space */
   .ai-hero-card .panel-desc {
     display: none !important;
   }
@@ -1143,7 +1144,7 @@ html, body {
     min-height: 0; 
   }
 
-  /* Remove Lines */
+  /* Remove Lines & Borders from Metric Tiles */
   .metric-strip .panel::after {
     display: none !important;
   }
@@ -1155,7 +1156,7 @@ html, body {
     min-height: 0 !important;
   }
 
-  /* Typography */
+  /* Typography Scaling */
   .metric-strip .panel-title { font-size: 0.65rem; }
   .metric-strip .metric-big { font-size: 1.2rem; line-height: 1.1; }
   
