@@ -1089,7 +1089,7 @@ html, body {
   /* --- HEADER LAYOUT FIX: Title ... Tag Button --- */
   
   .panel-header {
-    gap: 0px !important; /* Tight spacing (4px) between Tag and Logic Button */
+    gap: 0px !important; /* Zero gap between Tag and Logic Button */
   }
 
   /* Make the title container fill the space */
@@ -1169,4 +1169,11 @@ html, body {
   }
   
   .metric-strip svg { width: 14px; height: 14px; }
+
+  /* 7. HERO CHART: Full Width */
+  /* Counteract the card's 20px padding to make the chart edge-to-edge */
+  .ai-hero-card .chart-content-area {
+    margin-left: -20px;
+    margin-right: -20px;
+  }
 }

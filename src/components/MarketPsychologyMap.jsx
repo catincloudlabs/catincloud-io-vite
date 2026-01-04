@@ -42,7 +42,6 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 1. POINT TO LOCAL FILE (Changed from CDN)
     fetch('/data/market_psychology_map.json')
       .then(res => {
         if (!res.ok) throw new Error("File not found");
@@ -51,7 +50,6 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
       .then(payload => {
         setChartData(payload.data || []);
         setLoading(false);
-        // 2. SUCCESS: Pass metadata up to parent
         if (onMetaLoaded && payload.meta) {
             onMetaLoaded(payload.meta);
         }
@@ -59,7 +57,6 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
       .catch(err => {
         console.error("Failed to load map:", err);
         setLoading(false);
-        // 3. FAILURE: Tell parent we are done loading (so it stops saying "Loading...")
         if (onMetaLoaded) {
             onMetaLoaded({
                 inspector: { description: "⚠ Error loading data. Check public/data/ folder." },
@@ -74,8 +71,9 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
   return (
     <div className="map-container">
         <ResponsiveContainer width="100%" height="100%">
-          <ScatterChart margin={{ top: 20, right: 20, bottom: 40, left: 20 }}>
-            {/* Hide Axes for a pure "Map" feel */}
+          {/* Margins set to 0 to remove whitespace shift */}
+          <ScatterChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+            {/* Hide Axes completely for a pure "Map" feel */}
             <XAxis type="number" dataKey="x" hide domain={['auto', 'auto']} />
             <YAxis type="number" dataKey="y" hide domain={['auto', 'auto']} />
             

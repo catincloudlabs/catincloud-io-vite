@@ -140,7 +140,6 @@ function App() {
          showscale: !isMobile, 
          opacity: 0.8, 
          line: { color: 'white', width: 0.5 },
-         // --- VERTICAL BAR w/ BOTTOM LABEL ---
          colorbar: { 
             orientation: 'v',      
             x: 1.01,               
