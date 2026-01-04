@@ -1038,12 +1038,13 @@ html, body {
   .area-risk     { order: 5; }
   .area-whale    { order: 6; }
 
-  /* FIX: Negative margins to pull charts closer to the bar */
+  /* Aggressive negative margins to pull charts closer */
   .control-bar-spacing {
     margin-top: -12px !important;    /* Pulls Chaos Map closer */
     margin-bottom: -24px !important; /* Pulls Risk Radar closer */
     z-index: 20; 
     position: relative;
+    pointer-events: auto;
   }
 
   /* 2. HEADER CLEANUP */
@@ -1100,6 +1101,7 @@ html, body {
     overflow-x: auto; 
     overflow-y: hidden; 
     
+    /* Add padding to catch the active button's highlighted border */
     padding-bottom: 4px; 
     margin-bottom: 0;
     
@@ -1108,10 +1110,7 @@ html, body {
     align-items: center;
     
     scrollbar-width: none; 
-    -ms-overflow-style: none; 
-    
-    mask-image: linear-gradient(to right, black 90%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to right, black 90%, transparent 100%);
+    -ms-overflow-style: none;
   }
   
   .ticker-selector-group::-webkit-scrollbar {
