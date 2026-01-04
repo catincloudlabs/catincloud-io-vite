@@ -975,7 +975,7 @@ html, body {
 .text-red { color: var(--red); }
 
 /* ==================================================================== */
-/* 18. MOBILE OVERRIDES                                                 */
+/* 18. MOBILE OVERRIDES (Place at the END of your CSS file)             */
 /* ==================================================================== */
 
 @media (max-width: 1024px) {
@@ -1049,7 +1049,6 @@ html, body {
     width: 100%;
     overflow-x: auto; /* Horizontal scroll for tickers */
     padding-bottom: 4px;
-    /* Fade out edges to hint scrolling */
     mask-image: linear-gradient(to right, black 90%, transparent 100%);
     -webkit-mask-image: linear-gradient(to right, black 90%, transparent 100%);
   }
@@ -1064,28 +1063,58 @@ html, body {
     grid-column: span 1 !important; 
   }
   
-  /* Reduce heights significantly for mobile to reduce scrolling */
+  /* Reduce chart heights significantly for mobile to reduce scrolling */
   .h-tall { height: 350px; }
   .h-standard { height: 350px; }
 
-  /* 6. Metric Strip: Horizontal Carousel (Overrides Grid) */
+  /* 6. COMPACT METRIC CAROUSEL (The "Engine Room" Ticker) */
   .metric-strip {
     display: flex !important; /* Override 'display: grid' */
     flex-direction: row;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     gap: 12px;
-    padding-bottom: 8px;
+    padding-bottom: 4px; /* Tiny padding for scrollbar */
+    
+    /* Bleed effect: allows cards to touch the screen edge */
+    margin-right: -12px; 
+    padding-right: 12px; 
   }
   
   .metric-strip::-webkit-scrollbar {
     display: none; 
   }
 
-  /* Force cards to have a fixed width in the carousel */
-  .metric-strip > * {
-    min-width: 260px; 
+  /* Force cards to be small tiles (160px width) */
+  .metric-strip .panel {
+    min-width: 160px; 
+    width: 160px;
     flex-shrink: 0;
     scroll-snap-align: start;
+    padding: 12px; /* Tighter padding than desktop */
+    min-height: 0; /* Remove default min-height */
+  }
+
+  /* Compact Typography for Tiles */
+  .metric-strip .panel-title {
+    font-size: 0.7rem;
+    margin-bottom: 4px;
+  }
+
+  .metric-strip .metric-big {
+    font-size: 1.25rem; /* Smaller numbers */
+  }
+
+  .metric-strip .metric-sub {
+    font-size: 0.65rem;
+    white-space: nowrap; /* Prevent wrapping */
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  /* Scale down icons inside the metric strip */
+  .metric-strip svg {
+    width: 14px;
+    height: 14px;
   }
 }
