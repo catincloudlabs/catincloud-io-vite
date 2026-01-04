@@ -466,7 +466,7 @@ html, body {
   position: sticky;
   top: 0px;
   z-index: 900; 
-  margin-bottom: 24px;
+  margin-bottom: 0;
   box-shadow: 0 4px 20px rgba(0,0,0,0.4);
 }
 
@@ -727,13 +727,14 @@ html, body {
 
 /* --- Control Bar Spacing Utility --- */
 .control-bar-spacing {
-  margin-top: -8px;
-  margin-bottom: -8px; /* Pulls the bottom charts closer */
+  /* Counteract the grid gap (16px) to create a tight 4px visual gap */
+  margin-top: -8px; 
+  margin-bottom: -8px; 
   position: relative;
   z-index: 20;
 }
 
-/* Mobile Reset: Removes negative margins to prevent overlap on small screens */
+/* Mobile Reset: Handled in Block 18 */
 @media (max-width: 768px) {
   .control-bar-spacing {
     margin-top: 16px;
@@ -1040,8 +1041,8 @@ html, body {
 
   /* Aggressive negative margins to pull charts closer */
   .control-bar-spacing {
-    margin-top: -12px !important;    /* Pulls Chaos Map closer */
-    margin-bottom: -24px !important; /* Pulls Risk Radar closer */
+    margin-top: -16px !important;    /* Pulls Chaos Map closer */
+    margin-bottom: -4px !important; /* Pulls Risk Radar closer */
     z-index: 20; 
     position: relative;
     pointer-events: auto;
