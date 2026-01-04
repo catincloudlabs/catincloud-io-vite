@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, Search, Calendar } from 'lucide-react';
+import { Search, Calendar } from 'lucide-react';
 
 const GlobalControlBar = ({ 
   dates, 
@@ -48,11 +48,6 @@ const GlobalControlBar = ({
 
       {/* 2. RIGHT: TIME SLIDER */}
       <div className="time-travel-group">
-        {/* Label: Text removed, Icon kept for context */}
-        <div className="control-label" style={{ justifyContent: 'flex-end' }}>
-          <Clock size={14} className="text-accent" />
-        </div>
-
         <div className="slider-wrapper">
           {/* A. The Slider */}
           <input
