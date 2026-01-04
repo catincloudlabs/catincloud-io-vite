@@ -727,8 +727,8 @@ html, body {
 
 /* --- Control Bar Spacing Utility --- */
 .control-bar-spacing {
-  margin-top: 24px;
-  margin-bottom: -12px; /* Pulls the bottom charts closer */
+  margin-top: 12px;
+  margin-bottom: -28px; /* Pulls the bottom charts closer */
   position: relative;
   z-index: 5;
 }
