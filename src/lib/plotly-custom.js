@@ -1,6 +1,6 @@
 // src/lib/plotly-custom.js
 
-// 1. Load the core engine (smallest possible base)
+// 1. Load the core engine
 import Plotly from 'plotly.js/lib/core';
 
 // 2. Import only the types of charts needed
