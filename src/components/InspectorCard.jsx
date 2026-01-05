@@ -1,14 +1,15 @@
 import React, { useState, Suspense, lazy } from 'react';
 
-// --- OPTIMIZATION 1: LIGHTWEIGHT PLOTLY ---
-// Use the factory to force React to use 'basic-dist' (1MB) instead of full (4MB)
-import Plotly from 'plotly.js-basic-dist';
+// --- CUSTOM PLOTLY BUNDLE ---
+// Use the custom builder (src/lib/plotly-custom.js) instead of the pre-built 'basic-dist'.
+// This ensures Heatmaps and Radar charts are included without loading the massive full library.
+import Plotly from '../lib/plotly-custom'; 
 import createPlotlyComponent from 'react-plotly.js/factory';
 const Plot = createPlotlyComponent(Plotly);
 
 import { FileCode, Activity } from 'lucide-react'; 
 
-// --- OPTIMIZATION 2: LAZY LOAD HEAVY LOGIC ---
+// --- LAZY LOAD HEAVY LOGIC ---
 // The 'syntax' chunk (react-syntax-highlighter) will NOT download until this modal is requested.
 const LogicModal = lazy(() => import('./LogicModal'));
 
