@@ -1,17 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense, lazy } from 'react';
 
-// --- OPTIMIZATION START ---
-// 1. Import the lightweight core (Basic Dist)
+// --- OPTIMIZATION 1: LIGHTWEIGHT PLOTLY ---
+// Use the factory to force React to use 'basic-dist' (1MB) instead of full (4MB)
 import Plotly from 'plotly.js-basic-dist';
-// 2. Import the factory function
 import createPlotlyComponent from 'react-plotly.js/factory';
-
-// 3. Create the optimized component
 const Plot = createPlotlyComponent(Plotly);
-// --- OPTIMIZATION END ---
 
 import { FileCode, Activity } from 'lucide-react'; 
-import LogicModal from './LogicModal';
+
+// --- OPTIMIZATION 2: LAZY LOAD HEAVY LOGIC ---
+// The 'syntax' chunk (react-syntax-highlighter) will NOT download until this modal is requested.
+const LogicModal = lazy(() => import('./LogicModal'));
 
 const InspectorCard = ({ 
   className,
@@ -159,15 +158,20 @@ const InspectorCard = ({
         </div>
       )}
 
-      {/* --- LOGIC MODAL --- */}
-      <LogicModal 
-        isOpen={showLogic} 
-        onClose={() => setShowLogic(false)} 
-        title={title}
-        dagCode={sqlCode} 
-        dbtCode={dbtCode} 
-        dbtYml={dbtYml}
-      />
+      {/* --- LOGIC MODAL (LAZY LOADED) --- */}
+      {/* Wrapped in Suspense so the 'syntax' chunk loads only when showLogic is true */}
+      <Suspense fallback={null}>
+        {showLogic && (
+          <LogicModal 
+            isOpen={showLogic} 
+            onClose={() => setShowLogic(false)} 
+            title={title}
+            dagCode={sqlCode} 
+            dbtCode={dbtCode} 
+            dbtYml={dbtYml}
+          />
+        )}
+      </Suspense>
     </div>
   );
 };
