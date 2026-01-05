@@ -25,15 +25,12 @@ Thumbs.db
 .venv/
 .idea/
 
-# Build / cache
+# Build / cache (via Cloudflare)
 dist/
 build/
+node_modules
 *.egg-info/
 
 # scratch paper for notes
 scratch.txt
 scratch.json
-
-
-node_modules
-package-lock.json
