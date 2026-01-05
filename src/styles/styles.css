@@ -1171,3 +1171,245 @@ html, body {
     width: calc(100% + 40px);
   }
 }
+
+/* ==================================================================== */
+/* 19. INSIGHTS PANEL & THEMES (RAG OVERLAY)                            */
+/* ==================================================================== */
+
+.relative-container {
+  position: relative;
+}
+
+/* --- Cluster Themes (No Inline Styles!) --- */
+/* These classes set a variable used by children (label, border, bullets) */
+
+.theme-justified-optimism { --theme-color: #4ade80; }
+.theme-bull-trap          { --theme-color: #f87171; }
+.theme-justified-fear     { --theme-color: #ef4444; }
+.theme-bear-trap          { --theme-color: #60a5fa; }
+.theme-noise              { --theme-color: #334155; }
+
+/* ------------------------------------------- */
+
+/* Hover Pulse Animation for Clusters */
+.hover-pulse {
+  transition: r 0.3s ease, fill-opacity 0.3s ease;
+}
+.hover-pulse:hover {
+  r: 10px;
+  fill-opacity: 1 !important;
+  stroke: #fff;
+  stroke-width: 1px;
+}
+
+/* Tooltip Instruction */
+.tooltip-instruction {
+  font-size: 10px;
+  color: var(--accent);
+  text-align: center;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(255,255,255,0.1);
+  font-style: italic;
+}
+
+/* Dynamic Text Color from Theme */
+.tooltip-label {
+  color: var(--theme-color, #fff); 
+  font-weight: 500;
+}
+
+/* Dynamic Label Badge from Theme */
+.insight-label {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: var(--theme-color, #fff);
+  border: 1px solid var(--theme-color, #fff);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+/* Dynamic Bullet from Theme */
+.bullet {
+  min-width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-top: 7px;
+  background-color: var(--theme-color, #fff);
+}
+
+/* --- Sentiment Badges (Static) --- */
+.sentiment-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  margin-bottom: 16px;
+  border: 1px solid transparent;
+}
+
+.badge-bullish {
+  background-color: rgba(74, 222, 128, 0.15);
+  color: #4ade80;
+  border-color: rgba(74, 222, 128, 0.3);
+}
+
+.badge-bearish {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.badge-neutral {
+  background-color: rgba(148, 163, 184, 0.15);
+  color: #94a3b8;
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+/* --- Panel Layout --- */
+.insight-panel-overlay {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  bottom: 48px;
+  width: 320px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.insight-panel {
+  flex: 1;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.insight-header {
+  padding: 16px;
+  background: rgba(56, 189, 248, 0.1);
+  border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.insight-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.insight-id {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.close-btn:hover {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+
+.insight-body {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.insight-section {
+  margin-bottom: 20px;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding-bottom: 4px;
+}
+
+.insight-text {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text-main);
+}
+
+.takeaway-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.takeaway-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  line-height: 1.4;
+}
+
+.insight-footer {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-align: right;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(255,255,255,0.1);
+}
+
+/* Mobile Adjustments for Panel */
+@media (max-width: 768px) {
+  .insight-panel-overlay {
+    position: fixed;
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 60vh;
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 1000;
+  }
+  
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  .insight-panel {
+    border-radius: 12px 12px 0 0;
+    border-bottom: none;
+  }
+}
