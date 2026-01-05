@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { ScatterChart, Scatter, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
 import { X, TrendingUp, TrendingDown, Activity, Info } from 'lucide-react';
 
-const COLORS = {
+// Required ONLY for Recharts SVG rendering
+const CHART_COLORS = {
   'Justified Optimism': '#4ade80',
   'Bull Trap': '#f87171',
   'Justified Fear': '#ef4444',
@@ -10,17 +11,21 @@ const COLORS = {
   'Noise': '#334155'
 };
 
+// Helper: Maps API labels to CSS classes
+const getThemeClass = (label) => {
+  if (!label) return 'theme-noise';
+  return `theme-${label.toLowerCase().replace(/\s+/g, '-')}`;
+};
+
 // --- TOOLTIP COMPONENT (Hover State) ---
 const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     const sentimentClass = data.sentiment > 0 ? "text-green" : "text-red";
-    
-    // Pass the color as a variable, not a direct style property
-    const style = { '--cluster-color': COLORS[data.label] || '#fff' };
+    const themeClass = getThemeClass(data.label);
 
     return (
-      <div className="custom-tooltip">
+      <div className={`custom-tooltip ${themeClass}`}>
         <div className="tooltip-header">
             <span className="tooltip-ticker">{data.ticker}</span>
             <span className="tooltip-date">
@@ -29,7 +34,7 @@ const CustomTooltip = ({ active, payload }) => {
         </div>
         <p className="tooltip-title">"{data.title}"</p>
         <div className="tooltip-footer">
-            <span className="tooltip-label" style={style}>
+            <span className="tooltip-label">
                 {data.label}
             </span>
             <span className={sentimentClass}>
@@ -50,15 +55,12 @@ const InsightPanel = ({ clusterId, label, insights, onClose }) => {
   // Fallback if we clicked a point but have no RAG data for it yet
   if (!data) return null;
 
-  // 1. Determine Sentiment Class
   const sentimentClass = `sentiment-badge badge-${data.sentiment?.toLowerCase() || 'neutral'}`;
-
-  // 2. Pass dynamic cluster color as a CSS variable
-  const panelStyle = { '--cluster-color': COLORS[label] || '#fff' };
+  const themeClass = getThemeClass(label);
 
   return (
     <div className="insight-panel-overlay">
-      <div className="insight-panel" style={panelStyle}>
+      <div className={`insight-panel ${themeClass}`}>
         <div className="insight-header">
             <div className="insight-title-group">
                 <span className="insight-label">
@@ -70,7 +72,7 @@ const InsightPanel = ({ clusterId, label, insights, onClose }) => {
         </div>
 
         <div className="insight-body custom-scrollbar">
-            {/* Sentiment Badge (Styles moved to CSS) */}
+            {/* Sentiment Badge (Styles in CSS) */}
             <div className={sentimentClass}>
                 {data.sentiment === 'Bullish' && <TrendingUp size={14} />}
                 {data.sentiment === 'Bearish' && <TrendingDown size={14} />}
@@ -117,7 +119,6 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
   useEffect(() => {
     const fetchData = async () => {
         try {
-            // 1. Parallel Fetch: Geometry (Map) + Intelligence (Feed)
             const [mapRes, feedRes] = await Promise.all([
                 fetch('/data/market_psychology_map.json'),
                 fetch('/data/market_cluster_feed.json')
@@ -127,7 +128,6 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
             
             const mapJson = await mapRes.json();
             
-            // Handle optional feed
             let feedJson = { data: [] };
             if (feedRes.ok) {
                 feedJson = await feedRes.json();
@@ -135,14 +135,12 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
 
             setChartData(mapJson.data || []);
             
-            // 2. Index the Insights
             const insightsMap = feedJson.data.reduce((acc, item) => {
                 acc[item.id] = item;
                 return acc;
             }, {});
             setInsightData(insightsMap);
 
-            // 3. Bubble up Metadata
             if (onMetaLoaded && mapJson.meta) {
                 const combinedMeta = {
                     ...mapJson.meta,
@@ -198,7 +196,7 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
               {chartData.map((entry, index) => (
                 <Cell 
                   key={`cell-${index}`} 
-                  fill={COLORS[entry.label] || COLORS['Noise']} 
+                  fill={CHART_COLORS[entry.label] || CHART_COLORS['Noise']} 
                   opacity={entry.label === 'Noise' ? 0.3 : 0.8}
                   r={entry.label === 'Noise' ? 2 : Math.min(18, 5 + (Math.abs(entry.impact || 0) * 800))}
                   className={entry.label !== 'Noise' ? 'cursor-pointer hover-pulse' : ''}
