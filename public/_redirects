@@ -1,10 +1,4 @@
-# 1. Canonicalize root
-
-/index.html   /   301
-
-# 2. SPA Fallback (CRITICAL for React)
-
-# If a file isn't found, serve index.html with a 200 OK status
-# This allows React to handle the "Page Not Found" or routing internally
-
-/* /index.html   200
+# SPA Fallback
+# If a file isn't found (like /dashboard), serve index.html
+# This allows React to handle the routing internally
+/* /index.html  200
