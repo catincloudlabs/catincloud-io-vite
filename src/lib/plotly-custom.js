@@ -1,9 +1,5 @@
-// src/lib/plotly-custom.js
-
-// 1. Load the core engine
 import Plotly from 'plotly.js/lib/core';
 
-// 2. Import only the types of charts needed
 import scatter from 'plotly.js/lib/scatter';
 import bar from 'plotly.js/lib/bar';
 import pie from 'plotly.js/lib/pie';
