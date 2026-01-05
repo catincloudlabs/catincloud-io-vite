@@ -77,8 +77,8 @@ const InsightPanel = ({ clusterId, label, insights, onClose, position }) => {
   // DYNAMIC STYLE: Position absolute based on click coordinates
   // On Desktop: use top/left. On Mobile: classes override this to fixed/bottom.
   const style = position ? {
-    top: position.y,
-    left: position.x + 20, // Offset 20px to the right of the click
+    top: position.y + 10,
+    left: position.x + 30,
   } : {};
 
   return (
