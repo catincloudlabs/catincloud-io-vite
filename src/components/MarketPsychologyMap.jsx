@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { ScatterChart, Scatter, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
-import { X, TrendingUp, TrendingDown, Activity, Info } from 'lucide-react';
+import { X, TrendingUp, TrendingDown, Activity, Info, Maximize2 } from 'lucide-react';
 
 const CHART_COLORS = {
   'Justified Optimism': '#4ade80',
@@ -10,113 +10,97 @@ const CHART_COLORS = {
   'Noise': '#334155'
 };
 
-const getThemeClass = (label) => {
-  if (!label) return 'theme-noise';
-  return `theme-${label.toLowerCase().replace(/\s+/g, '-')}`;
-};
-
 // --- TOOLTIP COMPONENT ---
 const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
-    const sentimentClass = data.sentiment > 0 ? "text-green" : "text-red";
-    const themeClass = getThemeClass(data.label);
-
+    const isPositive = data.sentiment > 0;
+    const themeColor = CHART_COLORS[data.label] || '#94a3b8';
+    
+    // We pass the dynamic color as a CSS variable
     return (
-      <div className={`custom-tooltip ${themeClass}`}>
+      <div className="custom-tooltip map-tooltip" style={{ '--tooltip-accent': themeColor }}>
         <div className="tooltip-header">
             <span className="tooltip-ticker">{data.ticker}</span>
             <span className="tooltip-date">{new Date(data.published_at).toLocaleDateString()}</span>
         </div>
-        <p className="tooltip-title">"{data.title}"</p>
+        <div className="tooltip-title">"{data.title}"</div>
         <div className="tooltip-footer">
-            <span className="tooltip-label">{data.label}</span>
-            <span className={sentimentClass}>Sent: {data.sentiment?.toFixed(2)}</span>
+            <span className="tooltip-pill">{data.label}</span>
+            <span className={isPositive ? "text-green" : "text-red"}>
+              Sent: {data.sentiment?.toFixed(2)}
+            </span>
         </div>
-        <div className="tooltip-instruction">Click cluster for AI Insights</div>
       </div>
     );
   }
   return null;
 };
 
-// --- INSIGHT PANEL COMPONENT ---
-const InsightPanel = ({ clusterId, label, insights, onClose, position }) => {
+// --- INSIGHT PANEL (DOCKED) ---
+const InsightPanel = ({ clusterId, label, insights, onClose }) => {
   const data = insights[clusterId];
-  const panelRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (panelRef.current && !panelRef.current.contains(event.target)) {
-        onClose();
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [onClose]);
-
   if (!data) return null;
 
-  const PANEL_WIDTH = 320;
-  const GAP = 30;
-  const isRightHalf = position ? position.x > window.innerWidth / 2 : false;
-  const themeClass = getThemeClass(label);
-  const sentimentClass = `sentiment-badge badge-${data.sentiment?.toLowerCase() || 'neutral'}`;
-
-  // SMART POSITIONING BLOCK
-  const style = position ? {
-    top: position.y - 20, 
-    left: isRightHalf 
-      ? position.x - PANEL_WIDTH - GAP 
-      : position.x + GAP,
-  } : {};
+  const themeColor = CHART_COLORS[label] || '#94a3b8';
 
   return (
-    <div 
-      ref={panelRef}
-      className={`insight-panel-overlay ${isRightHalf ? 'flipped' : ''}`} 
-      style={style}
-    >
-      <div className={`insight-panel ${themeClass}`}>
-        <div className="insight-header">
-            <div className="insight-title-group">
-                <span className="insight-label">{label}</span>
-                <span className="insight-id">Cluster #{clusterId}</span>
+    <div className="insight-panel-dock" style={{ '--panel-accent': themeColor }}>
+      
+      {/* HEADER */}
+      <div className="dock-header">
+         <div className="dock-title-group">
+            <div className="dock-indicator" />
+            <div>
+              <h3 className="dock-title">{label}</h3>
+              <p className="dock-subtitle">Cluster ID: {clusterId}</p>
             </div>
-            <button onClick={onClose} className="close-btn"><X size={18} /></button>
-        </div>
+         </div>
+         <button onClick={onClose} className="dock-close-btn">
+           <X size={18} />
+         </button>
+      </div>
 
-        <div className="insight-body custom-scrollbar">
-            <div className={sentimentClass}>
-                {data.sentiment === 'Bullish' && <TrendingUp size={14} />}
-                {data.sentiment === 'Bearish' && <TrendingDown size={14} />}
-                {data.sentiment === 'Neutral' && <Activity size={14} />}
-                <span className="ml-2 font-bold uppercase">{data.sentiment} Sentiment</span>
-            </div>
+      {/* SCROLLABLE BODY */}
+      <div className="dock-body custom-scrollbar">
+          
+          {/* SENTIMENT BADGE */}
+          <div className="dock-sentiment-box">
+             {data.sentiment === 'Bullish' && <TrendingUp size={16} className="text-green" />}
+             {data.sentiment === 'Bearish' && <TrendingDown size={16} className="text-red" />}
+             {data.sentiment === 'Neutral' && <Activity size={16} className="text-muted" />}
+             <span className="dock-sentiment-text">{data.sentiment} Sentiment</span>
+          </div>
 
-            <div className="insight-section">
-                <h4 className="section-title"><Info size={14} className="mr-2" /> Market Narrative</h4>
-                <p className="insight-text">{data.summary}</p>
-            </div>
+          {/* AI SUMMARY */}
+          <div className="dock-section">
+            <h4 className="dock-section-title">
+              <Info size={12} className="mr-2" /> Narrative Analysis
+            </h4>
+            <p className="dock-text">
+              {data.summary}
+            </p>
+          </div>
 
-            {data.takeaways && data.takeaways.length > 0 && (
-                <div className="insight-section">
-                    <h4 className="section-title">Key Events</h4>
-                    <ul className="takeaway-list">
-                        {data.takeaways.map((item, i) => (
-                            <li key={i} className="takeaway-item">
-                                <span className="bullet"></span>
-                                {item}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
-            
-            <div className="insight-footer">
-                Updated: {new Date(data.lastUpdated).toLocaleString()}
+          {/* KEY TAKEAWAYS */}
+          {data.takeaways && data.takeaways.length > 0 && (
+            <div className="dock-section">
+              <h4 className="dock-section-title">Key Events</h4>
+              <ul className="dock-list">
+                {data.takeaways.map((item, i) => (
+                   <li key={i} className="dock-list-item">
+                      <span className="dock-bullet" />
+                      {item}
+                   </li>
+                ))}
+              </ul>
             </div>
-        </div>
+          )}
+      </div>
+
+      {/* FOOTER */}
+      <div className="dock-footer">
+         AI Analysis Updated: {new Date(data.lastUpdated).toLocaleString()}
       </div>
     </div>
   );
@@ -126,7 +110,9 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
   const [chartData, setChartData] = useState([]);
   const [insightData, setInsightData] = useState({});
   const [loading, setLoading] = useState(true);
-  const [pinnedState, setPinnedState] = useState(null);
+  
+  // Store only the ID and Label of the active cluster
+  const [activeCluster, setActiveCluster] = useState(null); 
 
   useEffect(() => {
     const fetchData = async () => {
@@ -146,7 +132,7 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
                     ...mapJson.meta,
                     inspector: {
                         ...mapJson.meta.inspector,
-                        description: `${mapJson.meta.inspector.description} \n\n[RAG ENRICHMENT]: Analyzed by AI models.`
+                        description: `${mapJson.meta.inspector.description}\n\n[RAG ENRICHMENT]: Analyzed by OpenAI Embeddings.`
                     }
                 });
             }
@@ -159,54 +145,96 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
     fetchData();
   }, [onMetaLoaded]);
 
+  // --- MEMOIZED SORTING ---
+  // 1. Sort "Noise" to the beginning so they render first (background).
+  // 2. Sort high impact items to end so they render on top.
+  const sortedData = useMemo(() => {
+    return [...chartData].sort((a, b) => {
+      // If A is Noise and B is not, A comes first (return -1)
+      if (a.label === 'Noise' && b.label !== 'Noise') return -1;
+      if (a.label !== 'Noise' && b.label === 'Noise') return 1;
+      return 0;
+    });
+  }, [chartData]);
+
   const handlePointClick = (nodeProps) => {
     const data = nodeProps.payload;
-    if (data && data.cluster_id !== undefined) {
-        setPinnedState({
+    // Don't open insights for 'Noise' points
+    if (data && data.cluster_id !== undefined && data.label !== 'Noise') {
+        setActiveCluster({
             id: data.cluster_id,
-            label: data.label,
-            x: nodeProps.cx, 
-            y: nodeProps.cy
+            label: data.label
         });
     }
   };
 
-  if (loading) return <div className="loading-state">Loading Neural Map & Insights...</div>;
+  if (loading) return (
+     <div className="map-loading-container">
+        <div className="map-loading-text">Initializing Neural Map...</div>
+     </div>
+  );
 
   return (
-    <div className="map-container relative-container">
+    <div className="map-wrapper">
+        
+        {/* EMPTY STATE HINT */}
+        {!activeCluster && (
+           <div className="map-empty-state-hint">
+              <span className="hint-text">
+                 <Maximize2 size={10} /> Click a colored cluster to analyze
+              </span>
+           </div>
+        )}
+
         <ResponsiveContainer width="100%" height="100%">
-          <ScatterChart margin={{ top: 12, right: 12, bottom: 12, left: 12 }}>
+          <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+            {/* Hide Axes for clean "Map" look */}
             <XAxis type="number" dataKey="x" hide domain={['dataMin', 'dataMax']} />
             <YAxis type="number" dataKey="y" hide domain={['dataMin', 'dataMax']} />
-            <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3', stroke: '#555' }} />
-            <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+            
+            <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3', stroke: '#334155' }} />
+            
+            <Legend 
+                verticalAlign="bottom" 
+                height={36} 
+                iconType="circle" 
+                wrapperStyle={{ fontSize: '11px', color: '#94a3b8', paddingTop: '10px' }} 
+            />
+            
             <Scatter 
                 name="Clusters" 
-                data={chartData} 
+                data={sortedData} 
                 onClick={(props) => handlePointClick(props)} 
                 cursor="pointer"
             >
-              {chartData.map((entry, index) => (
-                <Cell 
-                  key={`cell-${index}`} 
-                  fill={CHART_COLORS[entry.label] || CHART_COLORS['Noise']} 
-                  opacity={entry.label === 'Noise' ? 0.3 : 0.8}
-                  r={entry.label === 'Noise' ? 2 : Math.min(18, 5 + (Math.abs(entry.impact || 0) * 800))}
-                  className={entry.label !== 'Noise' ? 'cursor-pointer hover-pulse' : ''}
-                />
-              ))}
+              {sortedData.map((entry, index) => {
+                 const isNoise = entry.label === 'Noise';
+                 // Threshold for pulsing: Impact > 0.7
+                 const isHighImpact = !isNoise && Math.abs(entry.impact || 0) > 0.7; 
+                 
+                 return (
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={CHART_COLORS[entry.label] || CHART_COLORS['Noise']} 
+                      stroke={isHighImpact ? CHART_COLORS[entry.label] : 'none'}
+                      opacity={isNoise ? 0.2 : 0.8}
+                      // Scaled sizing logic
+                      r={isNoise ? 2 : Math.min(12, 4 + (Math.abs(entry.impact || 0) * 8))} 
+                      className={isHighImpact ? 'node-pulse cursor-pointer' : (isNoise ? 'node-noise' : 'node-standard cursor-pointer')}
+                    />
+                 );
+              })}
             </Scatter>
           </ScatterChart>
         </ResponsiveContainer>
 
-        {pinnedState && (
+        {/* DOCKED INSIGHT PANEL */}
+        {activeCluster && (
             <InsightPanel 
-                clusterId={pinnedState.id}
-                label={pinnedState.label}
+                clusterId={activeCluster.id}
+                label={activeCluster.label}
                 insights={insightData}
-                onClose={() => setPinnedState(null)}
-                position={{ x: pinnedState.x, y: pinnedState.y }}
+                onClose={() => setActiveCluster(null)}
             />
         )}
     </div>
