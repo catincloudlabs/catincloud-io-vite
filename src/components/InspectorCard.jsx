@@ -3,7 +3,7 @@ import React, { useState, Suspense, lazy } from 'react';
 // --- CUSTOM PLOTLY BUNDLE ---
 // Use the custom builder (src/lib/plotly-custom.js) instead of the pre-built 'basic-dist'.
 // This ensures Heatmaps and Radar charts are included without loading the massive full library.
-import Plotly from 'plotly.js-basic-dist'; 
+import Plotly from '/src/lib/plotly-custom.js'; 
 import createPlotlyComponent from 'react-plotly.js/factory';
 const Plot = createPlotlyComponent(Plotly);
 
