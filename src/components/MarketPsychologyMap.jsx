@@ -206,7 +206,7 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
                 data={sortedData} 
                 onClick={(props) => handlePointClick(props)} 
                 cursor="pointer"
-                fill="#64748b"
+                fill="#64748b" /* Slate-500 for visible legend icon */
             >
               {sortedData.map((entry, index) => {
                  const isNoise = entry.label === 'Noise';
