@@ -6,13 +6,36 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
-      // This tells Vite: "Forward any request starting with /data to S3"
       '/data': {
-        target: 'https://catincloud-io-public.s3.us-east-2.amazonaws.com/data',
+        // Matches Cloudflare structure (public/data -> domain.io/data)
+        target: 'https://catincloud.io', 
         changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path.replace(/^\/data/, '') 
+        secure: false
       }
     }
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // 1. Core React (caches forever)
+          'react-vendor': ['react', 'react-dom'],
+          
+          // 2. Plotly (Lightweight Basic Version ~1MB)
+          'plotly': ['react-plotly.js', 'plotly.js-basic-dist'], 
+          
+          // 3. Recharts (Heavy chart library, kept separate)
+          'recharts': ['recharts'],
+          
+          // 4. Icons (Lightweight - needed immediately for Header/UI)
+          'icons': ['lucide-react', 'clsx'],
+
+          // 5. Syntax Highlighter (Heavy - loaded ONLY when Logic Modal opens)
+          'syntax': ['react-syntax-highlighter']
+        }
+      }
+    },
+    // Adjusted warning limit since chunks are now optimized
+    chunkSizeWarningLimit: 1000 
   }
 })
