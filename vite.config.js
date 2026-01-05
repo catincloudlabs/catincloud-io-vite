@@ -25,6 +25,7 @@ export default defineConfig({
           // Explicitly groups the core + specific modules into one file.
           'plotly': [
             'react-plotly.js',
+            'plotly.js-basic-dist',
             'plotly.js/lib/core',
             'plotly.js/lib/scatter',
             'plotly.js/lib/bar',
