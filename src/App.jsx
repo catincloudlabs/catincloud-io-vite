@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, Suspense, lazy } from 'react'; // Added Suspense, lazy
+import React, { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import MetricCard from './components/MetricCard';
@@ -8,7 +8,6 @@ import { useSystemHeartbeat } from './hooks/useSystemHeartbeat';
 import { getSentimentColor, getRiskColor, getMomentumColor } from './utils/statusHelpers';
 
 // --- LAZY LOAD HEAVY COMPONENTS ---
-// This prevents the 4MB Plotly chunk from blocking the initial page paint
 const InspectorCard = lazy(() => import('./components/InspectorCard'));
 const MarketPsychologyMap = lazy(() => import('./components/MarketPsychologyMap'));
 
@@ -50,7 +49,7 @@ function App() {
   const [sentVolMeta, setSentVolMeta] = useState(null);
   const [sentVolLoading, setSentVolLoading] = useState(true);
 
-  // New: Map Metadata State (Bubbled up from Child)
+  // Map Metadata State (Bubbled up from Child)
   const [mapMeta, setMapMeta] = useState(null);
 
   // UI State
@@ -64,7 +63,6 @@ function App() {
   }, []);
 
   // --- FETCHING ---
-  // (Your fetching logic remains exactly the same...)
   useEffect(() => {
     fetch('/data/chaos.json').then(res => res.json()).then(json => {
         setChaosRaw(json.data); 
@@ -89,7 +87,6 @@ function App() {
   }, []);
 
   // --- METRICS ---
-  // (Your metric logic remains exactly the same...)
   const whaleMetric = useMemo(() => {
     if (!whaleData?.data) return { value: "$0M", sub: "No Data" };
     let bullTotal = 0, total = 0;
@@ -119,16 +116,80 @@ function App() {
     return { value: leader.ticker, sub: `Net Flow: ${leader.net_sentiment_flow > 0 ? "+" : ""}$${flowM}M`, isPositive: leader.net_sentiment_flow > 0 };
   }, [magRaw, selectedDate]);
 
-  // --- PLOT HELPERS ---
-  // (Your plot helpers remain exactly the same...)
-  const getMag7PlotData = () => { /* ... */ return []; }; // Kept abbreviated for clarity, paste your original logic here
-  const getFilteredChaosPlot = () => { /* ... */ return []; };
-  const getSentimentPlotData = () => { /* ... */ return []; };
+  // --- PLOT HELPERS (Restored) ---
+  const getMag7PlotData = () => {
+    if (!magRaw || magRaw.length === 0) return [];
+    return Object.keys(MAG7_CONFIG).map(ticker => {
+      const tickerData = magRaw.filter(d => d.ticker === ticker);
+      return {
+        x: tickerData.map(d => d.trade_date), y: tickerData.map(d => d.net_sentiment_flow),
+        name: ticker, type: 'scatter', mode: 'lines', line: { color: MAG7_CONFIG[ticker]?.color || '#ccc', width: 2 },
+      };
+    });
+  };
 
-  // --- LAYOUTS ---
-  const scatterLayout = { /* ... */ }; 
-  const lineLayout = { /* ... */ };
-  const sentimentLayout = { /* ... */ };
+  const getFilteredChaosPlot = () => {
+    if (!selectedDate || chaosRaw.length === 0) return [];
+    const dailyData = chaosRaw.filter(d => d.trade_date?.startsWith(selectedDate) && d.ticker === selectedTicker);
+    return [{
+       x: dailyData.map(d => d.dte), y: dailyData.map(d => d.moneyness),
+       text: dailyData.map(d => `Strike: ${d.strike}<br>IV: ${d.iv.toFixed(1)}%`),
+       mode: 'markers', type: 'scatter',
+       marker: {
+         size: dailyData.map(d => Math.log(d.chaos_score || d.volume) * 3),
+         color: dailyData.map(d => d.iv), 
+         colorscale: 'Viridis', 
+         showscale: !isMobile, 
+         opacity: 0.8, 
+         line: { color: 'white', width: 0.5 },
+         colorbar: { 
+            orientation: 'v',      
+            x: 1.01,                
+            y: 0.5,                
+            yanchor: 'middle',      
+            len: 0.9,              
+            thickness: 10,          
+            tickfont: { size: 9, color: '#94a3b8', family: 'JetBrains Mono' },
+            bgcolor: 'rgba(0,0,0,0)', 
+            outlinecolor: 'rgba(0,0,0,0)' 
+         }
+       }
+    }];
+  };
+
+  const getSentimentPlotData = () => {
+    if (!sentVolRaw || sentVolRaw.length === 0 || !selectedDate) return [];
+    const dailyData = sentVolRaw.filter(d => d.trade_date === selectedDate && WATCHLIST.includes(d.ticker)).sort((a, b) => a.ticker.localeCompare(b.ticker));
+    if (dailyData.length === 0) return [];
+    return dailyData.map(row => ({
+      x: [row.sentiment_signal], y: [row.avg_iv], mode: 'markers', name: row.ticker, 
+      marker: { 
+         size: [Math.max(6, Math.log(row.news_volume || 1) * 10)], 
+         color: MAG7_CONFIG[row.ticker]?.color || '#94a3b8', opacity: 0.8, line: { color: 'white', width: 1 },
+         sizemode: 'area', sizeref: 0.2
+      },
+      hovertemplate: `<b>${row.ticker}</b><br>Sentiment: %{x:.2f}<br>Implied Vol: %{y:.1f}%<br>News Vol: ${row.news_volume || 0}<extra></extra>`
+    }));
+  };
+
+  // --- LAYOUTS (Restored) ---
+  const scatterLayout = { 
+      xaxis: { title: 'DTE', gridcolor: '#334155' }, 
+      yaxis: { title: 'Moneyness', gridcolor: '#334155', range: [0.5, 1.8] }, 
+      showlegend: false, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: '#94a3b8' }, 
+      margin: isMobile ? { t: 10, b: 40, l: 30, r: 10 } : { t: 10, b: 40, l: 40, r: 50 },
+      annotations: [{ text: 'IV%', x: 1.04, y: 0.04, xref: 'paper', yref: 'paper', showarrow: false, xanchor: 'center', yanchor: 'top', font: { size: 9, color: '#94a3b8', family: 'JetBrains Mono' } }]
+  };
+  
+  const lineLayout = { xaxis: { title: 'Trend', gridcolor: '#334155' }, yaxis: { title: 'Flow', gridcolor: '#334155' }, showlegend: false, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: '#94a3b8' }, margin: isMobile ? { t: 10, b: 40, l: 30, r: 5 } : { t: 10, b: 40, l: 40, r: 10 } };
+  
+  const sentimentLayout = { 
+      xaxis: { title: 'Sentiment', gridcolor: '#334155', range: [-1, 1], zeroline: true }, yaxis: { title: 'IV', gridcolor: '#334155' }, 
+      showlegend: true, legend: { orientation: "h", yanchor: "bottom", y: -0.8, xanchor: "center", x: 0.5, font: { family: 'JetBrains Mono, monospace', size: 10, color: '#94a3b8' } },
+      paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: '#94a3b8' }, 
+      margin: isMobile ? { t: 10, b: 60, l: 30, r: 10 } : { t: 20, b: 130, l: 50, r: 20 }, 
+      shapes: [{ type: 'rect', xref: 'x', yref: 'paper', x0: -1, y0: 0.5, x1: 0, y1: 1, fillcolor: '#ef4444', opacity: 0.05, line: { width: 0 }}, { type: 'rect', xref: 'x', yref: 'paper', x0: 0, y0: 0, x1: 1, y1: 0.5, fillcolor: '#22c55e', opacity: 0.05, line: { width: 0 }}] 
+  };
 
   const sidebarProps = sidebarTab === 'momentum' ? {
         title: "Mag 7 Momentum", tag: "Trend", desc: magMeta?.inspector.description || "Net Sentiment Flow",
@@ -143,14 +204,14 @@ function App() {
   return (
     <div className="app-container">
       
-      {/* 1. HEADER (Brand & Nav Only) */}
+      {/* 1. HEADER */}
       <div className="sticky-header-group">
         <Header />
       </div>
 
       <main className="bento-grid">
         
-        {/* 2. KPI STRIP (Lightweight - Renders Instantly) */}
+        {/* 2. KPI STRIP */}
         <div className="span-4 metric-strip area-metrics">
            <MetricCard title="Market Sentiment" value={(Math.random() * 100).toFixed(0)} subValue="Fear / Greed Index" icon={<TrendingUp size={16} className="text-accent" />} />
            <MetricCard title="Whale Flow" value={whaleMetric.value} subValue={whaleMetric.sub} icon={<Activity size={16} className={getSentimentColor(whaleMetric.isBullish)} />} />
@@ -159,7 +220,6 @@ function App() {
         </div>
 
         {/* --- LAZY LOAD BOUNDARY START --- */}
-        {/* Everything inside here waits for the heavy JS chunks to download */}
         <Suspense fallback={<div className="span-4 h-tall flex items-center justify-center text-muted animate-pulse">Initializing AI Models...</div>}>
 
             {/* 3. MARKET PSYCHOLOGY HERO */}
@@ -168,7 +228,7 @@ function App() {
                  className="ai-hero-card"
                  title="Market Psychology Map"
                  tag="AI MODEL"
-                 desc="t-SNE Clustering of Uses OpenAI Embeddings..."
+                 desc="t-SNE Clustering Using OpenAI Embeddings"
                  sqlCode={mapMeta?.inspector?.sql_logic}
                  dbtCode={mapMeta?.inspector?.dbt_logic}
                  dbtYml={mapMeta?.inspector?.dbt_yml}

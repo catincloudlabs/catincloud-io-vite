@@ -1,5 +1,5 @@
 {
-    "name": "CatInCloud Quantum Console",
+    "name": "CatInCloud Terminal",
     "short_name": "CatInCloud",
     "description": "Live market data pipeline and volatility analysis.",
     "start_url": "/",
