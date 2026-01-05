@@ -232,9 +232,7 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
                 name="Clusters" 
                 data={chartData} 
                 fill="#8884d8"
-                // Recharts passes (props, index, event) to onClick. 
-                // 'props' contains payload (your data) AND cx/cy (coordinates).
-                onClick={(props) => handlePointClick(props.payload, props)} 
+                onClick={(props) => handlePointClick(props)} 
                 cursor="pointer"
             >
               {chartData.map((entry, index) => (
