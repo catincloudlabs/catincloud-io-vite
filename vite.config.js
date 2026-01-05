@@ -7,10 +7,10 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/data': {
-        target: 'https://catincloud-io-public.s3.us-east-2.amazonaws.com/data',
+        // FIXED: Added '.io' (assuming catincloud.io is your domain)
+        target: 'https://catincloud.io', 
         changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path.replace(/^\/data/, '') 
+        secure: false
       }
     }
   },
@@ -21,18 +21,22 @@ export default defineConfig({
           // 1. Core React (caches forever)
           'react-vendor': ['react', 'react-dom'],
           
-          // 2. Plotly (UPDATED: Now using the lightweight Basic version)
+          // 2. Plotly (Lightweight Basic Version)
           'plotly': ['react-plotly.js', 'plotly.js-basic-dist'], 
           
-          // 3. Recharts (Another heavy chart library, best kept separate)
+          // 3. Recharts (Heavy chart library, kept separate)
           'recharts': ['recharts'],
           
-          // 4. UI Utilities (Icons and Syntax Highlighting)
-          'ui-utils': ['lucide-react', 'react-syntax-highlighter', 'clsx']
+          // --- SPLIT UI UTILITIES HERE ---
+          
+          // 4. Icons (Lightweight - needed immediately for Header/UI)
+          'icons': ['lucide-react', 'clsx'],
+
+          // 5. Syntax Highlighter (Heavy - loaded ONLY when Logic Modal opens)
+          'syntax': ['react-syntax-highlighter']
         }
       }
     },
-    // We can lower this now because the basic Plotly bundle is much smaller (~1MB)
     chunkSizeWarningLimit: 1000 
   }
 })
