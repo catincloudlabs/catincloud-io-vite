@@ -1202,7 +1202,65 @@ html, body {
   font-style: italic;
 }
 
-/* Panel Container */
+/* --- Dynamic Colors from CSS Variables --- */
+.tooltip-label {
+  /* Receives --cluster-color from React style prop */
+  color: var(--cluster-color, #fff); 
+  font-weight: 500;
+}
+
+.insight-label {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  /* Dynamic Border & Color */
+  color: var(--cluster-color, #fff);
+  border: 1px solid var(--cluster-color, #fff);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.bullet {
+  min-width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-top: 7px;
+  /* Dynamic Background */
+  background-color: var(--cluster-color, #fff);
+}
+
+/* --- Sentiment Badges (Static Classes) --- */
+.sentiment-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  margin-bottom: 16px;
+  border: 1px solid transparent;
+}
+
+.badge-bullish {
+  background-color: rgba(74, 222, 128, 0.15);
+  color: #4ade80;
+  border-color: rgba(74, 222, 128, 0.3);
+}
+
+.badge-bearish {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.badge-neutral {
+  background-color: rgba(148, 163, 184, 0.15);
+  color: #94a3b8;
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+/* --- Panel Layout & Animation --- */
 .insight-panel-overlay {
   position: absolute;
   top: 12px;
@@ -1224,7 +1282,7 @@ html, body {
   flex: 1;
   background: rgba(15, 23, 42, 0.95); /* Deep Navy */
   backdrop-filter: blur(12px);
-  border: 1px solid var(--accent);
+  border: 1px solid var(--border); /* Default border */
   border-radius: var(--radius);
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
   display: flex;
@@ -1244,15 +1302,7 @@ html, body {
 .insight-title-group {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-}
-
-.insight-label {
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-size: 1.1rem;
-  letter-spacing: -0.02em;
-  text-transform: uppercase;
+  gap: 8px;
 }
 
 .insight-id {
@@ -1282,17 +1332,6 @@ html, body {
   flex: 1;
 }
 
-/* Sentiment Badge */
-.sentiment-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  margin-bottom: 16px;
-  border: 1px solid transparent;
-}
-
 .insight-section {
   margin-bottom: 20px;
 }
@@ -1315,7 +1354,6 @@ html, body {
   color: var(--text-main);
 }
 
-/* Takeaways List */
 .takeaway-list {
   list-style: none;
   padding: 0;
@@ -1330,13 +1368,6 @@ html, body {
   font-size: 0.85rem;
   color: #cbd5e1;
   line-height: 1.4;
-}
-
-.bullet {
-  min-width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  margin-top: 7px;
 }
 
 .insight-footer {

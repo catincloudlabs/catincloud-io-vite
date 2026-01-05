@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScatterChart, Scatter, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
 import { X, TrendingUp, TrendingDown, Activity, Info } from 'lucide-react';
 
@@ -10,18 +10,15 @@ const COLORS = {
   'Noise': '#334155'
 };
 
-const SENTIMENT_COLORS = {
-  'Bullish': '#4ade80', // Green
-  'Bearish': '#ef4444', // Red
-  'Neutral': '#94a3b8'  // Slate
-};
-
 // --- TOOLTIP COMPONENT (Hover State) ---
 const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     const sentimentClass = data.sentiment > 0 ? "text-green" : "text-red";
     
+    // Pass the color as a variable, not a direct style property
+    const style = { '--cluster-color': COLORS[data.label] || '#fff' };
+
     return (
       <div className="custom-tooltip">
         <div className="tooltip-header">
@@ -32,7 +29,7 @@ const CustomTooltip = ({ active, payload }) => {
         </div>
         <p className="tooltip-title">"{data.title}"</p>
         <div className="tooltip-footer">
-            <span className="tooltip-label" style={{ color: COLORS[data.label] || '#fff' }}>
+            <span className="tooltip-label" style={style}>
                 {data.label}
             </span>
             <span className={sentimentClass}>
@@ -53,14 +50,18 @@ const InsightPanel = ({ clusterId, label, insights, onClose }) => {
   // Fallback if we clicked a point but have no RAG data for it yet
   if (!data) return null;
 
-  const sentimentColor = SENTIMENT_COLORS[data.sentiment] || '#94a3b8';
+  // 1. Determine Sentiment Class
+  const sentimentClass = `sentiment-badge badge-${data.sentiment?.toLowerCase() || 'neutral'}`;
+
+  // 2. Pass dynamic cluster color as a CSS variable
+  const panelStyle = { '--cluster-color': COLORS[label] || '#fff' };
 
   return (
     <div className="insight-panel-overlay">
-      <div className="insight-panel">
+      <div className="insight-panel" style={panelStyle}>
         <div className="insight-header">
             <div className="insight-title-group">
-                <span className="insight-label" style={{ color: COLORS[label] || '#fff', borderColor: COLORS[label] || '#fff' }}>
+                <span className="insight-label">
                     {label}
                 </span>
                 <span className="insight-id">Cluster #{clusterId}</span>
@@ -69,8 +70,8 @@ const InsightPanel = ({ clusterId, label, insights, onClose }) => {
         </div>
 
         <div className="insight-body custom-scrollbar">
-            {/* Sentiment Badge */}
-            <div className="sentiment-badge" style={{ backgroundColor: `${sentimentColor}20`, color: sentimentColor, borderColor: `${sentimentColor}40` }}>
+            {/* Sentiment Badge (Styles moved to CSS) */}
+            <div className={sentimentClass}>
                 {data.sentiment === 'Bullish' && <TrendingUp size={14} />}
                 {data.sentiment === 'Bearish' && <TrendingDown size={14} />}
                 {data.sentiment === 'Neutral' && <Activity size={14} />}
@@ -90,7 +91,7 @@ const InsightPanel = ({ clusterId, label, insights, onClose }) => {
                     <ul className="takeaway-list">
                         {data.takeaways.map((item, i) => (
                             <li key={i} className="takeaway-item">
-                                <span className="bullet" style={{ backgroundColor: COLORS[label] || '#fff' }}></span>
+                                <span className="bullet"></span>
                                 {item}
                             </li>
                         ))}
@@ -109,8 +110,8 @@ const InsightPanel = ({ clusterId, label, insights, onClose }) => {
 
 export default function MarketPsychologyMap({ onMetaLoaded }) {
   const [chartData, setChartData] = useState([]);
-  const [insightData, setInsightData] = useState({}); // Map: cluster_id -> details
-  const [selectedCluster, setSelectedCluster] = useState(null); // { id, label }
+  const [insightData, setInsightData] = useState({});
+  const [selectedCluster, setSelectedCluster] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -126,7 +127,7 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
             
             const mapJson = await mapRes.json();
             
-            // Handle optional feed (it might not exist yet if Airflow hasn't run)
+            // Handle optional feed
             let feedJson = { data: [] };
             if (feedRes.ok) {
                 feedJson = await feedRes.json();
@@ -134,22 +135,19 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
 
             setChartData(mapJson.data || []);
             
-            // 2. Index the Insights for O(1) Lookup
-            // Transform Array [{id: 0, summary: "..."}] -> Object { 0: {summary: "..."} }
+            // 2. Index the Insights
             const insightsMap = feedJson.data.reduce((acc, item) => {
                 acc[item.id] = item;
                 return acc;
             }, {});
             setInsightData(insightsMap);
 
-            // 3. Bubble up Metadata for the Inspector
+            // 3. Bubble up Metadata
             if (onMetaLoaded && mapJson.meta) {
-                // We combine metadata so the Inspector shows BOTH logic steps
                 const combinedMeta = {
                     ...mapJson.meta,
                     inspector: {
                         ...mapJson.meta.inspector,
-                        // Append the RAG logic description to the existing Map description
                         description: `${mapJson.meta.inspector.description} \n\n[RAG ENRICHMENT]: Clusters are analyzed by Llama 3 (via Snowflake Cortex) to generate the summaries visible on click.`
                     }
                 };
@@ -166,7 +164,6 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
     fetchData();
   }, [onMetaLoaded]);
 
-  // Handle click on a scatter point
   const handlePointClick = (data) => {
     if (data && data.cluster_id !== undefined) {
         setSelectedCluster({ id: data.cluster_id, label: data.label });
@@ -177,8 +174,6 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
 
   return (
     <div className="map-container relative-container">
-        
-        {/* THE INTERACTIVE MAP */}
         <ResponsiveContainer width="100%" height="100%">
           <ScatterChart margin={{ top: 12, right: 12, bottom: 12, left: 12 }}>
             <XAxis type="number" dataKey="x" hide domain={['dataMin', 'dataMax']} />
@@ -205,7 +200,6 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
                   key={`cell-${index}`} 
                   fill={COLORS[entry.label] || COLORS['Noise']} 
                   opacity={entry.label === 'Noise' ? 0.3 : 0.8}
-                  // Make non-noise clusters slightly larger to invite clicking
                   r={entry.label === 'Noise' ? 2 : Math.min(18, 5 + (Math.abs(entry.impact || 0) * 800))}
                   className={entry.label !== 'Noise' ? 'cursor-pointer hover-pulse' : ''}
                 />
@@ -214,7 +208,6 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
           </ScatterChart>
         </ResponsiveContainer>
 
-        {/* THE INSIGHT PANEL OVERLAY */}
         {selectedCluster && (
             <InsightPanel 
                 clusterId={selectedCluster.id}
