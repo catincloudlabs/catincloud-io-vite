@@ -1268,15 +1268,13 @@ html, body {
   border-color: rgba(148, 163, 184, 0.3);
 }
 
-/* --- Panel Layout (UPDATED) --- */
+/* --- Panel Layout --- */
 .insight-panel-overlay {
   position: absolute; /* Allows dynamic Top/Left positioning via inline styles */
   z-index: 50;
   display: flex;
   flex-direction: column;
   width: 320px;
-  /* Ensure clicks pass through the invisible wrapper if needed, 
-     but usually we want the wrapper to catch clicks for the children. */
 }
 
 /* Animation: Pop In (Better for floating context) */
