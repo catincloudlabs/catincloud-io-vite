@@ -1181,8 +1181,6 @@ html, body {
 }
 
 /* --- Cluster Themes (No Inline Styles!) --- */
-/* These classes set a variable used by children (label, border, bullets) */
-
 .theme-justified-optimism { --theme-color: #4ade80; }
 .theme-bull-trap          { --theme-color: #f87171; }
 .theme-justified-fear     { --theme-color: #ef4444; }
@@ -1273,21 +1271,13 @@ html, body {
 /* --- Panel Layout --- */
 .insight-panel-overlay {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  bottom: 48px;
-  width: 320px;
   z-index: 50;
   display: flex;
   flex-direction: column;
-  animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  width: 320px;
 }
 
-@keyframes slideInRight {
-  from { opacity: 0; transform: translateX(20px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
+/* Animation: Pop In (Better for floating context) */
 .insight-panel {
   flex: 1;
   background: rgba(15, 23, 42, 0.95);
@@ -1298,6 +1288,12 @@ html, body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.95) translateY(5px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .insight-header {
@@ -1340,6 +1336,7 @@ html, body {
   padding: 16px;
   overflow-y: auto;
   flex: 1;
+  max-height: 400px; /* Prevent it from getting too tall */
 }
 
 .insight-section {
@@ -1389,12 +1386,12 @@ html, body {
   border-top: 1px dashed rgba(255,255,255,0.1);
 }
 
-/* Mobile Adjustments for Panel */
+/* Mobile Adjustments */
 @media (max-width: 768px) {
   .insight-panel-overlay {
-    position: fixed;
-    top: auto;
-    left: 0;
+    position: fixed; /* Revert to fixed sheet on mobile */
+    top: auto !important;
+    left: 0 !important;
     right: 0;
     bottom: 0;
     width: 100%;
@@ -1411,5 +1408,6 @@ html, body {
   .insight-panel {
     border-radius: 12px 12px 0 0;
     border-bottom: none;
+    animation: none; /* Disable the desktop popIn */
   }
 }
