@@ -1,16 +1,13 @@
 import React, { useState, Suspense, lazy } from 'react';
 
 // --- CUSTOM PLOTLY BUNDLE ---
-// Use the custom builder (src/lib/plotly-custom.js) instead of the pre-built 'basic-dist'.
-// This ensures Heatmaps and Radar charts are included without loading the massive full library.
-import Plotly from '/src/lib/plotly-custom.js'; 
+import Plotly from '../lib/plotly-custom'; 
 import createPlotlyComponent from 'react-plotly.js/factory';
 const Plot = createPlotlyComponent(Plotly);
 
 import { FileCode, Activity } from 'lucide-react'; 
 
 // --- LAZY LOAD HEAVY LOGIC ---
-// The 'syntax' chunk (react-syntax-highlighter) will NOT download until this modal is requested.
 const LogicModal = lazy(() => import('./LogicModal'));
 
 const InspectorCard = ({ 
@@ -24,7 +21,6 @@ const InspectorCard = ({
   plotLayout, 
   tableData,
   customChart,
-  // Logic Props
   sqlCode, 
   dbtCode, 
   dbtYml,
@@ -34,7 +30,6 @@ const InspectorCard = ({
   
   const [showLogic, setShowLogic] = useState(false);
   const isCall = (type) => ['C', 'CALL', 'Call'].includes(type);
-  
   const hasLogic = Boolean(sqlCode || dbtCode || dbtYml);
   
   return (
@@ -49,14 +44,12 @@ const InspectorCard = ({
         </div>
         
         <div className="panel-header-actions">
-            {/* Custom Controls */}
             {headerControls && (
                 <div className="header-tabs-wrapper">
                     {headerControls}
                 </div>
             )}
 
-            {/* Inspector Button */}
             {hasLogic && (
             <button 
                 className="nav-link panel-toggle-btn logic-inspector-btn"
@@ -160,7 +153,6 @@ const InspectorCard = ({
       )}
 
       {/* --- LOGIC MODAL (LAZY LOADED) --- */}
-      {/* Wrapped in Suspense so the 'syntax' chunk loads only when showLogic is true */}
       <Suspense fallback={null}>
         {showLogic && (
           <LogicModal 

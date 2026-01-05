@@ -7,7 +7,6 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/data': {
-        // Points to Cloudflare production for local development
         target: 'https://catincloud.io', 
         changeOrigin: true,
         secure: false
@@ -17,34 +16,36 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          // 1. Core React (caches forever)
-          'react-vendor': ['react', 'react-dom'],
+        manualChunks: (id) => {
+          // 1. Caches React Core
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
+            return 'react-vendor';
+          }
           
-          // 2. Plotly (Custom Bundle)
-          // Explicitly groups the core + specific modules into one file.
-          'plotly': [
-            'react-plotly.js',
-            'plotly.js/lib/core',
-            'plotly.js/lib/scatter',
-            'plotly.js/lib/bar',
-            'plotly.js/lib/pie',
-            'plotly.js/lib/heatmap',
-            'plotly.js/lib/scatterpolar'
-          ], 
-          
-          // 3. Recharts (Heavy chart library, kept separate)
-          'recharts': ['recharts'],
-          
-          // 4. Icons (Lightweight - needed immediately for Header/UI)
-          'icons': ['lucide-react', 'clsx'],
+          // 2. Caches ALL Plotly related code (The Fix)
+          // This catches 'plotly.js', 'react-plotly.js', and your 'plotly-custom.js'
+          // keeping them in the same scope so registration works.
+          if (id.includes('plotly')) {
+            return 'plotly';
+          }
 
-          // 5. Syntax Highlighter (Heavy - loaded ONLY when Logic Modal opens)
-          'syntax': ['react-syntax-highlighter']
+          // 3. Caches Recharts
+          if (id.includes('recharts')) {
+            return 'recharts';
+          }
+
+          // 4. Caches Syntax Highlighter (Heavy)
+          if (id.includes('react-syntax-highlighter') || id.includes('refractor')) {
+            return 'syntax';
+          }
+
+          // 5. Caches Icons
+          if (id.includes('lucide-react')) {
+            return 'icons';
+          }
         }
       }
     },
-    // Adjusted warning limit since chunks are now optimized
-    chunkSizeWarningLimit: 1000 
+    chunkSizeWarningLimit: 1500 
   }
 })
