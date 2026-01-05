@@ -1,5 +1,15 @@
 import React, { useState } from 'react';
-import Plot from 'react-plotly.js';
+
+// --- OPTIMIZATION START ---
+// 1. Import the lightweight core (Basic Dist)
+import Plotly from 'plotly.js-basic-dist';
+// 2. Import the factory function
+import createPlotlyComponent from 'react-plotly.js/factory';
+
+// 3. Create the optimized component
+const Plot = createPlotlyComponent(Plotly);
+// --- OPTIMIZATION END ---
+
 import { FileCode, Activity } from 'lucide-react'; 
 import LogicModal from './LogicModal';
 
