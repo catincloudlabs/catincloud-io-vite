@@ -7,7 +7,7 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/data': {
-        // FIXED: Added '.io' (assuming catincloud.io is your domain)
+        // Matches Cloudflare structure (public/data -> domain.io/data)
         target: 'https://catincloud.io', 
         changeOrigin: true,
         secure: false
@@ -21,13 +21,11 @@ export default defineConfig({
           // 1. Core React (caches forever)
           'react-vendor': ['react', 'react-dom'],
           
-          // 2. Plotly (Lightweight Basic Version)
+          // 2. Plotly (Lightweight Basic Version ~1MB)
           'plotly': ['react-plotly.js', 'plotly.js-basic-dist'], 
           
           // 3. Recharts (Heavy chart library, kept separate)
           'recharts': ['recharts'],
-          
-          // --- SPLIT UI UTILITIES HERE ---
           
           // 4. Icons (Lightweight - needed immediately for Header/UI)
           'icons': ['lucide-react', 'clsx'],
@@ -37,6 +35,7 @@ export default defineConfig({
         }
       }
     },
+    // Adjusted warning limit since chunks are now optimized
     chunkSizeWarningLimit: 1000 
   }
 })
