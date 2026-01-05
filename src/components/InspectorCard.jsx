@@ -4,7 +4,7 @@ import React, { useState, Suspense, lazy } from 'react';
 // Use the custom builder (src/lib/plotly-custom.js) instead of the pre-built 'basic-dist'.
 // This ensures Heatmaps and Radar charts are included without loading the massive full library.
 import Plotly from '../lib/plotly-custom'; 
-import createPlotlyComponent from 'react-plotly.js/factory';
+import createPlotlyComponent from 'react-plotly.js';
 const Plot = createPlotlyComponent(Plotly);
 
 import { FileCode, Activity } from 'lucide-react'; 

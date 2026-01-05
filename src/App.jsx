@@ -168,7 +168,7 @@ function App() {
                  className="ai-hero-card"
                  title="Market Psychology Map"
                  tag="AI MODEL"
-                 desc="t-SNE Clustering of Uses OpenAI Embeddings..."
+                 desc="t-SNE Clustering Using OpenAI Embeddings"
                  sqlCode={mapMeta?.inspector?.sql_logic}
                  dbtCode={mapMeta?.inspector?.dbt_logic}
                  dbtYml={mapMeta?.inspector?.dbt_yml}
