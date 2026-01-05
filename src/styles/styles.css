@@ -1408,6 +1408,6 @@ html, body {
   .insight-panel {
     border-radius: 12px 12px 0 0;
     border-bottom: none;
-    animation: none; /* Disable the desktop popIn */
+    animation: none;
   }
 }
