@@ -189,22 +189,17 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
   }, [onMetaLoaded]);
 
   // HANDLER: Grabs Recharts event to find X/Y
-  const handlePointClick = (data, e) => {
-    // NOTE: Recharts passes the SyntheticEvent as the *second* argument in newer versions,
-    // or sometimes wrapped inside the first argument. 
-    // However, the `e` object passed here contains `cx` and `cy` (SVG coordinates)
-    // if we access it via the Scatter onClick prop correctly.
-    
-    // In Recharts <Scatter onClick={(data, index, event) => ...} /> 
-    // 'data' usually contains 'cx' and 'cy' (the pixel coordinates on the chart).
-    
+  const handlePointClick = (nodeProps) => {
+    // nodeProps contains: cx, cy (coordinates), and payload (your actual data)
+    const data = nodeProps.payload;
+
     if (data && data.cluster_id !== undefined) {
-        // Prevent re-pinning if clicking the same one, just update coords
         setPinnedState({
             id: data.cluster_id,
             label: data.label,
-            x: data.cx || 0, // cx is the center X pixel of the node
-            y: data.cy || 0  // cy is the center Y pixel of the node
+            // Read coordinates from the nodeProps, not the payload
+            x: nodeProps.cx, 
+            y: nodeProps.cy
         });
     }
   };
