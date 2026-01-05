@@ -21,8 +21,8 @@ export default defineConfig({
           // 1. Core React (caches forever)
           'react-vendor': ['react', 'react-dom'],
           
-          // 2. Plotly (The biggest file - matched to your package.json)
-          'plotly': ['react-plotly.js', 'plotly.js'], 
+          // 2. Plotly (UPDATED: Now using the lightweight Basic version)
+          'plotly': ['react-plotly.js', 'plotly.js-basic-dist'], 
           
           // 3. Recharts (Another heavy chart library, best kept separate)
           'recharts': ['recharts'],
@@ -32,7 +32,7 @@ export default defineConfig({
         }
       }
     },
-    // Plotly alone is ~3MB, so we raise the warning limit to stop the console spam
-    chunkSizeWarningLimit: 1600 
+    // We can lower this now because the basic Plotly bundle is much smaller (~1MB)
+    chunkSizeWarningLimit: 1000 
   }
 })
