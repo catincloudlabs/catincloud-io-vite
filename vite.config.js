@@ -7,7 +7,7 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/data': {
-        // Matches Cloudflare structure (public/data -> domain.io/data)
+        // Points to Cloudflare production for local development
         target: 'https://catincloud.io', 
         changeOrigin: true,
         secure: false
@@ -21,8 +21,17 @@ export default defineConfig({
           // 1. Core React (caches forever)
           'react-vendor': ['react', 'react-dom'],
           
-          // 2. Plotly (Lightweight Basic Version ~1MB)
-          'plotly': ['react-plotly.js', 'plotly.js-basic-dist'], 
+          // 2. Plotly (Custom Bundle)
+          // Explicitly groups the core + specific modules into one file.
+          'plotly': [
+            'react-plotly.js',
+            'plotly.js/lib/core',
+            'plotly.js/lib/scatter',
+            'plotly.js/lib/bar',
+            'plotly.js/lib/pie',
+            'plotly.js/lib/heatmap',
+            'plotly.js/lib/scatterpolar'
+          ], 
           
           // 3. Recharts (Heavy chart library, kept separate)
           'recharts': ['recharts'],
