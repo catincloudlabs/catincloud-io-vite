@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { ScatterChart, Scatter, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
 import { X, TrendingUp, TrendingDown, Activity, Info } from 'lucide-react';
 
@@ -11,7 +11,6 @@ const CHART_COLORS = {
   'Noise': '#334155'
 };
 
-// Helper: Maps API labels to CSS classes
 const getThemeClass = (label) => {
   if (!label) return 'theme-noise';
   return `theme-${label.toLowerCase().replace(/\s+/g, '-')}`;
@@ -49,17 +48,45 @@ const CustomTooltip = ({ active, payload }) => {
 };
 
 // --- INSIGHT PANEL COMPONENT (Click State) ---
-const InsightPanel = ({ clusterId, label, insights, onClose }) => {
+// Now accepts 'position' prop to float next to the bubble
+const InsightPanel = ({ clusterId, label, insights, onClose, position }) => {
   const data = insights[clusterId];
+  const panelRef = useRef(null);
 
-  // Fallback if we clicked a point but have no RAG data for it yet
+  // CLICK OUTSIDE HANDLER
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // If we clicked outside the panel, close it
+      if (panelRef.current && !panelRef.current.contains(event.target)) {
+        onClose();
+      }
+    };
+
+    // Use mousedown to catch the start of the click
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [onClose]);
+
   if (!data) return null;
 
   const sentimentClass = `sentiment-badge badge-${data.sentiment?.toLowerCase() || 'neutral'}`;
   const themeClass = getThemeClass(label);
 
+  // DYNAMIC STYLE: Position absolute based on click coordinates
+  // On Desktop: use top/left. On Mobile: classes override this to fixed/bottom.
+  const style = position ? {
+    top: position.y,
+    left: position.x + 20, // Offset 20px to the right of the click
+  } : {};
+
   return (
-    <div className="insight-panel-overlay">
+    <div 
+      ref={panelRef}
+      className="insight-panel-overlay" 
+      style={style}
+    >
       <div className={`insight-panel ${themeClass}`}>
         <div className="insight-header">
             <div className="insight-title-group">
@@ -72,7 +99,6 @@ const InsightPanel = ({ clusterId, label, insights, onClose }) => {
         </div>
 
         <div className="insight-body custom-scrollbar">
-            {/* Sentiment Badge (Styles in CSS) */}
             <div className={sentimentClass}>
                 {data.sentiment === 'Bullish' && <TrendingUp size={14} />}
                 {data.sentiment === 'Bearish' && <TrendingDown size={14} />}
@@ -80,13 +106,11 @@ const InsightPanel = ({ clusterId, label, insights, onClose }) => {
                 <span className="ml-2 font-bold uppercase">{data.sentiment} Sentiment</span>
             </div>
 
-            {/* Executive Summary */}
             <div className="insight-section">
                 <h4 className="section-title"><Info size={14} className="mr-2" /> Market Narrative</h4>
                 <p className="insight-text">{data.summary}</p>
             </div>
 
-            {/* Key Takeaways */}
             {data.takeaways && data.takeaways.length > 0 && (
                 <div className="insight-section">
                     <h4 className="section-title">Key Events</h4>
@@ -113,11 +137,10 @@ const InsightPanel = ({ clusterId, label, insights, onClose }) => {
 export default function MarketPsychologyMap({ onMetaLoaded }) {
   const [chartData, setChartData] = useState([]);
   const [insightData, setInsightData] = useState({});
-  const [selectedCluster, setSelectedCluster] = useState(null);
   const [loading, setLoading] = useState(true);
   
-  // UX POLISH: Forces re-render to clear sticky tooltips on mobile
-  const [chartResetKey, setChartResetKey] = useState(0);
+  // STATE: Stores data + coordinates of the pinned cluster
+  const [pinnedState, setPinnedState] = useState(null); // { id, label, x, y }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -165,15 +188,29 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
     fetchData();
   }, [onMetaLoaded]);
 
-  const handlePointClick = (data) => {
+  // HANDLER: Grabs Recharts event to find X/Y
+  const handlePointClick = (data, e) => {
+    // NOTE: Recharts passes the SyntheticEvent as the *second* argument in newer versions,
+    // or sometimes wrapped inside the first argument. 
+    // However, the `e` object passed here contains `cx` and `cy` (SVG coordinates)
+    // if we access it via the Scatter onClick prop correctly.
+    
+    // In Recharts <Scatter onClick={(data, index, event) => ...} /> 
+    // 'data' usually contains 'cx' and 'cy' (the pixel coordinates on the chart).
+    
     if (data && data.cluster_id !== undefined) {
-        setSelectedCluster({ id: data.cluster_id, label: data.label });
+        // Prevent re-pinning if clicking the same one, just update coords
+        setPinnedState({
+            id: data.cluster_id,
+            label: data.label,
+            x: data.cx || 0, // cx is the center X pixel of the node
+            y: data.cy || 0  // cy is the center Y pixel of the node
+        });
     }
   };
 
   const handleClosePanel = () => {
-    setSelectedCluster(null);
-    setChartResetKey(prev => prev + 1);
+    setPinnedState(null);
   };
 
   if (loading) return <div className="loading-state">Loading Neural Map & Insights...</div>;
@@ -181,9 +218,7 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
   return (
     <div className="map-container relative-container">
         <ResponsiveContainer width="100%" height="100%">
-          {/* Key prop forces re-render on close */}
           <ScatterChart 
-            key={chartResetKey} 
             margin={{ top: 12, right: 12, bottom: 12, left: 12 }}
           >
             <XAxis type="number" dataKey="x" hide domain={['dataMin', 'dataMax']} />
@@ -202,11 +237,10 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
                 name="Clusters" 
                 data={chartData} 
                 fill="#8884d8"
-                onClick={(e) => handlePointClick(e.payload)}
+                // Recharts passes (props, index, event) to onClick. 
+                // 'props' contains payload (your data) AND cx/cy (coordinates).
+                onClick={(props) => handlePointClick(props.payload, props)} 
                 cursor="pointer"
-                // OPTIMIZATION: Only animate on the very first load (key=0).
-                // When we force-reset (key>0), disable animation so it swaps instantly without flashing.
-                isAnimationActive={chartResetKey === 0}
             >
               {chartData.map((entry, index) => (
                 <Cell 
@@ -221,12 +255,13 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
           </ScatterChart>
         </ResponsiveContainer>
 
-        {selectedCluster && (
+        {pinnedState && (
             <InsightPanel 
-                clusterId={selectedCluster.id}
-                label={selectedCluster.label}
+                clusterId={pinnedState.id}
+                label={pinnedState.label}
                 insights={insightData}
                 onClose={handleClosePanel}
+                position={{ x: pinnedState.x, y: pinnedState.y }}
             />
         )}
     </div>
