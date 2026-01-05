@@ -1180,12 +1180,16 @@ html, body {
   position: relative;
 }
 
+/* --- Cluster Themes (No Inline Styles!) --- */
 .theme-justified-optimism { --theme-color: #4ade80; }
 .theme-bull-trap          { --theme-color: #f87171; }
 .theme-justified-fear     { --theme-color: #ef4444; }
 .theme-bear-trap          { --theme-color: #60a5fa; }
 .theme-noise              { --theme-color: #334155; }
 
+/* ------------------------------------------- */
+
+/* Hover Pulse Animation for Clusters */
 .hover-pulse {
   transition: r 0.3s ease, fill-opacity 0.3s ease;
 }
@@ -1196,6 +1200,7 @@ html, body {
   stroke-width: 1px;
 }
 
+/* Tooltip Instruction */
 .tooltip-instruction {
   font-size: 10px;
   color: var(--accent);
@@ -1206,6 +1211,13 @@ html, body {
   font-style: italic;
 }
 
+/* Dynamic Text Color from Theme */
+.tooltip-label {
+  color: var(--theme-color, #fff); 
+  font-weight: 500;
+}
+
+/* Dynamic Label Badge from Theme */
 .insight-label {
   font-family: var(--font-mono);
   font-weight: 700;
@@ -1218,6 +1230,7 @@ html, body {
   border-radius: 4px;
 }
 
+/* Dynamic Bullet from Theme */
 .bullet {
   min-width: 6px;
   height: 6px;
@@ -1226,6 +1239,7 @@ html, body {
   background-color: var(--theme-color, #fff);
 }
 
+/* --- Sentiment Badges (Static) --- */
 .sentiment-badge {
   display: inline-flex;
   align-items: center;
@@ -1236,22 +1250,35 @@ html, body {
   border: 1px solid transparent;
 }
 
-.badge-bullish { background-color: rgba(74, 222, 128, 0.15); color: #4ade80; border-color: rgba(74, 222, 128, 0.3); }
-.badge-bearish { background-color: rgba(239, 68, 68, 0.15); color: #ef4444; border-color: rgba(239, 68, 68, 0.3); }
-.badge-neutral { background-color: rgba(148, 163, 184, 0.15); color: #94a3b8; border-color: rgba(148, 163, 184, 0.3); }
+.badge-bullish {
+  background-color: rgba(74, 222, 128, 0.15);
+  color: #4ade80;
+  border-color: rgba(74, 222, 128, 0.3);
+}
+
+.badge-bearish {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.badge-neutral {
+  background-color: rgba(148, 163, 184, 0.15);
+  color: #94a3b8;
+  border-color: rgba(148, 163, 184, 0.3);
+}
 
 /* --- Panel Layout --- */
 .insight-panel-overlay {
-  position: absolute;
-  z-index: 100;
+  position: absolute; /* Allows dynamic Top/Left positioning via inline styles */
+  z-index: 50;
   display: flex;
   flex-direction: column;
   width: 320px;
-  pointer-events: none; /* Let background clicks through */
 }
 
+/* Animation: Pop In (Better for floating context) */
 .insight-panel {
-  pointer-events: auto; /* Re-enable clicks for panel content */
   flex: 1;
   background: rgba(15, 23, 42, 0.95);
   backdrop-filter: blur(12px);
@@ -1260,35 +1287,8 @@ html, body {
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
-  overflow: visible; /* Allow beak to show */
+  overflow: hidden;
   animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* Floating Beak/Pointer Logic */
-.insight-panel::before {
-  content: "";
-  position: absolute;
-  top: 24px;
-  width: 12px;
-  height: 12px;
-  background: var(--bg-panel);
-  z-index: 1;
-}
-
-/* Default Beak (Right Side) */
-.insight-panel-overlay:not(.flipped) .insight-panel::before {
-  left: -6px;
-  transform: rotate(45deg);
-  border-left: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-}
-
-/* Flipped Beak (Left Side) */
-.insight-panel-overlay.flipped .insight-panel::before {
-  right: -6px;
-  transform: rotate(225deg);
-  border-left: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
 }
 
 @keyframes popIn {
@@ -1303,17 +1303,44 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  position: relative;
-  z-index: 2;
+}
+
+.insight-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.insight-id {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.close-btn:hover {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
 }
 
 .insight-body {
   padding: 16px;
   overflow-y: auto;
   flex: 1;
-  max-height: 400px;
-  position: relative;
-  z-index: 2;
+  max-height: 400px; /* Prevent it from getting too tall */
+}
+
+.insight-section {
+  margin-bottom: 20px;
 }
 
 .section-title {
@@ -1328,24 +1355,59 @@ html, body {
   padding-bottom: 4px;
 }
 
-.insight-text { font-size: 0.9rem; line-height: 1.6; color: var(--text-main); }
-.takeaway-item { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; font-size: 0.85rem; color: #cbd5e1; line-height: 1.4; }
+.insight-text {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text-main);
+}
+
+.takeaway-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.takeaway-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  line-height: 1.4;
+}
 
 .insight-footer {
   font-size: 0.7rem;
   color: var(--text-muted);
   text-align: right;
-  padding: 12px 16px;
+  margin-top: auto;
+  padding-top: 12px;
   border-top: 1px dashed rgba(255,255,255,0.1);
 }
 
+/* Mobile Adjustments */
 @media (max-width: 768px) {
   .insight-panel-overlay {
-    position: fixed;
-    top: auto !important; left: 0 !important; right: 0; bottom: 0;
-    width: 100%; height: 60vh;
+    position: fixed; /* Revert to fixed sheet on mobile */
+    top: auto !important;
+    left: 0 !important;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 60vh;
     animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 1000;
   }
-  .insight-panel { border-radius: 12px 12px 0 0; border-bottom: none; animation: none; }
-  .insight-panel::before { display: none; }
+  
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  .insight-panel {
+    border-radius: 12px 12px 0 0;
+    border-bottom: none;
+    animation: none; /* Disable the desktop popIn */
+  }
 }
