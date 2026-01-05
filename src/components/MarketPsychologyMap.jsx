@@ -115,6 +115,9 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
   const [insightData, setInsightData] = useState({});
   const [selectedCluster, setSelectedCluster] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // UX POLISH: Forces re-render to clear sticky tooltips on mobile
+  const [chartResetKey, setChartResetKey] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -168,12 +171,21 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
     }
   };
 
+  const handleClosePanel = () => {
+    setSelectedCluster(null);
+    setChartResetKey(prev => prev + 1);
+  };
+
   if (loading) return <div className="loading-state">Loading Neural Map & Insights...</div>;
 
   return (
     <div className="map-container relative-container">
         <ResponsiveContainer width="100%" height="100%">
-          <ScatterChart margin={{ top: 12, right: 12, bottom: 12, left: 12 }}>
+          {/* Key prop forces re-render on close */}
+          <ScatterChart 
+            key={chartResetKey} 
+            margin={{ top: 12, right: 12, bottom: 12, left: 12 }}
+          >
             <XAxis type="number" dataKey="x" hide domain={['dataMin', 'dataMax']} />
             <YAxis type="number" dataKey="y" hide domain={['dataMin', 'dataMax']} />
             
@@ -192,6 +204,9 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
                 fill="#8884d8"
                 onClick={(e) => handlePointClick(e.payload)}
                 cursor="pointer"
+                // OPTIMIZATION: Only animate on the very first load (key=0).
+                // When we force-reset (key>0), disable animation so it swaps instantly without flashing.
+                isAnimationActive={chartResetKey === 0}
             >
               {chartData.map((entry, index) => (
                 <Cell 
@@ -211,7 +226,7 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
                 clusterId={selectedCluster.id}
                 label={selectedCluster.label}
                 insights={insightData}
-                onClose={() => setSelectedCluster(null)}
+                onClose={handleClosePanel}
             />
         )}
     </div>
