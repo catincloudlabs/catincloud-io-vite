@@ -6,6 +6,7 @@ import createPlotlyComponent from 'react-plotly.js/factory';
 const Plot = createPlotlyComponent(Plotly);
 
 import { FileCode, Activity } from 'lucide-react'; 
+import DataErrorFallback from './DataErrorFallback'; // New Import
 
 // --- LAZY LOAD HEAVY LOGIC ---
 const LogicModal = lazy(() => import('./LogicModal'));
@@ -17,6 +18,8 @@ const InspectorCard = ({
   desc, 
   chartType, 
   isLoading, 
+  error,        // New Prop
+  onRetry,      // New Prop
   plotData, 
   plotLayout, 
   tableData,
@@ -38,7 +41,7 @@ const InspectorCard = ({
       {/* --- HEADER --- */}
       <div className="panel-header">
         
-        {/* 1. LEFT: Identity (Title + Tag) -> Hidden on Mobile */}
+        {/* 1. LEFT: Identity (Hidden on Mobile) */}
         <div className="panel-header-identity">
           {isLoading && <Activity className="spin-slow" size={16} color="#64748b"/>}
           
@@ -53,10 +56,10 @@ const InspectorCard = ({
           )}
         </div>
         
-        {/* 2. RIGHT: Insight & Utility -> Split on Mobile */}
+        {/* 2. RIGHT: Insight & Utility (Split on Mobile) */}
         <div className="panel-header-controls"> 
             
-            {/* A. The Metric (Left on Mobile) */}
+            {/* A. The Metric */}
             {headerControls && (
                 <div className="header-tabs-wrapper">
                     {headerControls}
@@ -68,12 +71,12 @@ const InspectorCard = ({
                 <div className="vertical-divider"></div>
             )}
 
-            {/* B. The Logic Button (Right on Mobile) */}
+            {/* B. The Logic Button */}
             {hasLogic && (
             <button 
                 className="nav-link panel-toggle-btn logic-inspector-btn"
                 onClick={() => setShowLogic(true)}
-                disabled={isLoading}
+                disabled={isLoading || !!error} // Disable if error
                 title="Inspect Data Pipeline Logic"
             >
                 <div className="logic-btn-inner">
@@ -87,14 +90,22 @@ const InspectorCard = ({
       <p className="panel-desc">{desc}</p>
 
       {/* --- CONTENT AREA --- */}
-      <div className="chart-box chart-content-area">
-        {isLoading && (
+      <div className="chart-box chart-content-area relative">
+        
+        {/* 1. LOADING STATE */}
+        {isLoading && !error && (
             <div className="loading-overlay">
                 <div className="scan-line"></div>
             </div>
         )}
 
-        {!isLoading && (
+        {/* 2. ERROR STATE (New) */}
+        {error && (
+            <DataErrorFallback errorType={error} onRetry={onRetry} />
+        )}
+
+        {/* 3. DATA STATE */}
+        {!isLoading && !error && (
             <>
               {chartType !== 'table' && plotData && (
                  <Plot 

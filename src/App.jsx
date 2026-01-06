@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, Suspense, lazy } from 'react';
+import React, { useState, useEffect, useMemo, Suspense, lazy, useCallback } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import { useSystemHeartbeat } from './hooks/useSystemHeartbeat';
@@ -42,17 +42,22 @@ function App() {
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTicker, setSelectedTicker] = useState('AAPL'); 
 
-  // Data State
+  // Data State: Chaos Map
   const [chaosRaw, setChaosRaw] = useState([]); 
   const [chaosMeta, setChaosMeta] = useState(null);
   const [chaosLoading, setChaosLoading] = useState(true);
+  const [chaosError, setChaosError] = useState(null);
 
+  // Data State: Whale Hunter
   const [whaleData, setWhaleData] = useState(null);
   const [whaleLoading, setWhaleLoading] = useState(true);
+  const [whaleError, setWhaleError] = useState(null);
 
+  // Data State: Risk Radar
   const [sentVolRaw, setSentVolRaw] = useState([]);
   const [sentVolMeta, setSentVolMeta] = useState(null);
   const [sentVolLoading, setSentVolLoading] = useState(true);
+  const [sentVolError, setSentVolError] = useState(null);
 
   const [mapMeta, setMapMeta] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -63,25 +68,67 @@ function App() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // --- FETCHING ---
-  useEffect(() => {
-    fetch('/data/chaos.json').then(res => res.json()).then(json => {
-        setChaosRaw(json.data); 
-        setChaosMeta(json.meta);
-        if (json.meta.available_dates?.length > 0) {
-           setSelectedDate(json.meta.available_dates[json.meta.available_dates.length - 1]);
-        }
-        setChaosLoading(false);
-      }).catch(err => { console.error("Chaos Error:", err); setChaosLoading(false); });
+  // --- ROBUST FETCHING LOGIC ---
 
-    fetch('/data/whales.json').then(res => res.json()).then(json => { 
-        setWhaleData(json); setWhaleLoading(false); 
-    }).catch(err => { console.error("Whale Error:", err); setWhaleLoading(false); });
-
-    fetch('/data/sentiment_volatility.json').then(res => res.json()).then(json => {
-        setSentVolRaw(json.data); setSentVolMeta(json.meta); setSentVolLoading(false);
-      }).catch(err => { console.error("Sent/Vol Error:", err); setSentVolLoading(false); });
+  const fetchChaos = useCallback(async () => {
+    setChaosLoading(true);
+    setChaosError(null);
+    try {
+      const res = await fetch('/data/chaos.json');
+      if (!res.ok) throw new Error(res.status === 404 ? 'Data Not Found' : 'Network Error');
+      const json = await res.json();
+      setChaosRaw(json.data);
+      setChaosMeta(json.meta);
+      if (json.meta.available_dates?.length > 0) {
+        setSelectedDate(json.meta.available_dates[json.meta.available_dates.length - 1]);
+      }
+    } catch (err) {
+      console.error("Chaos Fetch Error:", err);
+      setChaosError(err.message || 'Network Error');
+    } finally {
+      setChaosLoading(false);
+    }
   }, []);
+
+  const fetchWhales = useCallback(async () => {
+    setWhaleLoading(true);
+    setWhaleError(null);
+    try {
+      const res = await fetch('/data/whales.json');
+      if (!res.ok) throw new Error('Network Error');
+      const json = await res.json();
+      setWhaleData(json);
+    } catch (err) {
+      console.error("Whale Fetch Error:", err);
+      setWhaleError(err.message || 'Network Error');
+    } finally {
+      setWhaleLoading(false);
+    }
+  }, []);
+
+  const fetchSentVol = useCallback(async () => {
+    setSentVolLoading(true);
+    setSentVolError(null);
+    try {
+      const res = await fetch('/data/sentiment_volatility.json');
+      if (!res.ok) throw new Error('Network Error');
+      const json = await res.json();
+      setSentVolRaw(json.data);
+      setSentVolMeta(json.meta);
+    } catch (err) {
+      console.error("Risk Radar Fetch Error:", err);
+      setSentVolError(err.message || 'Network Error');
+    } finally {
+      setSentVolLoading(false);
+    }
+  }, []);
+
+  // Initial Mount
+  useEffect(() => {
+    fetchChaos();
+    fetchWhales();
+    fetchSentVol();
+  }, [fetchChaos, fetchWhales, fetchSentVol]);
 
   // --- METRICS ---
   const whaleMetric = useMemo(() => {
@@ -220,6 +267,8 @@ function App() {
                  headerControls={renderMetric("Max IV", chaosMetric.value, getRiskColor(chaosMetric.isExtreme))}
                  
                  isLoading={chaosLoading} 
+                 error={chaosError}      // Pass Error State
+                 onRetry={fetchChaos}    // Pass Retry Function
                  chartType="scatter" 
                  plotData={getFilteredChaosPlot()} 
                  plotLayout={scatterLayout}
@@ -237,6 +286,8 @@ function App() {
                   tag="AI MODEL"
                   desc="Sentiment vs Volatility (Market Wide)"
                   isLoading={sentVolLoading} 
+                  error={sentVolError}    // Pass Error State
+                  onRetry={fetchSentVol}  // Pass Retry Function
                   chartType="scatter" 
                   plotData={getSentimentPlotData()}
                   plotLayout={sentimentLayout} 
@@ -253,7 +304,11 @@ function App() {
                  title={whaleData?.meta.title || "Whale Hunter"} 
                  desc={whaleData?.meta.inspector.description}
                  headerControls={renderMetric("Net Flow", whaleMetric.value, getSentimentColor(whaleMetric.isBullish))}
-                 isLoading={whaleLoading} chartType="table" tableData={whaleData?.data}
+                 isLoading={whaleLoading} 
+                 error={whaleError}      // Pass Error State
+                 onRetry={fetchWhales}   // Pass Retry Function
+                 chartType="table" 
+                 tableData={whaleData?.data}
                  sqlCode={whaleData?.meta.inspector.sql_logic} dbtCode={whaleData?.meta.inspector.dbt_logic} dbtYml={whaleData?.meta.inspector.dbt_yml} 
                />
             </div>
