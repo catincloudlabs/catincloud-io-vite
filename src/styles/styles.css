@@ -1543,3 +1543,115 @@ html, body {
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
+
+/* ==================================================================== */
+/* 20. MAP CONTROLS & DOCK TABLES (New Features)                        */
+/* ==================================================================== */
+
+/* --- Container for Top-Left Buttons --- */
+.map-controls-group {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 10;
+  display: flex;
+  gap: 8px; /* Spacing between buttons */
+}
+
+/* --- Control Buttons --- */
+.map-control-btn {
+  /* Removed absolute positioning so they stack in the flex container */
+  position: static; 
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(51, 65, 85, 0.5);
+  color: #94a3b8;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  transition: all 0.2s ease;
+}
+
+.map-control-btn:hover {
+  background: rgba(30, 41, 59, 0.8);
+  color: #fff;
+  border-color: #94a3b8;
+}
+
+.map-control-btn.active {
+  /* Noise Toggle Active (Blue) */
+  background: rgba(56, 189, 248, 0.1);
+  border-color: #38bdf8;
+  color: #38bdf8;
+}
+
+.map-control-btn.active-focus {
+  /* Focus Mode Active (Yellow/Warning) */
+  background: rgba(234, 179, 8, 0.1); 
+  border-color: #eab308;
+  color: #eab308;
+}
+
+.control-text {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* Hide text labels on mobile to save space */
+@media (max-width: 768px) {
+  .desktop-only-text {
+    display: none; 
+  }
+}
+
+/* --- DOCK SOURCE DATA TABLE --- */
+.dock-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+
+.dock-table th {
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  padding: 8px 4px;
+  font-weight: 600;
+  color: var(--text-main);
+  text-transform: uppercase;
+  font-size: 0.65rem;
+}
+
+.dock-table td {
+  padding: 8px 4px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  vertical-align: middle;
+}
+
+/* --- DOCK FOOTER ACTION BUTTON --- */
+.dock-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text-main);
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dock-action-btn:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: var(--text-muted);
+}
