@@ -49,16 +49,19 @@ const ManualModal = ({ isOpen, onClose }) => {
 
         <div className="manual-body">
           {/* Sidebar (Desktop) / Tabs (Mobile) */}
-          <div className="manual-sidebar">
-            {sections.map(s => (
-              <button 
-                key={s.id}
-                className={`manual-nav-btn ${activeSection === s.id ? 'active' : ''}`}
-                onClick={() => scrollToSection(s.id)}
-              >
-                {s.label}
-              </button>
-            ))}
+          {/* UPDATED: Wrapper added for CSS fade mask effect */}
+          <div className="manual-sidebar-wrapper">
+            <div className="manual-sidebar">
+              {sections.map(s => (
+                <button 
+                  key={s.id}
+                  className={`manual-nav-btn ${activeSection === s.id ? 'active' : ''}`}
+                  onClick={() => scrollToSection(s.id)}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Content */}
