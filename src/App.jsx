@@ -3,7 +3,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import { useSystemHeartbeat } from './hooks/useSystemHeartbeat';
 import { getSentimentColor, getRiskColor } from './utils/statusHelpers';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react'; 
 
 // --- LAZY LOAD ---
 const InspectorCard = lazy(() => import('./components/InspectorCard'));
@@ -85,13 +85,9 @@ function App() {
 
   const chaosMetric = useMemo(() => {
     if (!chaosRaw.length || !selectedDate) return { value: "--", sub: "Low Volatility" };
-    // Filter by Date AND Selected Ticker
     const tickerData = chaosRaw.filter(d => d.trade_date === selectedDate && d.ticker === selectedTicker);
-    
     if (!tickerData.length) return { value: "--", sub: "No Data" };
-    
     const maxIVRow = tickerData.reduce((prev, current) => (prev.iv > current.iv) ? prev : current);
-    
     return { 
         value: `${maxIVRow.iv.toFixed(0)}%`, 
         sub: `Strike: $${maxIVRow.strike}`, 
@@ -146,6 +142,10 @@ function App() {
     }));
   };
 
+  // --- LAYOUTS ---
+  const scatterLayout = { xaxis: { title: 'DTE', gridcolor: '#334155' }, yaxis: { title: 'Moneyness', gridcolor: '#334155', range: [0.5, 1.8] }, showlegend: false, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: '#94a3b8' }, margin: isMobile ? { t: 10, b: 40, l: 30, r: 10 } : { t: 10, b: 40, l: 40, r: 50 }, annotations: [{ text: 'IV%', x: 1.04, y: 0.04, xref: 'paper', yref: 'paper', showarrow: false, xanchor: 'center', yanchor: 'top', font: { size: 9, color: '#94a3b8', family: 'JetBrains Mono' } }] };
+  const sentimentLayout = { xaxis: { title: 'Sentiment', gridcolor: '#334155', range: [-1, 1], zeroline: true }, yaxis: { title: 'IV', gridcolor: '#334155' }, showlegend: true, legend: { orientation: "h", yanchor: "bottom", y: -0.8, xanchor: "center", x: 0.5, font: { family: 'JetBrains Mono, monospace', size: 10, color: '#94a3b8' } }, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: '#94a3b8' }, margin: isMobile ? { t: 10, b: 60, l: 30, r: 10 } : { t: 20, b: 130, l: 50, r: 20 }, shapes: [{ type: 'rect', xref: 'x', yref: 'paper', x0: -1, y0: 0.5, x1: 0, y1: 1, fillcolor: '#ef4444', opacity: 0.05, line: { width: 0 }}, { type: 'rect', xref: 'x', yref: 'paper', x0: 0, y0: 0, x1: 1, y1: 0.5, fillcolor: '#22c55e', opacity: 0.05, line: { width: 0 }}] };
+
   // --- UI HELPERS ---
   const renderMetric = (label, value, colorClass) => (
     <div className="flex flex-col items-end leading-tight min-w-[80px]">
@@ -154,19 +154,16 @@ function App() {
     </div>
   );
 
-  // Selector optimized for "Subject" placement (next to Title)
   const renderTickerSelector = () => (
-    <div className="relative group inline-flex items-center ml-3">
-        <div className="relative">
-            <select 
-                value={selectedTicker}
-                onChange={(e) => setSelectedTicker(e.target.value)}
-                className="appearance-none bg-gray-100/10 hover:bg-gray-100/20 rounded px-2 py-0.5 pr-6 font-bold text-sm text-gray-200 cursor-pointer focus:outline-none transition-colors border border-gray-700/50"
-            >
-                {WATCHLIST.map(t => <option key={t} value={t} className="text-black">{t}</option>)}
-            </select>
-            <ChevronDown size={12} className="absolute right-1.5 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-400" />
-        </div>
+    <div className="relative group mr-4 border-r border-gray-700 pr-4">
+        <select 
+            value={selectedTicker}
+            onChange={(e) => setSelectedTicker(e.target.value)}
+            className="appearance-none bg-transparent font-bold text-sm text-gray-200 cursor-pointer pr-6 focus:outline-none hover:text-white transition-colors"
+        >
+            {WATCHLIST.map(t => <option key={t} value={t} className="text-black">{t}</option>)}
+        </select>
+        <ChevronDown size={14} className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-400" />
     </div>
   );
 
@@ -199,21 +196,19 @@ function App() {
                />
             </div>
 
-            {/* 3. STRUCTURE: CHAOS MAP (Selector moved to Title) */}
+            {/* 3. STRUCTURE: CHAOS MAP (Tag Removed) */}
             <div className="span-2 h-standard area-chaos">
                <InspectorCard 
-                 title={
-                    <div className="flex items-center">
-                        <span>Chaos Map</span>
-                        {renderTickerSelector()}
-                    </div>
-                 }
+                 title="Chaos Map" 
                  // tag="Gamma" <--- REMOVED
                  desc={`Structural Risk for ${selectedTicker}`}
-                 
-                 // Header Controls now only has the Metric (Object)
-                 headerControls={renderMetric("Max IV", chaosMetric.value, getRiskColor(chaosMetric.isExtreme))}
-                 
+                 headerControls={
+                     <div className="flex items-center">
+                         {renderTickerSelector()}
+                         <div className="h-4 w-px bg-gray-700 mx-2 opacity-50"></div>
+                         {renderMetric("Max IV", chaosMetric.value, getRiskColor(chaosMetric.isExtreme))}
+                     </div>
+                 }
                  isLoading={chaosLoading} 
                  chartType="scatter" 
                  plotData={getFilteredChaosPlot()} 
@@ -224,11 +219,10 @@ function App() {
                />
             </div>
 
-            {/* 4. RISK: RISK RADAR (Tag Removed) */}
+            {/* 4. RISK: RISK RADAR */}
             <div className="span-2 h-standard area-risk">
                 <InspectorCard 
                   title="Risk Radar" 
-                  // tag="Mag 7" <--- REMOVED
                   desc="Sentiment vs Volatility (Market Wide)"
                   isLoading={sentVolLoading} 
                   chartType="scatter" 
