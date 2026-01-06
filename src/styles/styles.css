@@ -1692,7 +1692,7 @@ html, body {
 }
 
 /* ==================================================================== */
-/* 21. ARCHITECTURE MODAL & MOBILE FLOW (New)                           */
+/* 21. ARCHITECTURE MODAL & MOBILE FLOW (Final Polish)                  */
 /* ==================================================================== */
 
 /* --- Base Layout --- */
@@ -1741,7 +1741,7 @@ html, body {
 /* --- Flow Diagram (Desktop: Horizontal) --- */
 .arch-flow {
   display: flex;
-  align-items: stretch; /* FIX: Forces all nodes to equal height */
+  align-items: stretch; 
   justify-content: center;
   gap: 16px;
   width: 100%;
@@ -1761,7 +1761,14 @@ html, body {
   text-align: center;
   transition: all 0.2s ease;
   position: relative;
-  /* No height set, let flex stretch handle it */
+}
+
+/* FIX: Explicitly handle the wrapper on Desktop */
+.arch-node-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
 }
 
 .arch-node:hover {
@@ -1789,7 +1796,8 @@ html, body {
 
 .arch-meta { 
   margin-bottom: 12px; 
-  flex-grow: 1; /* Pushes description down if needed */
+  flex-grow: 1; 
+  width: 100%; /* Ensure text centering works */
 }
 
 .arch-label {
@@ -1811,19 +1819,19 @@ html, body {
   font-size: 0.75rem;
   color: #94a3b8;
   line-height: 1.5;
-  margin-top: auto; /* Ensure uniform spacing at bottom */
+  margin-top: auto;
 }
 
 .arch-desc strong { color: #e2e8f0; font-weight: 600; }
 
 .arch-arrow {
   display: flex;
-  align-items: center; /* FIX: Vertically centers the arrow */
+  align-items: center;
   justify-content: center;
   color: var(--border);
   font-size: 1.5rem;
-  padding-top: 0;      /* FIX: Removed manual padding */
-  width: 20px;         /* Stable width to prevent squishing */
+  padding-top: 0;
+  width: 20px;
 }
 
 /* --- Mobile Specific Elements (Hidden on Desktop) --- */
@@ -1845,7 +1853,7 @@ html, body {
 
   .arch-container {
     padding: 20px;
-    align-items: stretch; 
+    align-items: stretch;
   }
   
   .arch-intro {
@@ -1857,26 +1865,26 @@ html, body {
   /* 1. Vertical Flow */
   .arch-flow {
     flex-direction: column;
-    align-items: stretch; /* Full width cards */
+    align-items: stretch;
     gap: 0;
   }
 
   /* 2. Accordion Nodes */
   .arch-node {
     width: 100%;
-    align-items: stretch; /* Left align content */
+    align-items: stretch;
     text-align: left;
     padding: 16px;
     margin-bottom: 12px;
     cursor: pointer;
-    min-height: 0; /* Override desktop equal height logic */
+    min-height: 0;
   }
 
   .arch-node:hover { transform: none; }
 
-  /* 3. Header Layout (Row) */
+  /* 3. Header Layout (Row for Mobile) */
   .arch-node-header {
-    display: flex;
+    flex-direction: row; /* SWITCH TO ROW */
     align-items: center;
     gap: 16px;
   }
