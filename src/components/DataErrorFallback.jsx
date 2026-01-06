@@ -1,6 +1,5 @@
 import React from 'react';
 import { AlertTriangle, RefreshCw, WifiOff } from 'lucide-react';
-
 const DataErrorFallback = ({ errorType, onRetry }) => {
   
   // Determine content based on error type
