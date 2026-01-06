@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { ScatterChart, Scatter, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
-import { X, TrendingUp, TrendingDown, Activity, Info, Maximize2 } from 'lucide-react';
+import { X, TrendingUp, TrendingDown, Activity, Info, Maximize2, Eye, EyeOff } from 'lucide-react';
 
 const CHART_COLORS = {
   'Justified Optimism': '#4ade80',
@@ -17,7 +17,6 @@ const CustomTooltip = ({ active, payload }) => {
     const isPositive = data.sentiment > 0;
     const themeColor = CHART_COLORS[data.label] || '#94a3b8';
     
-    // We pass the dynamic color as a CSS variable
     return (
       <div className="custom-tooltip map-tooltip" style={{ '--tooltip-accent': themeColor }}>
         <div className="tooltip-header">
@@ -111,6 +110,9 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
   const [insightData, setInsightData] = useState({});
   const [loading, setLoading] = useState(true);
   
+  // --- NEW STATE: NOISE TOGGLE ---
+  const [showNoise, setShowNoise] = useState(true);
+
   // Store only the ID and Label of the active cluster
   const [activeCluster, setActiveCluster] = useState(null); 
 
@@ -145,21 +147,25 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
     fetchData();
   }, [onMetaLoaded]);
 
-  // --- MEMOIZED SORTING ---
-  // 1. Sort "Noise" to the beginning so they render first (background).
-  // 2. Sort high impact items to end so they render on top.
+  // --- MEMOIZED DATA PROCESSING ---
   const sortedData = useMemo(() => {
-    return [...chartData].sort((a, b) => {
-      // If A is Noise and B is not, A comes first (return -1)
+    let data = [...chartData];
+
+    // 1. Filter out Noise if toggle is off
+    if (!showNoise) {
+        data = data.filter(d => d.label !== 'Noise');
+    }
+
+    // 2. Sort: "Noise" to background, everything else to foreground
+    return data.sort((a, b) => {
       if (a.label === 'Noise' && b.label !== 'Noise') return -1;
       if (a.label !== 'Noise' && b.label === 'Noise') return 1;
       return 0;
     });
-  }, [chartData]);
+  }, [chartData, showNoise]); // Depend on showNoise
 
   const handlePointClick = (nodeProps) => {
     const data = nodeProps.payload;
-    // Don't open insights for 'Noise' points
     if (data && data.cluster_id !== undefined && data.label !== 'Noise') {
         setActiveCluster({
             id: data.cluster_id,
@@ -177,7 +183,17 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
   return (
     <div className="map-wrapper">
         
-        {/* EMPTY STATE HINT */}
+        {/* --- TOGGLE CONTROL (Top Left) --- */}
+        <button 
+            className={`map-control-btn ${!showNoise ? 'active' : ''}`}
+            onClick={() => setShowNoise(!showNoise)}
+            title={showNoise ? "Hide Noise" : "Show Noise"}
+        >
+            {showNoise ? <Eye size={14} /> : <EyeOff size={14} />}
+            <span className="control-text">{showNoise ? "Noise On" : "Noise Off"}</span>
+        </button>
+
+        {/* EMPTY STATE HINT (Top Right) */}
         {!activeCluster && (
            <div className="map-empty-state-hint">
               <span className="hint-text">
@@ -188,7 +204,6 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
 
         <ResponsiveContainer width="100%" height="100%">
           <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-            {/* Hide Axes for clean "Map" look */}
             <XAxis type="number" dataKey="x" hide domain={['dataMin', 'dataMax']} />
             <YAxis type="number" dataKey="y" hide domain={['dataMin', 'dataMax']} />
             
@@ -210,7 +225,6 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
             >
               {sortedData.map((entry, index) => {
                  const isNoise = entry.label === 'Noise';
-                 // Threshold for pulsing: Impact > 0.7
                  const isHighImpact = !isNoise && Math.abs(entry.impact || 0) > 0.7; 
                  
                  return (
@@ -219,7 +233,6 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
                       fill={CHART_COLORS[entry.label] || CHART_COLORS['Noise']} 
                       stroke={isHighImpact ? CHART_COLORS[entry.label] : 'none'}
                       opacity={isNoise ? 0.2 : 0.8}
-                      // Scaled sizing logic
                       r={isNoise ? 2 : Math.min(12, 4 + (Math.abs(entry.impact || 0) * 8))} 
                       className={isHighImpact ? 'node-pulse cursor-pointer' : (isNoise ? 'node-noise' : 'node-standard cursor-pointer')}
                     />
