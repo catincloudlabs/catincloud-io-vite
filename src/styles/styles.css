@@ -1215,7 +1215,8 @@ html, body {
   height: 100%;
   overflow: hidden;
   border-radius: var(--radius);
-  background-color: rgba(15, 23, 42, 0.3); /* Subtle inset bg */
+  background-color: rgba(15, 23, 42, 0.3);
+  touch-action: none;
 }
 
 .map-loading-container {

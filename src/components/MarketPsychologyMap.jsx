@@ -157,7 +157,7 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
   
   // --- MOBILE RESET LOGIC ---
   const [chartResetKey, setChartResetKey] = useState(0);
-  const [shouldAnimate, setShouldAnimate] = useState(true); // Control animation state
+  const [shouldAnimate, setShouldAnimate] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -214,14 +214,12 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
 
   const handlePanelClose = () => {
     setActiveCluster(null);
-    // 1. Disable animation so it doesn't "float" in again
     setShouldAnimate(false);
-    // 2. Force remount to clear the stuck tooltip
     setChartResetKey(prev => prev + 1);
   };
 
   const chartMargins = isMobile 
-    ? { top: 10, right: 10, bottom: 10, left: 10 } 
+    ? { top: 10, right: 10, bottom: 60, left: 10 } 
     : { top: 20, right: 20, bottom: 20, left: 20 };
 
   const handleLegendEnter = (o) => setHoveredLegend(o.value);
@@ -271,7 +269,10 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
             <XAxis type="number" dataKey="x" hide domain={['dataMin', 'dataMax']} />
             <YAxis type="number" dataKey="y" hide domain={['dataMin', 'dataMax']} />
             
-            <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3', stroke: '#334155' }} />
+            {/* Only render Tooltip if NOT on mobile */}
+            {!isMobile && (
+              <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3', stroke: '#334155' }} />
+            )}
             
             <Legend 
                 verticalAlign="bottom" 
