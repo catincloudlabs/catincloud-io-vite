@@ -21,7 +21,7 @@ const TICKER_COLORS = {
 };
 const WATCHLIST = ['AAPL', 'AMZN', 'GOOGL', 'META', 'MSFT', 'NVDA', 'TSLA'];
 
-// --- MISSING LAYOUT DEFINITIONS (FIXED) ---
+// --- LAYOUT DEFINITIONS ---
 const scatterLayout = {
   xaxis: { title: 'Days to Expiry (DTE)', automargin: true },
   yaxis: { title: 'Moneyness', automargin: true },
@@ -155,15 +155,14 @@ function App() {
     }));
   };
 
-  // --- UI HELPERS ---
+  // --- UI HELPERS (Refined) ---
   const renderMetric = (label, value, colorClass) => (
-    <div className="flex flex-col items-end leading-tight min-w-[80px]">
-      <span className="text-[10px] uppercase tracking-wider text-gray-400">{label}</span>
-      <span className={`text-sm font-bold font-mono ${colorClass}`}>{value}</span>
+    <div className="metric-glass">
+      <span className="metric-label">{label}</span>
+      <span className={`metric-value ${colorClass}`}>{value}</span>
     </div>
   );
 
-  // UPDATED: Uses standard CSS classes defined in Step 1
   const renderTickerSelector = () => (
     <div className="ticker-select-container">
         <select 
@@ -173,7 +172,7 @@ function App() {
         >
             {WATCHLIST.map(t => <option key={t} value={t} style={{color: 'black'}}>{t}</option>)}
         </select>
-        <ChevronDown size={12} className="ticker-select-arrow" />
+        <ChevronDown size={14} className="ticker-select-arrow" />
     </div>
   );
 

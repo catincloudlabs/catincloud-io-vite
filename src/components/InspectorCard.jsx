@@ -53,7 +53,7 @@ const InspectorCard = ({
         </div>
         
         {/* 2. RIGHT: Insight & Utility (Metric + Logic) */}
-        <div className="panel-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className="panel-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '0' }}> 
             
             {/* A. The Metric */}
             {headerControls && (
@@ -64,7 +64,7 @@ const InspectorCard = ({
 
             {/* Divider */}
             {headerControls && hasLogic && (
-                <div className="vertical-divider" style={{ margin: '0 8px' }}></div>
+                <div className="vertical-divider"></div>
             )}
 
             {/* B. The Logic Button */}

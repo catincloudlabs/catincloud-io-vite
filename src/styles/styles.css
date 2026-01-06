@@ -404,7 +404,6 @@ html, body {
 
 .header-tabs-wrapper {
   margin-right: 8px;
-  border-right: 1px solid var(--border);
   padding-right: 8px;
 }
 
@@ -1372,15 +1371,10 @@ html, body {
 }
 
 /* ==================================================================== */
-/* 19. HEADER LAYOUT UTILITIES (Fix for Chaos Map)                      */
+/* 19. HEADER LAYOUT UTILITIES (Refined & Polished)                     */
 /* ==================================================================== */
 
-/* Flexbox Helpers */
-.flex { display: flex; }
-.items-center { align-items: center; }
-.justify-between { justify-content: space-between; }
-
-/* Dropdown Container */
+/* --- POLISHED DROPDOWN --- */
 .ticker-select-container {
   position: relative;
   display: inline-flex;
@@ -1388,44 +1382,86 @@ html, body {
   margin-left: 12px;
 }
 
-/* The Dropdown Itself */
 .ticker-select-input {
   appearance: none;
-  -webkit-appearance: none; /* Safari/Chrome */
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #e2e8f0; /* text-gray-200 */
+  -webkit-appearance: none; 
+  background-color: rgba(15, 23, 42, 0.6); /* Darker, more solid */
+  backdrop-filter: blur(8px);
+  color: var(--accent); /* Accent color text */
   font-weight: 700;
-  font-size: 0.75rem; /* text-sm */
-  padding: 2px 24px 2px 8px; /* Room for arrow */
-  border-radius: 4px;
-  border: 1px solid rgba(51, 65, 85, 0.5); /* border-gray-700/50 */
+  font-size: 0.75rem; 
+  padding: 6px 28px 6px 12px; /* Comfortable padding */
+  border-radius: 6px;
+  border: 1px solid rgba(56, 189, 248, 0.2); /* Subtle accent border */
   cursor: pointer;
   outline: none;
   transition: all 0.2s ease;
   font-family: var(--font-mono);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
 .ticker-select-input:hover {
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: rgba(56, 189, 248, 0.1);
+  border-color: var(--accent);
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.15); /* Glow effect */
   color: #fff;
-  border-color: #94a3b8;
 }
 
-/* The Dropdown Arrow */
 .ticker-select-arrow {
   position: absolute;
-  right: 6px;
+  right: 8px;
   top: 50%;
   transform: translateY(-50%);
   pointer-events: none;
-  color: #94a3b8;
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+
+.ticker-select-container:hover .ticker-select-arrow {
+  color: var(--accent);
+}
+
+/* --- POLISHED METRIC CARD (Glass Pill) --- */
+.metric-glass {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  min-width: 100px;
+  transition: all 0.2s ease;
+}
+
+.metric-glass:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.metric-label {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 3px;
+}
+
+.metric-value {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.1;
+  text-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
 
 /* Vertical Divider Utility */
 .vertical-divider {
-  height: 16px;
+  height: 24px; /* Taller to match new metrics */
   width: 1px;
-  background-color: #334155; /* gray-700 */
+  background: linear-gradient(to bottom, transparent, #334155, transparent); /* Faded ends */
   margin: 0 12px;
-  opacity: 0.5;
+  opacity: 1;
 }
