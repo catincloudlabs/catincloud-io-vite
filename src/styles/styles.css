@@ -1385,14 +1385,14 @@ html, body {
 .ticker-select-input {
   appearance: none;
   -webkit-appearance: none; 
-  background-color: rgba(15, 23, 42, 0.6); /* Darker, more solid */
+  background-color: rgba(15, 23, 42, 0.6); 
   backdrop-filter: blur(8px);
-  color: var(--accent); /* Accent color text */
+  color: var(--accent); 
   font-weight: 700;
   font-size: 0.75rem; 
-  padding: 6px 28px 6px 12px; /* Comfortable padding */
+  padding: 6px 28px 6px 12px; 
   border-radius: 6px;
-  border: 1px solid rgba(56, 189, 248, 0.2); /* Subtle accent border */
+  border: 1px solid rgba(56, 189, 248, 0.2); 
   cursor: pointer;
   outline: none;
   transition: all 0.2s ease;
@@ -1403,7 +1403,7 @@ html, body {
 .ticker-select-input:hover {
   background-color: rgba(56, 189, 248, 0.1);
   border-color: var(--accent);
-  box-shadow: 0 0 15px rgba(56, 189, 248, 0.15); /* Glow effect */
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.15); 
   color: #fff;
 }
 
@@ -1421,17 +1421,17 @@ html, body {
   color: var(--accent);
 }
 
-/* --- POLISHED METRIC CARD (Glass Pill) --- */
+/* --- POLISHED METRIC CARD (Glass Pill - Side by Side) --- */
 .metric-glass {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: center;
+  flex-direction: row; /* Changed to Row */
+  align-items: center; /* Vertically Center */
+  gap: 12px; /* Space between Label and Value */
   padding: 6px 14px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 6px;
-  min-width: 100px;
+  min-width: 0; /* Allow shrinking */
   transition: all 0.2s ease;
 }
 
@@ -1446,22 +1446,23 @@ html, body {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--text-muted);
-  margin-bottom: 3px;
+  margin-bottom: 0; /* Removed bottom margin */
+  white-space: nowrap;
 }
 
 .metric-value {
   font-family: var(--font-mono);
   font-size: 0.95rem;
   font-weight: 700;
-  line-height: 1.1;
+  line-height: 1;
   text-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
 
 /* Vertical Divider Utility */
 .vertical-divider {
-  height: 24px; /* Taller to match new metrics */
+  height: 24px; 
   width: 1px;
-  background: linear-gradient(to bottom, transparent, #334155, transparent); /* Faded ends */
+  background: linear-gradient(to bottom, transparent, #334155, transparent); 
   margin: 0 12px;
   opacity: 1;
 }
