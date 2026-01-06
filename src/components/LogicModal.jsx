@@ -11,9 +11,22 @@ SyntaxHighlighter.registerLanguage('sql', sql);
 SyntaxHighlighter.registerLanguage('python', python);
 SyntaxHighlighter.registerLanguage('yaml', yaml);
 
-const LogicModal = ({ isOpen, onClose, title, dagCode, dbtCode, dbtYml }) => {
-  const [activeTab, setActiveTab] = useState('dag'); // 'dag', 'dbt', or 'yml'
+// --- COLOR MAPPING ---
+const THEME_COLORS = {
+  'AI MODEL': '#c084fc', // Purple
+  'Gamma':    '#38bdf8', // Blue (Default)
+  'Flow':     '#4ade80', // Green
+  'Trend':    '#fbbf24', // Amber
+  'Risk':     '#f87171', // Red
+  'default':  '#38bdf8'
+};
+
+const LogicModal = ({ isOpen, onClose, title, tag, dagCode, dbtCode, dbtYml }) => {
+  const [activeTab, setActiveTab] = useState('dag'); 
   const [copied, setCopied] = useState(false);
+
+  // Determine accent color based on tag
+  const accentColor = THEME_COLORS[tag] || THEME_COLORS['default'];
 
   // Reset tab when opening different modal
   useEffect(() => {
@@ -68,16 +81,23 @@ const LogicModal = ({ isOpen, onClose, title, dagCode, dbtCode, dbtYml }) => {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-box logic-modal" onClick={e => e.stopPropagation()}>
+      {/* INJECT DYNAMIC ACCENT COLOR HERE 
+          This allows CSS to use var(--dynamic-accent) to color everything inside
+      */}
+      <div 
+        className="modal-box logic-modal" 
+        onClick={e => e.stopPropagation()}
+        style={{ '--dynamic-accent': accentColor }}
+      >
         
         {/* HEADER */}
         <div className="logic-header">
           <div className="logic-title-group">
             <div className="logic-icon-box">
-                <Terminal size={18} className="text-accent" />
+                <Terminal size={18} className="dynamic-text-color" />
             </div>
             <div className="logic-title-text">
-                <span className="logic-super">Inspect Logic</span>
+                <span className="logic-super dynamic-text-color">Inspect Logic</span>
                 <span className="logic-main">{title}</span>
             </div>
           </div>
@@ -92,7 +112,7 @@ const LogicModal = ({ isOpen, onClose, title, dagCode, dbtCode, dbtYml }) => {
             className={`logic-tab ${activeTab === 'dag' ? 'active' : ''}`}
             onClick={() => setActiveTab('dag')}
           >
-            <Layers size={14} className={activeTab === 'dag' ? 'text-accent' : 'text-muted'} />
+            <Layers size={14} className={activeTab === 'dag' ? 'dynamic-text-color' : 'text-muted'} />
             <span>Orchestration</span>
           </button>
           
@@ -101,7 +121,7 @@ const LogicModal = ({ isOpen, onClose, title, dagCode, dbtCode, dbtYml }) => {
               className={`logic-tab ${activeTab === 'dbt' ? 'active' : ''}`}
               onClick={() => setActiveTab('dbt')}
             >
-              <FileCode size={14} className={activeTab === 'dbt' ? 'text-accent' : 'text-muted'} />
+              <FileCode size={14} className={activeTab === 'dbt' ? 'dynamic-text-color' : 'text-muted'} />
               <span>Transformation</span>
             </button>
           )}
@@ -111,7 +131,7 @@ const LogicModal = ({ isOpen, onClose, title, dagCode, dbtCode, dbtYml }) => {
               className={`logic-tab ${activeTab === 'yml' ? 'active' : ''}`}
               onClick={() => setActiveTab('yml')}
             >
-              <Book size={14} className={activeTab === 'yml' ? 'text-accent' : 'text-muted'} />
+              <Book size={14} className={activeTab === 'yml' ? 'dynamic-text-color' : 'text-muted'} />
               <span>Documentation</span>
             </button>
           )}

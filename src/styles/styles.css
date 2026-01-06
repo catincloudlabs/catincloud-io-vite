@@ -1712,21 +1712,27 @@ html, body {
 }
 
 /* ==================================================================== */
-/* 21. LOGIC INSPECTOR MODAL (Refreshed UI)                             */
+/* 21. LOGIC INSPECTOR MODAL (Refreshed & Dynamic)                      */
 /* ==================================================================== */
 
 .logic-modal {
-  background: #0f172a; /* Darkest Navy */
+  /* Default Fallback if prop is missing */
+  --dynamic-accent: #38bdf8; 
+  
+  background: #0f172a; 
   border: 1px solid #334155;
   border-radius: 12px;
   width: 90%;
   max-width: 1000px;
-  height: 85vh; /* Fixed height for consistent feel */
+  height: 85vh; 
   display: flex;
   flex-direction: column;
   overflow: hidden;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
   animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  
+  /* Subtle glow matching the accent color */
+  box-shadow: 0 0 40px -10px color-mix(in srgb, var(--dynamic-accent), transparent 90%);
 }
 
 @keyframes modalPop {
@@ -1753,12 +1759,20 @@ html, body {
 .logic-icon-box {
   width: 36px;
   height: 36px;
-  background: rgba(56, 189, 248, 0.1);
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(56, 189, 248, 0.2);
+  
+  /* Dynamic Background & Border based on Accent */
+  background: color-mix(in srgb, var(--dynamic-accent), transparent 90%);
+  border: 1px solid color-mix(in srgb, var(--dynamic-accent), transparent 80%);
+  color: var(--dynamic-accent);
+}
+
+/* Utility to colorize icons/text inside the modal */
+.dynamic-text-color {
+  color: var(--dynamic-accent);
 }
 
 .logic-title-text {
@@ -1769,9 +1783,9 @@ html, body {
 .logic-super {
   font-size: 0.65rem;
   text-transform: uppercase;
-  color: #94a3b8;
   letter-spacing: 0.05em;
   font-weight: 600;
+  color: color-mix(in srgb, var(--dynamic-accent), #94a3b8 40%); /* Mix accent with gray */
 }
 
 .logic-main {
@@ -1826,22 +1840,24 @@ html, body {
 }
 
 .logic-tab.active {
-  color: #38bdf8; /* Accent Blue */
-  border-bottom: 2px solid #38bdf8;
-  background: rgba(56, 189, 248, 0.05);
+  color: var(--dynamic-accent);
+  border-bottom: 2px solid var(--dynamic-accent);
+  background: color-mix(in srgb, var(--dynamic-accent), transparent 95%);
 }
 
 /* --- EDITOR AREA --- */
 .logic-editor-container {
   flex: 1;
   position: relative;
-  background: #0d1117; /* GitHub Dark Dimmed equivalent */
+  background: #0d1117; 
   overflow: hidden;
 }
 
 .logic-scroll-area {
   height: 100%;
   overflow-y: auto;
+  /* Prevent scroll chaining on mobile */
+  overscroll-behavior: contain; 
 }
 
 .logic-copy-btn {
@@ -1880,8 +1896,8 @@ html, body {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #22c55e; /* Green */
-  box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+  background: var(--dynamic-accent); /* Match the modal theme */
+  box-shadow: 0 0 8px color-mix(in srgb, var(--dynamic-accent), transparent 40%);
 }
 
 /* --- MOBILE TWEAKS --- */
@@ -1895,7 +1911,7 @@ html, body {
   }
   
   .logic-tabs {
-    overflow-x: auto; /* Scroll tabs on small screens */
+    overflow-x: auto; 
     padding: 0 12px;
   }
   
