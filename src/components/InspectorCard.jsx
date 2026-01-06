@@ -37,19 +37,38 @@ const InspectorCard = ({
       
       {/* --- HEADER --- */}
       <div className="panel-header">
-        <div className="panel-title panel-header-actions">
-          {isLoading ? <Activity className="spin-slow mr-2" size={16} color="#64748b"/> : null}
-          <span className="panel-title-text">{title}</span>
-          {tag && <span className={`tag ml-2 ${tag === 'RISK' ? 'tag-red' : 'tag-blue'}`}>{tag}</span>}
+        
+        {/* 1. LEFT: Identity (Title + Tag) */}
+        <div className="panel-header-identity">
+          {isLoading && <Activity className="spin-slow" size={16} color="#64748b"/>}
+          
+          <div className="panel-title">
+             <div className="panel-title-text">{title}</div>
+          </div>
+          
+          {tag && (
+            <span className={`tag ${tag === 'RISK' ? 'tag-red' : 'tag-blue'}`}>
+              {tag}
+            </span>
+          )}
         </div>
         
-        <div className="panel-header-actions">
+        {/* 2. RIGHT: Insight & Utility (Metric + Logic) */}
+        <div className="panel-header-controls"> 
+            
+            {/* A. The Metric */}
             {headerControls && (
                 <div className="header-tabs-wrapper">
                     {headerControls}
                 </div>
             )}
 
+            {/* Divider */}
+            {headerControls && hasLogic && (
+                <div className="vertical-divider"></div>
+            )}
+
+            {/* B. The Logic Button */}
             {hasLogic && (
             <button 
                 className="nav-link panel-toggle-btn logic-inspector-btn"
@@ -58,8 +77,7 @@ const InspectorCard = ({
                 title="Inspect Data Pipeline Logic"
             >
                 <div className="logic-btn-inner">
-                <FileCode size={14} />
-                <span className="ml-1 desktop-only">Logic</span>
+                    <FileCode size={18} className="hover:text-slate-600 transition-colors" />
                 </div>
             </button>
             )}
@@ -70,7 +88,6 @@ const InspectorCard = ({
 
       {/* --- CONTENT AREA --- */}
       <div className="chart-box chart-content-area">
-        
         {isLoading && (
             <div className="loading-overlay">
                 <div className="scan-line"></div>
@@ -78,33 +95,31 @@ const InspectorCard = ({
         )}
 
         {!isLoading && (
-           <>
-             {/* 1. PLOTLY CHART */}
-             {chartType !== 'table' && plotData && (
-                <Plot 
-                  data={plotData} 
-                  layout={{
-                    ...plotLayout,
-                    autosize: true,
-                    margin: plotLayout.margin || { l: 40, r: 20, t: 20, b: 30 },
-                    paper_bgcolor: 'rgba(0,0,0,0)',
-                    plot_bgcolor: 'rgba(0,0,0,0)',
-                    font: { color: '#cbd5e1', family: 'JetBrains Mono, monospace' },
-                    xaxis: { ...plotLayout.xaxis, gridcolor: '#334155' },
-                    yaxis: { ...plotLayout.yaxis, gridcolor: '#334155' }
-                  }}
-                  useResizeHandler={true} 
-                  className="plotly-fill"
-                  config={{ displayModeBar: false, responsive: true }}
-                />
-             )}
+            <>
+              {chartType !== 'table' && plotData && (
+                 <Plot 
+                   data={plotData} 
+                   layout={{
+                     ...plotLayout,
+                     autosize: true,
+                     margin: plotLayout.margin || { l: 40, r: 20, t: 20, b: 30 },
+                     paper_bgcolor: 'rgba(0,0,0,0)',
+                     plot_bgcolor: 'rgba(0,0,0,0)',
+                     font: { color: '#cbd5e1', family: 'JetBrains Mono, monospace' },
+                     xaxis: { ...plotLayout.xaxis, gridcolor: '#334155' },
+                     yaxis: { ...plotLayout.yaxis, gridcolor: '#334155' }
+                   }}
+                   useResizeHandler={true} 
+                   className="plotly-fill"
+                   config={{ displayModeBar: false, responsive: true }}
+                 />
+              )}
 
-             {/* 2. DATA TABLE */}
-             {chartType === 'table' && tableData && (
-               <div className="table-view-container custom-scrollbar">
-                 <table className="table-standard">
-                   <thead className="table-header sticky-header">
-                     <tr className="table-header-row">
+              {chartType === 'table' && tableData && (
+                <div className="table-view-container custom-scrollbar">
+                  <table className="table-standard">
+                    <thead className="table-header sticky-header">
+                      <tr className="table-header-row">
                         <th className="table-cell-padding">TICKER</th>
                         <th className="table-cell-padding">STRIKE</th>
                         <th className="table-cell-padding">EXPIRY</th>
@@ -112,47 +127,44 @@ const InspectorCard = ({
                         <th className="table-cell-padding text-right">PREMIUM</th>
                         <th className="table-cell-padding text-right">SENTIMENT</th>
                       </tr>
-                   </thead>
-                   <tbody>
-                     {tableData.map((row, i) => (
-                       <tr key={i} className={row.sentiment === 'Bullish' ? 'row-bullish' : 'row-bearish'}>
-                         <td className="table-cell-padding font-bold text-accent">{row.ticker}</td>
-                         <td className="table-cell-padding">{row.strike}</td>
-                         <td className="table-cell-padding text-muted text-sm">{row.expiry}</td>
-                         <td className={`table-cell-padding font-bold ${isCall(row.type) ? 'text-green' : 'text-red'}`}>
-                            {row.type}
-                         </td>
-                         <td className="table-cell-padding text-right font-mono text-white">
-                           ${(row.premium / 1000000).toFixed(1)}M
-                         </td>
-                         <td className={`table-cell-padding text-right font-bold ${row.sentiment === 'Bullish' ? 'text-green' : 'text-red'}`}>
-                           {row.sentiment}
-                         </td>
-                       </tr>
-                     ))}
-                   </tbody>
-                 </table>
-               </div>
-             )}
-
-             {/* 3. CUSTOM CHART (RECHARTS) */}
-             {customChart && (
-                <div className="custom-chart-wrapper">
-                    {customChart}
+                    </thead>
+                    <tbody>
+                      {tableData.map((row, i) => (
+                        <tr key={i} className={row.sentiment === 'Bullish' ? 'row-bullish' : 'row-bearish'}>
+                          <td className="table-cell-padding font-bold text-accent">{row.ticker}</td>
+                          <td className="table-cell-padding">{row.strike}</td>
+                          <td className="table-cell-padding text-muted text-sm">{row.expiry}</td>
+                          <td className={`table-cell-padding font-bold ${isCall(row.type) ? 'text-green' : 'text-red'}`}>
+                             {row.type}
+                          </td>
+                          <td className="table-cell-padding text-right font-mono text-white">
+                            ${(row.premium / 1000000).toFixed(1)}M
+                          </td>
+                          <td className={`table-cell-padding text-right font-bold ${row.sentiment === 'Bullish' ? 'text-green' : 'text-red'}`}>
+                            {row.sentiment}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-             )}
-           </>
+              )}
+
+              {customChart && (
+                 <div className="custom-chart-wrapper">
+                     {customChart}
+                 </div>
+              )}
+            </>
         )}
       </div>
 
-      {/* --- FOOTER --- */}
       {children && (
         <div className="chart-footer-area border-top-subtle">
           {children}
         </div>
       )}
 
-      {/* --- LOGIC MODAL (LAZY LOADED) --- */}
       <Suspense fallback={null}>
         {showLogic && (
           <LogicModal 

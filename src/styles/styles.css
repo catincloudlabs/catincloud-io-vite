@@ -37,7 +37,6 @@
 /* 2. GLOBAL RESET & BASE                                               */
 /* ==================================================================== */
 
-/* Ensure padding doesn't expand width */
 *, *::before, *::after {
   box-sizing: border-box;
 }
@@ -107,6 +106,8 @@ html, body {
   min-height: 320px;
 }
 
+/* --- REFACTORED HEADER STYLES --- */
+
 .panel-header {
   display: flex;
   justify-content: space-between;
@@ -114,34 +115,38 @@ html, body {
   margin-bottom: 16px;
   border-bottom: 1px solid rgba(255,255,255,0.05);
   padding-bottom: 12px;
-  gap: 16px; /* Ensure strictly enforced spacing between title and actions */
+  gap: 16px;
+}
+
+/* Left side of header (Title + Tag) */
+.panel-header-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0; /* Flexbox text truncation fix */
+}
+
+/* Right side of header (Metrics + Logic Button) */
+.panel-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 0; /* Tight spacing for controls */
+  flex-shrink: 0;
 }
 
 .panel-title {
+  /* Removed flex properties here as they are now handled by parent wrapper */
   font-size: 0.85rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  
-  /* Flexbox fix: Allows child text to truncate properly if space runs out */
-  min-width: 0; 
 }
 
 .panel-title-text {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  /* Removed max-width: 180px; so it can fill the available desktop space */
-}
-
-.panel-header-actions {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0; /* Prevents buttons from being squashed by long titles */
 }
 
 .panel-desc {
@@ -159,6 +164,7 @@ html, body {
   color: var(--accent);
   font-weight: 500;
   white-space: nowrap;
+  margin-left: 0; /* Reset margin */
 }
 
 .tag-red { color: var(--red); border: 1px solid rgba(239, 68, 68, 0.2); }
@@ -186,23 +192,8 @@ html, body {
 /* 5. GRID SPANS & LAYOUT UTILITIES                                     */
 /* ==================================================================== */
 
-/* min-width: 0 prevents charts from forcing the grid to overflow horizontally.  */
-.span-1 { 
-  grid-column: span 1; 
-  display: flex;
-  flex-direction: column;
-  min-width: 0; 
-}
-
 .span-2 { 
   grid-column: span 2; 
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.span-3 {
-  grid-column: span 3;
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -226,7 +217,7 @@ html, body {
 }
 
 /* ==================================================================== */
-/* 6. TYPOGRAPHY & METRICS                                              */
+/* 6. TYPOGRAPHY                                                        */
 /* ==================================================================== */
 
 .brand-title {
@@ -236,36 +227,9 @@ html, body {
   letter-spacing: -0.03em;
 }
 
-.brand-sub {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  font-family: var(--font-mono);
-}
-
 .text-accent { color: var(--accent); }
 .nav-link { color: var(--text-muted); text-decoration: none; font-size: 0.85rem; }
 .nav-link:hover { color: var(--text-main); }
-
-.metric-big {
-  font-family: var(--font-mono);
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--text-main);
-  letter-spacing: -0.05em;
-}
-
-.metric-sub {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  margin-top: 4px;
-}
-
-.metric-row {
-  display: flex;
-  gap: 16px;
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-}
 
 /* ==================================================================== */
 /* 7. CONTROLS & CHARTS                                                 */
@@ -275,12 +239,6 @@ html, body {
   flex: 1;
   width: 100%;
   min-height: 0;
-}
-
-.loading-state {
-  text-align: center;
-  color: var(--text-muted);
-  padding: 20px;
 }
 
 .loading-overlay {
@@ -352,51 +310,53 @@ html, body {
   flex-direction: column;
 }
 
+/* --- LOGIC BUTTON STYLES (Refactored) --- */
+
 .panel-toggle-btn {
-  background: none;
+  /* Previously inline styles moved here */
+  padding: 6px;
   border: none;
+  background: transparent;
   cursor: pointer;
   font-size: 0.75rem;
   color: var(--text-muted); 
   transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .panel-toggle-btn:hover {
   color: var(--text-main);
 }
 
-/* --- LOGIC BUTTON STYLES --- */
-
-/* 1. Default (Blue - Matches Alpha/Gamma tags) */
+/* Specific Logic Button colors */
 .logic-inspector-btn {
-  /* Soft Sky Blue - slightly muted to keep it subtle like grey */
   color: #93c5fd !important; 
   transition: all 0.2s ease;
 }
 
 .logic-inspector-btn:hover {
-  /* Full Accent Blue + Glow */
   color: #38bdf8 !important;
   text-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
 }
 
-/* 2. AI Hero Variant (Purple - Matches AI Map Glow) */
-/* This targets .logic-inspector-btn ONLY when it is inside .ai-hero-card */
 .ai-hero-card .logic-inspector-btn {
-  color: #b19cd9 !important; /* Soft Purple */
+  color: #b19cd9 !important; 
 }
 
 .ai-hero-card .logic-inspector-btn:hover {
-  color: #d1c4e9 !important; /* Bright Purple */
+  color: #d1c4e9 !important; 
   text-shadow: 0 0 8px rgba(177, 156, 217, 0.4);
 }
 
-/* Ensure the icon inside inherits the transitions */
-.logic-inspector-btn .logic-btn-inner {
-    transition: inherit;
+.logic-btn-inner {
+  display: flex;
+  align-items: center;
+  gap: 4px; /* Icon spacing */
+  font-size: 0.75rem;
+  transition: inherit;
 }
-
-/* --- END LOGIC BUTTON STYLES --- */
 
 .chart-content-area {
   flex: 1;
@@ -415,7 +375,7 @@ html, body {
   border-top: 1px solid rgba(255,255,255,0.05);
 }
 
-/* TABLE STYLES */
+/* --- RESTORED TABLE STYLES (Whale Hunter) --- */
 .table-view-container {
   overflow: auto;
   height: 100%;
@@ -424,7 +384,7 @@ html, body {
 
 .table-standard {
   width: 100%;
-  border-collapse: separate; /* Required for custom spacing */
+  border-collapse: separate; 
   border-spacing: 0 2px;
   font-size: 0.8rem;
   font-family: var(--font-mono);
@@ -457,246 +417,16 @@ html, body {
 }
 
 /* ==================================================================== */
-/* 10. GLOBAL CONTROL BAR (STICKY HEADER)                               */
-/* ==================================================================== */
-
-.global-control-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: rgba(15, 23, 42, 0.95);
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid #1e293b;
-  padding: 12px 24px;
-  gap: 40px;
-  position: sticky;
-  top: 0px;
-  z-index: 900; 
-  margin-bottom: 0;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-}
-
-.control-label {
-  display: flex;
-  align-items: center;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin-bottom: 8px;
-  font-weight: 600;
-  letter-spacing: 1px;
-}
-
-/* Ticker Pills */
-.ticker-selector-group {
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-}
-
-.ticker-pills-row {
-  display: flex;
-  gap: 8px;
-  flex-wrap: nowrap;
-}
-
-/* --- UPDATED: Tactile Buttons --- */
-.ticker-pill {
-  background: rgba(30, 41, 59, 0.5);
-  border: 1px solid #334155;
-  color: #94a3b8;
-  padding: 6px 16px;
-  border-radius: 4px; 
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  user-select: none;
-}
-
-.ticker-pill:hover {
-  background: #334155;
-  color: #fff;
-  transform: translateY(-1px);
-}
-
-.ticker-pill.active {
-  /* Darker background to simulate a pressed button */
-  background: rgba(15, 23, 42, 0.8);
-  /* Glowing border */
-  border: 1px solid #38bdf8;
-  /* Text Glow */
-  text-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
-  color: #38bdf8;
-  /* Inset shadow to make it look "pressed in" */
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
-  font-weight: bold;
-  transform: translateY(1px); /* Physical press movement */
-}
-
-/* Time Slider Group */
-.time-travel-group {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  max-width: 600px; 
-  margin-left: auto;
-}
-
-.slider-wrapper {
-  display: flex;
-  align-items: center;
-  position: relative;
-  height: 32px; 
-}
-
-/* The Track */
-.time-slider-input {
-  flex-grow: 1;
-  appearance: none;
-  -webkit-appearance: none;
-  height: 6px; 
-  border-radius: 4px;
-  outline: none;
-  cursor: pointer;
-  transition: height 0.2s ease;
-  background: linear-gradient(to right, #38bdf8 var(--progress), #334155 var(--progress));
-}
-
-.time-slider-input:hover {
-  height: 8px;
-}
-
-/* The Handle (Thumb) */
-.time-slider-input::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 20px;
-  height: 20px;
-  background: #0f172a; 
-  border: 2px solid #38bdf8;
-  border-radius: 50%;
-  cursor: grab;
-  box-shadow: 0 0 0 0 rgba(56, 189, 248, 0);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  margin-top: -1px; 
-}
-
-.time-slider-input:hover::-webkit-slider-thumb {
-  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.2);
-  transform: scale(1.1);
-  background: #38bdf8;
-}
-
-.time-slider-input:active::-webkit-slider-thumb {
-  cursor: grabbing;
-  transform: scale(1.2);
-  box-shadow: 0 0 0 6px rgba(56, 189, 248, 0.3);
-}
-
-/* Date Badge */
-.current-date-badge {
-  background: rgba(56, 189, 248, 0.1);
-  border: 1px solid rgba(56, 189, 248, 0.2);
-  color: #38bdf8;
-  padding: 4px 12px;
-  border-radius: 4px;
-  font-family: var(--font-mono);
-  font-weight: bold;
-  font-size: 0.8rem;
-  min-width: 120px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  user-select: none; 
-}
-
-/* ==================================================================== */
-/* 11. SYSTEM STATUS RIBBON                                             */
-/* ==================================================================== */
-
-.status-ribbon-container {
-  width: 100%;
-  height: 32px;
-  background-color: #0f172a;
-  border-bottom: 1px solid #1e293b;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 20px;
-  font-size: 11px;
-  font-family: var(--font-mono);
-  color: var(--text-muted);
-  box-sizing: border-box;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-}
-
-.status-ribbon-container.status-healthy { --status-color: #10B981; }
-.status-ribbon-container.status-warning { --status-color: #F59E0B; }
-
-/* ==================================================================== */
-/* 12. TABBED HEADER UTILITIES (New)                                    */
+/* 10. HEADER UTILITIES (New)                                           */
 /* ==================================================================== */
 
 .header-tabs-wrapper {
   margin-right: 8px;
-  border-right: 1px solid var(--border);
   padding-right: 8px;
 }
 
-.header-tabs {
-  display: flex;
-  gap: 4px;
-  background: rgba(0,0,0,0.2);
-  padding: 2px;
-  border-radius: 6px;
-  border: 1px solid rgba(255,255,255,0.05);
-}
-
-.header-tab-btn {
-  background: transparent;
-  border: none;
-  /* CHANGED: Use accent color instead of text-muted for default state */
-  color: var(--accent); 
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-transform: uppercase;
-  /* Optional: Add a subtle border or background to make them pop more like buttons */
-  border: 1px solid rgba(56, 189, 248, 0.2); 
-  background: rgba(56, 189, 248, 0.05);
-}
-
-.header-tab-btn:hover {
-  /* Brighter on hover */
-  color: #fff;
-  background: rgba(56, 189, 248, 0.2);
-  border-color: var(--accent);
-}
-
-.header-tab-btn.active {
-  background: var(--accent); /* Full fill for active state if needed */
-  color: #0f172a; /* Dark text on bright background */
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
-  border: 1px solid var(--accent);
-}
-
-/* Compact Ticker Controls (Sidebar) */
-.ticker-controls-compact {
-  padding: 8px;
-  gap: 4px;
-  display: flex;
-  justify-content: center;
-}
-
 /* ==================================================================== */
-/* 13. UTILITIES                                                        */
+/* 11. UTILITIES                                                        */
 /* ==================================================================== */
 
 .mr-2 { margin-right: 8px; }
@@ -731,30 +461,6 @@ html, body {
   height: 100%;
 }
 
-/* --- Control Bar Spacing Utility --- */
-.control-bar-spacing {
-  /* Counteract the grid gap (16px) to create a tight 4px visual gap */
-  margin-top: -8px; 
-  margin-bottom: -8px; 
-  position: relative;
-  z-index: 20;
-}
-
-/* Mobile Reset: Handled in Block 18 */
-@media (max-width: 768px) {
-  .control-bar-spacing {
-    margin-top: 16px;
-    margin-bottom: 0;
-  }
-}
-
-/* ==================================================================== */
-/* 13. UTILITIES                                                        */
-/* ==================================================================== */
-
-/* ... existing utilities ... */
-
-/* --- Custom Scrollbar Utility --- */
 .custom-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
@@ -772,7 +478,7 @@ html, body {
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background-color: var(--border);
   border-radius: 99px;
-  border: 2px solid transparent; /* Creates padding effect */
+  border: 2px solid transparent; 
   background-clip: content-box;
 }
 
@@ -781,7 +487,7 @@ html, body {
 }
 
 /* ==================================================================== */
-/* 14. COMPACT HEADER (Single Line)                                     */
+/* 12. COMPACT HEADER (Single Line)                                     */
 /* ==================================================================== */
 
 .app-header {
@@ -791,7 +497,7 @@ html, body {
   padding: 12px 0;
   margin-bottom: 20px;
   border-bottom: 1px solid rgba(255,255,255,0.05);
-  flex-wrap: nowrap; /* FORCE SINGLE LINE */
+  flex-wrap: nowrap; 
   gap: 16px;
 }
 
@@ -800,8 +506,8 @@ html, body {
   display: flex;
   align-items: center;
   gap: 12px;
-  white-space: nowrap; /* Prevent Logo/Status Wrapping */
-  flex-shrink: 0;      /* Never shrink the logo */
+  white-space: nowrap; 
+  flex-shrink: 0;      
 }
 
 .brand-title {
@@ -846,9 +552,9 @@ html, body {
   border-radius: 99px;
   border: 1px solid var(--border);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  white-space: nowrap; /* Prevent Nav Items Wrapping */
-  flex-shrink: 1;      /* Allow nav to shrink slightly if needed */
-  overflow-x: auto;    /* Scroll if screen is extremely small */
+  white-space: nowrap; 
+  flex-shrink: 1;      
+  overflow-x: auto;    
 }
 
 .nav-separator {
@@ -876,93 +582,26 @@ html, body {
 /* --- Mobile / Small Laptop Handling --- */
 @media (max-width: 768px) {
   .desktop-only {
-    display: none; /* Hide text labels on small screens to save space */
+    display: none; 
   }
   
   .header-nav-pill {
-    gap: 12px; /* Tighter gap on mobile */
+    gap: 12px; 
     padding: 6px 12px;
   }
 }
 
 /* ==================================================================== */
-/* 15. METRIC STRIP (Horizontal Scroll Layout)                          */
-/* ==================================================================== */
-
-/* Desktop: Standard 4-column grid */
-.metric-strip {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--spacing);
-  width: 100%;
-}
-
-/* --- UPDATED: Active Monitor Effect for Metrics --- */
-.metric-strip .panel {
-  background: linear-gradient(
-    145deg, 
-    rgba(30, 41, 59, 1) 0%, 
-    rgba(15, 23, 42, 1) 100%
-  );
-  border: 1px solid rgba(255,255,255,0.08);
-}
-
-.metric-strip .panel::after {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.4), transparent);
-  opacity: 0.6;
-}
-
-.metric-strip .panel:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.3);
-  border-color: rgba(56, 189, 248, 0.3);
-  transition: all 0.3s ease;
-}
-
-
-/* Mobile: Horizontal Scroll Snap */
-@media (max-width: 768px) {
-  .metric-strip {
-    display: flex;
-    flex-direction: row;    /* <--- FORCE ROW TO OVERRIDE SPAN-4 */
-    overflow-x: auto;       /* Enable horizontal scrolling */
-    scroll-snap-type: x mandatory; /* Snap to cards */
-    gap: 12px;
-    padding-bottom: 4px;    /* Tiny space for scrollbar */
-    
-    /* Hide Scrollbar for cleaner UI */
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
-  }
-  
-  .metric-strip::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Opera */
-  }
-
-  /* Force cards to stay fixed width and not shrink */
-  .metric-strip > * {
-    min-width: 260px; /* Wide enough to read, small enough to peek next card */
-    flex-shrink: 0;
-    scroll-snap-align: start;
-    width: 260px; /* Explicit width helps some browsers */
-  }
-}
-
-/* ==================================================================== */
-/* 16. CUSTOM CHART CONTAINER (For Recharts/Maps)                       */
+/* 13. CUSTOM CHART CONTAINER (For Recharts/Maps)                       */
 /* ==================================================================== */
 
 .custom-chart-wrapper {
   width: 100%;
   height: 100%;
   position: relative;
-  min-height: 300px; /* Ensure visibility on small screens */
+  min-height: 300px; 
 }
 
-/* Flex container for the map to ensure it fills the card body */
 .map-container {
   height: 100%;
   width: 100%;
@@ -970,7 +609,7 @@ html, body {
 }
 
 /* ==================================================================== */
-/* 17. CUSTOM TOOLTIP (Recharts)                                        */
+/* 14. CUSTOM TOOLTIP (Recharts)                                        */
 /* ==================================================================== */
 
 .custom-tooltip {
@@ -1007,7 +646,7 @@ html, body {
 }
 
 .tooltip-title {
-  color: #cbd5e1; /* Ideally move to var(--text-secondary) */
+  color: #cbd5e1; 
   font-style: italic;
   font-size: 12px;
   margin-bottom: 8px;
@@ -1023,16 +662,14 @@ html, body {
 }
 
 .tooltip-label {
-  /* Color is dynamic via JS, but base style is here */
   font-weight: 500;
 }
 
-/* Utility for text colors used in tooltips */
 .text-green { color: var(--green); }
 .text-red { color: var(--red); }
 
 /* ==================================================================== */
-/* 18. MOBILE OVERRIDES (Place at the END of your CSS file)             */
+/* 15. MOBILE OVERRIDES (Place at the END of your CSS file)             */
 /* ==================================================================== */
 
 @media (max-width: 1024px) {
@@ -1045,7 +682,7 @@ html, body {
   }
   
   /* Force all spans to fill the 2-column row on tablet */
-  .span-1, .span-2, .span-3, .span-4 {
+  .span-2, .span-4 {
     grid-column: span 2; 
     height: auto;
     margin-bottom: 12px;
@@ -1054,7 +691,6 @@ html, body {
   .h-tall { height: 450px; }
   .h-standard { height: 400px; }
   
-  .metric-big { font-size: 1.5rem; }
   .desktop-only { display: none; }
 }
 
@@ -1070,21 +706,10 @@ html, body {
   }
 
   /* Define the specific mobile order */
-  .area-metrics  { order: 1; }
-  .area-cluster  { order: 2; }
-  .area-chaos    { order: 3; }
-  .area-controls { order: 4; } 
-  .area-risk     { order: 5; }
-  .area-whale    { order: 6; }
-
-  /* Aggressive negative margins to pull charts closer */
-  .control-bar-spacing {
-    margin-top: -16px !important;    /* Pulls Chaos Map closer */
-    margin-bottom: -4px !important; /* Pulls Risk Radar closer */
-    z-index: 20; 
-    position: relative;
-    pointer-events: auto;
-  }
+  .area-cluster  { order: 1; }
+  .area-chaos    { order: 2; }
+  .area-risk     { order: 3; }
+  .area-whale    { order: 4; }
 
   /* 2. HEADER CLEANUP */
   .sticky-header-group {
@@ -1112,62 +737,8 @@ html, body {
   .status-text { display: none; } 
   .status-badge-compact { padding: 4px; border-radius: 50%; }
 
-  /* 4. Controls: Stacked & Compacted */
-  .global-control-bar {
-    flex-direction: column;
-    gap: 8px;
-    padding: 8px 12px;
-    align-items: stretch;
-    min-height: auto;
-  }
-
-  .global-control-bar .control-label {
-    display: none;
-  }
-
-  /* Compact Ticker Pills */
-  .ticker-pill {
-    padding: 4px 10px;
-    font-size: 0.7rem;
-    line-height: 1.2; 
-    height: 26px; 
-    display: flex;
-    align-items: center;
-  }
-
-  .ticker-selector-group {
-    width: 100%;
-    overflow-x: auto; 
-    overflow-y: hidden; 
-    
-    /* Add padding to catch the active button's highlighted border */
-    padding-bottom: 4px; 
-    margin-bottom: 0;
-    
-    white-space: nowrap; 
-    display: flex;
-    align-items: center;
-    
-    scrollbar-width: none; 
-    -ms-overflow-style: none;
-  }
-  
-  .ticker-selector-group::-webkit-scrollbar {
-    display: none;
-  }
-
-  .time-travel-group {
-    width: 100%;
-    margin: 0;
-  }
-  
-  .slider-wrapper {
-    height: 24px; 
-    min-height: 24px;
-  }
-
-  /* 5. CHART & CARD ADJUSTMENTS */
-  .span-1, .span-2, .span-3, .span-4 { 
+  /* 4. CHART & CARD ADJUSTMENTS */
+  .span-2, .span-4 { 
     width: 100%; 
   }
   
@@ -1181,27 +752,6 @@ html, body {
   .panel-title .tag { margin-left: auto !important; white-space: nowrap; }
   .ai-hero-card .panel-desc { display: none !important; }
 
-  /* 6. COMPACT METRIC CAROUSEL */
-  .metric-strip {
-    display: flex !important; 
-    flex-direction: row;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    gap: 12px;
-    padding-bottom: 4px; 
-    margin-right: -12px; 
-    padding-right: 12px; 
-  }
-
-  .metric-strip::-webkit-scrollbar { display: none; }
-  .metric-strip .panel { min-width: 150px; width: 150px; flex-shrink: 0; scroll-snap-align: start; padding: 10px; min-height: 0; }
-  .metric-strip .panel::after { display: none !important; }
-  .metric-strip .panel-header { border-bottom: none !important; margin-bottom: 4px !important; padding-bottom: 0 !important; min-height: 0 !important; }
-  .metric-strip .panel-title { font-size: 0.65rem; }
-  .metric-strip .metric-big { font-size: 1.2rem; line-height: 1.1; }
-  .metric-strip .metric-sub { font-size: 0.6rem; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .metric-strip svg { width: 14px; height: 14px; }
-
   /* 7. HERO CHART: Full Width (FIXED) */
   .ai-hero-card .chart-content-area {
     margin-left: -20px;
@@ -1211,7 +761,7 @@ html, body {
 }
 
 /* ==================================================================== */
-/* 19. INSIGHTS PANEL, MAP & RAG OVERLAY (Refactored)                   */
+/* 16. INSIGHTS PANEL, MAP & RAG OVERLAY (Refactored)                   */
 /* ==================================================================== */
 
 /* --- Container Wrappers --- */
@@ -1250,7 +800,6 @@ html, body {
 
 /* --- Node Animations (Recharts Cells) --- */
 
-/* 1. Pulse for High Impact */
 @keyframes softPulse {
   0% { r: 6px; opacity: 0.8; }
   50% { r: 9px; opacity: 1; stroke-width: 2px; }
@@ -1259,7 +808,7 @@ html, body {
 
 .node-pulse {
   animation: softPulse 3s infinite ease-in-out;
-  stroke: #fff; /* Fallback */
+  stroke: #fff; 
 }
 
 .node-standard:hover {
@@ -1270,7 +819,7 @@ html, body {
 }
 
 .node-noise {
-  pointer-events: none; /* Ignore clicks on noise */
+  pointer-events: none; 
 }
 
 /* --- Empty State Hint --- */
@@ -1300,17 +849,12 @@ html, body {
 .insight-panel-dock {
   position: absolute;
   z-index: 20;
-  
-  /* Glassmorphism */
   background: rgba(15, 23, 42, 0.75); 
   backdrop-filter: blur(16px) saturate(180%);
-  
   border: 1px solid var(--border);
   box-shadow: -10px 0 25px rgba(0,0,0,0.5);
   display: flex;
   flex-direction: column;
-  
-  /* Desktop Defaults */
   top: 8px;
   right: 8px;
   bottom: 8px;
@@ -1347,7 +891,7 @@ html, body {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background-color: var(--panel-accent); /* Dynamic CSS Var */
+  background-color: var(--panel-accent); 
   box-shadow: 0 0 10px var(--panel-accent);
   flex-shrink: 0;
 }
@@ -1392,8 +936,6 @@ html, body {
   flex: 1;
   overflow-y: auto;
   padding: 16px;
-  
-  /* PREVENT SCROLL CHAINING ON MOBILE (FLICKER FIX) */
   overscroll-behavior: contain;
 }
 
@@ -1472,15 +1014,12 @@ html, body {
   color: var(--text-muted);
   text-align: center;
   flex-shrink: 0;
-  
-  /* CENTER THE BUTTON */
   display: flex;
   justify-content: center; 
 }
 
 /* --- MAP SPECIFIC TOOLTIP OVERRIDES --- */
 .map-tooltip {
-  /* Inherits .custom-tooltip base */
   border-color: var(--tooltip-accent);
   box-shadow: 0 0 20px rgba(0,0,0,0.5);
 }
@@ -1501,24 +1040,16 @@ html, body {
 @media (max-width: 768px) {
   .insight-panel-dock {
     position: fixed; 
-    
-    /* ANCHOR TO BOTTOM, 65% HEIGHT */
     top: auto; 
     bottom: 0;
     left: 0;
     right: 0;
     height: 65vh; 
     width: 100vw;
-    
-    /* SHEET STYLING */
-    border-radius: 16px 16px 0 0; /* Round top corners */
+    border-radius: 16px 16px 0 0; 
     border: none;
-    border-top: 1px solid var(--panel-accent); /* Highlight top edge */
-    
-    /* Ensure it sits on top of everything */
+    border-top: 1px solid var(--panel-accent); 
     z-index: 2000;
-    
-    /* Slide in from bottom */
     animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
@@ -1527,32 +1058,28 @@ html, body {
     to { transform: translateY(0); opacity: 1; }
   }
 
-  /* Make the header slightly larger/easier to tap */
   .dock-header {
     padding: 16px 20px;
     min-height: 64px;
   }
 
-  /* Ensure the close button is a nice big target */
   .dock-close-btn {
     padding: 8px;
     background: rgba(255, 255, 255, 0.05);
     margin-left: 12px;
   }
 
-  /* Hide the "Click to analyze" hint on mobile */
   .map-empty-state-hint {
     display: none;
   }
   
-  /* Hide the desktop controls when the panel is open */
   .insight-panel-dock ~ .map-controls-group {
      display: none;
   }
 }
 
 /* ==================================================================== */
-/* 20. MAP CONTROLS & DOCK TABLES (New Features)                        */
+/* 17. MAP CONTROLS & DOCK TABLES (New Features)                        */
 /* ==================================================================== */
 
 /* --- Container for Top-Left Buttons --- */
@@ -1562,12 +1089,11 @@ html, body {
   left: 16px;
   z-index: 10;
   display: flex;
-  gap: 8px; /* Spacing between buttons */
+  gap: 8px; 
 }
 
 /* --- Control Buttons --- */
 .map-control-btn {
-  /* Removed absolute positioning so they stack in the flex container */
   position: static; 
   display: flex;
   align-items: center;
@@ -1591,14 +1117,12 @@ html, body {
 }
 
 .map-control-btn.active {
-  /* Noise Toggle Active (Blue) */
   background: rgba(56, 189, 248, 0.1);
   border-color: #38bdf8;
   color: #38bdf8;
 }
 
 .map-control-btn.active-focus {
-  /* Focus Mode Active (Yellow/Warning) */
   background: rgba(234, 179, 8, 0.1); 
   border-color: #eab308;
   color: #eab308;
@@ -1610,7 +1134,6 @@ html, body {
   text-transform: uppercase;
 }
 
-/* Hide text labels on mobile to save space */
 @media (max-width: 768px) {
   .desktop-only-text {
     display: none; 
@@ -1663,66 +1186,11 @@ html, body {
   border-color: var(--text-muted);
 }
 
-/* --- MOBILE BREAKPOINT: BOTTOM SHEET --- */
-@media (max-width: 768px) {
-  .insight-panel-dock {
-    position: fixed; 
-    
-    /* ANCHOR TO BOTTOM, 65% HEIGHT */
-    top: auto; 
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 65vh; 
-    width: 100vw;
-    
-    /* SHEET STYLING */
-    border-radius: 16px 16px 0 0; /* Round top corners */
-    border: none;
-    border-top: 1px solid var(--panel-accent); /* Highlight top edge */
-    
-    /* Ensure it sits on top of everything */
-    z-index: 2000;
-    
-    /* Slide in from bottom */
-    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  @keyframes slideUp {
-    from { transform: translateY(100%); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-  }
-
-  /* Make the header slightly larger/easier to tap */
-  .dock-header {
-    padding: 16px 20px;
-    min-height: 64px;
-  }
-
-  /* Ensure the close button is a nice big target */
-  .dock-close-btn {
-    padding: 8px;
-    background: rgba(255, 255, 255, 0.05);
-    margin-left: 12px;
-  }
-
-  /* Hide the "Click to analyze" hint on mobile */
-  .map-empty-state-hint {
-    display: none;
-  }
-  
-  /* Hide the desktop controls when the panel is open */
-  .insight-panel-dock ~ .map-controls-group {
-     display: none;
-  }
-}
-
 /* ==================================================================== */
-/* 21. LOGIC INSPECTOR MODAL (Refreshed & Dynamic)                      */
+/* 18. LOGIC INSPECTOR MODAL (Refreshed & Dynamic)                      */
 /* ==================================================================== */
 
 .logic-modal {
-  /* Default Fallback if prop is missing */
   --dynamic-accent: #38bdf8; 
   
   background: #0f172a; 
@@ -1734,11 +1202,8 @@ html, body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
-  animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  
-  /* Subtle glow matching the accent color */
   box-shadow: 0 0 40px -10px color-mix(in srgb, var(--dynamic-accent), transparent 90%);
+  animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes modalPop {
@@ -1769,14 +1234,11 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  
-  /* Dynamic Background & Border based on Accent */
   background: color-mix(in srgb, var(--dynamic-accent), transparent 90%);
   border: 1px solid color-mix(in srgb, var(--dynamic-accent), transparent 80%);
   color: var(--dynamic-accent);
 }
 
-/* Utility to colorize icons/text inside the modal */
 .dynamic-text-color {
   color: var(--dynamic-accent);
 }
@@ -1862,7 +1324,6 @@ html, body {
 .logic-scroll-area {
   height: 100%;
   overflow-y: auto;
-  /* Prevent scroll chaining on mobile */
   overscroll-behavior: contain; 
 }
 
@@ -1902,7 +1363,7 @@ html, body {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--dynamic-accent); /* Match the modal theme */
+  background: var(--dynamic-accent); 
   box-shadow: 0 0 8px color-mix(in srgb, var(--dynamic-accent), transparent 40%);
 }
 
@@ -1925,4 +1386,107 @@ html, body {
     white-space: nowrap;
     padding: 12px;
   }
+}
+
+/* ==================================================================== */
+/* 19. HEADER LAYOUT UTILITIES (Refined & Polished)                     */
+/* ==================================================================== */
+
+/* --- POLISHED DROPDOWN --- */
+.ticker-select-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 12px;
+}
+
+.ticker-select-input {
+  appearance: none;
+  -webkit-appearance: none; 
+  background-color: rgba(15, 23, 42, 0.6); 
+  backdrop-filter: blur(8px);
+  color: var(--accent); 
+  font-weight: 700;
+  font-size: 0.75rem; 
+  padding: 6px 28px 6px 12px; 
+  border-radius: 6px;
+  border: 1px solid rgba(56, 189, 248, 0.2); 
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+  font-family: var(--font-mono);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* New rule to replace inline style={{color: 'black'}} in App.jsx */
+.ticker-select-input option {
+  color: #000000;
+  background-color: #ffffff;
+}
+
+.ticker-select-input:hover {
+  background-color: rgba(56, 189, 248, 0.1);
+  border-color: var(--accent);
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.15); 
+  color: #fff;
+}
+
+.ticker-select-arrow {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+
+.ticker-select-container:hover .ticker-select-arrow {
+  color: var(--accent);
+}
+
+/* --- POLISHED METRIC CARD (Glass Pill - Side by Side) --- */
+.metric-glass {
+  display: flex;
+  flex-direction: row; 
+  align-items: center; 
+  gap: 12px; 
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  min-width: 0; 
+  transition: all 0.2s ease;
+}
+
+.metric-glass:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.metric-label {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 0; 
+  white-space: nowrap;
+}
+
+.metric-value {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1;
+  text-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+
+/* Vertical Divider Utility */
+.vertical-divider {
+  height: 24px; 
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, #334155, transparent); 
+  margin: 0 12px;
+  opacity: 1;
 }
