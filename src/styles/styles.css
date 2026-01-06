@@ -1707,6 +1707,21 @@ html, body {
   flex-direction: column;
 }
 
+.architecture-modal .modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  background: var(--bg-panel);
+  width: 100%;
+}
+
+.architecture-modal .modal-title-wrapper {
+  display: flex;
+  align-items: center;
+}
+
 .arch-container {
   padding: 32px;
   display: flex;
