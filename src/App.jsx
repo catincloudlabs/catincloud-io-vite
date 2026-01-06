@@ -21,6 +21,19 @@ const TICKER_COLORS = {
 };
 const WATCHLIST = ['AAPL', 'AMZN', 'GOOGL', 'META', 'MSFT', 'NVDA', 'TSLA'];
 
+// --- MISSING LAYOUT DEFINITIONS (FIXED) ---
+const scatterLayout = {
+  xaxis: { title: 'Days to Expiry (DTE)', automargin: true },
+  yaxis: { title: 'Moneyness', automargin: true },
+  showlegend: false
+};
+
+const sentimentLayout = {
+  xaxis: { title: 'Sentiment Signal', range: [-1, 1], automargin: true },
+  yaxis: { title: 'Implied Volatility', automargin: true },
+  showlegend: false
+};
+
 function App() {
   
   // --- STATE ---
