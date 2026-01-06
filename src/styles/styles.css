@@ -1645,38 +1645,40 @@ html, body {
   border-color: var(--text-muted);
 }
 
-/* --- MOBILE BREAKPOINT: BOTTOM SHEET / FULL COVER --- */
+/* --- MOBILE BREAKPOINT: BOTTOM SHEET (66% Height) --- */
 @media (max-width: 768px) {
   .insight-panel-dock {
     position: fixed; 
-    top: 0;
+    
+    /* ANCHOR TO BOTTOM, 65% HEIGHT */
+    top: auto; 
+    bottom: 0;
     left: 0;
     right: 0;
-    bottom: 0;
-    
+    height: 65vh; 
     width: 100vw;
-    height: 100vh;
     
-    /* Reset borders to match the container */
-    border-radius: 0; 
+    /* SHEET STYLING */
+    border-radius: 16px 16px 0 0; /* Round top corners */
     border: none;
+    border-top: 1px solid var(--panel-accent); /* Highlight top edge */
     
-    /* Ensure it sits on top of everything (including sticky headers) */
+    /* Ensure it sits on top of everything */
     z-index: 2000;
     
     /* Slide in from bottom */
-    animation: slideUp 0.2s ease-out;
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   @keyframes slideUp {
-    from { transform: translateY(10%); opacity: 0; }
+    from { transform: translateY(100%); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
   }
 
-  /* Make the header slightly larger on mobile for easier tapping */
+  /* Make the header slightly larger/easier to tap */
   .dock-header {
-    padding: 12px 16px;
-    min-height: 60px;
+    padding: 16px 20px;
+    min-height: 64px;
   }
 
   /* Ensure the close button is a nice big target */
@@ -1686,12 +1688,12 @@ html, body {
     margin-left: 12px;
   }
 
-  /* Hide the "Click to analyze" hint on mobile to save space */
+  /* Hide the "Click to analyze" hint on mobile */
   .map-empty-state-hint {
     display: none;
   }
   
-  /* Hide the desktop controls when the panel is open to prevent confusion */
+  /* Hide the desktop controls when the panel is open */
   .insight-panel-dock ~ .map-controls-group {
      display: none;
   }
