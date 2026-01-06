@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
-// import MetricCard from './components/MetricCard'; // <-- REMOVED: No longer needed
+import MetricCard from './components/MetricCard';
 import GlobalControlBar from './components/GlobalControlBar'; 
 import { Activity, Zap, ArrowUpRight, ArrowDownRight, TrendingUp } from 'lucide-react';
 import { useSystemHeartbeat } from './hooks/useSystemHeartbeat';
 import { getSentimentColor, getRiskColor, getMomentumColor } from './utils/statusHelpers';
 
-// --- LAZY LOAD ---
+// --- LAZY LOAD HEAVY COMPONENTS ---
 const InspectorCard = lazy(() => import('./components/InspectorCard'));
 const MarketPsychologyMap = lazy(() => import('./components/MarketPsychologyMap'));
 
@@ -21,12 +21,15 @@ const MAG7_CONFIG = {
   GOOGL: { color: '#818cf8', label: 'GOOGL' },
   META: { color: '#c084fc', label: 'META' } 
 };
+
 const WATCHLIST = ['AAPL', 'AMZN', 'GOOGL', 'META', 'MSFT', 'NVDA', 'TSLA'];
 
 function App() {
   
   // --- STATE ---
   const { data: heartbeat } = useSystemHeartbeat();
+
+  // Global State
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTicker, setSelectedTicker] = useState('AAPL'); 
 
@@ -46,7 +49,7 @@ function App() {
   const [sentVolMeta, setSentVolMeta] = useState(null);
   const [sentVolLoading, setSentVolLoading] = useState(true);
 
-  // Map Metadata
+  // Map Metadata State (Bubbled up from Child)
   const [mapMeta, setMapMeta] = useState(null);
 
   // UI State
@@ -83,7 +86,7 @@ function App() {
       }).catch(err => { console.error("Sent/Vol Error:", err); setSentVolLoading(false); });
   }, []);
 
-  // --- METRICS (Unchanged logic, used differently) ---
+  // --- METRICS ---
   const whaleMetric = useMemo(() => {
     if (!whaleData?.data) return { value: "$0M", sub: "No Data" };
     let bullTotal = 0, total = 0;
@@ -113,7 +116,7 @@ function App() {
     return { value: leader.ticker, sub: `Net Flow: ${leader.net_sentiment_flow > 0 ? "+" : ""}$${flowM}M`, isPositive: leader.net_sentiment_flow > 0 };
   }, [magRaw, selectedDate]);
 
-  // --- PLOT HELPERS (Unchanged) ---
+  // --- PLOT HELPERS (Restored) ---
   const getMag7PlotData = () => {
     if (!magRaw || magRaw.length === 0) return [];
     return Object.keys(MAG7_CONFIG).map(ticker => {
@@ -139,7 +142,17 @@ function App() {
          showscale: !isMobile, 
          opacity: 0.8, 
          line: { color: 'white', width: 0.5 },
-         colorbar: { orientation: 'v', x: 1.01, y: 0.5, yanchor: 'middle', len: 0.9, thickness: 10, tickfont: { size: 9, color: '#94a3b8', family: 'JetBrains Mono' }, bgcolor: 'rgba(0,0,0,0)', outlinecolor: 'rgba(0,0,0,0)' }
+         colorbar: { 
+            orientation: 'v',      
+            x: 1.01,                
+            y: 0.5,                
+            yanchor: 'middle',      
+            len: 0.9,              
+            thickness: 10,          
+            tickfont: { size: 9, color: '#94a3b8', family: 'JetBrains Mono' },
+            bgcolor: 'rgba(0,0,0,0)', 
+            outlinecolor: 'rgba(0,0,0,0)' 
+         }
        }
     }];
   };
@@ -159,18 +172,24 @@ function App() {
     }));
   };
 
-  // --- LAYOUTS (Unchanged) ---
-  const scatterLayout = { xaxis: { title: 'DTE', gridcolor: '#334155' }, yaxis: { title: 'Moneyness', gridcolor: '#334155', range: [0.5, 1.8] }, showlegend: false, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: '#94a3b8' }, margin: isMobile ? { t: 10, b: 40, l: 30, r: 10 } : { t: 10, b: 40, l: 40, r: 50 }, annotations: [{ text: 'IV%', x: 1.04, y: 0.04, xref: 'paper', yref: 'paper', showarrow: false, xanchor: 'center', yanchor: 'top', font: { size: 9, color: '#94a3b8', family: 'JetBrains Mono' } }] };
+  // --- LAYOUTS (Restored) ---
+  const scatterLayout = { 
+      xaxis: { title: 'DTE', gridcolor: '#334155' }, 
+      yaxis: { title: 'Moneyness', gridcolor: '#334155', range: [0.5, 1.8] }, 
+      showlegend: false, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: '#94a3b8' }, 
+      margin: isMobile ? { t: 10, b: 40, l: 30, r: 10 } : { t: 10, b: 40, l: 40, r: 50 },
+      annotations: [{ text: 'IV%', x: 1.04, y: 0.04, xref: 'paper', yref: 'paper', showarrow: false, xanchor: 'center', yanchor: 'top', font: { size: 9, color: '#94a3b8', family: 'JetBrains Mono' } }]
+  };
+  
   const lineLayout = { xaxis: { title: 'Trend', gridcolor: '#334155' }, yaxis: { title: 'Flow', gridcolor: '#334155' }, showlegend: false, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: '#94a3b8' }, margin: isMobile ? { t: 10, b: 40, l: 30, r: 5 } : { t: 10, b: 40, l: 40, r: 10 } };
-  const sentimentLayout = { xaxis: { title: 'Sentiment', gridcolor: '#334155', range: [-1, 1], zeroline: true }, yaxis: { title: 'IV', gridcolor: '#334155' }, showlegend: true, legend: { orientation: "h", yanchor: "bottom", y: -0.8, xanchor: "center", x: 0.5, font: { family: 'JetBrains Mono, monospace', size: 10, color: '#94a3b8' } }, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: '#94a3b8' }, margin: isMobile ? { t: 10, b: 60, l: 30, r: 10 } : { t: 20, b: 130, l: 50, r: 20 }, shapes: [{ type: 'rect', xref: 'x', yref: 'paper', x0: -1, y0: 0.5, x1: 0, y1: 1, fillcolor: '#ef4444', opacity: 0.05, line: { width: 0 }}, { type: 'rect', xref: 'x', yref: 'paper', x0: 0, y0: 0, x1: 1, y1: 0.5, fillcolor: '#22c55e', opacity: 0.05, line: { width: 0 }}] };
-
-  // --- COMPONENT HELPERS ---
-  const renderMetric = (label, value, colorClass) => (
-    <div className="flex flex-col items-end leading-tight">
-      <span className="text-xs text-muted uppercase tracking-wider">{label}</span>
-      <span className={`text-sm font-bold font-mono ${colorClass}`}>{value}</span>
-    </div>
-  );
+  
+  const sentimentLayout = { 
+      xaxis: { title: 'Sentiment', gridcolor: '#334155', range: [-1, 1], zeroline: true }, yaxis: { title: 'IV', gridcolor: '#334155' }, 
+      showlegend: true, legend: { orientation: "h", yanchor: "bottom", y: -0.8, xanchor: "center", x: 0.5, font: { family: 'JetBrains Mono, monospace', size: 10, color: '#94a3b8' } },
+      paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: '#94a3b8' }, 
+      margin: isMobile ? { t: 10, b: 60, l: 30, r: 10 } : { t: 20, b: 130, l: 50, r: 20 }, 
+      shapes: [{ type: 'rect', xref: 'x', yref: 'paper', x0: -1, y0: 0.5, x1: 0, y1: 1, fillcolor: '#ef4444', opacity: 0.05, line: { width: 0 }}, { type: 'rect', xref: 'x', yref: 'paper', x0: 0, y0: 0, x1: 1, y1: 0.5, fillcolor: '#22c55e', opacity: 0.05, line: { width: 0 }}] 
+  };
 
   const sidebarProps = sidebarTab === 'momentum' ? {
         title: "Mag 7 Momentum", tag: "Trend", desc: magMeta?.inspector.description || "Net Sentiment Flow",
@@ -185,49 +204,53 @@ function App() {
   return (
     <div className="app-container">
       
-      {/* 1. STICKY HEADER & COMMAND BAR */}
+      {/* 1. HEADER */}
       <div className="sticky-header-group">
         <Header />
-        
-        {/* We place the GlobalControlBar INSIDE the sticky group so it's always accessible */}
-        <div className="px-4 py-2 border-b border-gray-200 bg-white/95 backdrop-blur z-40">
-           <GlobalControlBar 
-              dates={chaosMeta?.available_dates || []} selectedDate={selectedDate} onDateChange={setSelectedDate}
-              availableTickers={WATCHLIST} selectedTicker={selectedTicker} onTickerChange={setSelectedTicker}
-           />
-        </div>
       </div>
 
-      <main className="bento-grid pt-4"> {/* Added padding top since metric strip is gone */}
+      <main className="bento-grid">
         
+        {/* 2. KPI STRIP */}
+        <div className="span-4 metric-strip area-metrics">
+           <MetricCard title="Market Sentiment" value={(Math.random() * 100).toFixed(0)} subValue="Fear / Greed Index" icon={<TrendingUp size={16} className="text-accent" />} />
+           <MetricCard title="Whale Flow" value={whaleMetric.value} subValue={whaleMetric.sub} icon={<Activity size={16} className={getSentimentColor(whaleMetric.isBullish)} />} />
+           <MetricCard title="Max Volatility" value={chaosMetric.value} subValue={chaosMetric.sub} icon={<Zap size={16} className={getRiskColor(chaosMetric.isExtreme)} />} />
+           <MetricCard title="Mag 7 Leader" value={magLeaderMetric.value} subValue={magLeaderMetric.sub} icon={magLeaderMetric.isPositive ? <ArrowUpRight size={16} className={getMomentumColor(true)}/> : <ArrowDownRight size={16} className={getMomentumColor(false)}/>} />
+        </div>
+
         {/* --- LAZY LOAD BOUNDARY START --- */}
         <Suspense fallback={<div className="span-4 h-tall flex items-center justify-center text-muted animate-pulse">Initializing AI Models...</div>}>
 
-            {/* 2. HERO: MARKET PSYCHOLOGY (Full Width) */}
+            {/* 3. MARKET PSYCHOLOGY HERO */}
             <div className="span-4 h-tall area-cluster">
                <InspectorCard 
                  className="ai-hero-card"
                  title="Market Psychology Map"
                  tag="AI MODEL"
                  desc="t-SNE Clustering Using OpenAI Embeddings"
-                 // Pass a generic sentiment metric here if desired
-                 headerControls={renderMetric("Fear/Greed", "NEUTRAL", "text-blue-500")}
                  sqlCode={mapMeta?.inspector?.sql_logic}
                  dbtCode={mapMeta?.inspector?.dbt_logic}
                  dbtYml={mapMeta?.inspector?.dbt_yml}
                  plotLayout={{ margin: { l: 0, r: 0, t: 0, b: 0 }, xaxis: { visible: false }, yaxis: { visible: false } }}
                  customChart={
-                    <MarketPsychologyMap onMetaLoaded={setMapMeta} isMobile={isMobile} />
+                     <MarketPsychologyMap onMetaLoaded={setMapMeta} isMobile={isMobile} />
                  }
                />
             </div>
 
-            {/* 3. STRUCTURE & TREND (Split Row) */}
+            {/* 4. CONTROLS */}
+            <div className="span-4 control-bar-spacing area-controls">
+                <GlobalControlBar 
+                  dates={chaosMeta?.available_dates || []} selectedDate={selectedDate} onDateChange={setSelectedDate}
+                  availableTickers={WATCHLIST} selectedTicker={selectedTicker} onTickerChange={setSelectedTicker}
+                />
+            </div>
+
+            {/* 5. STRUCTURE & TREND */}
             <div className="span-2 h-standard area-chaos">
                <InspectorCard 
                  title={`Chaos Map: ${selectedTicker}`} tag="Gamma" desc={chaosMeta?.inspector.description}
-                 // EMBED METRIC: Chaos Metric (Max IV)
-                 headerControls={renderMetric("Max IV", chaosMetric.sub.replace("Max IV: ", ""), getRiskColor(chaosMetric.isExtreme))}
                  isLoading={chaosLoading} chartType="scatter" plotData={getFilteredChaosPlot()} plotLayout={scatterLayout}
                  sqlCode={chaosMeta?.inspector.sql_logic} dbtCode={chaosMeta?.inspector.dbt_logic} dbtYml={chaosMeta?.inspector.dbt_yml} 
                />
@@ -238,26 +261,24 @@ function App() {
                   className="ai-hero-card" 
                   {...sidebarProps} 
                   headerControls={
-                      <div className="flex items-center gap-4">
-                          {/* EMBED METRIC: Momentum Leader */}
-                          {sidebarTab === 'momentum' && renderMetric("Leader", magLeaderMetric.value, getMomentumColor(magLeaderMetric.isPositive))}
-                          
-                          <div className="header-tabs border border-gray-200 rounded-md p-0.5 bg-gray-50">
-                              <button className={`px-3 py-1 text-xs font-medium rounded ${sidebarTab === 'risk' ? 'bg-white shadow-sm text-black' : 'text-gray-500'}`} onClick={() => setSidebarTab('risk')}>Risk</button>
-                              <button className={`px-3 py-1 text-xs font-medium rounded ${sidebarTab === 'momentum' ? 'bg-white shadow-sm text-black' : 'text-gray-500'}`} onClick={() => setSidebarTab('momentum')}>Trend</button>
-                          </div>
+                      <div className="header-tabs">
+                          <button className={`header-tab-btn ${sidebarTab === 'risk' ? 'active' : ''}`} onClick={() => setSidebarTab('risk')}>Risk</button>
+                          <button className={`header-tab-btn ${sidebarTab === 'momentum' ? 'active' : ''}`} onClick={() => setSidebarTab('momentum')}>Trend</button>
                       </div>
                   }
                 >
+                   {sidebarTab === 'momentum' && (
+                     <div className="ticker-controls-compact">
+                        <span className="text-muted text-sm">Showing All 7</span>
+                     </div>
+                   )}
                 </InspectorCard>
             </div>
 
-            {/* 4. WHALE HUNTER (Full Width Table) */}
+            {/* 6. WHALE HUNTER */}
             <div className="span-4 h-tall area-whale">
                <InspectorCard 
                  title={whaleData?.meta.title || "Whale Hunter"} tag="Flow" desc={whaleData?.meta.inspector.description}
-                 // EMBED METRIC: Whale Flow
-                 headerControls={renderMetric("Flow", whaleMetric.value, getSentimentColor(whaleMetric.isBullish))}
                  isLoading={whaleLoading} chartType="table" tableData={whaleData?.data}
                  sqlCode={whaleData?.meta.inspector.sql_logic} dbtCode={whaleData?.meta.inspector.dbt_logic} dbtYml={whaleData?.meta.inspector.dbt_yml} 
                />
