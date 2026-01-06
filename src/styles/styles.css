@@ -1961,10 +1961,10 @@ html, body {
 }
 
 /* ==================================================================== */
-/* 22. BIO MODAL & MOBILE PROFILE (New)                                 */
+/* 22. BIO MODAL & MOBILE PROFILE (Purple/AI Theme)                     */
 /* ==================================================================== */
 
-/* --- Base Layout --- */
+/* --- Local Theme Overrides --- */
 .bio-modal {
   width: 90%;
   max-width: 800px;
@@ -1974,7 +1974,16 @@ html, body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  
+  /* Local Purple Variables (Matches AI Hero Card) */
+  --bio-purple: #e879f9; 
+  --bio-purple-dim: #c084fc;
+  --bio-bg-tint: rgba(192, 132, 252, 0.15);
+  --bio-border-tint: rgba(192, 132, 252, 0.3);
 }
+
+/* Utility for the Terminal Icon */
+.text-purple { color: var(--bio-purple); }
 
 /* FIX: Ensure Header follows Flexbox (Title Left, X Right) */
 .bio-modal .modal-header {
@@ -2012,7 +2021,7 @@ html, body {
   border-radius: 12px;
   overflow: hidden;
   border: 2px solid var(--border);
-  box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+  box-shadow: 0 0 30px -5px rgba(192, 132, 252, 0.2); /* Purple Glow */
 }
 
 .bio-profile-img {
@@ -2043,16 +2052,18 @@ html, body {
   line-height: 1.1;
 }
 
+/* Purple Role Badge */
 .bio-role {
   font-family: var(--font-mono);
   font-size: 0.8rem;
-  color: var(--accent);
+  color: var(--bio-purple);
   margin-bottom: 24px;
   display: inline-block;
   padding: 4px 10px;
-  background: rgba(56, 189, 248, 0.1);
+  background: var(--bio-bg-tint);
   border-radius: 4px;
-  border: 1px solid rgba(56, 189, 248, 0.2);
+  border: 1px solid var(--bio-border-tint);
+  box-shadow: 0 0 10px -2px var(--bio-bg-tint);
 }
 
 .bio-text {
@@ -2096,6 +2107,11 @@ html, body {
   color: #cbd5e1;
 }
 
+/* Override standard accent with purple inside stack items */
+.stack-item .text-accent {
+  color: var(--bio-purple);
+}
+
 /* --- Contact Links --- */
 .contact-row {
   display: flex;
@@ -2124,17 +2140,19 @@ html, body {
   border-color: var(--text-muted);
 }
 
+/* Purple Primary Button */
 .btn-primary {
-  background: var(--accent);
+  background: var(--bio-purple);
   color: #0f172a; /* Dark text on bright button */
-  border-color: var(--accent);
+  border-color: var(--bio-purple);
   font-weight: 700;
 }
 
 .btn-primary:hover {
-  background: var(--accent-dim);
+  background: var(--bio-purple-dim);
   color: #0f172a;
-  border-color: var(--accent-dim);
+  border-color: var(--bio-purple-dim);
+  box-shadow: 0 0 15px var(--bio-bg-tint);
 }
 
 

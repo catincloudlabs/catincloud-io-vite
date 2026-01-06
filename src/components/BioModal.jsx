@@ -22,7 +22,7 @@ const BioModal = ({ isOpen, onClose }) => {
         {/* Header */}
         <div className="modal-header bio-header">
           <div className="modal-title-wrapper">
-            <Terminal size={16} className="text-green mr-2" />
+            <Terminal size={16} className="text-purple mr-2" />
             <span className="modal-title">dave@root:~$ whoami</span>
           </div>
           <button className="panel-toggle-btn" onClick={onClose}>
