@@ -219,11 +219,10 @@ function App() {
                />
             </div>
 
-            {/* 4. RISK: RISK RADAR (Tag Removed) */}
+            {/* 4. RISK: RISK RADAR */}
             <div className="span-2 h-standard area-risk">
                 <InspectorCard 
                   title="Risk Radar" 
-                  // tag="Mag 7" <--- REMOVED
                   desc="Sentiment vs Volatility (Market Wide)"
                   isLoading={sentVolLoading} 
                   chartType="scatter" 
