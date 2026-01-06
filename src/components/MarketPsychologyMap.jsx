@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { ScatterChart, Scatter, XAxis, YAxis, ResponsiveContainer, Cell, Legend } from 'recharts';
 import { X, TrendingUp, TrendingDown, Activity, Info, Eye, EyeOff, Target, FileText, Database } from 'lucide-react';
 
@@ -136,6 +136,7 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
   // --- INTERACTION STATES ---
   const [lockedCluster, setLockedCluster] = useState(null);  // Clicked (Persistent)
   const [hoveredCluster, setHoveredCluster] = useState(null); // Hovered (Ephemeral)
+  const hoverTimer = useRef(null); // Timer for hover delay
   
   // --- MOBILE RESET LOGIC ---
   const [chartResetKey, setChartResetKey] = useState(0);
@@ -186,29 +187,47 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
 
   // --- HANDLERS ---
 
-  // 1. Mouse Enter (Desktop Hover)
+  // 1. Smart Hover (Desktop): Debounced to prevent flickering
   const handleNodeMouseEnter = (nodeProps) => {
-    if (isMobile) return; // Disable hover logic on mobile
+    if (isMobile) return; 
+    
+    // Clear any pending close actions
+    if (hoverTimer.current) clearTimeout(hoverTimer.current);
+
     const data = nodeProps.payload;
     if (data && data.cluster_id !== undefined && data.label !== 'Noise') {
-        setHoveredCluster({ id: data.cluster_id, label: data.label });
+        // Wait 300ms before showing panel
+        hoverTimer.current = setTimeout(() => {
+            setHoveredCluster({ id: data.cluster_id, label: data.label });
+        }, 300);
     }
   };
 
-  // 2. Mouse Leave (Desktop Hover)
+  // 2. Mouse Leave: Cancel timer or clear state
   const handleNodeMouseLeave = () => {
     if (isMobile) return;
+    if (hoverTimer.current) clearTimeout(hoverTimer.current);
     setHoveredCluster(null);
   };
 
   // 3. Click (Lock selection)
   const handleNodeClick = (nodeProps) => {
+    if (hoverTimer.current) clearTimeout(hoverTimer.current); // Stop hover logic immediately
     const data = nodeProps.payload;
     if (data && data.cluster_id !== undefined && data.label !== 'Noise') {
         setLockedCluster({
             id: data.cluster_id,
             label: data.label
         });
+    }
+  };
+
+  // 4. Background Click (Dismiss Lock)
+  const handleChartBackgroundClick = (e) => {
+    // Recharts passes 'activePayload' if a node was clicked.
+    // If activePayload is null/undefined, we clicked the empty background.
+    if (lockedCluster && (!e || !e.activePayload)) {
+        handlePanelClose();
     }
   };
 
@@ -269,11 +288,13 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
         )}
 
         <ResponsiveContainer width="100%" height="100%">
-          <ScatterChart key={chartResetKey} margin={chartMargins}>
+          <ScatterChart 
+            key={chartResetKey} 
+            margin={chartMargins}
+            onClick={handleChartBackgroundClick} // New: Click outside to close
+          >
             <XAxis type="number" dataKey="x" hide domain={['dataMin', 'dataMax']} />
             <YAxis type="number" dataKey="y" hide domain={['dataMin', 'dataMax']} />
-            
-            {/* TOOLTIP REMOVED ENTIRELY */}
             
             <Legend 
                 verticalAlign="bottom" 
@@ -298,19 +319,15 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
                   const isNoise = entry.label === 'Noise';
                   const sentMagnitude = Math.abs(entry.sentiment || 0);
                   const isHighMagnitude = !isNoise && sentMagnitude > 0.7; 
-                  
-                  // Increased base size to 10 and multiplier to 15 for mobile
                   const radius = isMobile 
                     ? (isNoise ? 4 : Math.min(24, 10 + (sentMagnitude * 15)))
                     : (isNoise ? 2 : Math.min(12, 4 + (sentMagnitude * 8)));
 
                   let opacity = isNoise ? 0.2 : 0.8;
                   
-                  // Priority: Hovered Legend > Active Panel > Default
                   if (hoveredLegend) {
                       opacity = (hoveredLegend === entry.label) ? 1 : 0.1;
                   } else if (activeDisplayCluster) {
-                      // If panel is open/hovered, dim everything else
                       opacity = (activeDisplayCluster.id === entry.cluster_id) ? 1 : 0.1;
                   }
 
@@ -336,7 +353,7 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
                 insights={insightData}
                 rawArticles={chartData} 
                 onClose={handlePanelClose} 
-                isLocked={!!lockedCluster} // Pass lock state to toggle "X" button
+                isLocked={!!lockedCluster} 
             />
         )}
     </div>

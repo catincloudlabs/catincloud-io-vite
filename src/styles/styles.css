@@ -1294,8 +1294,11 @@ html, body {
 .insight-panel-dock {
   position: absolute;
   z-index: 20;
-  background: rgba(15, 23, 42, 0.95);
-  backdrop-filter: blur(12px);
+  
+  /* NEW: Stronger Glassmorphism */
+  background: rgba(15, 23, 42, 0.75); /* Lower opacity for see-through effect */
+  backdrop-filter: blur(16px) saturate(180%); /* Higher blur + vibancy boost */
+  
   border: 1px solid var(--border);
   box-shadow: -10px 0 25px rgba(0,0,0,0.5);
   display: flex;
@@ -1487,25 +1490,22 @@ html, body {
 /* --- MOBILE BREAKPOINT: BOTTOM SHEET / FULL COVER --- */
 @media (max-width: 768px) {
   .insight-panel-dock {
-    /* Force panel to fill the exact size of the parent chart container */
-    width: 100%;
-    height: 100%; 
-    
-    /* Pin to all 4 corners of the .map-wrapper */
+    /* CHANGED: Fixed positioning to cover the entire viewport, not just the chart */
+    position: fixed; 
     top: 0;
+    left: 0;
     right: 0;
     bottom: 0;
-    left: 0;
+    
+    width: 100vw;
+    height: 100vh;
     
     /* Reset borders to match the container */
-    border-radius: var(--radius); 
+    border-radius: 0; 
     border: none;
-    border-left: none;
-    border-right: none;
-    border-bottom: none;
     
-    /* Ensure it sits on top of everything */
-    z-index: 50;
+    /* Ensure it sits on top of everything (including sticky headers) */
+    z-index: 2000;
     
     /* Slide in from bottom */
     animation: slideUp 0.2s ease-out;
@@ -1538,25 +1538,6 @@ html, body {
   .insight-panel-dock ~ .map-controls-group {
      display: none;
   }
-}
-
-.map-control-btn:hover {
-  background: rgba(30, 41, 59, 0.8);
-  color: #fff;
-  border-color: #94a3b8;
-}
-
-.map-control-btn.active {
-  /* Style when Noise is HIDDEN (Active Filter) */
-  background: rgba(56, 189, 248, 0.1);
-  border-color: #38bdf8;
-  color: #38bdf8;
-}
-
-.control-text {
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
 }
 
 /* ==================================================================== */
