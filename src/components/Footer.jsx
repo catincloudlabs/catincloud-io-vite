@@ -6,7 +6,7 @@ const Footer = () => {
   return (
     <footer className="app-footer">
       <p>
-        © {year} CatInCloud Labs. 
+        © {year} CatInCloud Labs 
         <span className="opacity-50 mx-2"> | </span> 
         Not Financial Advice.
       </p>
