@@ -257,27 +257,28 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
     <div className="map-wrapper">
         
         {/* --- CONTROLS GROUP (Top Left) --- */}
-        <div className="map-controls-group">
-            {/* NOISE TOGGLE */}
-            <button 
-                className={`map-control-btn ${!showNoise ? 'active' : ''}`}
-                onClick={() => setShowNoise(!showNoise)}
-                title={showNoise ? "Hide Noise" : "Show Noise"}
-            >
-                {showNoise ? <Eye size={14} /> : <EyeOff size={14} />}
-                <span className="control-text desktop-only-text">Noise</span>
-            </button>
+        {/* OPTIONAL SAFETY TWEAK: Hide controls if a cluster is active (Mobile UX) */}
+        {(!activeCluster || !isMobile) && (
+            <div className="map-controls-group">
+                <button 
+                    className={`map-control-btn ${!showNoise ? 'active' : ''}`}
+                    onClick={() => setShowNoise(!showNoise)}
+                    title={showNoise ? "Hide Noise" : "Show Noise"}
+                >
+                    {showNoise ? <Eye size={14} /> : <EyeOff size={14} />}
+                    <span className="control-text desktop-only-text">Noise</span>
+                </button>
 
-            {/* SEMANTIC ZOOM (FOCUS MODE) */}
-            <button 
-                className={`map-control-btn ${focusMode ? 'active-focus' : ''}`}
-                onClick={() => setFocusMode(!focusMode)}
-                title="Focus Mode (High Impact Only)"
-            >
-                <Target size={14} />
-                <span className="control-text desktop-only-text">Focus</span>
-            </button>
-        </div>
+                <button 
+                    className={`map-control-btn ${focusMode ? 'active-focus' : ''}`}
+                    onClick={() => setFocusMode(!focusMode)}
+                    title="Focus Mode (High Impact Only)"
+                >
+                    <Target size={14} />
+                    <span className="control-text desktop-only-text">Focus</span>
+                </button>
+            </div>
+        )}
 
         {/* EMPTY STATE HINT (Top Right) */}
         {!activeCluster && (
