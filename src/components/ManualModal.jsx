@@ -17,9 +17,9 @@ const ManualModal = ({ isOpen, onClose }) => {
 
   const sections = [
     { id: 'synopsis', label: 'SYNOPSIS' },
-    { id: 'metrics', label: 'METRIC CARDS' },
-    { id: 'mag7', label: 'MAG 7 MOMENTUM' },
-    { id: 'chaos', label: 'CHAOS INDEX' },
+    { id: 'psych', label: 'MARKET PSYCH' },
+    { id: 'chaos', label: 'CHAOS MAP' },
+    { id: 'risk', label: 'RISK RADAR' },
     { id: 'whales', label: 'WHALE HUNTER' },
     { id: 'controls', label: 'CONTROLS' },
   ];
@@ -37,7 +37,7 @@ const ManualModal = ({ isOpen, onClose }) => {
         <div className="modal-header manual-header">
           <div className="modal-title-wrapper">
             <BookOpen size={16} className="text-accent mr-2" />
-            <span className="modal-title">OPERATOR MANUAL (v1.0)</span>
+            <span className="modal-title">OPERATOR MANUAL (v1.2)</span>
           </div>
           <button className="panel-toggle-btn" onClick={onClose}>
             <X size={20} />
@@ -45,7 +45,7 @@ const ManualModal = ({ isOpen, onClose }) => {
         </div>
 
         <div className="manual-body">
-          {/* Sidebar */}
+          {/* Sidebar (Desktop) / Tabs (Mobile) */}
           <div className="manual-sidebar">
             {sections.map(s => (
               <button 
@@ -65,63 +65,79 @@ const ManualModal = ({ isOpen, onClose }) => {
             <section id="sec-synopsis" className="manual-section">
               <h3 className="manual-h3">1. SYNOPSIS</h3>
               <p className="manual-p">
-                <strong>CatInCloud.io</strong> is a real-time quantitative dashboard monitoring 
-                unusual options activity across Mag 7 and meme-tier equities.
+                <strong>CatInCloud.io</strong> is a quantitative dashboard monitoring 
+                asymmetric risk and semantic data clusters across the "Mag 7" equities.
               </p>
               <p className="manual-p">
-                Data is ingested via Massive.com, normalized in Snowflake, and served via 
-                static JSON endpoints for low-latency retrieval.
+                Data is ingested via distributed pipelines, normalized in Snowflake, and served 
+                as static JSON artifacts for ultra-low latency retrieval.
               </p>
             </section>
 
             <div className="manual-divider" />
 
-            {/* 2. METRIC CARDS */}
-            <section id="sec-metrics" className="manual-section">
-              <h3 className="manual-h3">2. METRIC CARDS</h3>
+            {/* 2. MARKET PSYCHOLOGY */}
+            <section id="sec-psych" className="manual-section">
+              <h3 className="manual-h3">2. MARKET PSYCHOLOGY (AI Model)</h3>
               <p className="manual-p">
-                Top-level KPIs providing instant situational awareness.
+                <span className="text-accent">Dataset:</span> <code>market_psychology_map.json</code>
+              </p>
+              <p className="manual-p">
+                Visualizes the "Narrative Landscape" by clustering thousands of news headlines using vector embeddings.
               </p>
               <ul className="manual-list">
-                <li><strong>Pipeline State:</strong>
-                  <ul className="manual-list-nested">
-                    <li><span className="text-green">GREEN</span> :: All Systems Operational.</li>
-                    <li><span className="text-yellow">YELLOW</span> :: Data Stale (&gt; 26h Weekday / 72h Weekend).</li>
-                    <li><span className="text-red">RED</span> :: System Offline / Connectivity Lost.</li>
-                  </ul>
+                <li><strong>Algorithm:</strong> High-dimensional OpenAI text embeddings reduced via t-SNE.</li>
+                <li><strong>Node Size:</strong> Proportional to <strong>News Volume</strong> (Cluster Density).</li>
+                <li><strong>Color Scale:</strong> Represents Aggregate Sentiment.
+                    <ul className="manual-list-nested">
+                        <li><span className="text-red">RED</span> :: Negative Sentiment (Fear)</li>
+                        <li><span className="text-green">GREEN</span> :: Positive Sentiment (Greed)</li>
+                        <li><span className="text-muted">GRAY</span> :: Neutral / Noise</li>
+                    </ul>
                 </li>
-                <li><strong>Whale Flow:</strong> Total Net Premium traded by institutional blocks today.</li>
-                <li><strong>Max Volatility:</strong> The single contract with the highest Implied Volatility (IV) in the Chaos dataset. <span className="text-purple">Purple</span> indicates extreme risk (&gt;100% IV).</li>
-                <li><strong>Mag 7 Leader:</strong> The mega-cap ticker with the highest absolute sentiment flow (bullish or bearish) for the day.</li>
               </ul>
             </section>
 
             <div className="manual-divider" />
 
-            {/* 3. MAG 7 MOMENTUM */}
-            <section id="sec-mag7" className="manual-section">
-              <h3 className="manual-h3">3. MAG 7 MOMENTUM (Time Series)</h3>
-              <p className="manual-p">
-                <span className="text-accent">Purpose:</span> Tracks aggregated option sentiment flow for mega-cap tech.
-              </p>
-              <ul className="manual-list">
-                <li><strong>Metric (Y-Axis):</strong> Net Sentiment Flow. Calculated as <code>(Call Premium - Put Premium)</code> adjusted for delta.</li>
-                <li><strong>Multi-Select:</strong> Toggle individual tickers (NVDA, TSLA, etc.) using the control pills in the chart footer.</li>
-              </ul>
-            </section>
-
-            <div className="manual-divider" />
-
-            {/* 4. CHAOS INDEX */}
+            {/* 3. CHAOS MAP */}
             <section id="sec-chaos" className="manual-section">
-              <h3 className="manual-h3">4. CHAOS INDEX (Scatter Plot)</h3>
+              <h3 className="manual-h3">3. CHAOS MAP (Structure)</h3>
               <p className="manual-p">
-                <span className="text-accent">Purpose:</span> Identifies gamma exposure risk.
+                <span className="text-accent">Dataset:</span> <code>chaos.json</code>
+              </p>
+              <p className="manual-p">
+                Isolates "Pin Risk" by plotting the Option Chain surface. Identifies where dealers may be forced to hedge.
               </p>
               <ul className="manual-list">
-                <li><strong>X-Axis (DTE):</strong> Days to Expiration. Closer to 0 = Higher Gamma Risk.</li>
-                <li><strong>Y-Axis (Moneyness):</strong> Strike Price / Current Price. 1.0 = ATM.</li>
-                <li><strong>Bubble Size:</strong> Relative Volume (Log Scale).</li>
+                <li><strong>X-Axis (DTE):</strong> 0 to 60 Days. Left-tail indicates immediate Gamma risk.</li>
+                <li><strong>Y-Axis (Moneyness):</strong> Strike / Spot Price. 
+                    <br/><code>1.0</code> = ATM. <code>&gt;1.0</code> = OTM Call / ITM Put.
+                </li>
+                <li><strong>Chaos Score (Size):</strong> A composite metric weighting <code>Relative Vol * Implied Volatility</code>. Large bubbles = High impact nodes.</li>
+              </ul>
+            </section>
+
+            <div className="manual-divider" />
+
+            {/* 4. RISK RADAR */}
+            <section id="sec-risk" className="manual-section">
+              <h3 className="manual-h3">4. RISK RADAR (Scatter)</h3>
+              <p className="manual-p">
+                <span className="text-accent">Dataset:</span> <code>sentiment_volatility.json</code>
+              </p>
+              <p className="manual-p">
+                Detects pricing dislocations by contrasting "What they say" (News) vs "What they pay" (Volatility).
+              </p>
+              <ul className="manual-list">
+                <li><strong>X-Axis (Sentiment):</strong> NLP Signal (-1.0 to +1.0).</li>
+                <li><strong>Y-Axis (IV):</strong> 30-Day Implied Volatility %.</li>
+                <li><strong>Signal Interpretation:</strong>
+                    <ul className="manual-list-nested">
+                        <li><strong>Top Left:</strong> High Fear (High IV, Low Sentiment).</li>
+                        <li><strong>Bottom Right:</strong> Complacency (Low IV, High Sentiment).</li>
+                    </ul>
+                </li>
               </ul>
             </section>
 
@@ -131,11 +147,18 @@ const ManualModal = ({ isOpen, onClose }) => {
             <section id="sec-whales" className="manual-section">
               <h3 className="manual-h3">5. WHALE HUNTER (Flow Tape)</h3>
               <p className="manual-p">
-                Filters for institutional block trades exceeding <span className="text-green">$1M premium</span>.
+                <span className="text-accent">Dataset:</span> <code>whales.json</code>
               </p>
               <p className="manual-p">
-                <span className="text-accent">Logic:</span> See <code>models/intermediate/int_massive__whale_hunter.sql</code> via the "View Logic" button on the card.
+                A filtered tape of institutional block trades with premiums exceeding <span className="text-green">$1M</span>.
               </p>
+              <ul className="manual-list">
+                <li><strong>PREM:</strong> Total cash value of the trade.</li>
+                <li><strong>SENT:</strong> Directional bias. 
+                    <br/>Derived from trade side (Ask = Bullish, Bid = Bearish) and OTM/ITM positioning.
+                </li>
+                <li><strong>TYPE:</strong> <code>C</code> (Call) or <code>P</code> (Put).</li>
+              </ul>
             </section>
 
             <div className="manual-divider" />
