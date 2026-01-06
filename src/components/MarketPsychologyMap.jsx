@@ -317,7 +317,7 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
                   const sentMagnitude = Math.abs(entry.sentiment || 0);
                   const isHighMagnitude = !isNoise && sentMagnitude > 0.7; 
                   const radius = isMobile 
-                    ? (isNoise ? 4 : Math.min(24, 10 + (sentMagnitude * 15)))
+                    ? (isNoise ? 5 : Math.min(40, 15 + (sentMagnitude * 25))) 
                     : (isNoise ? 2 : Math.min(12, 4 + (sentMagnitude * 8)));
 
                   let opacity = isNoise ? 0.2 : 0.8;
