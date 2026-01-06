@@ -1785,7 +1785,7 @@ html, body {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 600;
-  color: color-mix(in srgb, var(--dynamic-accent), #94a3b8 40%); /* Mix accent with gray */
+  color: color-mix(in srgb, var(--dynamic-accent), #94a3b8 40%);
 }
 
 .logic-main {
