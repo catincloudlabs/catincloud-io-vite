@@ -64,21 +64,33 @@ const Header = () => {
 
         {/* RIGHT: NAVIGATION PILL (Horizontal Group) */}
         <nav className="header-nav-pill">
-          <button onClick={() => setManualOpen(true)} className="nav-link icon-link">
+          <button 
+            onClick={() => setManualOpen(true)} 
+            className="nav-link icon-link"
+            aria-label="Open Operator Manual"
+          >
             <BookOpen size={14} className="mr-2" />
             <span className="desktop-only">Manual</span>
           </button>
 
           <div className="nav-separator">/</div>
 
-          <button onClick={() => setArchOpen(true)} className="nav-link icon-link">
+          <button 
+            onClick={() => setArchOpen(true)} 
+            className="nav-link icon-link"
+            aria-label="View System Architecture"
+          >
             <Network size={14} className="mr-2" />
             <span className="desktop-only">Architecture</span>
           </button>
 
           <div className="nav-separator">/</div>
 
-          <button onClick={() => setBioOpen(true)} className="nav-link icon-link">
+          <button 
+            onClick={() => setBioOpen(true)} 
+            className="nav-link icon-link"
+            aria-label="View Biography"
+          >
             <User size={14} className="mr-2" />
             <span className="desktop-only">Bio</span>
           </button>

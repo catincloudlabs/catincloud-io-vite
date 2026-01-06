@@ -1490,3 +1490,203 @@ html, body {
   margin: 0 12px;
   opacity: 1;
 }
+
+/* ==================================================================== */
+/* 20. MANUAL MODAL & MOBILE POLISH (New)                               */
+/* ==================================================================== */
+
+/* --- Base Modal Layout (Desktop) --- */
+.manual-modal {
+  display: flex;
+  flex-direction: column;
+  padding: 0; /* Override default pad to handle internal scroll */
+  height: 80vh; 
+  max-height: 800px;
+  overflow: hidden; /* Prevent body scroll, handle internally */
+}
+
+.manual-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-panel);
+  flex-shrink: 0;
+}
+
+.modal-title-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.modal-title {
+  font-weight: 700;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--text-main);
+  letter-spacing: 0.05em;
+}
+
+.manual-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden; 
+  position: relative;
+}
+
+/* --- Sidebar (Desktop) --- */
+.manual-sidebar {
+  width: 200px;
+  background: rgba(15, 23, 42, 0.3);
+  border-right: 1px solid var(--border);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.manual-nav-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  text-align: left;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.manual-nav-btn:hover {
+  background: rgba(255,255,255,0.05);
+  color: var(--text-main);
+}
+
+.manual-nav-btn.active {
+  background: rgba(56, 189, 248, 0.1);
+  color: var(--accent);
+  border-color: rgba(56, 189, 248, 0.2);
+}
+
+/* --- Content Area --- */
+.manual-content {
+  flex: 1;
+  padding: 32px 40px;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+
+.manual-section {
+  margin-bottom: 48px;
+  scroll-margin-top: 20px;
+}
+
+.manual-h3 {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin: 0 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.manual-p {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #cbd5e1;
+  margin-bottom: 16px;
+}
+
+.manual-list {
+  padding-left: 20px;
+  margin-bottom: 16px;
+  color: #cbd5e1;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.manual-list li { margin-bottom: 8px; }
+
+.key-cap {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--accent);
+}
+
+.manual-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 32px 0;
+  opacity: 0.3;
+}
+
+/* --- MOBILE TRANSFORMATION --- */
+@media (max-width: 768px) {
+  
+  /* 1. Full Screen Modal */
+  .manual-modal {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+    border: none !important;
+    background: var(--bg-app); /* Match app bg */
+  }
+
+  /* 2. Horizontal Scroll Tabs (Instead of Sidebar) */
+  .manual-body {
+    flex-direction: column;
+  }
+
+  .manual-sidebar {
+    width: 100%;
+    height: auto;
+    flex-direction: row; 
+    overflow-x: auto; /* Horizontal Scroll */
+    overflow-y: hidden;
+    white-space: nowrap;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 12px;
+    gap: 8px;
+    
+    /* Hide Scrollbar but keep functionality */
+    -ms-overflow-style: none;  
+    scrollbar-width: none;  
+  }
+  
+  .manual-sidebar::-webkit-scrollbar { 
+    display: none; 
+  }
+
+  .manual-nav-btn {
+    flex-shrink: 0;
+    padding: 6px 12px;
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .manual-nav-btn.active {
+    background: var(--accent);
+    color: #000; /* Contrast text on active pill */
+    font-weight: 700;
+  }
+
+  /* 3. Tighter Content */
+  .manual-content {
+    padding: 20px;
+  }
+  
+  .manual-h3 { font-size: 0.9rem; }
+  .manual-p, .manual-list { font-size: 0.85rem; }
+}
