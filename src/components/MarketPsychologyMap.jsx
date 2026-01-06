@@ -105,12 +105,12 @@ const InsightPanel = ({ clusterId, label, insights, onClose }) => {
   );
 };
 
-export default function MarketPsychologyMap({ onMetaLoaded }) {
+export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
   const [chartData, setChartData] = useState([]);
   const [insightData, setInsightData] = useState({});
   const [loading, setLoading] = useState(true);
   
-  // --- NEW STATE: NOISE TOGGLE ---
+  // --- STATE: NOISE TOGGLE ---
   const [showNoise, setShowNoise] = useState(true);
 
   // Store only the ID and Label of the active cluster
@@ -174,6 +174,11 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
     }
   };
 
+  // --- MOBILE SIZING LOGIC ---
+  const chartMargins = isMobile 
+    ? { top: 10, right: 10, bottom: 10, left: 10 } 
+    : { top: 20, right: 20, bottom: 20, left: 20 };
+
   if (loading) return (
      <div className="map-loading-container">
         <div className="map-loading-text">Initializing Neural Map...</div>
@@ -203,7 +208,7 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
         )}
 
         <ResponsiveContainer width="100%" height="100%">
-          <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+          <ScatterChart margin={chartMargins}>
             <XAxis type="number" dataKey="x" hide domain={['dataMin', 'dataMax']} />
             <YAxis type="number" dataKey="y" hide domain={['dataMin', 'dataMax']} />
             
@@ -227,13 +232,20 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
                  const isNoise = entry.label === 'Noise';
                  const isHighImpact = !isNoise && Math.abs(entry.impact || 0) > 0.7; 
                  
+                 // DYNAMIC RADIUS CALCULATION
+                 // Mobile: Base size 3 for noise, 8-18 for clusters (Larger Touch Targets)
+                 // Desktop: Base size 2 for noise, 4-12 for clusters
+                 const radius = isMobile 
+                    ? (isNoise ? 3 : Math.min(18, 8 + (Math.abs(entry.impact || 0) * 10)))
+                    : (isNoise ? 2 : Math.min(12, 4 + (Math.abs(entry.impact || 0) * 8)));
+
                  return (
                     <Cell 
                       key={`cell-${index}`} 
                       fill={CHART_COLORS[entry.label] || CHART_COLORS['Noise']} 
                       stroke={isHighImpact ? CHART_COLORS[entry.label] : 'none'}
                       opacity={isNoise ? 0.2 : 0.8}
-                      r={isNoise ? 2 : Math.min(12, 4 + (Math.abs(entry.impact || 0) * 8))} 
+                      r={radius} 
                       className={isHighImpact ? 'node-pulse cursor-pointer' : (isNoise ? 'node-noise' : 'node-standard cursor-pointer')}
                     />
                  );
