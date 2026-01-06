@@ -358,6 +358,64 @@ html, body {
   transition: inherit;
 }
 
+.chart-content-area {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.chart-footer-area {
+  flex-shrink: 0;
+  margin-top: auto;
+  border-top: 1px solid var(--border);
+}
+
+.border-top-subtle {
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+/* --- RESTORED TABLE STYLES (Whale Hunter) --- */
+.table-view-container {
+  overflow: auto;
+  height: 100%;
+  width: 100%;
+}
+
+.table-standard {
+  width: 100%;
+  border-collapse: separate; 
+  border-spacing: 0 2px;
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+}
+
+.table-header {
+  position: sticky;
+  top: 0;
+  background: var(--bg-panel);
+  z-index: 10;
+}
+
+.table-header-row {
+  text-align: left;
+  color: var(--text-muted);
+}
+
+.table-cell-padding {
+  padding: 8px;
+}
+
+.row-bullish {
+  background-color: rgba(34, 197, 94, 0.04);
+  border-left: 3px solid var(--green);
+}
+
+.row-bearish {
+  background-color: rgba(239, 68, 68, 0.04);
+  border-left: 3px solid var(--red);
+}
+
 /* ==================================================================== */
 /* 10. HEADER UTILITIES (New)                                           */
 /* ==================================================================== */
