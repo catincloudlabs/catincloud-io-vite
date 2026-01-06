@@ -1,8 +1,8 @@
 import React from 'react';
-import { Calendar } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const GlobalControlBar = ({ 
-  dates, 
+  dates = [], 
   selectedDate, 
   onDateChange,
   availableTickers = [],
@@ -12,19 +12,29 @@ const GlobalControlBar = ({
   
   if (!dates || dates.length === 0) return null;
 
+  // 1. Determine current position to handle Previous/Next logic
   const currentIndex = dates.indexOf(selectedDate);
-  const maxIndex = dates.length - 1;
-  const progressPercent = maxIndex > 0 ? (currentIndex / maxIndex) * 100 : 100;
+  const canGoBack = currentIndex > 0;
+  const canGoForward = currentIndex < dates.length - 1;
 
-  const handleRangeChange = (e) => {
-    const index = parseInt(e.target.value, 10);
-    onDateChange(dates[index]);
+  const handlePrev = () => {
+    if (canGoBack) {
+      onDateChange(dates[currentIndex - 1]);
+    }
+  };
+
+  const handleNext = () => {
+    if (canGoForward) {
+      onDateChange(dates[currentIndex + 1]);
+    }
   };
 
   return (
-    <div className="global-control-bar panel-flex-row">
+    <div className="global-control-bar panel-flex-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      
+      {/* LEFT: Ticker Pills */}
       <div className="ticker-selector-group">
-        <div className="ticker-pills-row">
+        <div className="ticker-pills-row" style={{ display: 'flex', gap: '8px' }}>
           {availableTickers.map((ticker) => {
             const isActive = selectedTicker === ticker;
             return (
@@ -32,6 +42,14 @@ const GlobalControlBar = ({
                 key={ticker}
                 onClick={() => onTickerChange(ticker)}
                 className={`ticker-pill ${isActive ? 'active' : ''}`}
+                style={{
+                  // Basic inline styles for immediate visual feedback (move to CSS)
+                  padding: '6px 12px',
+                  borderRadius: '16px',
+                  border: isActive ? '1px solid currentColor' : '1px solid transparent',
+                  background: isActive ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                  cursor: 'pointer'
+                }}
               >
                 {ticker}
               </button>
@@ -40,26 +58,35 @@ const GlobalControlBar = ({
         </div>
       </div>
 
-      {/* 2. RIGHT: TIME SLIDER */}
-      <div className="time-travel-group">
-        <div className="slider-wrapper">
-          {/* A. The Slider */}
-          <input
-            type="range"
-            min="0"
-            max={maxIndex}
-            value={currentIndex === -1 ? maxIndex : currentIndex}
-            onChange={handleRangeChange}
-            className="time-slider-input"
-            style={{ '--progress': `${progressPercent}%` }}
-          />
+      {/* RIGHT: Date Stepper */}
+      <div className="date-stepper-group" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        
+        {/* Previous Button */}
+        <button 
+          onClick={handlePrev} 
+          disabled={!canGoBack}
+          className="stepper-btn"
+          style={{ opacity: canGoBack ? 1 : 0.5, cursor: canGoBack ? 'pointer' : 'not-allowed' }}
+        >
+          <ChevronLeft size={20} />
+        </button>
 
-          {/* B. The Date Badge */}
-          <div className="current-date-badge ml-4">
-             <Calendar size={12} className="mr-2"/>
-             {selectedDate}
-          </div>
+        {/* Date Display */}
+        <div className="current-date-badge" style={{ display: 'flex', alignItems: 'center', minWidth: '120px', justifyContent: 'center' }}>
+           <Calendar size={14} className="mr-2" style={{ marginRight: '8px' }}/>
+           <span style={{ fontWeight: 600 }}>{selectedDate}</span>
         </div>
+
+        {/* Next Button */}
+        <button 
+          onClick={handleNext} 
+          disabled={!canGoForward}
+          className="stepper-btn"
+          style={{ opacity: canGoForward ? 1 : 0.5, cursor: canGoForward ? 'pointer' : 'not-allowed' }}
+        >
+          <ChevronRight size={20} />
+        </button>
+
       </div>
 
     </div>
