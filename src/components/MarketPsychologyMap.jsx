@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { ScatterChart, Scatter, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
+import { ScatterChart, Scatter, XAxis, YAxis, ResponsiveContainer, Cell, Legend } from 'recharts';
 import { X, TrendingUp, TrendingDown, Activity, Info, Eye, EyeOff, Target, FileText, Database } from 'lucide-react';
 
 const CHART_COLORS = {
@@ -10,34 +10,8 @@ const CHART_COLORS = {
   'Noise': '#334155'
 };
 
-// --- TOOLTIP COMPONENT ---
-const CustomTooltip = ({ active, payload }) => {
-  if (active && payload && payload.length) {
-    const data = payload[0].payload;
-    const isPositive = data.sentiment > 0;
-    const themeColor = CHART_COLORS[data.label] || '#94a3b8';
-    
-    return (
-      <div className="custom-tooltip map-tooltip" style={{ '--tooltip-accent': themeColor }}>
-        <div className="tooltip-header">
-            <span className="tooltip-ticker">{data.ticker}</span>
-            <span className="tooltip-date">{new Date(data.published_at).toLocaleDateString()}</span>
-        </div>
-        <div className="tooltip-title">"{data.title}"</div>
-        <div className="tooltip-footer">
-            <span className="tooltip-pill">{data.label}</span>
-            <span className={isPositive ? "text-green" : "text-red"}>
-              Sent: {data.sentiment?.toFixed(2)}
-            </span>
-        </div>
-      </div>
-    );
-  }
-  return null;
-};
-
 // --- INSIGHT PANEL ---
-const InsightPanel = ({ clusterId, label, insights, onClose, rawArticles }) => {
+const InsightPanel = ({ clusterId, label, insights, onClose, rawArticles, isLocked }) => {
   const data = insights[clusterId];
   const [viewMode, setViewMode] = useState('narrative'); // 'narrative' | 'sources'
 
@@ -59,12 +33,17 @@ const InsightPanel = ({ clusterId, label, insights, onClose, rawArticles }) => {
             <div className="dock-indicator" />
             <div>
               <h3 className="dock-title">{label}</h3>
-              <p className="dock-subtitle">Cluster ID: {clusterId}</p>
+              <p className="dock-subtitle">
+                {isLocked ? 'Analysis Locked' : 'Previewing Cluster'} • ID: {clusterId}
+              </p>
             </div>
          </div>
-         <button onClick={onClose} className="dock-close-btn">
-           <X size={18} />
-         </button>
+         {/* Only show Close button if locked (clicked) */}
+         {isLocked && (
+             <button onClick={onClose} className="dock-close-btn">
+               <X size={18} />
+             </button>
+         )}
       </div>
 
       <div className="dock-body custom-scrollbar">
@@ -153,7 +132,10 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
   const [showNoise, setShowNoise] = useState(true);
   const [focusMode, setFocusMode] = useState(false);
   const [hoveredLegend, setHoveredLegend] = useState(null);
-  const [activeCluster, setActiveCluster] = useState(null); 
+  
+  // --- INTERACTION STATES ---
+  const [lockedCluster, setLockedCluster] = useState(null);  // Clicked (Persistent)
+  const [hoveredCluster, setHoveredCluster] = useState(null); // Hovered (Ephemeral)
   
   // --- MOBILE RESET LOGIC ---
   const [chartResetKey, setChartResetKey] = useState(0);
@@ -202,10 +184,28 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
     });
   }, [chartData, showNoise, focusMode]); 
 
-  const handlePointClick = (nodeProps) => {
+  // --- HANDLERS ---
+
+  // 1. Mouse Enter (Desktop Hover)
+  const handleNodeMouseEnter = (nodeProps) => {
+    if (isMobile) return; // Disable hover logic on mobile
     const data = nodeProps.payload;
     if (data && data.cluster_id !== undefined && data.label !== 'Noise') {
-        setActiveCluster({
+        setHoveredCluster({ id: data.cluster_id, label: data.label });
+    }
+  };
+
+  // 2. Mouse Leave (Desktop Hover)
+  const handleNodeMouseLeave = () => {
+    if (isMobile) return;
+    setHoveredCluster(null);
+  };
+
+  // 3. Click (Lock selection)
+  const handleNodeClick = (nodeProps) => {
+    const data = nodeProps.payload;
+    if (data && data.cluster_id !== undefined && data.label !== 'Noise') {
+        setLockedCluster({
             id: data.cluster_id,
             label: data.label
         });
@@ -213,7 +213,8 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
   };
 
   const handlePanelClose = () => {
-    setActiveCluster(null);
+    setLockedCluster(null);
+    setHoveredCluster(null);
     setShouldAnimate(false);
     setChartResetKey(prev => prev + 1);
   };
@@ -225,6 +226,9 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
   const handleLegendEnter = (o) => setHoveredLegend(o.value);
   const handleLegendLeave = () => setHoveredLegend(null);
 
+  // Determine what to show: Locked takes precedence over Hovered
+  const activeDisplayCluster = lockedCluster || hoveredCluster;
+
   if (loading) return (
      <div className="map-loading-container">
         <div className="map-loading-text">Initializing Neural Map...</div>
@@ -234,7 +238,7 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
   return (
     <div className="map-wrapper">
         
-        {(!activeCluster || !isMobile) && (
+        {(!activeDisplayCluster || !isMobile) && (
             <div className="map-controls-group">
                 <button 
                     className={`map-control-btn ${!showNoise ? 'active' : ''}`}
@@ -256,10 +260,10 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
             </div>
         )}
 
-        {!activeCluster && (
+        {!activeDisplayCluster && (
            <div className="map-empty-state-hint">
               <span className="hint-text">
-                  Click a colored cluster to analyze
+                  {isMobile ? 'Tap a cluster to analyze' : 'Hover to preview, click to lock'}
               </span>
            </div>
         )}
@@ -269,10 +273,7 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
             <XAxis type="number" dataKey="x" hide domain={['dataMin', 'dataMax']} />
             <YAxis type="number" dataKey="y" hide domain={['dataMin', 'dataMax']} />
             
-            {/* Only render Tooltip if NOT on mobile */}
-            {!isMobile && (
-              <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3', stroke: '#334155' }} />
-            )}
+            {/* TOOLTIP REMOVED ENTIRELY */}
             
             <Legend 
                 verticalAlign="bottom" 
@@ -286,7 +287,9 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
             <Scatter 
                 name="Clusters" 
                 data={sortedData} 
-                onClick={(props) => handlePointClick(props)} 
+                onClick={(props) => handleNodeClick(props)} 
+                onMouseEnter={(props) => handleNodeMouseEnter(props)}
+                onMouseLeave={handleNodeMouseLeave}
                 cursor="pointer"
                 fill="#64748b"
                 isAnimationActive={shouldAnimate}
@@ -300,10 +303,13 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
                     : (isNoise ? 2 : Math.min(12, 4 + (sentMagnitude * 8)));
 
                   let opacity = isNoise ? 0.2 : 0.8;
-                  if (hoveredLegend && hoveredLegend !== entry.label) {
-                    opacity = 0.1; 
-                  } else if (hoveredLegend && hoveredLegend === entry.label) {
-                    opacity = 1;
+                  
+                  // Priority: Hovered Legend > Active Panel > Default
+                  if (hoveredLegend) {
+                      opacity = (hoveredLegend === entry.label) ? 1 : 0.1;
+                  } else if (activeDisplayCluster) {
+                      // If panel is open/hovered, dim everything else
+                      opacity = (activeDisplayCluster.id === entry.cluster_id) ? 1 : 0.1;
                   }
 
                   return (
@@ -321,13 +327,14 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
           </ScatterChart>
         </ResponsiveContainer>
 
-        {activeCluster && (
+        {activeDisplayCluster && (
             <InsightPanel 
-                clusterId={activeCluster.id}
-                label={activeCluster.label}
+                clusterId={activeDisplayCluster.id}
+                label={activeDisplayCluster.label}
                 insights={insightData}
                 rawArticles={chartData} 
                 onClose={handlePanelClose} 
+                isLocked={!!lockedCluster} // Pass lock state to toggle "X" button
             />
         )}
     </div>
