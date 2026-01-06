@@ -234,7 +234,7 @@ function App() {
                  dbtYml={mapMeta?.inspector?.dbt_yml}
                  plotLayout={{ margin: { l: 0, r: 0, t: 0, b: 0 }, xaxis: { visible: false }, yaxis: { visible: false } }}
                  customChart={
-                     <MarketPsychologyMap onMetaLoaded={setMapMeta} />
+                     <MarketPsychologyMap onMetaLoaded={setMapMeta} isMobile={isMobile} />
                  }
                />
             </div>

@@ -1323,12 +1323,16 @@ html, body {
   padding: 16px;
   border-bottom: 1px solid rgba(255,255,255,0.05);
   flex-shrink: 0;
+  gap: 12px; /* Ensure space between title and X */
 }
 
+/* Allow the title group to shrink if needed */
 .dock-title-group {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0; /* CRITICAL: Allows flex child to truncate text */
+  flex: 1;
 }
 
 .dock-indicator {
@@ -1337,14 +1341,19 @@ html, body {
   border-radius: 50%;
   background-color: var(--panel-accent); /* Dynamic CSS Var */
   box-shadow: 0 0 10px var(--panel-accent);
+  flex-shrink: 0;
 }
 
+/* Prevent the title text from breaking layout */
 .dock-title {
   margin: 0;
   font-size: 0.9rem;
   font-weight: 700;
   color: var(--text-main);
   line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* ellipses if title is too long */
 }
 
 .dock-subtitle {
@@ -1355,6 +1364,7 @@ html, body {
   text-transform: uppercase;
 }
 
+/* Ensure the Close Button never shrinks */
 .dock-close-btn {
   background: transparent;
   border: none;
@@ -1363,6 +1373,7 @@ html, body {
   padding: 4px;
   border-radius: 4px;
   transition: all 0.2s;
+  flex-shrink: 0; /* CRITICAL: Prevents button from being squashed */
 }
 
 .dock-close-btn:hover {
