@@ -159,6 +159,7 @@ const InspectorCard = ({
             isOpen={showLogic} 
             onClose={() => setShowLogic(false)} 
             title={title}
+            tag={tag}
             dagCode={sqlCode} 
             dbtCode={dbtCode} 
             dbtYml={dbtYml}
