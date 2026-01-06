@@ -1710,3 +1710,213 @@ html, body {
      display: none;
   }
 }
+
+/* ==================================================================== */
+/* 21. LOGIC INSPECTOR MODAL (Refreshed & Dynamic)                      */
+/* ==================================================================== */
+
+.logic-modal {
+  /* Default Fallback if prop is missing */
+  --dynamic-accent: #38bdf8; 
+  
+  background: #0f172a; 
+  border: 1px solid #334155;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 1000px;
+  height: 85vh; 
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  
+  /* Subtle glow matching the accent color */
+  box-shadow: 0 0 40px -10px color-mix(in srgb, var(--dynamic-accent), transparent 90%);
+}
+
+@keyframes modalPop {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* --- HEADER --- */
+.logic-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: #1e293b;
+  border-bottom: 1px solid #334155;
+}
+
+.logic-title-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.logic-icon-box {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  /* Dynamic Background & Border based on Accent */
+  background: color-mix(in srgb, var(--dynamic-accent), transparent 90%);
+  border: 1px solid color-mix(in srgb, var(--dynamic-accent), transparent 80%);
+  color: var(--dynamic-accent);
+}
+
+/* Utility to colorize icons/text inside the modal */
+.dynamic-text-color {
+  color: var(--dynamic-accent);
+}
+
+.logic-title-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.logic-super {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--dynamic-accent), #94a3b8 40%);
+}
+
+.logic-main {
+  font-size: 1rem;
+  color: #f8fafc;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.logic-close-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.logic-close-btn:hover {
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+}
+
+/* --- TABS --- */
+.logic-tabs {
+  display: flex;
+  gap: 2px;
+  background: #0f172a;
+  padding: 0 24px;
+  border-bottom: 1px solid #334155;
+}
+
+.logic-tab {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  padding: 12px 16px;
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.logic-tab:hover {
+  color: #cbd5e1;
+  background: rgba(255,255,255,0.02);
+}
+
+.logic-tab.active {
+  color: var(--dynamic-accent);
+  border-bottom: 2px solid var(--dynamic-accent);
+  background: color-mix(in srgb, var(--dynamic-accent), transparent 95%);
+}
+
+/* --- EDITOR AREA --- */
+.logic-editor-container {
+  flex: 1;
+  position: relative;
+  background: #0d1117; 
+  overflow: hidden;
+}
+
+.logic-scroll-area {
+  height: 100%;
+  overflow-y: auto;
+  /* Prevent scroll chaining on mobile */
+  overscroll-behavior: contain; 
+}
+
+.logic-copy-btn {
+  position: absolute;
+  top: 16px;
+  right: 24px;
+  z-index: 10;
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid #334155;
+  color: #94a3b8;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  backdrop-filter: blur(4px);
+  transition: all 0.2s;
+}
+
+.logic-copy-btn:hover {
+  background: #334155;
+  color: #fff;
+}
+
+/* --- FOOTER --- */
+.logic-footer {
+  padding: 8px 24px;
+  background: #1e293b;
+  border-top: 1px solid #334155;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logic-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--dynamic-accent); /* Match the modal theme */
+  box-shadow: 0 0 8px color-mix(in srgb, var(--dynamic-accent), transparent 40%);
+}
+
+/* --- MOBILE TWEAKS --- */
+@media (max-width: 768px) {
+  .logic-modal {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    max-width: none;
+    border: none;
+  }
+  
+  .logic-tabs {
+    overflow-x: auto; 
+    padding: 0 12px;
+  }
+  
+  .logic-tab {
+    white-space: nowrap;
+    padding: 12px;
+  }
+}
