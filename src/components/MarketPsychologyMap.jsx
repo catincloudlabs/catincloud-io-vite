@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { ScatterChart, Scatter, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
-import { X, TrendingUp, TrendingDown, Activity, Info, Maximize2, Eye, EyeOff } from 'lucide-react';
+import { X, TrendingUp, TrendingDown, Activity, Info, Eye, EyeOff } from 'lucide-react';
 
 const CHART_COLORS = {
   'Justified Optimism': '#4ade80',
@@ -162,7 +162,7 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
       if (a.label !== 'Noise' && b.label === 'Noise') return 1;
       return 0;
     });
-  }, [chartData, showNoise]); // Depend on showNoise
+  }, [chartData, showNoise]); 
 
   const handlePointClick = (nodeProps) => {
     const data = nodeProps.payload;
@@ -197,7 +197,7 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
         {!activeCluster && (
            <div className="map-empty-state-hint">
               <span className="hint-text">
-                 <Maximize2 size={10} /> Click a colored cluster to analyze
+                 Click a colored cluster to analyze
               </span>
            </div>
         )}
@@ -221,7 +221,7 @@ export default function MarketPsychologyMap({ onMetaLoaded }) {
                 data={sortedData} 
                 onClick={(props) => handlePointClick(props)} 
                 cursor="pointer"
-                fill="#64748b" /* Slate-500 for visible legend icon */
+                fill="#64748b"
             >
               {sortedData.map((entry, index) => {
                  const isNoise = entry.label === 'Noise';
