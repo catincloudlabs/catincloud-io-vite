@@ -89,11 +89,21 @@ function App() {
 
   const chaosMetric = useMemo(() => {
     if (!chaosRaw.length || !selectedDate) return { value: "--", sub: "Low Volatility" };
-    const todayData = chaosRaw.filter(d => d.trade_date === selectedDate);
-    if (!todayData.length) return { value: "--", sub: "No Data" };
-    const maxIVRow = todayData.reduce((prev, current) => (prev.iv > current.iv) ? prev : current);
-    return { value: `${maxIVRow.ticker}`, sub: `Max IV: ${maxIVRow.iv.toFixed(0)}%`, isExtreme: maxIVRow.iv > 100 };
-  }, [chaosRaw, selectedDate]);
+    
+    // UPDATED LOGIC: Filter by Date AND Selected Ticker
+    const tickerData = chaosRaw.filter(d => d.trade_date === selectedDate && d.ticker === selectedTicker);
+    
+    if (!tickerData.length) return { value: "--", sub: "No Data" };
+    
+    const maxIVRow = tickerData.reduce((prev, current) => (prev.iv > current.iv) ? prev : current);
+    
+    // Simplified return (Ticker is redundant in label now)
+    return { 
+        value: `${maxIVRow.iv.toFixed(0)}%`, 
+        sub: `Strike: $${maxIVRow.strike}`, 
+        isExtreme: maxIVRow.iv > 100 
+    };
+  }, [chaosRaw, selectedDate, selectedTicker]);
 
   const riskMetric = useMemo(() => {
     if (!sentVolRaw.length || !selectedDate) return { value: "--", label: "AVG SENTIMENT", color: "text-gray-500" };
@@ -158,13 +168,13 @@ function App() {
 
   // New Helper: Contextual Ticker Selector
   const renderTickerSelector = () => (
-    <div className="relative group mr-4 border-r border-gray-200 pr-4">
+    <div className="relative group mr-4 border-r border-gray-700 pr-4"> {/* Changed border color for dark mode fit */}
         <select 
             value={selectedTicker}
             onChange={(e) => setSelectedTicker(e.target.value)}
-            className="appearance-none bg-transparent font-bold text-sm text-gray-700 cursor-pointer pr-6 focus:outline-none"
+            className="appearance-none bg-transparent font-bold text-sm text-gray-200 cursor-pointer pr-6 focus:outline-none hover:text-white transition-colors"
         >
-            {WATCHLIST.map(t => <option key={t} value={t}>{t}</option>)}
+            {WATCHLIST.map(t => <option key={t} value={t} className="text-black">{t}</option>)}
         </select>
         <ChevronDown size={14} className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-400" />
     </div>
@@ -210,8 +220,12 @@ function App() {
                      <div className="flex items-center">
                          {/* Control: Change Ticker */}
                          {renderTickerSelector()}
+                         
+                         {/* VISUAL POLISH: Small Divider */}
+                         <div className="h-4 w-px bg-gray-700 mx-2 opacity-50"></div>
+
                          {/* Metric: Result of Ticker */}
-                         {renderMetric("Max IV", `${chaosMetric.value} (${chaosMetric.sub.split(': ')[1]})`, getRiskColor(chaosMetric.isExtreme))}
+                         {renderMetric("Max IV", chaosMetric.value, getRiskColor(chaosMetric.isExtreme))}
                      </div>
                  }
                  isLoading={chaosLoading} 
