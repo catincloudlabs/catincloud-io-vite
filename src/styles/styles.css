@@ -1707,7 +1707,6 @@ html, body {
   flex-direction: column;
 }
 
-/* Ensure Header follows Flexbox (Title Left, X Right) */
 .architecture-modal .modal-header {
   display: flex;
   align-items: center;
@@ -1742,7 +1741,7 @@ html, body {
 /* --- Flow Diagram (Desktop: Horizontal) --- */
 .arch-flow {
   display: flex;
-  align-items: flex-start; /* Align tops */
+  align-items: stretch; /* FIX: Forces all nodes to equal height */
   justify-content: center;
   gap: 16px;
   width: 100%;
@@ -1762,6 +1761,7 @@ html, body {
   text-align: center;
   transition: all 0.2s ease;
   position: relative;
+  /* No height set, let flex stretch handle it */
 }
 
 .arch-node:hover {
@@ -1787,7 +1787,10 @@ html, body {
 .color-green  { color: #4ade80; background: rgba(74, 222, 128, 0.1); }
 .color-yellow { color: #facc15; background: rgba(250, 204, 21, 0.1); }
 
-.arch-meta { margin-bottom: 12px; }
+.arch-meta { 
+  margin-bottom: 12px; 
+  flex-grow: 1; /* Pushes description down if needed */
+}
 
 .arch-label {
   font-size: 0.7rem;
@@ -1808,17 +1811,19 @@ html, body {
   font-size: 0.75rem;
   color: #94a3b8;
   line-height: 1.5;
+  margin-top: auto; /* Ensure uniform spacing at bottom */
 }
 
 .arch-desc strong { color: #e2e8f0; font-weight: 600; }
 
 .arch-arrow {
   display: flex;
-  align-items: center;
+  align-items: center; /* FIX: Vertically centers the arrow */
   justify-content: center;
   color: var(--border);
   font-size: 1.5rem;
-  padding-top: 30px; /* Align with node center visually */
+  padding-top: 0;      /* FIX: Removed manual padding */
+  width: 20px;         /* Stable width to prevent squishing */
 }
 
 /* --- Mobile Specific Elements (Hidden on Desktop) --- */
@@ -1840,7 +1845,7 @@ html, body {
 
   .arch-container {
     padding: 20px;
-    align-items: stretch; /* Full width items */
+    align-items: stretch; 
   }
   
   .arch-intro {
@@ -1852,6 +1857,7 @@ html, body {
   /* 1. Vertical Flow */
   .arch-flow {
     flex-direction: column;
+    align-items: stretch; /* Full width cards */
     gap: 0;
   }
 
@@ -1863,6 +1869,7 @@ html, body {
     padding: 16px;
     margin-bottom: 12px;
     cursor: pointer;
+    min-height: 0; /* Override desktop equal height logic */
   }
 
   .arch-node:hover { transform: none; }
@@ -1888,7 +1895,7 @@ html, body {
 
   /* 4. Description (Collapsible) */
   .arch-desc {
-    display: none; /* Hidden by default on mobile */
+    display: none; 
     margin-top: 12px;
     padding-top: 12px;
     border-top: 1px solid rgba(255,255,255,0.05);
@@ -1896,7 +1903,7 @@ html, body {
   }
 
   .arch-node.active .arch-desc {
-    display: block; /* Show when active */
+    display: block; 
   }
 
   .arch-node.active {
@@ -1923,7 +1930,7 @@ html, body {
     padding: 0 0 12px 0;
     font-size: 1.2rem;
     height: auto;
-    width: 100%; /* Force full width so justify-content:center works */
+    width: 100%; 
   }
   
   .mobile-arrow { display: block; }
