@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { ScatterChart, Scatter, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
-import { X, TrendingUp, TrendingDown, Activity, Info, Eye, EyeOff } from 'lucide-react';
+import { X, TrendingUp, TrendingDown, Activity, Info, Eye, EyeOff, Target, FileText, Database } from 'lucide-react';
 
 const CHART_COLORS = {
   'Justified Optimism': '#4ade80',
@@ -36,9 +36,19 @@ const CustomTooltip = ({ active, payload }) => {
   return null;
 };
 
-// --- INSIGHT PANEL (DOCKED) ---
-const InsightPanel = ({ clusterId, label, insights, onClose }) => {
+// --- INSIGHT PANEL ---
+const InsightPanel = ({ clusterId, label, insights, onClose, rawArticles }) => {
   const data = insights[clusterId];
+  const [viewMode, setViewMode] = useState('narrative'); // 'narrative' | 'sources'
+
+  // Filter and sort the raw articles for this specific cluster
+  const sourceArticles = useMemo(() => {
+    if (!rawArticles) return [];
+    return rawArticles
+      .filter(node => node.cluster_id === clusterId)
+      .sort((a, b) => new Date(b.published_at) - new Date(a.published_at));
+  }, [rawArticles, clusterId]);
+
   if (!data) return null;
 
   const themeColor = CHART_COLORS[label] || '#94a3b8';
@@ -60,46 +70,90 @@ const InsightPanel = ({ clusterId, label, insights, onClose }) => {
          </button>
       </div>
 
-      {/* SCROLLABLE BODY */}
+      {/* BODY CONTENT SWITCHER */}
       <div className="dock-body custom-scrollbar">
-          
-          {/* SENTIMENT BADGE */}
-          <div className="dock-sentiment-box">
-             {data.sentiment === 'Bullish' && <TrendingUp size={16} className="text-green" />}
-             {data.sentiment === 'Bearish' && <TrendingDown size={16} className="text-red" />}
-             {data.sentiment === 'Neutral' && <Activity size={16} className="text-muted" />}
-             <span className="dock-sentiment-text">{data.sentiment} Sentiment</span>
-          </div>
-
-          {/* AI SUMMARY */}
-          <div className="dock-section">
-            <h4 className="dock-section-title">
-              <Info size={12} className="mr-2" /> Narrative Analysis
-            </h4>
-            <p className="dock-text">
-              {data.summary}
-            </p>
-          </div>
-
-          {/* KEY TAKEAWAYS */}
-          {data.takeaways && data.takeaways.length > 0 && (
-            <div className="dock-section">
-              <h4 className="dock-section-title">Key Events</h4>
-              <ul className="dock-list">
-                {data.takeaways.map((item, i) => (
-                   <li key={i} className="dock-list-item">
-                      <span className="dock-bullet" />
-                      {item}
-                   </li>
-                ))}
-              </ul>
+        
+        {viewMode === 'narrative' ? (
+          <>
+            {/* SENTIMENT BADGE */}
+            <div className="dock-sentiment-box">
+               {data.sentiment === 'Bullish' && <TrendingUp size={16} className="text-green" />}
+               {data.sentiment === 'Bearish' && <TrendingDown size={16} className="text-red" />}
+               {data.sentiment === 'Neutral' && <Activity size={16} className="text-muted" />}
+               <span className="dock-sentiment-text">{data.sentiment} Sentiment</span>
             </div>
-          )}
+
+            {/* AI SUMMARY */}
+            <div className="dock-section">
+              <h4 className="dock-section-title">
+                <Info size={12} className="mr-2" /> Narrative Analysis
+              </h4>
+              <p className="dock-text">
+                {data.summary}
+              </p>
+            </div>
+
+            {/* KEY TAKEAWAYS */}
+            {data.takeaways && data.takeaways.length > 0 && (
+              <div className="dock-section">
+                <h4 className="dock-section-title">Key Events</h4>
+                <ul className="dock-list">
+                  {data.takeaways.map((item, i) => (
+                     <li key={i} className="dock-list-item">
+                        <span className="dock-bullet" />
+                        {item}
+                     </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </>
+        ) : (
+          /* SOURCE DATA TABLE VIEW */
+          <div className="dock-section">
+             <h4 className="dock-section-title mb-4">
+               <Database size={12} className="mr-2" /> Underlying Signals ({sourceArticles.length})
+             </h4>
+             <div className="overflow-x-auto">
+               <table className="dock-table">
+                 <thead>
+                   <tr>
+                     <th>Ticker</th>
+                     <th>Headline</th>
+                     <th className="text-right">Sent.</th>
+                   </tr>
+                 </thead>
+                 <tbody>
+                   {sourceArticles.map((row, i) => (
+                     <tr key={i}>
+                       <td className="font-mono text-xs text-slate-300">{row.ticker}</td>
+                       <td className="max-w-[140px] truncate" title={row.title}>{row.title}</td>
+                       <td className={`text-right font-mono ${row.sentiment > 0 ? 'text-green' : 'text-red'}`}>
+                         {row.sentiment > 0 ? '+' : ''}{row.sentiment?.toFixed(2)}
+                       </td>
+                     </tr>
+                   ))}
+                 </tbody>
+               </table>
+             </div>
+          </div>
+        )}
       </div>
 
-      {/* FOOTER */}
-      <div className="dock-footer">
-         AI Analysis Updated: {new Date(data.lastUpdated).toLocaleString()}
+      {/* FOOTER ACTIONS */}
+      <div className="dock-footer flex justify-between items-center">
+         <span className="text-[10px] text-slate-500">Updated: {new Date(data.lastUpdated).toLocaleTimeString()}</span>
+         
+         <button 
+           className="dock-action-btn"
+           onClick={() => setViewMode(viewMode === 'narrative' ? 'sources' : 'narrative')}
+         >
+           {viewMode === 'narrative' ? (
+             <> <Database size={12} /> View Sources </>
+           ) : (
+             <> <FileText size={12} /> View Summary </>
+           )}
+         </button>
       </div>
     </div>
   );
@@ -110,10 +164,11 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
   const [insightData, setInsightData] = useState({});
   const [loading, setLoading] = useState(true);
   
-  // --- STATE: NOISE TOGGLE ---
+  // --- VIEW STATES ---
   const [showNoise, setShowNoise] = useState(true);
+  const [focusMode, setFocusMode] = useState(false); // Semantic Zoom
+  const [hoveredLegend, setHoveredLegend] = useState(null); // Legend Interaction
 
-  // Store only the ID and Label of the active cluster
   const [activeCluster, setActiveCluster] = useState(null); 
 
   useEffect(() => {
@@ -151,18 +206,23 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
   const sortedData = useMemo(() => {
     let data = [...chartData];
 
-    // 1. Filter out Noise if toggle is off
+    // 1. Hide Noise Toggle
     if (!showNoise) {
         data = data.filter(d => d.label !== 'Noise');
     }
 
-    // 2. Sort: "Noise" to background, everything else to foreground
+    // 2. Semantic Zoom (Focus Mode) - Show only High Impact (> 0.6)
+    if (focusMode) {
+        data = data.filter(d => Math.abs(d.impact || 0) > 0.6);
+    }
+
+    // 3. Sort for Z-Index (Noise back, Impact front)
     return data.sort((a, b) => {
       if (a.label === 'Noise' && b.label !== 'Noise') return -1;
       if (a.label !== 'Noise' && b.label === 'Noise') return 1;
       return 0;
     });
-  }, [chartData, showNoise]); 
+  }, [chartData, showNoise, focusMode]); 
 
   const handlePointClick = (nodeProps) => {
     const data = nodeProps.payload;
@@ -174,10 +234,18 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
     }
   };
 
-  // --- MOBILE SIZING LOGIC ---
   const chartMargins = isMobile 
     ? { top: 10, right: 10, bottom: 10, left: 10 } 
     : { top: 20, right: 20, bottom: 20, left: 20 };
+
+  // --- LEGEND HANDLERS ---
+  const handleLegendEnter = (o) => {
+    setHoveredLegend(o.value);
+  };
+  
+  const handleLegendLeave = () => {
+    setHoveredLegend(null);
+  };
 
   if (loading) return (
      <div className="map-loading-container">
@@ -188,15 +256,28 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
   return (
     <div className="map-wrapper">
         
-        {/* --- TOGGLE CONTROL (Top Left) --- */}
-        <button 
-            className={`map-control-btn ${!showNoise ? 'active' : ''}`}
-            onClick={() => setShowNoise(!showNoise)}
-            title={showNoise ? "Hide Noise" : "Show Noise"}
-        >
-            {showNoise ? <Eye size={14} /> : <EyeOff size={14} />}
-            <span className="control-text">{showNoise ? "Noise On" : "Noise Off"}</span>
-        </button>
+        {/* --- CONTROLS GROUP (Top Left) --- */}
+        <div className="map-controls-group">
+            {/* NOISE TOGGLE */}
+            <button 
+                className={`map-control-btn ${!showNoise ? 'active' : ''}`}
+                onClick={() => setShowNoise(!showNoise)}
+                title={showNoise ? "Hide Noise" : "Show Noise"}
+            >
+                {showNoise ? <Eye size={14} /> : <EyeOff size={14} />}
+                <span className="control-text desktop-only-text">Noise</span>
+            </button>
+
+            {/* SEMANTIC ZOOM (FOCUS MODE) */}
+            <button 
+                className={`map-control-btn ${focusMode ? 'active-focus' : ''}`}
+                onClick={() => setFocusMode(!focusMode)}
+                title="Focus Mode (High Impact Only)"
+            >
+                <Target size={14} />
+                <span className="control-text desktop-only-text">Focus</span>
+            </button>
+        </div>
 
         {/* EMPTY STATE HINT (Top Right) */}
         {!activeCluster && (
@@ -218,7 +299,9 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
                 verticalAlign="bottom" 
                 height={36} 
                 iconType="circle" 
-                wrapperStyle={{ fontSize: '11px', color: '#94a3b8', paddingTop: '10px' }} 
+                wrapperStyle={{ fontSize: '11px', color: '#94a3b8', paddingTop: '10px', cursor: 'pointer' }}
+                onMouseEnter={handleLegendEnter}
+                onMouseLeave={handleLegendLeave}
             />
             
             <Scatter 
@@ -232,19 +315,25 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
                  const isNoise = entry.label === 'Noise';
                  const isHighImpact = !isNoise && Math.abs(entry.impact || 0) > 0.7; 
                  
-                 // DYNAMIC RADIUS CALCULATION
-                 // Mobile: Base size 3 for noise, 8-18 for clusters (Larger Touch Targets)
-                 // Desktop: Base size 2 for noise, 4-12 for clusters
+                 // Radius Logic
                  const radius = isMobile 
                     ? (isNoise ? 3 : Math.min(18, 8 + (Math.abs(entry.impact || 0) * 10)))
                     : (isNoise ? 2 : Math.min(12, 4 + (Math.abs(entry.impact || 0) * 8)));
+
+                 // INTERACTIVE LEGEND OPACITY LOGIC
+                 let opacity = isNoise ? 0.2 : 0.8;
+                 if (hoveredLegend && hoveredLegend !== entry.label) {
+                    opacity = 0.1; 
+                 } else if (hoveredLegend && hoveredLegend === entry.label) {
+                    opacity = 1; // Highlight active group
+                 }
 
                  return (
                     <Cell 
                       key={`cell-${index}`} 
                       fill={CHART_COLORS[entry.label] || CHART_COLORS['Noise']} 
                       stroke={isHighImpact ? CHART_COLORS[entry.label] : 'none'}
-                      opacity={isNoise ? 0.2 : 0.8}
+                      opacity={opacity}
                       r={radius} 
                       className={isHighImpact ? 'node-pulse cursor-pointer' : (isNoise ? 'node-noise' : 'node-standard cursor-pointer')}
                     />
@@ -254,12 +343,13 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
           </ScatterChart>
         </ResponsiveContainer>
 
-        {/* DOCKED INSIGHT PANEL */}
+        {/* DOCKED INSIGHT PANEL (With rawArticles passed down) */}
         {activeCluster && (
             <InsightPanel 
                 clusterId={activeCluster.id}
                 label={activeCluster.label}
                 insights={insightData}
+                rawArticles={chartData} 
                 onClose={() => setActiveCluster(null)}
             />
         )}
