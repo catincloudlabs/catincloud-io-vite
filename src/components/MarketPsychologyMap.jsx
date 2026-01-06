@@ -99,10 +99,10 @@ const InsightPanel = ({ clusterId, label, insights, onClose, rawArticles }) => {
                 <h4 className="dock-section-title">Key Events</h4>
                 <ul className="dock-list">
                   {data.takeaways.map((item, i) => (
-                     <li key={i} className="dock-list-item">
-                        <span className="dock-bullet" />
-                        {item}
-                     </li>
+                      <li key={i} className="dock-list-item">
+                         <span className="dock-bullet" />
+                         {item}
+                      </li>
                   ))}
                 </ul>
               </div>
@@ -211,12 +211,13 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
         data = data.filter(d => d.label !== 'Noise');
     }
 
-    // 2. Semantic Zoom (Focus Mode) - Show only High Impact (> 0.6)
+    // 2. Semantic Zoom (Focus Mode) - Show only High Sentiment Magnitude (> 0.6)
     if (focusMode) {
-        data = data.filter(d => Math.abs(d.impact || 0) > 0.6);
+        // CHANGED: Using Sentiment Magnitude instead of Impact
+        data = data.filter(d => Math.abs(d.sentiment || 0) > 0.6);
     }
 
-    // 3. Sort for Z-Index (Noise back, Impact front)
+    // 3. Sort for Z-Index (Noise back, Impact/Sentiment front)
     return data.sort((a, b) => {
       if (a.label === 'Noise' && b.label !== 'Noise') return -1;
       if (a.label !== 'Noise' && b.label === 'Noise') return 1;
@@ -272,7 +273,7 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
                 <button 
                     className={`map-control-btn ${focusMode ? 'active-focus' : ''}`}
                     onClick={() => setFocusMode(!focusMode)}
-                    title="Focus Mode (High Impact Only)"
+                    title="Focus Mode (High Sentiment Magnitude Only)"
                 >
                     <Target size={14} />
                     <span className="control-text desktop-only-text">Focus</span>
@@ -284,7 +285,7 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
         {!activeCluster && (
            <div className="map-empty-state-hint">
               <span className="hint-text">
-                 Click a colored cluster to analyze
+                  Click a colored cluster to analyze
               </span>
            </div>
         )}
@@ -313,32 +314,31 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
                 fill="#64748b"
             >
               {sortedData.map((entry, index) => {
-                 const isNoise = entry.label === 'Noise';
-                 const isHighImpact = !isNoise && Math.abs(entry.impact || 0) > 0.7; 
-                 
-                 // Radius Logic
-                 const radius = isMobile 
-                    ? (isNoise ? 3 : Math.min(18, 8 + (Math.abs(entry.impact || 0) * 10)))
-                    : (isNoise ? 2 : Math.min(12, 4 + (Math.abs(entry.impact || 0) * 8)));
+                  const isNoise = entry.label === 'Noise';
+                  const sentMagnitude = Math.abs(entry.sentiment || 0);
+                  const isHighMagnitude = !isNoise && sentMagnitude > 0.7; 
+                  const radius = isMobile 
+                    ? (isNoise ? 3 : Math.min(18, 8 + (sentMagnitude * 10)))
+                    : (isNoise ? 2 : Math.min(12, 4 + (sentMagnitude * 8)));
 
-                 // INTERACTIVE LEGEND OPACITY LOGIC
-                 let opacity = isNoise ? 0.2 : 0.8;
-                 if (hoveredLegend && hoveredLegend !== entry.label) {
+                  // INTERACTIVE LEGEND OPACITY LOGIC
+                  let opacity = isNoise ? 0.2 : 0.8;
+                  if (hoveredLegend && hoveredLegend !== entry.label) {
                     opacity = 0.1; 
-                 } else if (hoveredLegend && hoveredLegend === entry.label) {
+                  } else if (hoveredLegend && hoveredLegend === entry.label) {
                     opacity = 1; // Highlight active group
-                 }
+                  }
 
-                 return (
+                  return (
                     <Cell 
                       key={`cell-${index}`} 
                       fill={CHART_COLORS[entry.label] || CHART_COLORS['Noise']} 
-                      stroke={isHighImpact ? CHART_COLORS[entry.label] : 'none'}
+                      stroke={isHighMagnitude ? CHART_COLORS[entry.label] : 'none'}
                       opacity={opacity}
                       r={radius} 
-                      className={isHighImpact ? 'node-pulse cursor-pointer' : (isNoise ? 'node-noise' : 'node-standard cursor-pointer')}
+                      className={isHighMagnitude ? 'node-pulse cursor-pointer' : (isNoise ? 'node-noise' : 'node-standard cursor-pointer')}
                     />
-                 );
+                  );
               })}
             </Scatter>
           </ScatterChart>
