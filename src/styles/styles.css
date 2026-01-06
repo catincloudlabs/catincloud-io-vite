@@ -134,6 +134,25 @@ html, body {
   flex-shrink: 0;
 }
 
+/* --- MOBILE HEADER OVERRIDES (Section 4 Update) --- */
+@media (max-width: 768px) {
+  /* 1. Hide Title & Tag on Mobile */
+  .panel-header-identity {
+    display: none !important;
+  }
+  
+  /* 2. Space Metric (Left) and Logic (Right) */
+  .panel-header-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  /* 3. Hide the vertical divider on mobile */
+  .panel-header-controls .vertical-divider {
+    display: none;
+  }
+}
+
 .panel-title {
   /* Removed flex properties here as they are now handled by parent wrapper */
   font-size: 0.85rem;
@@ -149,11 +168,13 @@ html, body {
   text-overflow: ellipsis;
 }
 
+/* RED-LINE UPDATE: De-emphasized Description */
 .panel-desc {
-  font-size: 0.8rem;
-  color: var(--text-muted);
+  font-size: 0.75rem; 
+  color: rgba(148, 163, 184, 0.7); 
   margin-bottom: 12px;
-  margin-top: 0;
+  margin-top: 4px;
+  line-height: 1.4;
 }
 
 .tag {
@@ -414,6 +435,51 @@ html, body {
 .row-bearish {
   background-color: rgba(239, 68, 68, 0.04);
   border-left: 3px solid var(--red);
+}
+
+/* --- TABLE CARD LAYOUT & PILLS (Section 9 Update) --- */
+/* Sentiment Pills (Phase 1) */
+.sentiment-pill {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+.pill-green { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
+.pill-red   { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+
+@media (max-width: 768px) {
+  /* Transform Table to Cards */
+  .table-header { display: none; }
+  
+  .table-standard tbody tr {
+    display: flex;
+    flex-wrap: wrap;
+    background: rgba(30, 41, 59, 0.4);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    padding: 8px;
+  }
+
+  .table-standard td {
+    display: flex;
+    flex-direction: column;
+    width: 50%; /* 2x3 Grid */
+    padding: 8px;
+    border: none !important;
+    text-align: left !important;
+  }
+
+  /* Inject Labels from data-label attribute */
+  .table-standard td::before {
+    content: attr(data-label);
+    font-size: 0.65rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
 }
 
 /* ==================================================================== */
@@ -758,6 +824,20 @@ html, body {
     margin-right: -20px;
     width: calc(100% + 40px);
   }
+
+  /* RED-LINE UPDATE: Mobile Manual Sidebar Fade Wrapper */
+  .manual-sidebar-wrapper {
+    position: relative;
+  }
+
+  .manual-sidebar-wrapper::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0; bottom: 0;
+    width: 24px;
+    background: linear-gradient(to right, transparent, var(--bg-app));
+    pointer-events: none;
+  }
 }
 
 /* ==================================================================== */
@@ -800,10 +880,24 @@ html, body {
 
 /* --- Node Animations (Recharts Cells) --- */
 
+/* RED-LINE UPDATE: Radioactive Pulse */
 @keyframes softPulse {
-  0% { r: 6px; opacity: 0.8; }
-  50% { r: 9px; opacity: 1; stroke-width: 2px; }
-  100% { r: 6px; opacity: 0.8; }
+  0% { 
+    r: 6px; 
+    opacity: 0.8; 
+    stroke-width: 0px;
+  }
+  50% { 
+    r: 9px; 
+    opacity: 1; 
+    stroke-width: 3px;
+    stroke-opacity: 0.3; /* Soft halo */
+  }
+  100% { 
+    r: 6px; 
+    opacity: 0.8; 
+    stroke-width: 0px;
+  }
 }
 
 .node-pulse {
@@ -1053,6 +1147,20 @@ html, body {
     animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
+  /* RED-LINE UPDATE: Mobile Sheet "Handle" Affordance */
+  .insight-panel-dock::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    pointer-events: none;
+  }
+
   @keyframes slideUp {
     from { transform: translateY(100%); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
@@ -1060,6 +1168,8 @@ html, body {
 
   .dock-header {
     padding: 16px 20px;
+    /* Extra padding for handle */
+    padding-top: 24px; 
     min-height: 64px;
   }
 
@@ -1446,17 +1556,19 @@ html, body {
 }
 
 /* --- POLISHED METRIC CARD (Glass Pill - Side by Side) --- */
+/* RED-LINE UPDATE: Enhanced Glass & Label Spacing */
 .metric-glass {
   display: flex;
   flex-direction: row; 
   align-items: center; 
-  gap: 12px; 
-  padding: 6px 14px;
+  gap: 10px; /* Wider Gap */
+  padding: 6px 16px; /* Wider Padding */
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 6px;
   min-width: 0; 
   transition: all 0.2s ease;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05); /* Inner Light */
 }
 
 .metric-glass:hover {
@@ -1472,6 +1584,8 @@ html, body {
   color: var(--text-muted);
   margin-bottom: 0; 
   white-space: nowrap;
+  opacity: 0.7; /* Lower contrast label */
+  font-weight: 600;
 }
 
 .metric-value {

@@ -38,7 +38,7 @@ const InspectorCard = ({
       {/* --- HEADER --- */}
       <div className="panel-header">
         
-        {/* 1. LEFT: Identity (Title + Tag) */}
+        {/* 1. LEFT: Identity (Title + Tag) -> Hidden on Mobile */}
         <div className="panel-header-identity">
           {isLoading && <Activity className="spin-slow" size={16} color="#64748b"/>}
           
@@ -53,22 +53,22 @@ const InspectorCard = ({
           )}
         </div>
         
-        {/* 2. RIGHT: Insight & Utility (Metric + Logic) */}
+        {/* 2. RIGHT: Insight & Utility -> Split on Mobile */}
         <div className="panel-header-controls"> 
             
-            {/* A. The Metric */}
+            {/* A. The Metric (Left on Mobile) */}
             {headerControls && (
                 <div className="header-tabs-wrapper">
                     {headerControls}
                 </div>
             )}
 
-            {/* Divider */}
+            {/* Divider (Hidden on Mobile) */}
             {headerControls && hasLogic && (
                 <div className="vertical-divider"></div>
             )}
 
-            {/* B. The Logic Button */}
+            {/* B. The Logic Button (Right on Mobile) */}
             {hasLogic && (
             <button 
                 className="nav-link panel-toggle-btn logic-inspector-btn"
@@ -131,17 +131,25 @@ const InspectorCard = ({
                     <tbody>
                       {tableData.map((row, i) => (
                         <tr key={i} className={row.sentiment === 'Bullish' ? 'row-bullish' : 'row-bearish'}>
-                          <td className="table-cell-padding font-bold text-accent">{row.ticker}</td>
-                          <td className="table-cell-padding">{row.strike}</td>
-                          <td className="table-cell-padding text-muted text-sm">{row.expiry}</td>
-                          <td className={`table-cell-padding font-bold ${isCall(row.type) ? 'text-green' : 'text-red'}`}>
+                          <td data-label="TICKER" className="table-cell-padding font-bold text-accent">
+                             {row.ticker}
+                          </td>
+                          <td data-label="STRIKE" className="table-cell-padding">
+                             {row.strike}
+                          </td>
+                          <td data-label="EXPIRY" className="table-cell-padding text-muted text-sm">
+                             {row.expiry}
+                          </td>
+                          <td data-label="TYPE" className={`table-cell-padding font-bold ${isCall(row.type) ? 'text-green' : 'text-red'}`}>
                              {row.type}
                           </td>
-                          <td className="table-cell-padding text-right font-mono text-white">
+                          <td data-label="PREMIUM" className="table-cell-padding text-right font-mono text-white">
                             ${(row.premium / 1000000).toFixed(1)}M
                           </td>
-                          <td className={`table-cell-padding text-right font-bold ${row.sentiment === 'Bullish' ? 'text-green' : 'text-red'}`}>
-                            {row.sentiment}
+                          <td data-label="SENTIMENT" className="table-cell-padding text-right">
+                             <span className={`sentiment-pill ${row.sentiment === 'Bullish' ? 'pill-green' : 'pill-red'}`}>
+                                {row.sentiment}
+                             </span>
                           </td>
                         </tr>
                       ))}
