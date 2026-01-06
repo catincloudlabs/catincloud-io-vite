@@ -5,8 +5,8 @@
   Location: Minneapolis, MN
 
 /* SITE */
-  Purpose: Live R&D Environment ("The Engine Room")
-  Last Update: 2025/12/27
+  Purpose: Live R&D Environment ("Terminal")
+  Last Update: 2026/01/06
   Standards: HTML5, CSS3, WCAG 2.1 AA
 
 /* TECH STACK */
