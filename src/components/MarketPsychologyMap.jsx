@@ -41,7 +41,6 @@ const InsightPanel = ({ clusterId, label, insights, onClose, rawArticles }) => {
   const data = insights[clusterId];
   const [viewMode, setViewMode] = useState('narrative'); // 'narrative' | 'sources'
 
-  // Filter and sort the raw articles for this specific cluster
   const sourceArticles = useMemo(() => {
     if (!rawArticles) return [];
     return rawArticles
@@ -55,8 +54,6 @@ const InsightPanel = ({ clusterId, label, insights, onClose, rawArticles }) => {
 
   return (
     <div className="insight-panel-dock" style={{ '--panel-accent': themeColor }}>
-      
-      {/* HEADER */}
       <div className="dock-header">
          <div className="dock-title-group">
             <div className="dock-indicator" />
@@ -70,30 +67,21 @@ const InsightPanel = ({ clusterId, label, insights, onClose, rawArticles }) => {
          </button>
       </div>
 
-      {/* BODY CONTENT SWITCHER */}
       <div className="dock-body custom-scrollbar">
-        
         {viewMode === 'narrative' ? (
           <>
-            {/* SENTIMENT BADGE */}
             <div className="dock-sentiment-box">
                {data.sentiment === 'Bullish' && <TrendingUp size={16} className="text-green" />}
                {data.sentiment === 'Bearish' && <TrendingDown size={16} className="text-red" />}
                {data.sentiment === 'Neutral' && <Activity size={16} className="text-muted" />}
                <span className="dock-sentiment-text">{data.sentiment} Sentiment</span>
             </div>
-
-            {/* AI SUMMARY */}
             <div className="dock-section">
               <h4 className="dock-section-title">
                 <Info size={12} className="mr-2" /> Narrative Analysis
               </h4>
-              <p className="dock-text">
-                {data.summary}
-              </p>
+              <p className="dock-text">{data.summary}</p>
             </div>
-
-            {/* KEY TAKEAWAYS */}
             {data.takeaways && data.takeaways.length > 0 && (
               <div className="dock-section">
                 <h4 className="dock-section-title">Key Events</h4>
@@ -109,7 +97,6 @@ const InsightPanel = ({ clusterId, label, insights, onClose, rawArticles }) => {
             )}
           </>
         ) : (
-          /* SOURCE DATA TABLE VIEW */
           <div className="dock-section">
              <h4 className="dock-section-title mb-4">
                <Database size={12} className="mr-2" /> Underlying Signals ({sourceArticles.length})
@@ -140,10 +127,8 @@ const InsightPanel = ({ clusterId, label, insights, onClose, rawArticles }) => {
         )}
       </div>
 
-      {/* FOOTER ACTIONS */}
       <div className="dock-footer flex justify-between items-center">
          <span className="text-[10px] text-slate-500">Updated: {new Date(data.lastUpdated).toLocaleTimeString()}</span>
-         
          <button 
            className="dock-action-btn"
            onClick={() => setViewMode(viewMode === 'narrative' ? 'sources' : 'narrative')}
@@ -166,12 +151,13 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
   
   // --- VIEW STATES ---
   const [showNoise, setShowNoise] = useState(true);
-  const [focusMode, setFocusMode] = useState(false); // Semantic Zoom
-  const [hoveredLegend, setHoveredLegend] = useState(null); // Legend Interaction
+  const [focusMode, setFocusMode] = useState(false);
+  const [hoveredLegend, setHoveredLegend] = useState(null);
   const [activeCluster, setActiveCluster] = useState(null); 
   
-  // Re-render state of chart to clear stuck tooltips on mobile
+  // --- MOBILE RESET LOGIC ---
   const [chartResetKey, setChartResetKey] = useState(0);
+  const [shouldAnimate, setShouldAnimate] = useState(true); // Control animation state
 
   useEffect(() => {
     const fetchData = async () => {
@@ -204,21 +190,11 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
     fetchData();
   }, [onMetaLoaded]);
 
-  // --- MEMOIZED DATA PROCESSING ---
   const sortedData = useMemo(() => {
     let data = [...chartData];
+    if (!showNoise) data = data.filter(d => d.label !== 'Noise');
+    if (focusMode) data = data.filter(d => Math.abs(d.sentiment || 0) > 0.6);
 
-    // 1. Hide Noise Toggle
-    if (!showNoise) {
-        data = data.filter(d => d.label !== 'Noise');
-    }
-
-    // 2. Semantic Zoom (Focus Mode) - Show only High Sentiment Magnitude (> 0.6)
-    if (focusMode) {
-        data = data.filter(d => Math.abs(d.sentiment || 0) > 0.6);
-    }
-
-    // 3. Sort for Z-Index (Noise back, Impact/Sentiment front)
     return data.sort((a, b) => {
       if (a.label === 'Noise' && b.label !== 'Noise') return -1;
       if (a.label !== 'Noise' && b.label === 'Noise') return 1;
@@ -238,8 +214,9 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
 
   const handlePanelClose = () => {
     setActiveCluster(null);
-    // FORCE CHART RESET: This increments the key, causing ScatterChart to re-mount.
-    // This wipes the internal "hovered" state of Recharts, killing the stuck tooltip.
+    // 1. Disable animation so it doesn't "float" in again
+    setShouldAnimate(false);
+    // 2. Force remount to clear the stuck tooltip
     setChartResetKey(prev => prev + 1);
   };
 
@@ -247,14 +224,8 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
     ? { top: 10, right: 10, bottom: 10, left: 10 } 
     : { top: 20, right: 20, bottom: 20, left: 20 };
 
-  // --- LEGEND HANDLERS ---
-  const handleLegendEnter = (o) => {
-    setHoveredLegend(o.value);
-  };
-  
-  const handleLegendLeave = () => {
-    setHoveredLegend(null);
-  };
+  const handleLegendEnter = (o) => setHoveredLegend(o.value);
+  const handleLegendLeave = () => setHoveredLegend(null);
 
   if (loading) return (
      <div className="map-loading-container">
@@ -265,8 +236,6 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
   return (
     <div className="map-wrapper">
         
-        {/* --- CONTROLS GROUP (Top Left) --- */}
-        {/* OPTIONAL SAFETY TWEAK: Hide controls if a cluster is active (Mobile UX) */}
         {(!activeCluster || !isMobile) && (
             <div className="map-controls-group">
                 <button 
@@ -289,7 +258,6 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
             </div>
         )}
 
-        {/* EMPTY STATE HINT (Top Right) */}
         {!activeCluster && (
            <div className="map-empty-state-hint">
               <span className="hint-text">
@@ -299,9 +267,6 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
         )}
 
         <ResponsiveContainer width="100%" height="100%">
-          {/* KEY CHANGE: The 'key' prop here forces a remount when closing the panel,
-              clearing the stuck tooltip on mobile.
-          */}
           <ScatterChart key={chartResetKey} margin={chartMargins}>
             <XAxis type="number" dataKey="x" hide domain={['dataMin', 'dataMax']} />
             <YAxis type="number" dataKey="y" hide domain={['dataMin', 'dataMax']} />
@@ -323,6 +288,7 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
                 onClick={(props) => handlePointClick(props)} 
                 cursor="pointer"
                 fill="#64748b"
+                isAnimationActive={shouldAnimate}
             >
               {sortedData.map((entry, index) => {
                   const isNoise = entry.label === 'Noise';
@@ -332,12 +298,11 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
                     ? (isNoise ? 3 : Math.min(18, 8 + (sentMagnitude * 10)))
                     : (isNoise ? 2 : Math.min(12, 4 + (sentMagnitude * 8)));
 
-                  // INTERACTIVE LEGEND OPACITY LOGIC
                   let opacity = isNoise ? 0.2 : 0.8;
                   if (hoveredLegend && hoveredLegend !== entry.label) {
                     opacity = 0.1; 
                   } else if (hoveredLegend && hoveredLegend === entry.label) {
-                    opacity = 1; // Highlight active group
+                    opacity = 1;
                   }
 
                   return (
@@ -355,7 +320,6 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
           </ScatterChart>
         </ResponsiveContainer>
 
-        {/* DOCKED INSIGHT PANEL (With rawArticles passed down) */}
         {activeCluster && (
             <InsightPanel 
                 clusterId={activeCluster.id}
