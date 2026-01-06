@@ -230,7 +230,7 @@ function App() {
             </div>
 
             {/* 4. RISK: RISK RADAR */}
-            <div className="span-2 h-standard area-risk">
+            <div className="span-2 h-standard area-risk ai-hero-card">
                 <InspectorCard 
                   title="Risk Radar" 
                   desc="Sentiment vs Volatility (Market Wide)"
