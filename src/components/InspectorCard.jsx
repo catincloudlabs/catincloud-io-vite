@@ -24,11 +24,13 @@ const InspectorCard = ({
   sqlCode, 
   dbtCode, 
   dbtYml,
-  headerControls, 
+  headerControls, // <--- This is where the Metrics live now
   children 
 }) => {
   
   const [showLogic, setShowLogic] = useState(false);
+  
+  // Helper for Table view
   const isCall = (type) => ['C', 'CALL', 'Call'].includes(type);
   const hasLogic = Boolean(sqlCode || dbtCode || dbtYml);
   
@@ -36,30 +38,52 @@ const InspectorCard = ({
     <div className={`panel panel-flex-column panel-min-height ${className || ''}`}>
       
       {/* --- HEADER --- */}
-      <div className="panel-header">
-        <div className="panel-title panel-header-actions">
-          {isLoading ? <Activity className="spin-slow mr-2" size={16} color="#64748b"/> : null}
+      <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        
+        {/* 1. LEFT: Identity (Title + Tag) */}
+        <div className="panel-title panel-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {isLoading && <Activity className="spin-slow" size={16} color="#64748b"/>}
           <span className="panel-title-text">{title}</span>
-          {tag && <span className={`tag ml-2 ${tag === 'RISK' ? 'tag-red' : 'tag-blue'}`}>{tag}</span>}
+          
+          {tag && (
+            <span className={`tag ${tag === 'RISK' ? 'tag-red' : 'tag-blue'}`} style={{ marginLeft: 0 }}>
+              {tag}
+            </span>
+          )}
         </div>
         
-        <div className="panel-header-actions">
+        {/* 2. RIGHT: Insight & Utility (Metric + Logic) */}
+        <div className="panel-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            
+            {/* A. The Metric (Primary) */}
             {headerControls && (
                 <div className="header-tabs-wrapper">
                     {headerControls}
                 </div>
             )}
 
+            {/* Divider between Metric and Logic */}
+            {headerControls && hasLogic && (
+                <div style={{ height: '20px', width: '1px', background: '#e2e8f0' }}></div>
+            )}
+
+            {/* B. The Logic Button (Tertiary / Utility) */}
             {hasLogic && (
             <button 
                 className="nav-link panel-toggle-btn logic-inspector-btn"
                 onClick={() => setShowLogic(true)}
                 disabled={isLoading}
                 title="Inspect Data Pipeline Logic"
+                style={{ 
+                    padding: '6px', 
+                    border: 'none', 
+                    background: 'transparent',
+                    cursor: 'pointer',
+                    color: '#94a3b8' // Subtle gray
+                }}
             >
-                <div className="logic-btn-inner">
-                <FileCode size={14} />
-                <span className="ml-1 desktop-only">Logic</span>
+                <div className="logic-btn-inner" style={{ display: 'flex', alignItems: 'center' }}>
+                    <FileCode size={18} className="hover:text-slate-600 transition-colors" />
                 </div>
             </button>
             )}
@@ -78,33 +102,33 @@ const InspectorCard = ({
         )}
 
         {!isLoading && (
-           <>
-             {/* 1. PLOTLY CHART */}
-             {chartType !== 'table' && plotData && (
-                <Plot 
-                  data={plotData} 
-                  layout={{
-                    ...plotLayout,
-                    autosize: true,
-                    margin: plotLayout.margin || { l: 40, r: 20, t: 20, b: 30 },
-                    paper_bgcolor: 'rgba(0,0,0,0)',
-                    plot_bgcolor: 'rgba(0,0,0,0)',
-                    font: { color: '#cbd5e1', family: 'JetBrains Mono, monospace' },
-                    xaxis: { ...plotLayout.xaxis, gridcolor: '#334155' },
-                    yaxis: { ...plotLayout.yaxis, gridcolor: '#334155' }
-                  }}
-                  useResizeHandler={true} 
-                  className="plotly-fill"
-                  config={{ displayModeBar: false, responsive: true }}
-                />
-             )}
+            <>
+              {/* 1. PLOTLY CHART */}
+              {chartType !== 'table' && plotData && (
+                 <Plot 
+                   data={plotData} 
+                   layout={{
+                     ...plotLayout,
+                     autosize: true,
+                     margin: plotLayout.margin || { l: 40, r: 20, t: 20, b: 30 },
+                     paper_bgcolor: 'rgba(0,0,0,0)',
+                     plot_bgcolor: 'rgba(0,0,0,0)',
+                     font: { color: '#cbd5e1', family: 'JetBrains Mono, monospace' },
+                     xaxis: { ...plotLayout.xaxis, gridcolor: '#334155' },
+                     yaxis: { ...plotLayout.yaxis, gridcolor: '#334155' }
+                   }}
+                   useResizeHandler={true} 
+                   className="plotly-fill"
+                   config={{ displayModeBar: false, responsive: true }}
+                 />
+              )}
 
-             {/* 2. DATA TABLE */}
-             {chartType === 'table' && tableData && (
-               <div className="table-view-container custom-scrollbar">
-                 <table className="table-standard">
-                   <thead className="table-header sticky-header">
-                     <tr className="table-header-row">
+              {/* 2. DATA TABLE */}
+              {chartType === 'table' && tableData && (
+                <div className="table-view-container custom-scrollbar">
+                  <table className="table-standard">
+                    <thead className="table-header sticky-header">
+                      <tr className="table-header-row">
                         <th className="table-cell-padding">TICKER</th>
                         <th className="table-cell-padding">STRIKE</th>
                         <th className="table-cell-padding">EXPIRY</th>
@@ -112,36 +136,36 @@ const InspectorCard = ({
                         <th className="table-cell-padding text-right">PREMIUM</th>
                         <th className="table-cell-padding text-right">SENTIMENT</th>
                       </tr>
-                   </thead>
-                   <tbody>
-                     {tableData.map((row, i) => (
-                       <tr key={i} className={row.sentiment === 'Bullish' ? 'row-bullish' : 'row-bearish'}>
-                         <td className="table-cell-padding font-bold text-accent">{row.ticker}</td>
-                         <td className="table-cell-padding">{row.strike}</td>
-                         <td className="table-cell-padding text-muted text-sm">{row.expiry}</td>
-                         <td className={`table-cell-padding font-bold ${isCall(row.type) ? 'text-green' : 'text-red'}`}>
-                            {row.type}
-                         </td>
-                         <td className="table-cell-padding text-right font-mono text-white">
-                           ${(row.premium / 1000000).toFixed(1)}M
-                         </td>
-                         <td className={`table-cell-padding text-right font-bold ${row.sentiment === 'Bullish' ? 'text-green' : 'text-red'}`}>
-                           {row.sentiment}
-                         </td>
-                       </tr>
-                     ))}
-                   </tbody>
-                 </table>
-               </div>
-             )}
-
-             {/* 3. CUSTOM CHART (RECHARTS) */}
-             {customChart && (
-                <div className="custom-chart-wrapper">
-                    {customChart}
+                    </thead>
+                    <tbody>
+                      {tableData.map((row, i) => (
+                        <tr key={i} className={row.sentiment === 'Bullish' ? 'row-bullish' : 'row-bearish'}>
+                          <td className="table-cell-padding font-bold text-accent">{row.ticker}</td>
+                          <td className="table-cell-padding">{row.strike}</td>
+                          <td className="table-cell-padding text-muted text-sm">{row.expiry}</td>
+                          <td className={`table-cell-padding font-bold ${isCall(row.type) ? 'text-green' : 'text-red'}`}>
+                             {row.type}
+                          </td>
+                          <td className="table-cell-padding text-right font-mono text-white">
+                            ${(row.premium / 1000000).toFixed(1)}M
+                          </td>
+                          <td className={`table-cell-padding text-right font-bold ${row.sentiment === 'Bullish' ? 'text-green' : 'text-red'}`}>
+                            {row.sentiment}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-             )}
-           </>
+              )}
+
+              {/* 3. CUSTOM CHART (RECHARTS or MAPS) */}
+              {customChart && (
+                 <div className="custom-chart-wrapper">
+                     {customChart}
+                 </div>
+              )}
+            </>
         )}
       </div>
 
