@@ -1690,3 +1690,240 @@ html, body {
   .manual-h3 { font-size: 0.9rem; }
   .manual-p, .manual-list { font-size: 0.85rem; }
 }
+
+/* ==================================================================== */
+/* 21. ARCHITECTURE MODAL & MOBILE FLOW (New)                           */
+/* ==================================================================== */
+
+/* --- Base Layout --- */
+.architecture-modal {
+  width: 90%;
+  max-width: 1000px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.arch-container {
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.arch-intro {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 40px;
+  max-width: 600px;
+  line-height: 1.6;
+}
+
+/* --- Flow Diagram (Desktop: Horizontal) --- */
+.arch-flow {
+  display: flex;
+  align-items: flex-start; /* Align tops */
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+  position: relative;
+}
+
+.arch-node {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  width: 200px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.arch-node:hover {
+  background: rgba(30, 41, 59, 0.8);
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.3);
+}
+
+.arch-icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  background: rgba(255,255,255,0.05);
+}
+
+.color-orange { color: #f97316; background: rgba(249, 115, 22, 0.1); }
+.color-blue   { color: #38bdf8; background: rgba(56, 189, 248, 0.1); }
+.color-green  { color: #4ade80; background: rgba(74, 222, 128, 0.1); }
+.color-yellow { color: #facc15; background: rgba(250, 204, 21, 0.1); }
+
+.arch-meta { margin-bottom: 12px; }
+
+.arch-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.arch-tech {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-main);
+  font-family: var(--font-mono);
+}
+
+.arch-desc {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+
+.arch-desc strong { color: #e2e8f0; font-weight: 600; }
+
+.arch-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--border);
+  font-size: 1.5rem;
+  padding-top: 30px; /* Align with node center visually */
+}
+
+/* --- Mobile Specific Elements (Hidden on Desktop) --- */
+.mobile-chevron, .mobile-arrow { display: none; }
+.desktop-arrow { display: block; }
+
+
+/* --- MOBILE TRANSFORMATION --- */
+@media (max-width: 768px) {
+  
+  .architecture-modal {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    border-radius: 0 !important;
+    border: none !important;
+    overflow-y: auto;
+  }
+
+  .arch-container {
+    padding: 20px;
+    align-items: stretch; /* Full width items */
+  }
+  
+  .arch-intro {
+    font-size: 0.85rem;
+    margin-bottom: 24px;
+    text-align: left;
+  }
+
+  /* 1. Vertical Flow */
+  .arch-flow {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* 2. Accordion Nodes */
+  .arch-node {
+    width: 100%;
+    align-items: stretch; /* Left align content */
+    text-align: left;
+    padding: 16px;
+    margin-bottom: 12px;
+    cursor: pointer;
+  }
+
+  .arch-node:hover { transform: none; }
+
+  /* 3. Header Layout (Row) */
+  .arch-node-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .arch-icon-box {
+    margin-bottom: 0;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+  }
+  
+  .arch-meta {
+    flex: 1;
+    margin-bottom: 0;
+  }
+
+  /* 4. Description (Collapsible) */
+  .arch-desc {
+    display: none; /* Hidden by default on mobile */
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    animation: fadeIn 0.3s ease;
+  }
+
+  .arch-node.active .arch-desc {
+    display: block; /* Show when active */
+  }
+
+  .arch-node.active {
+    border-color: var(--accent);
+    background: rgba(30, 41, 59, 0.6);
+  }
+
+  /* 5. Indicators */
+  .mobile-chevron {
+    display: block;
+    color: var(--text-muted);
+    transition: transform 0.2s;
+  }
+
+  .arch-node.active .mobile-chevron {
+    transform: rotate(180deg);
+    color: var(--text-main);
+  }
+
+  .desktop-arrow { display: none; }
+  
+  /* Vertical Arrow between nodes */
+  .arch-arrow {
+    padding: 0 0 12px 0;
+    font-size: 1.2rem;
+    height: auto;
+  }
+  
+  .mobile-arrow { display: block; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Footer --- */
+.arch-footer {
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  width: 100%;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
