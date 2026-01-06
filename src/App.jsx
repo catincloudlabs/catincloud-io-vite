@@ -3,7 +3,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import { useSystemHeartbeat } from './hooks/useSystemHeartbeat';
 import { getSentimentColor, getRiskColor } from './utils/statusHelpers';
-import { ChevronDown } from 'lucide-react'; // Needed for the custom dropdown
+import { ChevronDown } from 'lucide-react'; 
 
 // --- LAZY LOAD ---
 const InspectorCard = lazy(() => import('./components/InspectorCard'));
@@ -26,7 +26,6 @@ function App() {
   // --- STATE ---
   const { data: heartbeat } = useSystemHeartbeat();
   
-  // Default State
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTicker, setSelectedTicker] = useState('AAPL'); 
 
@@ -42,10 +41,7 @@ function App() {
   const [sentVolMeta, setSentVolMeta] = useState(null);
   const [sentVolLoading, setSentVolLoading] = useState(true);
 
-  // Map Metadata
   const [mapMeta, setMapMeta] = useState(null);
-
-  // UI State
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
@@ -89,15 +85,9 @@ function App() {
 
   const chaosMetric = useMemo(() => {
     if (!chaosRaw.length || !selectedDate) return { value: "--", sub: "Low Volatility" };
-    
-    // UPDATED LOGIC: Filter by Date AND Selected Ticker
     const tickerData = chaosRaw.filter(d => d.trade_date === selectedDate && d.ticker === selectedTicker);
-    
     if (!tickerData.length) return { value: "--", sub: "No Data" };
-    
     const maxIVRow = tickerData.reduce((prev, current) => (prev.iv > current.iv) ? prev : current);
-    
-    // Simplified return (Ticker is redundant in label now)
     return { 
         value: `${maxIVRow.iv.toFixed(0)}%`, 
         sub: `Strike: $${maxIVRow.strike}`, 
@@ -109,7 +99,6 @@ function App() {
     if (!sentVolRaw.length || !selectedDate) return { value: "--", label: "AVG SENTIMENT", color: "text-gray-500" };
     const todayData = sentVolRaw.filter(d => d.trade_date === selectedDate && WATCHLIST.includes(d.ticker));
     if (!todayData.length) return { value: "--", label: "AVG SENTIMENT", color: "text-gray-500" };
-    
     const avgSent = todayData.reduce((acc, curr) => acc + (curr.sentiment_signal || 0), 0) / todayData.length;
     return { 
         value: avgSent.toFixed(2), 
@@ -117,7 +106,6 @@ function App() {
         color: avgSent > 0 ? "text-green-500" : "text-red-500" 
     };
   }, [sentVolRaw, selectedDate]);
-
 
   // --- PLOT HELPERS ---
   const getFilteredChaosPlot = () => {
@@ -166,9 +154,8 @@ function App() {
     </div>
   );
 
-  // New Helper: Contextual Ticker Selector
   const renderTickerSelector = () => (
-    <div className="relative group mr-4 border-r border-gray-700 pr-4"> {/* Changed border color for dark mode fit */}
+    <div className="relative group mr-4 border-r border-gray-700 pr-4">
         <select 
             value={selectedTicker}
             onChange={(e) => setSelectedTicker(e.target.value)}
@@ -183,7 +170,6 @@ function App() {
   return (
     <div className="app-container">
       
-      {/* 1. HEADER */}
       <div className="sticky-header-group">
         <Header />
       </div>
@@ -192,12 +178,12 @@ function App() {
         
         <Suspense fallback={<div className="span-4 h-tall flex items-center justify-center text-muted animate-pulse">Initializing AI Models...</div>}>
 
-            {/* 2. HERO: MARKET PSYCHOLOGY */}
+            {/* 2. HERO: MARKET PSYCHOLOGY (Tag: AI MODEL kept) */}
             <div className="span-4 h-tall area-cluster">
                <InspectorCard 
                  className="ai-hero-card"
                  title="Market Psychology Map"
-                 tag="AI MODEL"
+                 tag="AI MODEL" 
                  desc="t-SNE Clustering Using OpenAI Embeddings"
                  headerControls={renderMetric("Fear/Greed", "NEUTRAL", "text-blue-500")}
                  sqlCode={mapMeta?.inspector?.sql_logic}
@@ -210,21 +196,16 @@ function App() {
                />
             </div>
 
-            {/* 3. STRUCTURE: CHAOS MAP (Now with Ticker Selector) */}
+            {/* 3. STRUCTURE: CHAOS MAP (Tag Removed) */}
             <div className="span-2 h-standard area-chaos">
                <InspectorCard 
                  title="Chaos Map" 
-                 tag="Gamma" 
+                 // tag="Gamma" <--- REMOVED
                  desc={`Structural Risk for ${selectedTicker}`}
                  headerControls={
                      <div className="flex items-center">
-                         {/* Control: Change Ticker */}
                          {renderTickerSelector()}
-                         
-                         {/* VISUAL POLISH: Small Divider */}
                          <div className="h-4 w-px bg-gray-700 mx-2 opacity-50"></div>
-
-                         {/* Metric: Result of Ticker */}
                          {renderMetric("Max IV", chaosMetric.value, getRiskColor(chaosMetric.isExtreme))}
                      </div>
                  }
@@ -238,11 +219,11 @@ function App() {
                />
             </div>
 
-            {/* 4. RISK: RISK RADAR */}
+            {/* 4. RISK: RISK RADAR (Tag Removed) */}
             <div className="span-2 h-standard area-risk">
                 <InspectorCard 
                   title="Risk Radar" 
-                  tag="Mag 7" // Updated tag to be more specific
+                  // tag="Mag 7" <--- REMOVED
                   desc="Sentiment vs Volatility (Market Wide)"
                   isLoading={sentVolLoading} 
                   chartType="scatter" 
@@ -255,10 +236,12 @@ function App() {
                 />
             </div>
 
-            {/* 5. FLOW: WHALE HUNTER */}
+            {/* 5. FLOW: WHALE HUNTER (Tag Removed) */}
             <div className="span-4 h-tall area-whale">
                <InspectorCard 
-                 title={whaleData?.meta.title || "Whale Hunter"} tag="Flow" desc={whaleData?.meta.inspector.description}
+                 title={whaleData?.meta.title || "Whale Hunter"} 
+                 // tag="Flow" <--- REMOVED
+                 desc={whaleData?.meta.inspector.description}
                  headerControls={renderMetric("Net Flow", whaleMetric.value, getSentimentColor(whaleMetric.isBullish))}
                  isLoading={whaleLoading} chartType="table" tableData={whaleData?.data}
                  sqlCode={whaleData?.meta.inspector.sql_logic} dbtCode={whaleData?.meta.inspector.dbt_logic} dbtYml={whaleData?.meta.inspector.dbt_yml} 
