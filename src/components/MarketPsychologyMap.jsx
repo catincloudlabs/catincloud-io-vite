@@ -168,8 +168,10 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
   const [showNoise, setShowNoise] = useState(true);
   const [focusMode, setFocusMode] = useState(false); // Semantic Zoom
   const [hoveredLegend, setHoveredLegend] = useState(null); // Legend Interaction
-
   const [activeCluster, setActiveCluster] = useState(null); 
+  
+  // Re-render state of chart to clear stuck tooltips on mobile
+  const [chartResetKey, setChartResetKey] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -213,7 +215,6 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
 
     // 2. Semantic Zoom (Focus Mode) - Show only High Sentiment Magnitude (> 0.6)
     if (focusMode) {
-        // CHANGED: Using Sentiment Magnitude instead of Impact
         data = data.filter(d => Math.abs(d.sentiment || 0) > 0.6);
     }
 
@@ -233,6 +234,13 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
             label: data.label
         });
     }
+  };
+
+  const handlePanelClose = () => {
+    setActiveCluster(null);
+    // FORCE CHART RESET: This increments the key, causing ScatterChart to re-mount.
+    // This wipes the internal "hovered" state of Recharts, killing the stuck tooltip.
+    setChartResetKey(prev => prev + 1);
   };
 
   const chartMargins = isMobile 
@@ -291,7 +299,10 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
         )}
 
         <ResponsiveContainer width="100%" height="100%">
-          <ScatterChart margin={chartMargins}>
+          {/* KEY CHANGE: The 'key' prop here forces a remount when closing the panel,
+              clearing the stuck tooltip on mobile.
+          */}
+          <ScatterChart key={chartResetKey} margin={chartMargins}>
             <XAxis type="number" dataKey="x" hide domain={['dataMin', 'dataMax']} />
             <YAxis type="number" dataKey="y" hide domain={['dataMin', 'dataMax']} />
             
@@ -351,7 +362,7 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
                 label={activeCluster.label}
                 insights={insightData}
                 rawArticles={chartData} 
-                onClose={() => setActiveCluster(null)}
+                onClose={handlePanelClose} 
             />
         )}
     </div>
