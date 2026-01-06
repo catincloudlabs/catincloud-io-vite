@@ -24,13 +24,11 @@ const InspectorCard = ({
   sqlCode, 
   dbtCode, 
   dbtYml,
-  headerControls, // <--- This is where the Metrics live now
+  headerControls, 
   children 
 }) => {
   
   const [showLogic, setShowLogic] = useState(false);
-  
-  // Helper for Table view
   const isCall = (type) => ['C', 'CALL', 'Call'].includes(type);
   const hasLogic = Boolean(sqlCode || dbtCode || dbtYml);
   
@@ -43,7 +41,9 @@ const InspectorCard = ({
         {/* 1. LEFT: Identity (Title + Tag) */}
         <div className="panel-title panel-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           {isLoading && <Activity className="spin-slow" size={16} color="#64748b"/>}
-          <span className="panel-title-text">{title}</span>
+          
+          {/* Use DIV here for safe rendering of complex titles */}
+          <div className="panel-title-text">{title}</div>
           
           {tag && (
             <span className={`tag ${tag === 'RISK' ? 'tag-red' : 'tag-blue'}`} style={{ marginLeft: 0 }}>
@@ -55,19 +55,19 @@ const InspectorCard = ({
         {/* 2. RIGHT: Insight & Utility (Metric + Logic) */}
         <div className="panel-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             
-            {/* A. The Metric (Primary) */}
+            {/* A. The Metric */}
             {headerControls && (
                 <div className="header-tabs-wrapper">
                     {headerControls}
                 </div>
             )}
 
-            {/* Divider between Metric and Logic */}
+            {/* Divider */}
             {headerControls && hasLogic && (
-                <div style={{ height: '20px', width: '1px', background: '#e2e8f0' }}></div>
+                <div className="vertical-divider" style={{ margin: '0 8px' }}></div>
             )}
 
-            {/* B. The Logic Button (Tertiary / Utility) */}
+            {/* B. The Logic Button */}
             {hasLogic && (
             <button 
                 className="nav-link panel-toggle-btn logic-inspector-btn"
@@ -79,7 +79,7 @@ const InspectorCard = ({
                     border: 'none', 
                     background: 'transparent',
                     cursor: 'pointer',
-                    color: '#94a3b8' // Subtle gray
+                    color: '#94a3b8' 
                 }}
             >
                 <div className="logic-btn-inner" style={{ display: 'flex', alignItems: 'center' }}>
@@ -94,7 +94,6 @@ const InspectorCard = ({
 
       {/* --- CONTENT AREA --- */}
       <div className="chart-box chart-content-area">
-        
         {isLoading && (
             <div className="loading-overlay">
                 <div className="scan-line"></div>
@@ -103,7 +102,6 @@ const InspectorCard = ({
 
         {!isLoading && (
             <>
-              {/* 1. PLOTLY CHART */}
               {chartType !== 'table' && plotData && (
                  <Plot 
                    data={plotData} 
@@ -123,7 +121,6 @@ const InspectorCard = ({
                  />
               )}
 
-              {/* 2. DATA TABLE */}
               {chartType === 'table' && tableData && (
                 <div className="table-view-container custom-scrollbar">
                   <table className="table-standard">
@@ -159,7 +156,6 @@ const InspectorCard = ({
                 </div>
               )}
 
-              {/* 3. CUSTOM CHART (RECHARTS or MAPS) */}
               {customChart && (
                  <div className="custom-chart-wrapper">
                      {customChart}
@@ -169,14 +165,12 @@ const InspectorCard = ({
         )}
       </div>
 
-      {/* --- FOOTER --- */}
       {children && (
         <div className="chart-footer-area border-top-subtle">
           {children}
         </div>
       )}
 
-      {/* --- LOGIC MODAL (LAZY LOADED) --- */}
       <Suspense fallback={null}>
         {showLogic && (
           <LogicModal 

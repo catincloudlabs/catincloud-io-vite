@@ -1370,3 +1370,62 @@ html, body {
     padding: 12px;
   }
 }
+
+/* ==================================================================== */
+/* 19. HEADER LAYOUT UTILITIES (Fix for Chaos Map)                      */
+/* ==================================================================== */
+
+/* Flexbox Helpers */
+.flex { display: flex; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+
+/* Dropdown Container */
+.ticker-select-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 12px;
+}
+
+/* The Dropdown Itself */
+.ticker-select-input {
+  appearance: none;
+  -webkit-appearance: none; /* Safari/Chrome */
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #e2e8f0; /* text-gray-200 */
+  font-weight: 700;
+  font-size: 0.75rem; /* text-sm */
+  padding: 2px 24px 2px 8px; /* Room for arrow */
+  border-radius: 4px;
+  border: 1px solid rgba(51, 65, 85, 0.5); /* border-gray-700/50 */
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+  font-family: var(--font-mono);
+}
+
+.ticker-select-input:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border-color: #94a3b8;
+}
+
+/* The Dropdown Arrow */
+.ticker-select-arrow {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #94a3b8;
+}
+
+/* Vertical Divider Utility */
+.vertical-divider {
+  height: 16px;
+  width: 1px;
+  background-color: #334155; /* gray-700 */
+  margin: 0 12px;
+  opacity: 0.5;
+}
