@@ -114,6 +114,7 @@ html, body {
   margin-bottom: 16px;
   border-bottom: 1px solid rgba(255,255,255,0.05);
   padding-bottom: 12px;
+  gap: 16px; /* Ensure strictly enforced spacing between title and actions */
 }
 
 .panel-title {
@@ -125,18 +126,22 @@ html, body {
   display: flex;
   align-items: center;
   gap: 8px;
+  
+  /* Flexbox fix: Allows child text to truncate properly if space runs out */
+  min-width: 0; 
 }
 
 .panel-title-text {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 180px;
+  /* Removed max-width: 180px; so it can fill the available desktop space */
 }
 
 .panel-header-actions {
   display: flex;
   align-items: center;
+  flex-shrink: 0; /* Prevents buttons from being squashed by long titles */
 }
 
 .panel-desc {
@@ -153,6 +158,7 @@ html, body {
   background: rgba(255,255,255,0.1);
   color: var(--accent);
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .tag-red { color: var(--red); border: 1px solid rgba(239, 68, 68, 0.2); }
