@@ -1643,7 +1643,7 @@ html, body {
     background: var(--bg-app); /* Match app bg */
   }
 
-  /* 2. Horizontal Scroll Tabs (Instead of Sidebar) */
+  /* 2. Horizontal Scroll Tabs */
   .manual-body {
     flex-direction: column;
   }
