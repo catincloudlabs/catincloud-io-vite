@@ -2,14 +2,14 @@ import React, { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import { useSystemHeartbeat } from './hooks/useSystemHeartbeat';
-import { getSentimentColor, getRiskColor } from './utils/statusHelpers'; // Removed getMomentumColor
+import { getSentimentColor, getRiskColor } from './utils/statusHelpers';
+import { ChevronDown } from 'lucide-react'; // Needed for the custom dropdown
 
 // --- LAZY LOAD ---
 const InspectorCard = lazy(() => import('./components/InspectorCard'));
 const MarketPsychologyMap = lazy(() => import('./components/MarketPsychologyMap'));
 
 // --- CONFIGURATION ---
-// Kept for consistent coloring across charts
 const TICKER_COLORS = {
   NVDA: { color: '#4ade80', label: 'NVDA' },
   TSLA: { color: '#f87171', label: 'TSLA' },
@@ -69,8 +69,6 @@ function App() {
         setWhaleData(json); setWhaleLoading(false); 
     }).catch(err => { console.error("Whale Error:", err); setWhaleLoading(false); });
 
-    // Removed Mag7 Fetch
-
     fetch('/data/sentiment_volatility.json').then(res => res.json()).then(json => {
         setSentVolRaw(json.data); setSentVolMeta(json.meta); setSentVolLoading(false);
       }).catch(err => { console.error("Sent/Vol Error:", err); setSentVolLoading(false); });
@@ -97,7 +95,6 @@ function App() {
     return { value: `${maxIVRow.ticker}`, sub: `Max IV: ${maxIVRow.iv.toFixed(0)}%`, isExtreme: maxIVRow.iv > 100 };
   }, [chaosRaw, selectedDate]);
 
-  // Calculated metric for Risk Radar (Average Sentiment)
   const riskMetric = useMemo(() => {
     if (!sentVolRaw.length || !selectedDate) return { value: "--", label: "AVG SENTIMENT", color: "text-gray-500" };
     const todayData = sentVolRaw.filter(d => d.trade_date === selectedDate && WATCHLIST.includes(d.ticker));
@@ -159,6 +156,20 @@ function App() {
     </div>
   );
 
+  // New Helper: Contextual Ticker Selector
+  const renderTickerSelector = () => (
+    <div className="relative group mr-4 border-r border-gray-200 pr-4">
+        <select 
+            value={selectedTicker}
+            onChange={(e) => setSelectedTicker(e.target.value)}
+            className="appearance-none bg-transparent font-bold text-sm text-gray-700 cursor-pointer pr-6 focus:outline-none"
+        >
+            {WATCHLIST.map(t => <option key={t} value={t}>{t}</option>)}
+        </select>
+        <ChevronDown size={14} className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-400" />
+    </div>
+  );
+
   return (
     <div className="app-container">
       
@@ -189,22 +200,36 @@ function App() {
                />
             </div>
 
-            {/* 3. STRUCTURE: CHAOS MAP */}
+            {/* 3. STRUCTURE: CHAOS MAP (Now with Ticker Selector) */}
             <div className="span-2 h-standard area-chaos">
                <InspectorCard 
-                 title={`Chaos Map: ${selectedTicker}`} tag="Gamma" desc={chaosMeta?.inspector.description}
-                 headerControls={renderMetric("Max IV", `${chaosMetric.value} (${chaosMetric.sub.split(': ')[1]})`, getRiskColor(chaosMetric.isExtreme))}
-                 isLoading={chaosLoading} chartType="scatter" plotData={getFilteredChaosPlot()} plotLayout={scatterLayout}
-                 sqlCode={chaosMeta?.inspector.sql_logic} dbtCode={chaosMeta?.inspector.dbt_logic} dbtYml={chaosMeta?.inspector.dbt_yml} 
+                 title="Chaos Map" 
+                 tag="Gamma" 
+                 desc={`Structural Risk for ${selectedTicker}`}
+                 headerControls={
+                     <div className="flex items-center">
+                         {/* Control: Change Ticker */}
+                         {renderTickerSelector()}
+                         {/* Metric: Result of Ticker */}
+                         {renderMetric("Max IV", `${chaosMetric.value} (${chaosMetric.sub.split(': ')[1]})`, getRiskColor(chaosMetric.isExtreme))}
+                     </div>
+                 }
+                 isLoading={chaosLoading} 
+                 chartType="scatter" 
+                 plotData={getFilteredChaosPlot()} 
+                 plotLayout={scatterLayout}
+                 sqlCode={chaosMeta?.inspector.sql_logic} 
+                 dbtCode={chaosMeta?.inspector.dbt_logic} 
+                 dbtYml={chaosMeta?.inspector.dbt_yml} 
                />
             </div>
 
-            {/* 4. RISK: RISK RADAR (Simplified) */}
+            {/* 4. RISK: RISK RADAR */}
             <div className="span-2 h-standard area-risk">
                 <InspectorCard 
                   title="Risk Radar" 
-                  tag="AI MODEL" 
-                  desc="Sentiment vs Volatility"
+                  tag="Mag 7" // Updated tag to be more specific
+                  desc="Sentiment vs Volatility (Market Wide)"
                   isLoading={sentVolLoading} 
                   chartType="scatter" 
                   plotData={getSentimentPlotData()}
@@ -212,7 +237,6 @@ function App() {
                   sqlCode={sentVolMeta?.inspector.sql_logic} 
                   dbtCode={sentVolMeta?.inspector.dbt_logic} 
                   dbtYml={sentVolMeta?.inspector.dbt_yml}
-                  // New metric to fill the header space
                   headerControls={renderMetric(riskMetric.label, riskMetric.value, riskMetric.color)}
                 />
             </div>
