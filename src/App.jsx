@@ -142,6 +142,10 @@ function App() {
     }));
   };
 
+  // --- LAYOUTS ---
+  const scatterLayout = { xaxis: { title: 'DTE', gridcolor: '#334155' }, yaxis: { title: 'Moneyness', gridcolor: '#334155', range: [0.5, 1.8] }, showlegend: false, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: '#94a3b8' }, margin: isMobile ? { t: 10, b: 40, l: 30, r: 10 } : { t: 10, b: 40, l: 40, r: 50 }, annotations: [{ text: 'IV%', x: 1.04, y: 0.04, xref: 'paper', yref: 'paper', showarrow: false, xanchor: 'center', yanchor: 'top', font: { size: 9, color: '#94a3b8', family: 'JetBrains Mono' } }] };
+  const sentimentLayout = { xaxis: { title: 'Sentiment', gridcolor: '#334155', range: [-1, 1], zeroline: true }, yaxis: { title: 'IV', gridcolor: '#334155' }, showlegend: true, legend: { orientation: "h", yanchor: "bottom", y: -0.8, xanchor: "center", x: 0.5, font: { family: 'JetBrains Mono, monospace', size: 10, color: '#94a3b8' } }, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: '#94a3b8' }, margin: isMobile ? { t: 10, b: 60, l: 30, r: 10 } : { t: 20, b: 130, l: 50, r: 20 }, shapes: [{ type: 'rect', xref: 'x', yref: 'paper', x0: -1, y0: 0.5, x1: 0, y1: 1, fillcolor: '#ef4444', opacity: 0.05, line: { width: 0 }}, { type: 'rect', xref: 'x', yref: 'paper', x0: 0, y0: 0, x1: 1, y1: 0.5, fillcolor: '#22c55e', opacity: 0.05, line: { width: 0 }}] };
+
   // --- UI HELPERS ---
   const renderMetric = (label, value, colorClass) => (
     <div className="flex flex-col items-end leading-tight min-w-[80px]">
@@ -150,20 +154,16 @@ function App() {
     </div>
   );
 
-  // Ticker Selector (Modified for Title placement)
   const renderTickerSelector = () => (
-    <div className="relative group inline-flex items-center ml-3">
-        {/* Little label 'FOR' can be nice, or just the selector. Optional. */}
-        <div className="relative">
-            <select 
-                value={selectedTicker}
-                onChange={(e) => setSelectedTicker(e.target.value)}
-                className="appearance-none bg-gray-100/10 hover:bg-gray-100/20 rounded px-2 py-0.5 pr-6 font-bold text-sm text-gray-200 cursor-pointer focus:outline-none transition-colors border border-gray-700/50"
-            >
-                {WATCHLIST.map(t => <option key={t} value={t} className="text-black">{t}</option>)}
-            </select>
-            <ChevronDown size={12} className="absolute right-1.5 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-400" />
-        </div>
+    <div className="relative group mr-4 border-r border-gray-700 pr-4">
+        <select 
+            value={selectedTicker}
+            onChange={(e) => setSelectedTicker(e.target.value)}
+            className="appearance-none bg-transparent font-bold text-sm text-gray-200 cursor-pointer pr-6 focus:outline-none hover:text-white transition-colors"
+        >
+            {WATCHLIST.map(t => <option key={t} value={t} className="text-black">{t}</option>)}
+        </select>
+        <ChevronDown size={14} className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-400" />
     </div>
   );
 
@@ -178,7 +178,7 @@ function App() {
         
         <Suspense fallback={<div className="span-4 h-tall flex items-center justify-center text-muted animate-pulse">Initializing AI Models...</div>}>
 
-            {/* 2. HERO: MARKET PSYCHOLOGY */}
+            {/* 2. HERO: MARKET PSYCHOLOGY (Tag: AI MODEL kept) */}
             <div className="span-4 h-tall area-cluster">
                <InspectorCard 
                  className="ai-hero-card"
@@ -196,21 +196,19 @@ function App() {
                />
             </div>
 
-            {/* 3. STRUCTURE: CHAOS MAP */}
+            {/* 3. STRUCTURE: CHAOS MAP (Tag Removed) */}
             <div className="span-2 h-standard area-chaos">
                <InspectorCard 
-                 // SUBJECT: Move Ticker Selector here into the Title
-                 title={
-                    <div className="flex items-center">
-                        <span>Chaos Map</span>
-                        {renderTickerSelector()}
-                    </div>
-                 }
+                 title="Chaos Map" 
+                 // tag="Gamma" <--- REMOVED
                  desc={`Structural Risk for ${selectedTicker}`}
-                 
-                 // OBJECT: Metric Only on the right
-                 headerControls={renderMetric("Max IV", chaosMetric.value, getRiskColor(chaosMetric.isExtreme))}
-                 
+                 headerControls={
+                     <div className="flex items-center">
+                         {renderTickerSelector()}
+                         <div className="h-4 w-px bg-gray-700 mx-2 opacity-50"></div>
+                         {renderMetric("Max IV", chaosMetric.value, getRiskColor(chaosMetric.isExtreme))}
+                     </div>
+                 }
                  isLoading={chaosLoading} 
                  chartType="scatter" 
                  plotData={getFilteredChaosPlot()} 
@@ -221,10 +219,11 @@ function App() {
                />
             </div>
 
-            {/* 4. RISK: RISK RADAR */}
+            {/* 4. RISK: RISK RADAR (Tag Removed) */}
             <div className="span-2 h-standard area-risk">
                 <InspectorCard 
                   title="Risk Radar" 
+                  // tag="Mag 7" <--- REMOVED
                   desc="Sentiment vs Volatility (Market Wide)"
                   isLoading={sentVolLoading} 
                   chartType="scatter" 
@@ -237,10 +236,11 @@ function App() {
                 />
             </div>
 
-            {/* 5. FLOW: WHALE HUNTER */}
+            {/* 5. FLOW: WHALE HUNTER (Tag Removed) */}
             <div className="span-4 h-tall area-whale">
                <InspectorCard 
                  title={whaleData?.meta.title || "Whale Hunter"} 
+                 // tag="Flow" <--- REMOVED
                  desc={whaleData?.meta.inspector.description}
                  headerControls={renderMetric("Net Flow", whaleMetric.value, getSentimentColor(whaleMetric.isBullish))}
                  isLoading={whaleLoading} chartType="table" tableData={whaleData?.data}
