@@ -1645,7 +1645,7 @@ html, body {
   border-color: var(--text-muted);
 }
 
-/* --- MOBILE BREAKPOINT: BOTTOM SHEET (66% Height) --- */
+/* --- MOBILE BREAKPOINT: BOTTOM SHEET --- */
 @media (max-width: 768px) {
   .insight-panel-dock {
     position: fixed; 
