@@ -106,16 +106,15 @@ const InsightPanel = ({ clusterId, label, insights, onClose, rawArticles, isLock
         )}
       </div>
 
-      <div className="dock-footer flex justify-between items-center">
-         <span className="text-[10px] text-slate-500">Updated: {new Date(data.lastUpdated).toLocaleTimeString()}</span>
+      <div className="dock-footer">
          <button 
            className="dock-action-btn"
            onClick={() => setViewMode(viewMode === 'narrative' ? 'sources' : 'narrative')}
          >
            {viewMode === 'narrative' ? (
-             <> <Database size={12} /> View Sources </>
+             <> <Database size={12} /> Sources </>
            ) : (
-             <> <FileText size={12} /> View Summary </>
+             <> <FileText size={12} /> Summary </>
            )}
          </button>
       </div>
@@ -224,8 +223,6 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
 
   // 4. Background Click (Dismiss Lock)
   const handleChartBackgroundClick = (e) => {
-    // Recharts passes 'activePayload' if a node was clicked.
-    // If activePayload is null/undefined, we clicked the empty background.
     if (lockedCluster && (!e || !e.activePayload)) {
         handlePanelClose();
     }
@@ -291,7 +288,7 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
           <ScatterChart 
             key={chartResetKey} 
             margin={chartMargins}
-            onClick={handleChartBackgroundClick} // New: Click outside to close
+            onClick={handleChartBackgroundClick} 
           >
             <XAxis type="number" dataKey="x" hide domain={['dataMin', 'dataMax']} />
             <YAxis type="number" dataKey="y" hide domain={['dataMin', 'dataMax']} />
