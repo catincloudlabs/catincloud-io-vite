@@ -155,7 +155,7 @@ function App() {
     }));
   };
 
-  // --- UI HELPERS (Refined) ---
+  // --- UI HELPERS ---
   const renderMetric = (label, value, colorClass) => (
     <div className="metric-glass">
       <span className="metric-label">{label}</span>
