@@ -170,7 +170,7 @@ function App() {
             onChange={(e) => setSelectedTicker(e.target.value)}
             className="ticker-select-input"
         >
-            {WATCHLIST.map(t => <option key={t} value={t} style={{color: 'black'}}>{t}</option>)}
+            {WATCHLIST.map(t => <option key={t} value={t}>{t}</option>)}
         </select>
         <ChevronDown size={14} className="ticker-select-arrow" />
     </div>

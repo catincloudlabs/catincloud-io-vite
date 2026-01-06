@@ -36,24 +36,25 @@ const InspectorCard = ({
     <div className={`panel panel-flex-column panel-min-height ${className || ''}`}>
       
       {/* --- HEADER --- */}
-      <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="panel-header">
         
         {/* 1. LEFT: Identity (Title + Tag) */}
-        <div className="panel-title panel-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div className="panel-header-identity">
           {isLoading && <Activity className="spin-slow" size={16} color="#64748b"/>}
           
-          {/* Use DIV here for safe rendering of complex titles */}
-          <div className="panel-title-text">{title}</div>
+          <div className="panel-title">
+             <div className="panel-title-text">{title}</div>
+          </div>
           
           {tag && (
-            <span className={`tag ${tag === 'RISK' ? 'tag-red' : 'tag-blue'}`} style={{ marginLeft: 0 }}>
+            <span className={`tag ${tag === 'RISK' ? 'tag-red' : 'tag-blue'}`}>
               {tag}
             </span>
           )}
         </div>
         
         {/* 2. RIGHT: Insight & Utility (Metric + Logic) */}
-        <div className="panel-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '0' }}> 
+        <div className="panel-header-controls"> 
             
             {/* A. The Metric */}
             {headerControls && (
@@ -74,15 +75,8 @@ const InspectorCard = ({
                 onClick={() => setShowLogic(true)}
                 disabled={isLoading}
                 title="Inspect Data Pipeline Logic"
-                style={{ 
-                    padding: '6px', 
-                    border: 'none', 
-                    background: 'transparent',
-                    cursor: 'pointer',
-                    color: '#94a3b8' 
-                }}
             >
-                <div className="logic-btn-inner" style={{ display: 'flex', alignItems: 'center' }}>
+                <div className="logic-btn-inner">
                     <FileCode size={18} className="hover:text-slate-600 transition-colors" />
                 </div>
             </button>
