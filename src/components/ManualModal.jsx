@@ -29,6 +29,9 @@ const ManualModal = ({ isOpen, onClose }) => {
     document.getElementById(`sec-${id}`)?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // The purple used in .ai-hero-card tags
+  const purpleStyle = { color: '#e879f9' };
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box manual-modal" onClick={e => e.stopPropagation()}>
@@ -80,7 +83,7 @@ const ManualModal = ({ isOpen, onClose }) => {
             <section id="sec-psych" className="manual-section">
               <h3 className="manual-h3">2. MARKET PSYCHOLOGY (AI Model)</h3>
               <p className="manual-p">
-                <span className="text-accent">Dataset:</span> <code>market_psychology_map.json</code>
+                <span style={purpleStyle}>Dataset:</span> <code>market_psychology_map.json</code>
               </p>
               <p className="manual-p">
                 Visualizes the "Narrative Landscape" by clustering thousands of news headlines using vector embeddings.
@@ -88,7 +91,7 @@ const ManualModal = ({ isOpen, onClose }) => {
               <ul className="manual-list">
                 <li><strong>Algorithm:</strong> High-dimensional OpenAI text embeddings reduced via t-SNE.</li>
                 <li><strong>Node Size:</strong> Proportional to <strong>News Volume</strong> (Cluster Density).</li>
-                <li><strong>Color Scale:</strong> Represents Aggregate Sentiment.
+                <li><span style={purpleStyle}>Color:</span> Represents Aggregate Sentiment.
                     <ul className="manual-list-nested">
                         <li><span className="text-red">RED</span> :: Negative Sentiment (Fear)</li>
                         <li><span className="text-green">GREEN</span> :: Positive Sentiment (Greed)</li>
@@ -104,7 +107,7 @@ const ManualModal = ({ isOpen, onClose }) => {
             <section id="sec-chaos" className="manual-section">
               <h3 className="manual-h3">3. CHAOS MAP (Structure)</h3>
               <p className="manual-p">
-                <span className="text-accent">Dataset:</span> <code>chaos.json</code>
+                <span style={purpleStyle}>Dataset:</span> <code>chaos.json</code>
               </p>
               <p className="manual-p">
                 Isolates "Pin Risk" by plotting the Option Chain surface. Identifies where dealers may be forced to hedge.
