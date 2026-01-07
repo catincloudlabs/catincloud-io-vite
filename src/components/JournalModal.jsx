@@ -36,9 +36,6 @@ const JournalModal = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
-  // Derive the active entry (Latest) for the Header Title & Date
-  const activeEntry = entries.length > 0 ? entries[0] : null;
-
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div 
@@ -47,22 +44,12 @@ const JournalModal = ({ isOpen, onClose }) => {
         style={{ maxWidth: '750px' }} 
       >
         
-        {/* HEADER */}
+        {/* HEADER - Static Global Title */}
         <div className="journal-header">
           <div className="journal-title-block">
             <span className="journal-super">ARCHITECT'S JOURNAL</span>
-            
-            {/* DYNAMIC TITLE */}
-            <h2 className="journal-title">
-                {activeEntry ? activeEntry.title : 'Loading Entry...'}
-            </h2>
-            
-            {/* DYNAMIC DATE (Moved here) */}
-            <span className="journal-header-date">
-                {activeEntry ? activeEntry.date : ''}
-            </span>
+            <h2 className="journal-title">Field Notes</h2>
           </div>
-          
           <button className="logic-close-btn" onClick={onClose}>
             <X size={24} />
           </button>
@@ -76,17 +63,27 @@ const JournalModal = ({ isOpen, onClose }) => {
             {loading ? (
                 <div className="flex flex-col items-center justify-center h-64 text-muted space-y-4">
                     <Loader2 size={24} className="animate-spin text-amber-400" />
-                    <span className="text-sm font-mono opacity-70">Entry loading...</span>
+                    <span className="text-sm font-mono opacity-70">Decryption in progress...</span>
                 </div>
             ) : (
                 <div className="relative">
                     {entries.map((entry) => (
                         <article key={entry.id} className="journal-entry">
                             
-                            {/* Hollow Amber Node (Kept for timeline visual) */}
+                            {/* Hollow Amber Node */}
                             <div className="journal-node"></div>
                             
-                            {/* Prose Body (Clean - No Date/Title here) */}
+                            {/* ENTRY HEADER: Title & Date restored to body */}
+                            <div className="mb-4">
+                                <h3 className="journal-entry-title">
+                                    {entry.title}
+                                </h3>
+                                <span className="journal-entry-date">
+                                    {entry.date}
+                                </span>
+                            </div>
+                            
+                            {/* Prose Body */}
                             <div className="journal-prose">
                                 {entry.content.split('\n').map((paragraph, i) => (
                                     <p key={i}>{paragraph}</p>

@@ -2364,8 +2364,8 @@ html, body {
 /* ==================================================================== */
 
 .journal-sheet {
-  background-color: #0B1221; 
-  background-image: 
+  background-color: #0B1221;
+  background-image:
     radial-gradient(rgba(251, 191, 36, 0.1) 1px, transparent 1px);
   background-size: 24px 24px;
   border: 1px solid rgba(251, 191, 36, 0.2);
@@ -2376,7 +2376,7 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 32px 40px 24px 40px; /* Adjusted padding */
+  padding: 32px 40px 24px 40px;
   border-bottom: 2px solid rgba(251, 191, 36, 0.1);
   margin-bottom: 0;
 }
@@ -2404,28 +2404,26 @@ html, body {
   line-height: 1;
 }
 
-/* Content Area - Removed Mask/Shadow */
 .journal-content-area {
   padding: 0 40px 40px 40px;
   height: 600px;
   overflow-y: auto;
   scroll-behavior: smooth;
-  /* Removed mask-image to fix "shadow" complaint */
 }
 
 .journal-entry {
   position: relative;
   padding-left: 24px;
   padding-bottom: 40px;
-  border-left: 1px dashed rgba(148, 163, 184, 0.2); 
+  border-left: 1px dashed rgba(148, 163, 184, 0.2);
   margin-top: 0;
 }
 
-/* Timeline Node */
+/* Timeline Node (Aligned to Title) */
 .journal-node {
   position: absolute;
   left: -5px;
-  top: 5px; /* Aligns with the single-line header */
+  top: 6px;
   width: 9px;
   height: 9px;
   border-radius: 50%;
@@ -2434,29 +2432,23 @@ html, body {
   z-index: 10;
 }
 
-/* Compact Header: Date | Title */
-.journal-entry-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-  font-family: var(--font-mono);
+/* Entry Headings (Restored) */
+.journal-entry-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #f1f5f9; /* Bright White */
+  margin: 0 0 4px 0;
   line-height: 1.2;
 }
 
-.journal-date {
-  font-size: 0.8rem;
-  color: #fbbf24;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.journal-entry-title-inline {
-  font-size: 0.9rem; /* Smaller, efficient font size */
+.journal-entry-date {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #fbbf24; /* Amber Accent */
   font-weight: 600;
-  color: #f1f5f9; /* Bright White */
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.05em;
+  opacity: 0.9;
+  display: block;
 }
 
 /* Prose */
@@ -2466,24 +2458,11 @@ html, body {
   line-height: 1.6;
   color: #cbd5e1;
   max-width: 65ch;
+  margin-top: 12px;
 }
 
 .journal-prose p {
   margin-bottom: 12px;
-}
-
-/* Tags Footer */
-.journal-tags-footer {
-  margin-top: 12px;
-  display: flex;
-  gap: 8px;
-  opacity: 0.6; /* Subtle */
-}
-
-.journal-tag-pill {
-  font-size: 0.65rem;
-  font-family: var(--font-mono);
-  text-transform: uppercase;
 }
 
 /* Mobile Tweaks */
@@ -2491,34 +2470,4 @@ html, body {
   .journal-header { padding: 24px 20px 16px 20px; }
   .journal-content-area { padding: 0 20px 20px 20px; }
   .journal-title { font-size: 1.25rem; }
-  
-  .journal-entry-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-}
-
-/* NEW: Date in the main header */
-.journal-header-date {
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  color: #fbbf24; /* Match the Amber accent */
-  margin-top: 6px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  opacity: 0.9;
-}
-
-/* ADJUSTED: Align the node with the text body since header is gone */
-.journal-node {
-  position: absolute;
-  left: -5px;
-  top: 8px; /* Adjusted to align with the first line of text */
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: #0B1221;
-  border: 2px solid #fbbf24;
-  z-index: 10;
 }
