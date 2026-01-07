@@ -47,7 +47,6 @@ const JournalModal = ({ isOpen, onClose }) => {
         {/* HEADER */}
         <div className="journal-header">
           <div className="journal-title-block">
-            {/* Main Title: Amber & Mono */}
             <h2 className="journal-title">ARCHITECT'S JOURNAL</h2>
           </div>
           <button className="logic-close-btn" onClick={onClose}>
@@ -58,7 +57,9 @@ const JournalModal = ({ isOpen, onClose }) => {
         {/* CONTENT AREA */}
         <div className="journal-content-area custom-scrollbar">
             
-            <div className="h-8"></div>
+            {/* CLEANUP: Removed the manual spacer div here. 
+                Spacing is now handled by padding-top in CSS. 
+            */}
 
             {loading ? (
                 <div className="flex flex-col items-center justify-center h-64 text-muted space-y-4">

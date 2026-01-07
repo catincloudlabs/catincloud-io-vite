@@ -2376,9 +2376,7 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  /* UPDATED: Increased padding to de-bunch vertical space */
   padding: 32px 40px 24px 40px; 
-  /* UPDATED: Switched to dashed line for "Notebook" feel */
   border-bottom: 1px dashed rgba(251, 191, 36, 0.3);
   margin-bottom: 0;
 }
@@ -2389,28 +2387,23 @@ html, body {
   gap: 6px;
 }
 
-/* UPDATED: Architectural Typography */
 .journal-title {
   font-family: var(--font-mono);
-  font-size: 1.25rem;       /* Slightly smaller to balance the spacing */
+  font-size: 1.25rem;
   font-weight: 700;
   color: #fbbf24;
-  letter-spacing: 0.15em;   /* WIDE tracking = Premium/Architectural look */
+  letter-spacing: 0.15em;
   line-height: 1;
   text-transform: uppercase;
   margin-bottom: 0;
-  text-shadow: 0 0 20px rgba(251, 191, 36, 0.25); /* Softer, wider glow */
+  text-shadow: 0 0 20px rgba(251, 191, 36, 0.25);
 }
 
-/* NEW: Terminal Prefix decoration via CSS */
-.journal-title::before {
-  content: '// ';
-  color: rgba(251, 191, 36, 0.4);
-  margin-right: 4px;
-}
+/* REMOVED: .journal-title::before (The '//' prefix) */
 
 .journal-content-area {
-  padding: 0 40px 40px 40px;
+  /* UPDATED: Increased top padding to 64px for breathing room */
+  padding: 64px 40px 40px 40px; 
   height: 600px;
   overflow-y: auto;
   scroll-behavior: smooth;
@@ -2472,13 +2465,13 @@ html, body {
 
 /* Mobile Tweaks */
 @media (max-width: 768px) {
-  
   .journal-header { 
-    padding: 24px 16px 16px 16px; /* Balanced padding */
+    padding: 24px 16px 16px 16px; 
   }
   
   .journal-content-area { 
-    padding: 0 16px 20px 16px; 
+    /* Mobile top padding can be slightly less extreme if desired, or kept consistent */
+    padding: 40px 16px 20px 16px; 
   }
   
   .journal-entry {
@@ -2490,7 +2483,6 @@ html, body {
     left: -4px; 
   }
   
-  /* Adjusted font sizes for mobile width */
   .journal-title { 
     font-size: 1rem; 
     letter-spacing: 0.1em;
