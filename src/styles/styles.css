@@ -2498,3 +2498,27 @@ html, body {
     gap: 4px;
   }
 }
+
+/* NEW: Date in the main header */
+.journal-header-date {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: #fbbf24; /* Match the Amber accent */
+  margin-top: 6px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  opacity: 0.9;
+}
+
+/* ADJUSTED: Align the node with the text body since header is gone */
+.journal-node {
+  position: absolute;
+  left: -5px;
+  top: 8px; /* Adjusted to align with the first line of text */
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #0B1221;
+  border: 2px solid #fbbf24;
+  z-index: 10;
+}

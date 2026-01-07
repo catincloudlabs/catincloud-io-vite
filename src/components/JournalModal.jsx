@@ -36,7 +36,7 @@ const JournalModal = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
-  // Derive the active entry (Latest) for the Header Title
+  // Derive the active entry (Latest) for the Header Title & Date
   const activeEntry = entries.length > 0 ? entries[0] : null;
 
   return (
@@ -51,11 +51,18 @@ const JournalModal = ({ isOpen, onClose }) => {
         <div className="journal-header">
           <div className="journal-title-block">
             <span className="journal-super">ARCHITECT'S JOURNAL</span>
-            {/* DYNAMIC TITLE: Pulled from the first entry */}
+            
+            {/* DYNAMIC TITLE */}
             <h2 className="journal-title">
                 {activeEntry ? activeEntry.title : 'Loading Entry...'}
             </h2>
+            
+            {/* DYNAMIC DATE (Moved here) */}
+            <span className="journal-header-date">
+                {activeEntry ? activeEntry.date : ''}
+            </span>
           </div>
+          
           <button className="logic-close-btn" onClick={onClose}>
             <X size={24} />
           </button>
@@ -76,15 +83,10 @@ const JournalModal = ({ isOpen, onClose }) => {
                     {entries.map((entry) => (
                         <article key={entry.id} className="journal-entry">
                             
-                            {/* Hollow Amber Node */}
+                            {/* Hollow Amber Node (Kept for timeline visual) */}
                             <div className="journal-node"></div>
-
-                            {/* COMPACT HEADER: Date Only (Title is now up top) */}
-                            <div className="journal-entry-header">
-                                <span className="journal-date">{entry.date}</span>
-                            </div>
                             
-                            {/* Prose Body */}
+                            {/* Prose Body (Clean - No Date/Title here) */}
                             <div className="journal-prose">
                                 {entry.content.split('\n').map((paragraph, i) => (
                                     <p key={i}>{paragraph}</p>
