@@ -5,6 +5,7 @@ A React-based data visualization dashboard and single-page application (SPA). Th
 ## 🚀 Development
 
 ### Prerequisites
+
 * Node.js (v18+)
 * npm
 
