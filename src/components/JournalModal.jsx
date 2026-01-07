@@ -47,8 +47,8 @@ const JournalModal = ({ isOpen, onClose }) => {
         {/* HEADER */}
         <div className="journal-header">
           <div className="journal-title-block">
-            <span className="journal-super">ARCHITECT'S JOURNAL</span>
-            <h2 className="journal-title">Field Notes</h2>
+            {/* Main Title: Amber & Mono */}
+            <h2 className="journal-title">ARCHITECT'S JOURNAL</h2>
           </div>
           <button className="logic-close-btn" onClick={onClose}>
             <X size={24} />
@@ -58,8 +58,7 @@ const JournalModal = ({ isOpen, onClose }) => {
         {/* CONTENT AREA */}
         <div className="journal-content-area custom-scrollbar">
             
-            {/* UPDATED: Increased spacer height to 48px for better separation */}
-            <div style={{ height: '48px' }}></div>
+            <div className="h-8"></div>
 
             {loading ? (
                 <div className="flex flex-col items-center justify-center h-64 text-muted space-y-4">
