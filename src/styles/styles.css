@@ -2360,7 +2360,7 @@ html, body {
 }
 
 /* ==================================================================== */
-/* 24. JOURNAL / FIELD NOTES THEME (Refined)                            */
+/* 24. JOURNAL / FIELD NOTES THEME (Polished)                           */
 /* ==================================================================== */
 
 .journal-sheet {
@@ -2376,9 +2376,10 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  /* Reduced bottom padding to 12px to nudge the divider line up */
-  padding: 32px 40px 12px 40px; 
-  border-bottom: 2px solid rgba(251, 191, 36, 0.1);
+  /* UPDATED: Increased padding to de-bunch vertical space */
+  padding: 32px 40px 24px 40px; 
+  /* UPDATED: Switched to dashed line for "Notebook" feel */
+  border-bottom: 1px dashed rgba(251, 191, 36, 0.3);
   margin-bottom: 0;
 }
 
@@ -2388,17 +2389,24 @@ html, body {
   gap: 6px;
 }
 
-/* Updated to match the "Terminal/System" aesthetic: Amber & Mono */
+/* UPDATED: Architectural Typography */
 .journal-title {
   font-family: var(--font-mono);
-  font-size: 1.5rem;
+  font-size: 1.25rem;       /* Slightly smaller to balance the spacing */
   font-weight: 700;
   color: #fbbf24;
-  letter-spacing: -0.03em;
+  letter-spacing: 0.15em;   /* WIDE tracking = Premium/Architectural look */
   line-height: 1;
   text-transform: uppercase;
   margin-bottom: 0;
-  text-shadow: 0 0 15px rgba(251, 191, 36, 0.15);
+  text-shadow: 0 0 20px rgba(251, 191, 36, 0.25); /* Softer, wider glow */
+}
+
+/* NEW: Terminal Prefix decoration via CSS */
+.journal-title::before {
+  content: '// ';
+  color: rgba(251, 191, 36, 0.4);
+  margin-right: 4px;
 }
 
 .journal-content-area {
@@ -2433,7 +2441,7 @@ html, body {
 .journal-entry-title {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #f1f5f9; /* Bright White */
+  color: #f1f5f9; 
   margin: 0 0 4px 0;
   line-height: 1.2;
 }
@@ -2441,7 +2449,7 @@ html, body {
 .journal-entry-date {
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  color: #fbbf24; /* Amber Accent */
+  color: #fbbf24;
   font-weight: 600;
   letter-spacing: 0.05em;
   opacity: 0.9;
@@ -2462,19 +2470,17 @@ html, body {
   margin-bottom: 12px;
 }
 
-/* Mobile Tweaks: Maximizing Width */
+/* Mobile Tweaks */
 @media (max-width: 768px) {
   
-  /* 1. Minimize Modal Gutters */
   .journal-header { 
-    padding: 24px 12px 12px 12px; 
+    padding: 24px 16px 16px 16px; /* Balanced padding */
   }
   
   .journal-content-area { 
-    padding: 0 12px 20px 12px; 
+    padding: 0 16px 20px 16px; 
   }
   
-  /* 2. Tighten Timeline Layout to fix "thin" text */
   .journal-entry {
     padding-left: 16px; 
     padding-bottom: 32px;
@@ -2484,9 +2490,10 @@ html, body {
     left: -4px; 
   }
   
-  /* 3. Typography Adjustments */
+  /* Adjusted font sizes for mobile width */
   .journal-title { 
-    font-size: 1.1rem; 
+    font-size: 1rem; 
+    letter-spacing: 0.1em;
   }
   
   .journal-entry-title {
@@ -2494,7 +2501,6 @@ html, body {
     line-height: 1.3;
   }
 
-  /* 4. Full Width Prose */
   .journal-prose {
     width: 100%;
     max-width: none;
