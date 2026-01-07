@@ -1,14 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X, Loader2, Hash } from 'lucide-react';
-
-const TAG_COLORS = {
-  'Architecture': '#c084fc', // Purple
-  'Engineering':  '#38bdf8', // Blue
-  'Performance':  '#f87171', // Red
-  'Flow':         '#4ade80', // Green
-  'Personal':     '#fbbf24', // Amber
-  'default':      '#94a3b8'  // Gray
-};
+import { X, Loader2 } from 'lucide-react';
 
 const JournalModal = ({ isOpen, onClose }) => {
   const [entries, setEntries] = useState([]);
@@ -56,7 +47,8 @@ const JournalModal = ({ isOpen, onClose }) => {
         {/* HEADER */}
         <div className="journal-header">
           <div className="journal-title-block">
-            <span className="journal-super">CLASSIFIED // ARCHITECT ONLY</span>
+            {/* UPDATED: Replaced "CLASSIFIED..." with Topic Word */}
+            <span className="journal-super">ARCHITECTURE</span>
             <h2 className="journal-title">Field Notes</h2>
           </div>
           <button className="logic-close-btn" onClick={onClose}>
@@ -67,7 +59,6 @@ const JournalModal = ({ isOpen, onClose }) => {
         {/* CONTENT AREA */}
         <div className="journal-content-area custom-scrollbar">
             
-            {/* Spacer for breathing room */}
             <div className="h-8"></div>
 
             {loading ? (
@@ -99,20 +90,7 @@ const JournalModal = ({ isOpen, onClose }) => {
                                 ))}
                             </div>
 
-                            {/* Tags moved to footer to save header space */}
-                            {entry.tags && (
-                                <div className="journal-tags-footer">
-                                    {entry.tags.map(tag => (
-                                        <span 
-                                            key={tag} 
-                                            className="journal-tag-pill"
-                                            style={{ color: TAG_COLORS[tag] || TAG_COLORS.default }}
-                                        >
-                                            #{tag}
-                                        </span>
-                                    ))}
-                                </div>
-                            )}
+                            {/* REMOVED: Hashtags footer as requested */}
                         </article>
                     ))}
                 </div>
