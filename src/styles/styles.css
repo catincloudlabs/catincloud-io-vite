@@ -2376,8 +2376,8 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  /* UPDATED: Reduced bottom padding from 24px to 12px */
-  padding: 32px 40px 12px 40px; 
+  /* UPDATED: Increased bottom padding to 24px for more breathing room */
+  padding: 32px 40px 24px 40px; 
   border-bottom: 2px solid rgba(251, 191, 36, 0.1);
   margin-bottom: 0;
 }
@@ -2403,7 +2403,6 @@ html, body {
   color: #fff;
   letter-spacing: -0.03em;
   line-height: 1;
-  margin-bottom: 0; /* Ensure no hidden margin pushes the line down */
 }
 
 .journal-content-area {
@@ -2415,13 +2414,13 @@ html, body {
 
 .journal-entry {
   position: relative;
-  padding-left: 24px;
+  padding-left: 36px;
   padding-bottom: 40px;
   border-left: 1px dashed rgba(148, 163, 184, 0.2);
   margin-top: 0;
 }
 
-/* Timeline Node (Aligned to Title) */
+/* Timeline Node */
 .journal-node {
   position: absolute;
   left: -5px;
@@ -2434,11 +2433,11 @@ html, body {
   z-index: 10;
 }
 
-/* Entry Headings (Restored) */
+/* Entry Headings */
 .journal-entry-title {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #f1f5f9; /* Bright White */
+  color: #f1f5f9;
   margin: 0 0 4px 0;
   line-height: 1.2;
 }
@@ -2446,7 +2445,7 @@ html, body {
 .journal-entry-date {
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  color: #fbbf24; /* Amber Accent */
+  color: #fbbf24;
   font-weight: 600;
   letter-spacing: 0.05em;
   opacity: 0.9;
@@ -2469,7 +2468,7 @@ html, body {
 
 /* Mobile Tweaks */
 @media (max-width: 768px) {
-  .journal-header { padding: 24px 20px 12px 20px; } /* Updated mobile padding too */
+  .journal-header { padding: 24px 20px 24px 20px; }
   .journal-content-area { padding: 0 20px 20px 20px; }
   .journal-title { font-size: 1.25rem; }
 }

@@ -44,11 +44,11 @@ const JournalModal = ({ isOpen, onClose }) => {
         style={{ maxWidth: '750px' }} 
       >
         
-        {/* HEADER - Static Global Title */}
+        {/* HEADER */}
         <div className="journal-header">
           <div className="journal-title-block">
             <span className="journal-super">ARCHITECT'S JOURNAL</span>
-            <h2 className="journal-title">Notes</h2>
+            <h2 className="journal-title">Field Notes</h2>
           </div>
           <button className="logic-close-btn" onClick={onClose}>
             <X size={24} />
@@ -58,7 +58,8 @@ const JournalModal = ({ isOpen, onClose }) => {
         {/* CONTENT AREA */}
         <div className="journal-content-area custom-scrollbar">
             
-            <div className="h-8"></div>
+            {/* UPDATED: Increased spacer height to 48px for better separation */}
+            <div style={{ height: '48px' }}></div>
 
             {loading ? (
                 <div className="flex flex-col items-center justify-center h-64 text-muted space-y-4">
@@ -73,7 +74,7 @@ const JournalModal = ({ isOpen, onClose }) => {
                             {/* Hollow Amber Node */}
                             <div className="journal-node"></div>
                             
-                            {/* ENTRY HEADER: Title & Date restored to body */}
+                            {/* ENTRY HEADER */}
                             <div className="mb-4">
                                 <h3 className="journal-entry-title">
                                     {entry.title}
