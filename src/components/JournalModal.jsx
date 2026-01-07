@@ -27,7 +27,8 @@ const JournalModal = ({ isOpen, onClose }) => {
   useEffect(() => {
     if (isOpen) {
       setLoading(true);
-      fetch('/data/journal_entry.json')
+      // UPDATED FILE NAME HERE
+      fetch('/data/journal.json')
         .then(res => {
             if (!res.ok) throw new Error("Failed to load journal");
             return res.json();
