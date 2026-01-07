@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import ArchitectureModal from './ArchitectureModal';
 import ManualModal from './ManualModal';
 import BioModal from './BioModal';
-import { Network, BookOpen, User, CheckCircle, AlertTriangle, XCircle, Activity } from 'lucide-react';
+import JournalModal from './JournalModal';
+import { Network, BookOpen, User, CheckCircle, AlertTriangle, XCircle, Activity, Book } from 'lucide-react'; // Switched to Book icon
 import { useSystemHeartbeat } from '../hooks/useSystemHeartbeat';
 
 const Header = () => {
   const [isArchOpen, setArchOpen] = useState(false);
   const [isManualOpen, setManualOpen] = useState(false);
   const [isBioOpen, setBioOpen] = useState(false);
+  const [isJournalOpen, setJournalOpen] = useState(false);
 
   const { data: heartbeat, loading } = useSystemHeartbeat();
 
@@ -42,7 +44,7 @@ const Header = () => {
     <>
       <header className="app-header">
         
-        {/* LEFT: LOGO + STATUS (Horizontal Group) */}
+        {/* LEFT: LOGO + STATUS */}
         <div className="brand-group">
           <h1 className="brand-title">
             CatInCloud<span className="text-accent">.io</span>
@@ -62,8 +64,21 @@ const Header = () => {
           </div>
         </div>
 
-        {/* RIGHT: NAVIGATION PILL (Horizontal Group) */}
+        {/* RIGHT: NAVIGATION */}
         <nav className="header-nav-pill">
+          
+          {/* UPDATED: Journal Button */}
+          <button 
+            onClick={() => setJournalOpen(true)} 
+            className="nav-link icon-link"
+            aria-label="View System Journal"
+          >
+            <Book size={14} className="mr-2" />
+            <span className="desktop-only">Journal</span>
+          </button>
+
+          <div className="nav-separator">/</div>
+
           <button 
             onClick={() => setManualOpen(true)} 
             className="nav-link icon-link"
@@ -102,6 +117,7 @@ const Header = () => {
       <ArchitectureModal isOpen={isArchOpen} onClose={() => setArchOpen(false)} />
       <ManualModal isOpen={isManualOpen} onClose={() => setManualOpen(false)} />
       <BioModal isOpen={isBioOpen} onClose={() => setBioOpen(false)} />
+      <JournalModal isOpen={isJournalOpen} onClose={() => setJournalOpen(false)} />
     </>
   );
 };
