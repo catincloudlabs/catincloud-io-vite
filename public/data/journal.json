@@ -1,16 +1,23 @@
 {
   "meta": {
     "title": "System Journal",
-    "author": "Dave",
+    "author": "CatInCloud",
     "description": "A collection of engineering brainstorms, architectural decisions, and debugging logs."
   },
   "entries": [
     {
-      "id": "entry_1",
-      "date": "2024-03-22",
+      "id": "entry_2",
+      "date": "2026-01-06",
       "title": "The Neural Layer",
       "tags": ["Architecture", "Engineering"],
       "content": "Most financial dashboards are high-bandwidth noise. They excel at showing *what* happened (a 5% dip, a volatility spike), but they fail to explain *why*. I wanted to build a system that delivers context alongside calculation, effectively treating narrative as a data point.\nI designed a polyglot architecture to handle this, rather than forcing a single model to do the heavy lifting. I used OpenAI to generate vector embeddings that group news stories into spatial 'islands' based on meaning. Meanwhile, Snowflake Cortex runs directly inside my dbt models to score sentiment in real-time, and Llama 3 acts as the on-demand analyst to synthesize the noise into executive summaries.\nThis structure proves that AI isn't magic; it's simply the newest transformation layer in the stack. We used to aggregate numbers. Now, by orchestrating specialized tools for specialized layers, we can aggregate meaning."
+    },
+    {
+      "id": "entry_1",
+      "date": "2025-12-24",
+      "title": "The Cost of Connectivity",
+      "tags": ["Architecture", "Engineering"],
+      "content": "The most dangerous phrase in cloud engineering is \"It works.\" The fastest way to wire your VPC to your S3 bucket is a NAT Gateway. The connectivity is instant, the code runs, and the Airflow DAGs are green across the board. But this is also the fastest way to chew right through your budget. The most expensive mistake in AWS networking is letting your route table be an afterthought.\nI recently backfilled data for the most volatile tickers of the 2025 stock market, ingesting 1.99 billion options contracts (~4TB of raw JSON). If I had routed this backfill through a standard NAT Gateway, AWS would have charged a processing fee of $0.045 per GB, exceeding $1,000 for the year. Instead, I configured an S3 Gateway Endpoint. Traffic never leaves the region, bypassing the public internet entirely. The cost? $0.00.\nWhy does this matter? S3 lives outside your VPC. Without a Gateway Endpoint, you are paying a toll to leave and reenter your own network. Reliability isn't just about uptime; it's about financial predictability. Calm architecture doesn't show up on the bill."
     }
   ]
 }
