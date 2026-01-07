@@ -1,8 +1,8 @@
 {
   "meta": {
-    "title": "Architect's Journal",
+    "title": "System Journal",
     "author": "CatInCloud",
-    "last_updated": "2024-03-20"
+    "description": "A collection of engineering brainstorms, architectural decisions, and debugging logs."
   },
   "entries": [
     {
@@ -24,7 +24,7 @@
       "date": "2024-01-10",
       "title": "System Initialization",
       "tags": ["Personal", "Launch"],
-      "content": "Welcome to the Architect's Log. This system is designed to bridge the gap between heavy data engineering backends and clean, interactive frontends. The goal isn't just to show data, but to show the *structure* of the data pipelines that deliver it."
+      "content": "Welcome to the Architect's Journal. This system is designed to bridge the gap between heavy data engineering backends and clean, interactive frontends. The goal isn't just to show data, but to show the *structure* of the data pipelines that deliver it."
     }
   ]
 }
