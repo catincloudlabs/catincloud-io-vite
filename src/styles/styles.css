@@ -2466,9 +2466,30 @@ html, body {
   margin-bottom: 12px;
 }
 
-/* Mobile Tweaks */
+/* Mobile Tweaks: Optimized for Text Width */
 @media (max-width: 768px) {
-  .journal-header { padding: 24px 20px 24px 20px; }
-  .journal-content-area { padding: 0 20px 20px 20px; }
-  .journal-title { font-size: 1.25rem; }
+  
+  /* 1. Reduce Modal Gutters */
+  .journal-header { 
+    padding: 24px 16px 12px 16px; 
+  }
+  
+  .journal-content-area { 
+    padding: 0 16px 20px 16px; 
+  }
+  
+  /* 2. Tighten Timeline Indentation (Crucial for width) */
+  .journal-entry {
+    padding-left: 20px; /* Reduced from 36px */
+    padding-bottom: 32px;
+  }
+  
+  /* 3. Adjust Title Sizes */
+  .journal-title { 
+    font-size: 1.25rem; 
+  }
+  
+  .journal-entry-title {
+    font-size: 1.1rem;
+  }
 }
