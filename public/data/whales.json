@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Whale Hunter",
-    "generated_at": "2026-01-03T22:23:16.294621",
+    "generated_at": "2026-01-07T17:36:08.158007",
     "inspector": {
       "tag": "Flow",
       "description": "Top Institutional Options Blocks by Premium Traded (> $500k).",
@@ -12,453 +12,453 @@
   },
   "data": [
     {
-      "trade_date": "2026-01-02",
-      "ticker": "SPY",
-      "strike": "682",
-      "expiry": "2026-01-02",
-      "type": "C",
-      "premium": 115288800.0,
-      "sentiment": "Bullish"
-    },
-    {
-      "trade_date": "2026-01-02",
+      "trade_date": "2026-01-06",
       "ticker": "TSLA",
-      "strike": "450",
-      "expiry": "2026-01-02",
-      "type": "P",
-      "premium": 95542460.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2026-01-02",
-      "ticker": "TSLA",
-      "strike": "460",
-      "expiry": "2026-01-09",
-      "type": "P",
-      "premium": 77441000.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2026-01-02",
-      "ticker": "QQQ",
-      "strike": "620",
-      "expiry": "2026-01-02",
-      "type": "P",
-      "premium": 60548600.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2026-01-02",
-      "ticker": "TSLA",
-      "strike": "450",
-      "expiry": "2026-01-09",
-      "type": "P",
-      "premium": 60108021.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2026-01-02",
-      "ticker": "TSLA",
-      "strike": "445",
-      "expiry": "2026-01-02",
-      "type": "P",
-      "premium": 58035159.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2026-01-02",
-      "ticker": "TSLA",
-      "strike": "5",
+      "strike": "540",
       "expiry": "2026-01-16",
-      "type": "C",
-      "premium": 55320975.0,
-      "sentiment": "Bullish"
-    },
-    {
-      "trade_date": "2026-01-02",
-      "ticker": "QQQ",
-      "strike": "619",
-      "expiry": "2026-01-02",
       "type": "P",
-      "premium": 50404464.0,
+      "premium": 251411160.0,
       "sentiment": "Bearish"
     },
     {
-      "trade_date": "2026-01-02",
-      "ticker": "TSLA",
-      "strike": "455",
-      "expiry": "2026-01-02",
-      "type": "P",
-      "premium": 49044325.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2026-01-02",
+      "trade_date": "2026-01-06",
       "ticker": "SPY",
-      "strike": "681",
-      "expiry": "2026-01-02",
+      "strike": "690",
+      "expiry": "2026-01-06",
       "type": "C",
-      "premium": 48535531.0,
+      "premium": 130534218.0,
       "sentiment": "Bullish"
     },
     {
-      "trade_date": "2026-01-02",
-      "ticker": "TSLA",
-      "strike": "440",
-      "expiry": "2026-01-09",
+      "trade_date": "2026-01-06",
+      "ticker": "SPY",
+      "strike": "689",
+      "expiry": "2026-01-06",
       "type": "C",
-      "premium": 46892510.0,
+      "premium": 113637433.0,
       "sentiment": "Bullish"
     },
     {
-      "trade_date": "2026-01-02",
+      "trade_date": "2026-01-06",
       "ticker": "TSLA",
-      "strike": "452.5",
-      "expiry": "2026-01-02",
+      "strike": "500",
+      "expiry": "2028-01-21",
       "type": "P",
-      "premium": 43838868.0,
+      "premium": 95448700.0,
       "sentiment": "Bearish"
     },
     {
-      "trade_date": "2026-01-02",
-      "ticker": "TSLA",
-      "strike": "447.5",
-      "expiry": "2026-01-02",
-      "type": "P",
-      "premium": 40738046.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2026-01-02",
-      "ticker": "QQQ",
-      "strike": "621",
-      "expiry": "2026-01-02",
-      "type": "P",
-      "premium": 40235406.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2026-01-02",
+      "trade_date": "2026-01-06",
       "ticker": "META",
-      "strike": "765",
+      "strike": "730",
       "expiry": "2026-01-16",
       "type": "P",
-      "premium": 38717900.0,
+      "premium": 91886363.0,
       "sentiment": "Bearish"
     },
     {
-      "trade_date": "2026-01-02",
-      "ticker": "TSLA",
-      "strike": "442.5",
-      "expiry": "2026-01-02",
-      "type": "P",
-      "premium": 37750624.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2026-01-02",
-      "ticker": "QQQ",
-      "strike": "618",
-      "expiry": "2026-01-02",
-      "type": "P",
-      "premium": 37712150.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2026-01-02",
-      "ticker": "SPY",
-      "strike": "685",
-      "expiry": "2026-01-02",
-      "type": "P",
-      "premium": 37269778.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2026-01-02",
-      "ticker": "TSLA",
-      "strike": "470",
-      "expiry": "2026-01-09",
-      "type": "P",
-      "premium": 37204738.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2026-01-02",
-      "ticker": "TSLA",
-      "strike": "440",
-      "expiry": "2026-01-02",
-      "type": "P",
-      "premium": 34026340.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2026-01-02",
-      "ticker": "TSLA",
-      "strike": "10",
-      "expiry": "2026-01-16",
-      "type": "C",
-      "premium": 33296781.0,
-      "sentiment": "Bullish"
-    },
-    {
-      "trade_date": "2026-01-02",
-      "ticker": "TSLA",
-      "strike": "430",
-      "expiry": "2026-01-09",
-      "type": "C",
-      "premium": 32341332.0,
-      "sentiment": "Bullish"
-    },
-    {
-      "trade_date": "2026-01-02",
-      "ticker": "QQQ",
-      "strike": "660",
-      "expiry": "2026-01-16",
-      "type": "P",
-      "premium": 31198089.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2026-01-02",
-      "ticker": "SPY",
-      "strike": "686",
-      "expiry": "2026-01-02",
-      "type": "P",
-      "premium": 31137359.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2026-01-02",
-      "ticker": "TSLA",
-      "strike": "440",
-      "expiry": "2026-01-09",
-      "type": "P",
-      "premium": 30051996.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2026-01-02",
-      "ticker": "QQQ",
-      "strike": "609",
-      "expiry": "2026-01-02",
-      "type": "C",
-      "premium": 28305850.0,
-      "sentiment": "Bullish"
-    },
-    {
-      "trade_date": "2026-01-02",
-      "ticker": "TSLA",
-      "strike": "20",
-      "expiry": "2026-01-16",
-      "type": "C",
-      "premium": 27721320.0,
-      "sentiment": "Bullish"
-    },
-    {
-      "trade_date": "2026-01-02",
-      "ticker": "SPY",
-      "strike": "680",
-      "expiry": "2026-01-02",
-      "type": "C",
-      "premium": 27695565.0,
-      "sentiment": "Bullish"
-    },
-    {
-      "trade_date": "2026-01-02",
-      "ticker": "QQQ",
-      "strike": "617",
-      "expiry": "2026-01-02",
-      "type": "P",
-      "premium": 26343375.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2026-01-02",
-      "ticker": "QQQ",
-      "strike": "615",
-      "expiry": "2026-01-02",
-      "type": "P",
-      "premium": 24961729.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2026-01-02",
+      "trade_date": "2026-01-06",
       "ticker": "QQQ",
       "strike": "622",
-      "expiry": "2026-01-02",
-      "type": "P",
-      "premium": 24908436.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2026-01-02",
-      "ticker": "QQQ",
-      "strike": "650",
-      "expiry": "2026-01-16",
-      "type": "P",
-      "premium": 24276224.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2026-01-02",
-      "ticker": "SPY",
-      "strike": "683",
-      "expiry": "2026-01-02",
+      "expiry": "2026-01-06",
       "type": "C",
-      "premium": 24121080.0,
+      "premium": 91864105.0,
       "sentiment": "Bullish"
     },
     {
-      "trade_date": "2026-01-02",
-      "ticker": "NVDA",
-      "strike": "185",
-      "expiry": "2026-02-20",
-      "type": "P",
-      "premium": 23935434.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2026-01-02",
-      "ticker": "META",
-      "strike": "800",
-      "expiry": "2026-01-16",
-      "type": "P",
-      "premium": 23814000.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2026-01-02",
-      "ticker": "TSLA",
-      "strike": "445",
-      "expiry": "2026-01-09",
-      "type": "P",
-      "premium": 23515404.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2026-01-02",
+      "trade_date": "2026-01-06",
       "ticker": "MSFT",
       "strike": "525",
       "expiry": "2026-01-16",
       "type": "P",
-      "premium": 23220550.0,
+      "premium": 75648961.0,
       "sentiment": "Bearish"
     },
     {
-      "trade_date": "2026-01-02",
+      "trade_date": "2026-01-06",
+      "ticker": "QQQ",
+      "strike": "621",
+      "expiry": "2026-01-06",
+      "type": "C",
+      "premium": 74796120.0,
+      "sentiment": "Bullish"
+    },
+    {
+      "trade_date": "2026-01-06",
+      "ticker": "MSFT",
+      "strike": "515",
+      "expiry": "2026-01-16",
+      "type": "P",
+      "premium": 71558916.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2026-01-06",
+      "ticker": "META",
+      "strike": "765",
+      "expiry": "2026-01-16",
+      "type": "P",
+      "premium": 70907970.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2026-01-06",
+      "ticker": "MSFT",
+      "strike": "510",
+      "expiry": "2026-01-16",
+      "type": "P",
+      "premium": 70887072.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2026-01-06",
       "ticker": "TSLA",
-      "strike": "460",
-      "expiry": "2026-01-02",
+      "strike": "440",
+      "expiry": "2026-01-09",
       "type": "P",
-      "premium": 22804110.0,
+      "premium": 70463025.0,
       "sentiment": "Bearish"
     },
     {
-      "trade_date": "2026-01-02",
+      "trade_date": "2026-01-06",
+      "ticker": "QQQ",
+      "strike": "620",
+      "expiry": "2026-01-06",
+      "type": "C",
+      "premium": 70116792.0,
+      "sentiment": "Bullish"
+    },
+    {
+      "trade_date": "2026-01-06",
+      "ticker": "TSLA",
+      "strike": "430",
+      "expiry": "2026-01-09",
+      "type": "C",
+      "premium": 64639320.0,
+      "sentiment": "Bullish"
+    },
+    {
+      "trade_date": "2026-01-06",
+      "ticker": "TSLA",
+      "strike": "420",
+      "expiry": "2027-12-17",
+      "type": "P",
+      "premium": 64209698.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2026-01-06",
       "ticker": "SPY",
-      "strike": "700",
-      "expiry": "2027-03-19",
-      "type": "P",
-      "premium": 22782195.0,
-      "sentiment": "Bearish"
+      "strike": "688",
+      "expiry": "2026-01-06",
+      "type": "C",
+      "premium": 62038305.0,
+      "sentiment": "Bullish"
     },
     {
-      "trade_date": "2026-01-02",
+      "trade_date": "2026-01-06",
+      "ticker": "TSLA",
+      "strike": "420",
+      "expiry": "2026-01-09",
+      "type": "C",
+      "premium": 58679400.0,
+      "sentiment": "Bullish"
+    },
+    {
+      "trade_date": "2026-01-06",
+      "ticker": "NVDA",
+      "strike": "200",
+      "expiry": "2026-03-20",
+      "type": "C",
+      "premium": 55837795.0,
+      "sentiment": "Bullish"
+    },
+    {
+      "trade_date": "2026-01-06",
+      "ticker": "SPY",
+      "strike": "691",
+      "expiry": "2026-01-06",
+      "type": "C",
+      "premium": 54759981.0,
+      "sentiment": "Bullish"
+    },
+    {
+      "trade_date": "2026-01-06",
       "ticker": "TSLA",
       "strike": "450",
       "expiry": "2026-01-16",
       "type": "P",
-      "premium": 22633998.0,
+      "premium": 48807000.0,
       "sentiment": "Bearish"
     },
     {
-      "trade_date": "2026-01-02",
+      "trade_date": "2026-01-06",
+      "ticker": "META",
+      "strike": "800",
+      "expiry": "2026-01-16",
+      "type": "P",
+      "premium": 48772761.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2026-01-06",
+      "ticker": "TSLA",
+      "strike": "430",
+      "expiry": "2026-01-09",
+      "type": "P",
+      "premium": 48560190.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2026-01-06",
+      "ticker": "TSLA",
+      "strike": "440",
+      "expiry": "2026-03-20",
+      "type": "C",
+      "premium": 48544882.0,
+      "sentiment": "Bullish"
+    },
+    {
+      "trade_date": "2026-01-06",
+      "ticker": "SPY",
+      "strike": "650",
+      "expiry": "2026-01-07",
+      "type": "C",
+      "premium": 48415444.0,
+      "sentiment": "Bullish"
+    },
+    {
+      "trade_date": "2026-01-06",
+      "ticker": "NVDA",
+      "strike": "185",
+      "expiry": "2026-01-16",
+      "type": "C",
+      "premium": 45281700.0,
+      "sentiment": "Bullish"
+    },
+    {
+      "trade_date": "2026-01-06",
+      "ticker": "TSLA",
+      "strike": "435",
+      "expiry": "2026-01-09",
+      "type": "P",
+      "premium": 44478280.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2026-01-06",
+      "ticker": "TSLA",
+      "strike": "450",
+      "expiry": "2026-01-09",
+      "type": "P",
+      "premium": 44340660.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2026-01-06",
+      "ticker": "TSLA",
+      "strike": "495",
+      "expiry": "2026-01-09",
+      "type": "P",
+      "premium": 43117751.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2026-01-06",
+      "ticker": "NVDA",
+      "strike": "195",
+      "expiry": "2026-03-20",
+      "type": "C",
+      "premium": 42790080.0,
+      "sentiment": "Bullish"
+    },
+    {
+      "trade_date": "2026-01-06",
+      "ticker": "MSFT",
+      "strike": "520",
+      "expiry": "2026-01-16",
+      "type": "P",
+      "premium": 36576424.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2026-01-06",
+      "ticker": "TSLA",
+      "strike": "460",
+      "expiry": "2026-01-09",
+      "type": "P",
+      "premium": 36114715.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2026-01-06",
       "ticker": "META",
       "strike": "750",
       "expiry": "2026-01-16",
       "type": "P",
-      "premium": 22457600.0,
+      "premium": 36101142.0,
       "sentiment": "Bearish"
     },
     {
-      "trade_date": "2026-01-02",
+      "trade_date": "2026-01-06",
       "ticker": "TSLA",
-      "strike": "455",
+      "strike": "435",
+      "expiry": "2026-01-09",
+      "type": "C",
+      "premium": 35637615.0,
+      "sentiment": "Bullish"
+    },
+    {
+      "trade_date": "2026-01-06",
+      "ticker": "TSLA",
+      "strike": "440",
+      "expiry": "2026-01-09",
+      "type": "C",
+      "premium": 34726659.0,
+      "sentiment": "Bullish"
+    },
+    {
+      "trade_date": "2026-01-06",
+      "ticker": "TSLA",
+      "strike": "500",
       "expiry": "2026-01-09",
       "type": "P",
-      "premium": 21941010.0,
+      "premium": 33791070.0,
       "sentiment": "Bearish"
     },
     {
-      "trade_date": "2026-01-02",
+      "trade_date": "2026-01-06",
+      "ticker": "META",
+      "strike": "760",
+      "expiry": "2026-01-16",
+      "type": "P",
+      "premium": 31056894.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2026-01-06",
+      "ticker": "TSLA",
+      "strike": "410",
+      "expiry": "2026-01-09",
+      "type": "C",
+      "premium": 30285600.0,
+      "sentiment": "Bullish"
+    },
+    {
+      "trade_date": "2026-01-06",
+      "ticker": "TSLA",
+      "strike": "437.5",
+      "expiry": "2026-01-09",
+      "type": "P",
+      "premium": 29754590.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2026-01-06",
+      "ticker": "IWM",
+      "strike": "253",
+      "expiry": "2026-01-06",
+      "type": "C",
+      "premium": 27138020.0,
+      "sentiment": "Bullish"
+    },
+    {
+      "trade_date": "2026-01-06",
       "ticker": "NVDA",
       "strike": "190",
-      "expiry": "2026-01-02",
+      "expiry": "2026-01-09",
       "type": "P",
-      "premium": 20873590.0,
+      "premium": 27039090.0,
       "sentiment": "Bearish"
     },
     {
-      "trade_date": "2026-01-02",
-      "ticker": "SPY",
-      "strike": "684",
-      "expiry": "2026-01-02",
-      "type": "P",
-      "premium": 20798940.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2026-01-02",
-      "ticker": "QQQ",
-      "strike": "616",
-      "expiry": "2026-01-02",
-      "type": "P",
-      "premium": 20273120.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2026-01-02",
+      "trade_date": "2026-01-06",
       "ticker": "META",
-      "strike": "5",
+      "strike": "610",
       "expiry": "2026-01-16",
       "type": "C",
-      "premium": 20237568.0,
+      "premium": 27002280.0,
       "sentiment": "Bullish"
     },
     {
-      "trade_date": "2026-01-02",
-      "ticker": "TSLA",
-      "strike": "460",
-      "expiry": "2026-01-16",
-      "type": "P",
-      "premium": 20184080.0,
-      "sentiment": "Bearish"
-    },
-    {
-      "trade_date": "2026-01-02",
-      "ticker": "TSLA",
-      "strike": "450",
+      "trade_date": "2026-01-06",
+      "ticker": "NVDA",
+      "strike": "190",
       "expiry": "2026-01-09",
       "type": "C",
-      "premium": 19204031.0,
+      "premium": 26160675.0,
       "sentiment": "Bullish"
     },
     {
-      "trade_date": "2026-01-02",
+      "trade_date": "2026-01-06",
       "ticker": "QQQ",
-      "strike": "600",
-      "expiry": "2026-02-20",
+      "strike": "619",
+      "expiry": "2026-01-06",
       "type": "C",
-      "premium": 18975705.0,
+      "premium": 25590372.0,
       "sentiment": "Bullish"
     },
     {
-      "trade_date": "2026-01-02",
-      "ticker": "AAPL",
-      "strike": "280",
-      "expiry": "2027-01-15",
+      "trade_date": "2026-01-06",
+      "ticker": "TSLA",
+      "strike": "445",
+      "expiry": "2026-01-09",
+      "type": "P",
+      "premium": 25268915.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2026-01-06",
+      "ticker": "QQQ",
+      "strike": "585",
+      "expiry": "2026-04-17",
       "type": "C",
-      "premium": 18749680.0,
+      "premium": 25062634.0,
+      "sentiment": "Bullish"
+    },
+    {
+      "trade_date": "2026-01-06",
+      "ticker": "SPY",
+      "strike": "690",
+      "expiry": "2026-01-07",
+      "type": "C",
+      "premium": 24885310.0,
+      "sentiment": "Bullish"
+    },
+    {
+      "trade_date": "2026-01-06",
+      "ticker": "TSLA",
+      "strike": "420",
+      "expiry": "2026-01-16",
+      "type": "C",
+      "premium": 24607571.0,
+      "sentiment": "Bullish"
+    },
+    {
+      "trade_date": "2026-01-06",
+      "ticker": "TSLA",
+      "strike": "432.5",
+      "expiry": "2026-01-09",
+      "type": "C",
+      "premium": 23566451.0,
+      "sentiment": "Bullish"
+    },
+    {
+      "trade_date": "2026-01-06",
+      "ticker": "TSLA",
+      "strike": "432.5",
+      "expiry": "2026-01-09",
+      "type": "P",
+      "premium": 23243540.0,
+      "sentiment": "Bearish"
+    },
+    {
+      "trade_date": "2026-01-06",
+      "ticker": "TSLA",
+      "strike": "430",
+      "expiry": "2026-01-16",
+      "type": "C",
+      "premium": 22729980.0,
       "sentiment": "Bullish"
     }
   ]
