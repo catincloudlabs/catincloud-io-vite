@@ -2376,7 +2376,8 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 32px 40px 24px 40px;
+  /* UPDATED: Reduced bottom padding from 24px to 12px */
+  padding: 32px 40px 12px 40px; 
   border-bottom: 2px solid rgba(251, 191, 36, 0.1);
   margin-bottom: 0;
 }
@@ -2402,6 +2403,7 @@ html, body {
   color: #fff;
   letter-spacing: -0.03em;
   line-height: 1;
+  margin-bottom: 0; /* Ensure no hidden margin pushes the line down */
 }
 
 .journal-content-area {
@@ -2467,7 +2469,7 @@ html, body {
 
 /* Mobile Tweaks */
 @media (max-width: 768px) {
-  .journal-header { padding: 24px 20px 16px 20px; }
+  .journal-header { padding: 24px 20px 12px 20px; } /* Updated mobile padding too */
   .journal-content-area { padding: 0 20px 20px 20px; }
   .journal-title { font-size: 1.25rem; }
 }

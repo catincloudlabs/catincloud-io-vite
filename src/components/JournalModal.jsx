@@ -48,7 +48,7 @@ const JournalModal = ({ isOpen, onClose }) => {
         <div className="journal-header">
           <div className="journal-title-block">
             <span className="journal-super">ARCHITECT'S JOURNAL</span>
-            <h2 className="journal-title">Field Notes</h2>
+            <h2 className="journal-title">Notes</h2>
           </div>
           <button className="logic-close-btn" onClick={onClose}>
             <X size={24} />
@@ -63,7 +63,7 @@ const JournalModal = ({ isOpen, onClose }) => {
             {loading ? (
                 <div className="flex flex-col items-center justify-center h-64 text-muted space-y-4">
                     <Loader2 size={24} className="animate-spin text-amber-400" />
-                    <span className="text-sm font-mono opacity-70">Decryption in progress...</span>
+                    <span className="text-sm font-mono opacity-70">Loading entry...</span>
                 </div>
             ) : (
                 <div className="relative">
