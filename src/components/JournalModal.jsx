@@ -47,8 +47,8 @@ const JournalModal = ({ isOpen, onClose }) => {
         {/* HEADER */}
         <div className="journal-header">
           <div className="journal-title-block">
-            <span className="journal-super">AI ORCHESTRATION</span>
-            <h2 className="journal-title">Journal</h2>
+            <span className="journal-super">ARCHITECT'S JOURNAL</span>
+            <h2 className="journal-title">dynamic entry title goes here</h2>
           </div>
           <button className="logic-close-btn" onClick={onClose}>
             <X size={24} />
