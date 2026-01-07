@@ -36,6 +36,9 @@ const JournalModal = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
+  // Derive the active entry (Latest) for the Header Title
+  const activeEntry = entries.length > 0 ? entries[0] : null;
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div 
@@ -48,7 +51,10 @@ const JournalModal = ({ isOpen, onClose }) => {
         <div className="journal-header">
           <div className="journal-title-block">
             <span className="journal-super">ARCHITECT'S JOURNAL</span>
-            <h2 className="journal-title">dynamic entry title goes here</h2>
+            {/* DYNAMIC TITLE: Pulled from the first entry */}
+            <h2 className="journal-title">
+                {activeEntry ? activeEntry.title : 'Loading Entry...'}
+            </h2>
           </div>
           <button className="logic-close-btn" onClick={onClose}>
             <X size={24} />
@@ -73,13 +79,9 @@ const JournalModal = ({ isOpen, onClose }) => {
                             {/* Hollow Amber Node */}
                             <div className="journal-node"></div>
 
-                            {/* COMPACT HEADER: Date | Title */}
+                            {/* COMPACT HEADER: Date Only (Title is now up top) */}
                             <div className="journal-entry-header">
                                 <span className="journal-date">{entry.date}</span>
-                                <span className="text-slate-600 hidden md:inline">|</span>
-                                <h3 className="journal-entry-title-inline">
-                                    {entry.title}
-                                </h3>
                             </div>
                             
                             {/* Prose Body */}
