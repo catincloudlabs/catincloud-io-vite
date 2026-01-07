@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { X, BookOpen, Calendar, Scroll } from 'lucide-react';
+import { X, Book, Terminal } from 'lucide-react';
 
-// --- COLOR MAPPING FOR TAGS ---
 const TAG_COLORS = {
   'Architecture': '#c084fc', // Purple
   'Engineering':  '#38bdf8', // Blue
@@ -53,19 +52,19 @@ const JournalModal = ({ isOpen, onClose }) => {
         onClick={e => e.stopPropagation()}
         style={{ 
             maxWidth: '800px', 
-            '--dynamic-accent': '#fbbf24' // Amber accent for the Journal
+            '--dynamic-accent': '#fbbf24' // Amber accent
         }} 
       >
         
-        {/* HEADER (Reusing LogicModal styles for consistency) */}
+        {/* HEADER */}
         <div className="logic-header">
           <div className="logic-title-group">
             <div className="logic-icon-box">
-                <BookOpen size={18} className="dynamic-text-color" />
+                <Book size={18} className="dynamic-text-color" />
             </div>
             <div className="logic-title-text">
-                <span className="logic-super dynamic-text-color">Personal Log</span>
-                <span className="logic-main">Architect's Journal</span>
+                <span className="logic-super dynamic-text-color">System Journal</span>
+                <span className="logic-main">Engineering Brainstorms</span>
             </div>
           </div>
           <button className="logic-close-btn" onClick={onClose}>
@@ -81,40 +80,36 @@ const JournalModal = ({ isOpen, onClose }) => {
         }}>
             {loading ? (
                 <div className="flex flex-col items-center justify-center h-full text-muted space-y-4">
-                    <Scroll size={24} className="animate-pulse opacity-50" />
-                    <span className="text-sm font-mono animate-pulse">Retrieving entries...</span>
+                    <Terminal size={24} className="animate-pulse opacity-50" />
+                    <span className="text-sm font-mono animate-pulse">Initializing Journal Protocol...</span>
                 </div>
             ) : (
-                <div className="space-y-10">
-                    {entries.map(entry => (
-                        <article key={entry.id} className="border-l-2 border-slate-800 pl-6 relative">
-                            {/* Dot Indicator on the timeline line */}
-                            <div className="absolute -left-[5px] top-1 w-2.5 h-2.5 rounded-full bg-slate-700" />
+                <div className="space-y-12">
+                    {entries.map((entry, idx) => (
+                        <article key={entry.id} className="relative pl-6 border-l border-slate-800">
+                            
+                            {/* Terminal-style Connector Dot */}
+                            <div className="absolute -left-[5px] top-1.5 w-2.5 h-2.5 bg-[#0f172a] border border-slate-600 rounded-full"></div>
 
-                            {/* Meta Header */}
-                            <div className="flex flex-wrap items-center gap-3 mb-2">
-                                <span className="text-xs font-mono text-muted flex items-center">
-                                    <Calendar size={12} className="mr-1.5" />
-                                    {entry.date}
-                                </span>
+                            {/* Meta Header - "Terminal Prompt" style */}
+                            <div className="flex flex-wrap items-center gap-3 mb-3 font-mono text-xs">
+                                <span className="text-accent opacity-80">&gt;</span>
+                                <span className="text-slate-400">{entry.date}</span>
+                                <span className="text-slate-600">|</span>
                                 <div className="flex gap-2">
                                     {entry.tags?.map(tag => (
                                         <span 
                                             key={tag} 
-                                            className="text-[10px] px-2 py-0.5 rounded-sm font-mono tracking-wide"
-                                            style={{ 
-                                                color: TAG_COLORS[tag] || TAG_COLORS.default,
-                                                backgroundColor: `${TAG_COLORS[tag] || TAG_COLORS.default}15`,
-                                            }}
+                                            style={{ color: TAG_COLORS[tag] || TAG_COLORS.default }}
                                         >
-                                            {tag.toUpperCase()}
+                                            #{tag.toUpperCase()}
                                         </span>
                                     ))}
                                 </div>
                             </div>
 
                             {/* Title */}
-                            <h3 className="text-lg font-bold text-gray-100 mb-3 tracking-tight">
+                            <h3 className="text-xl font-bold text-gray-100 mb-4 tracking-tight">
                                 {entry.title}
                             </h3>
                             
@@ -127,11 +122,12 @@ const JournalModal = ({ isOpen, onClose }) => {
                         </article>
                     ))}
 
-                    {/* End of Log Marker */}
-                    <div className="flex items-center justify-center pt-8 opacity-30">
-                        <div className="h-px bg-slate-700 w-16 mx-4"></div>
-                        <span className="text-xs font-mono text-slate-500">END OF LOG</span>
-                        <div className="h-px bg-slate-700 w-16 mx-4"></div>
+                    {/* End of Stream Marker */}
+                    <div className="flex items-center justify-center pt-8 opacity-40">
+                         <span className="text-xs font-mono text-slate-500 flex items-center gap-2">
+                            <span className="w-2 h-2 bg-slate-500 animate-pulse"></span>
+                            END OF STREAM
+                         </span>
                     </div>
                 </div>
             )}
