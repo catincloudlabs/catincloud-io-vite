@@ -47,8 +47,7 @@ const JournalModal = ({ isOpen, onClose }) => {
         {/* HEADER */}
         <div className="journal-header">
           <div className="journal-title-block">
-            {/* UPDATED: Replaced "CLASSIFIED..." with Topic Word */}
-            <span className="journal-super">ARCHITECTURE</span>
+            <span className="journal-super">AI ORCHESTRATION</span>
             <h2 className="journal-title">Field Notes</h2>
           </div>
           <button className="logic-close-btn" onClick={onClose}>
@@ -89,8 +88,6 @@ const JournalModal = ({ isOpen, onClose }) => {
                                     <p key={i}>{paragraph}</p>
                                 ))}
                             </div>
-
-                            {/* REMOVED: Hashtags footer as requested */}
                         </article>
                     ))}
                 </div>
