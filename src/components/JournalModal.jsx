@@ -47,17 +47,13 @@ const JournalModal = ({ isOpen, onClose }) => {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      
-      {/* NEW CLASS: 'journal-sheet' 
-         Uses the dot-grid pattern and amber border
-      */}
       <div 
         className="modal-box journal-sheet" 
         onClick={e => e.stopPropagation()}
         style={{ maxWidth: '750px' }} 
       >
         
-        {/* HEADER: Minimalist Title Block */}
+        {/* HEADER */}
         <div className="journal-header">
           <div className="journal-title-block">
             <span className="journal-super">CLASSIFIED // ARCHITECT ONLY</span>
@@ -68,10 +64,10 @@ const JournalModal = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        {/* CONTENT AREA: 'journal-content-area' with 'journal-prose' */}
+        {/* CONTENT AREA */}
         <div className="journal-content-area custom-scrollbar">
             
-            {/* Top Spacer for the mask effect */}
+            {/* Spacer for breathing room */}
             <div className="h-8"></div>
 
             {loading ? (
@@ -87,28 +83,14 @@ const JournalModal = ({ isOpen, onClose }) => {
                             {/* Hollow Amber Node */}
                             <div className="journal-node"></div>
 
-                            {/* Date & Meta */}
-                            <div className="journal-date">
-                                <span className="text-amber-400 font-bold">{entry.date}</span>
-                                <span className="opacity-30">|</span>
-                                <div className="flex gap-3">
-                                    {entry.tags?.map(tag => (
-                                        <span 
-                                            key={tag} 
-                                            className="flex items-center gap-1 opacity-80"
-                                            style={{ color: TAG_COLORS[tag] || TAG_COLORS.default }}
-                                        >
-                                            <Hash size={10} />
-                                            {tag.toUpperCase()}
-                                        </span>
-                                    ))}
-                                </div>
+                            {/* COMPACT HEADER: Date | Title */}
+                            <div className="journal-entry-header">
+                                <span className="journal-date">{entry.date}</span>
+                                <span className="text-slate-600 hidden md:inline">|</span>
+                                <h3 className="journal-entry-title-inline">
+                                    {entry.title}
+                                </h3>
                             </div>
-
-                            {/* Headline */}
-                            <h3 className="journal-entry-title">
-                                {entry.title}
-                            </h3>
                             
                             {/* Prose Body */}
                             <div className="journal-prose">
@@ -116,15 +98,23 @@ const JournalModal = ({ isOpen, onClose }) => {
                                     <p key={i}>{paragraph}</p>
                                 ))}
                             </div>
+
+                            {/* Tags moved to footer to save header space */}
+                            {entry.tags && (
+                                <div className="journal-tags-footer">
+                                    {entry.tags.map(tag => (
+                                        <span 
+                                            key={tag} 
+                                            className="journal-tag-pill"
+                                            style={{ color: TAG_COLORS[tag] || TAG_COLORS.default }}
+                                        >
+                                            #{tag}
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
                         </article>
                     ))}
-
-                    {/* Footer Ornament */}
-                    <div className="flex items-center justify-center pt-8 pb-4 opacity-40">
-                        <span className="font-mono text-xs text-amber-500 tracking-widest">
-                            *** END OF RECORD ***
-                        </span>
-                    </div>
                 </div>
             )}
         </div>
