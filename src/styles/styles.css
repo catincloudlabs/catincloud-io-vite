@@ -2358,3 +2358,117 @@ html, body {
     transition: none !important;
   }
 }
+
+/* ==================================================================== */
+/* 24. JOURNAL / FIELD NOTES THEME (New)                                */
+/* ==================================================================== */
+
+/* A distinct "Paper" feel for the journal, separating it from the "IDE" feel */
+.journal-sheet {
+  /* Override standard modal base */
+  background-color: #0B1221; /* Slightly darker, richer navy */
+  background-image: 
+    radial-gradient(rgba(251, 191, 36, 0.1) 1px, transparent 1px);
+  background-size: 24px 24px; /* Engineering Grid Pattern */
+  border: 1px solid rgba(251, 191, 36, 0.2); /* Amber Border */
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+}
+
+/* Header: Minimalist, less "Window Chrome", more "Title Block" */
+.journal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 32px 40px 16px 40px;
+  border-bottom: 2px solid rgba(251, 191, 36, 0.1);
+  margin-bottom: 0;
+}
+
+.journal-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.journal-super {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #fbbf24; /* Amber */
+  opacity: 0.8;
+}
+
+.journal-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+/* Content Area: Optimized for Reading (Prose) */
+.journal-content-area {
+  padding: 0 40px 40px 40px;
+  height: 600px;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 20px, black 95%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 20px, black 95%, transparent 100%);
+}
+
+.journal-entry {
+  position: relative;
+  padding-left: 32px;
+  padding-bottom: 48px;
+  border-left: 1px dashed rgba(148, 163, 184, 0.3); /* Dashed line = "Cut here" feel */
+}
+
+/* Timeline Node: Hollow Circle (Checklist style) */
+.journal-node {
+  position: absolute;
+  left: -5px;
+  top: 6px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #0B1221;
+  border: 2px solid #fbbf24;
+  z-index: 10;
+}
+
+.journal-date {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.journal-entry-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin-bottom: 16px;
+}
+
+.journal-prose {
+  font-family: 'Inter', sans-serif; /* Explicitly Sans for reading */
+  font-size: 0.95rem;
+  line-height: 1.7; /* Relaxed reading height */
+  color: #cbd5e1;
+  max-width: 65ch; /* Optimal reading width */
+}
+
+.journal-prose p {
+  margin-bottom: 16px;
+}
+
+/* Mobile Tweaks */
+@media (max-width: 768px) {
+  .journal-header { padding: 24px 20px 16px 20px; }
+  .journal-content-area { padding: 0 20px 20px 20px; }
+  .journal-title { font-size: 1.5rem; }
+}
