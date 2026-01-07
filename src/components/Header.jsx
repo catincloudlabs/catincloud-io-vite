@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import ArchitectureModal from './ArchitectureModal';
 import ManualModal from './ManualModal';
 import BioModal from './BioModal';
-import { Network, BookOpen, User, CheckCircle, AlertTriangle, XCircle, Activity } from 'lucide-react';
+import JournalModal from './JournalModal'; // Import the new modal
+import { Network, BookOpen, User, CheckCircle, AlertTriangle, XCircle, Activity, Scroll } from 'lucide-react'; // Added Scroll icon
 import { useSystemHeartbeat } from '../hooks/useSystemHeartbeat';
 
 const Header = () => {
   const [isArchOpen, setArchOpen] = useState(false);
   const [isManualOpen, setManualOpen] = useState(false);
   const [isBioOpen, setBioOpen] = useState(false);
+  const [isJournalOpen, setJournalOpen] = useState(false); // New State
 
   const { data: heartbeat, loading } = useSystemHeartbeat();
 
@@ -64,6 +66,19 @@ const Header = () => {
 
         {/* RIGHT: NAVIGATION PILL (Horizontal Group) */}
         <nav className="header-nav-pill">
+          
+          {/* NEW: Journal / Log Button */}
+          <button 
+            onClick={() => setJournalOpen(true)} 
+            className="nav-link icon-link"
+            aria-label="View Architect Log"
+          >
+            <Scroll size={14} className="mr-2" />
+            <span className="desktop-only">Log</span>
+          </button>
+
+          <div className="nav-separator">/</div>
+
           <button 
             onClick={() => setManualOpen(true)} 
             className="nav-link icon-link"
@@ -102,6 +117,7 @@ const Header = () => {
       <ArchitectureModal isOpen={isArchOpen} onClose={() => setArchOpen(false)} />
       <ManualModal isOpen={isManualOpen} onClose={() => setManualOpen(false)} />
       <BioModal isOpen={isBioOpen} onClose={() => setBioOpen(false)} />
+      <JournalModal isOpen={isJournalOpen} onClose={() => setJournalOpen(false)} />
     </>
   );
 };
