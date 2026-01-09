@@ -41,7 +41,6 @@ const MarketGalaxy = ({ data, onNodeClick }) => {
     };
   }, [currentFrameData]);
 
-  // Handle Resize
   useEffect(() => {
     const updateSize = () => {
       if (containerRef.current) {
@@ -65,12 +64,12 @@ const MarketGalaxy = ({ data, onNodeClick }) => {
     const { width, height } = dimensions;
     const pixelRatio = window.devicePixelRatio || 1;
 
-    // Theme Colors (Hardcoded to match CSS for Canvas perf)
+    // Theme Colors (Hardcoded to match styles.css)
     const colorBlue = '#38bdf8';   
     const colorGreen = '#22c55e';
     const colorRed = '#ef4444';
     const colorTextMain = '#f8fafc';
-    const colorGrid = 'rgba(51, 65, 85, 0.3)'; // --border with opacity
+    const colorGrid = 'rgba(192, 132, 252, 0.15)'; // Purple Grid
 
     canvas.width = width * pixelRatio;
     canvas.height = height * pixelRatio;
@@ -123,7 +122,6 @@ const MarketGalaxy = ({ data, onNodeClick }) => {
 
   }, [currentFrameData, dimensions, hoveredNode, frameBounds]);
 
-  // Click Handler
   const handleCanvasClick = (e) => {
     if (!onNodeClick || !currentFrameData) return;
     const rect = canvasRef.current.getBoundingClientRect();
@@ -153,35 +151,37 @@ const MarketGalaxy = ({ data, onNodeClick }) => {
   };
 
   return (
-    <div className="panel h-tall" ref={containerRef} style={{ padding: 0, overflow: 'hidden' }}>
+    <div className="panel h-full flex flex-col p-0" ref={containerRef} style={{ borderRadius: 'inherit' }}>
       
-      {/* Header */}
-      <div className="panel-header" style={{ margin: 0, padding: '16px', borderBottom: '1px solid var(--border)' }}>
+      {/* HEADER: Flex-wrap allows controls to drop below title on very small phones */}
+      <div className="panel-header flex flex-wrap gap-2" style={{ margin: 0, padding: '12px 16px', borderBottom: '1px solid rgba(192, 132, 252, 0.2)' }}>
         <div className="panel-header-identity">
-            <span className="panel-title">MARKET GALAXY</span>
-            <span className="tag tag-blue">PHYSICS ENGINE</span>
+            <span className="panel-title text-purple-300">MARKET GALAXY</span>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[rgba(192,132,252,0.15)] text-[#e879f9] border border-[rgba(192,132,252,0.3)]">
+              PHYSICS
+            </span>
         </div>
         
-        <div className="panel-header-controls" style={{ gap: '16px' }}>
-            <span className="text-sm font-mono text-accent">
+        {/* Controls: Always aligned right or spread on mobile */}
+        <div className="panel-header-controls ml-auto gap-3">
+            <span className="text-xs md:text-sm font-mono text-[#e879f9] shadow-purple-500/50 drop-shadow-sm">
               {currentDate || "LOADING..."}
             </span>
 
             <div className="map-controls-group" style={{ position: 'static' }}>
-                <button onClick={controls.stepBack} className="map-control-btn">
+                <button onClick={controls.stepBack} className="map-control-btn hover:text-[#e879f9] hover:border-[#e879f9]">
                   <ChevronLeft size={14} />
                 </button>
-                <button onClick={() => controls.setIsPlaying(!controls.isPlaying)} className={`map-control-btn ${controls.isPlaying ? 'active' : ''}`}>
+                <button onClick={() => controls.setIsPlaying(!controls.isPlaying)} className={`map-control-btn hover:text-[#e879f9] hover:border-[#e879f9] ${controls.isPlaying ? 'text-[#e879f9] border-[#e879f9]' : ''}`}>
                   {controls.isPlaying ? <Pause size={14} /> : <Play size={14} />}
                 </button>
-                <button onClick={controls.stepForward} className="map-control-btn">
+                <button onClick={controls.stepForward} className="map-control-btn hover:text-[#e879f9] hover:border-[#e879f9]">
                   <ChevronRight size={14} />
                 </button>
             </div>
         </div>
       </div>
 
-      {/* Canvas Area */}
       <div className="chart-content-area relative cursor-crosshair bg-app">
         <canvas 
             ref={canvasRef}
@@ -190,10 +190,10 @@ const MarketGalaxy = ({ data, onNodeClick }) => {
             className="block"
         />
         {!hoveredNode && (
-            <div className="map-empty-state-hint" style={{ bottom: '16px', top: 'auto', right: 'auto', left: '16px' }}>
-                <div className="hint-text">
-                    <Activity size={12} className="text-accent" />
-                    <span>SELECT A PARTICLE TO ANALYZE</span>
+            <div className="map-empty-state-hint" style={{ bottom: '16px', top: 'auto', right: 'auto', left: '16px', borderColor: 'rgba(192, 132, 252, 0.3)' }}>
+                <div className="hint-text text-purple-200">
+                    <Activity size={12} className="text-[#e879f9]" />
+                    <span>SELECT A PARTICLE</span>
                 </div>
             </div>
         )}

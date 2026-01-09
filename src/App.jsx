@@ -27,21 +27,31 @@ function App() {
   }, []);
 
   return (
-    <div className="app-container">
+    // MD: Desktop (Locked Screen), Base: Mobile (Scrollable)
+    <div className="app-container flex flex-col h-auto md:h-screen md:overflow-hidden min-h-screen">
       
-      <div className="sticky-header-group">
+      {/* Header stays fixed at top */}
+      <div className="sticky-header-group flex-shrink-0">
         <Header />
       </div>
 
-      <main className="bento-grid pt-4">
+      {/* Main Grid 
+          - Mobile: Flex Column (Scrollable)
+          - Desktop: Bento Grid (Locked)
+      */}
+      <main className="bento-grid flex-1 min-h-0 pt-2 pb-4">
         
-        {/* LEFT: VISUALIZATION ENGINE (Span 3 on Desktop) */}
-        <div className="span-4 lg:col-span-3">
+        {/* LEFT: VISUALIZATION ENGINE 
+            - Mobile: Fixed height (400px) to ensure map is usable but leaves room
+            - Desktop: Full height of the grid area
+        */}
+        <div className="col-span-4 md:col-span-3 h-[450px] md:h-full"> 
+          <div className="panel ai-hero-card p-0 overflow-hidden relative h-full w-full">
             {isLoading ? (
-               <div className="panel h-tall flex flex-col items-center justify-center">
+               <div className="w-full h-full flex flex-col items-center justify-center">
                   <div className="scan-line mb-8 w-1/2"></div>
-                  <div className="text-accent font-mono text-sm tracking-widest animate-pulse">
-                    INITIALIZING PHYSICS ENGINE...
+                  <div className="text-[#e879f9] font-mono text-sm tracking-widest animate-pulse">
+                    INITIALIZING PHYSICS...
                   </div>
                </div>
             ) : (
@@ -50,16 +60,23 @@ function App() {
                 onNodeClick={setSelectedNode} 
               />
             )}
+          </div>
         </div>
 
-        {/* RIGHT: AGENT PANEL (Span 1 on Desktop) */}
-        <div className="span-4 lg:col-span-1">
+        {/* RIGHT: AGENT PANEL 
+            - Mobile: Auto height (grows with content)
+            - Desktop: Full height (scrolls internally)
+        */}
+        <div className="col-span-4 md:col-span-1 h-auto md:h-full min-h-[400px]">
            <AgentPanel selectedNode={selectedNode} />
         </div>
 
       </main>
 
-      <Footer />
+      {/* Footer pinned only on Desktop */}
+      <div className="flex-shrink-0 hidden md:block">
+         <Footer />
+      </div>
     </div>
   );
 }
