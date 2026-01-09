@@ -1,15 +1,15 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { ScatterChart, Scatter, XAxis, YAxis, ResponsiveContainer, Cell, Tooltip } from 'recharts';
-import { ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, RotateCcw, Play, Pause } from 'lucide-react';
 
 // --- CONFIGURATION ---
 const MAG_7 = ['AAPL', 'MSFT', 'NVDA', 'GOOGL', 'AMZN', 'META', 'TSLA', 'AMD'];
 const CHAOS = ['GME', 'AMC', 'DJT', 'PLTR', 'SOUN', 'BTDR', 'MSTR'];
 
 const THEME = {
-  MAG7: '#4ade80',   // Green
+  MAG7: '#4ade80',   // Green (Matches var(--green))
   CHAOS: '#e879f9',  // Purple
-  NOISE: '#334155',  // Slate
+  NOISE: '#334155',  // Slate (Matches var(--border))
 };
 
 export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
@@ -19,17 +19,18 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
   const [currentDateIndex, setCurrentDateIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   
-  // This state controls the "Big Bang" animation on load
+  // Controls the "Big Bang" entrance animation
   const [hasExploded, setHasExploded] = useState(false);
 
   // --- DATA LOADING ---
   useEffect(() => {
     const fetchData = async () => {
         try {
+            // Load the Physics History
             const res = await fetch('/data/market_physics_history.json');
             const json = await res.json();
             
-            // 1. Group by Date
+            // 1. Group flat list by Date
             const grouped = {};
             const uniqueDates = new Set();
             
@@ -39,13 +40,14 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
                 uniqueDates.add(row.date);
             });
 
-            // 2. Sort Dates (Oldest First)
+            // 2. Sort Dates
             const sortedDates = Array.from(uniqueDates).sort();
             
             setHistoryData(grouped);
             setDates(sortedDates);
-            setCurrentDateIndex(0); // Start at the beginning of the story
+            setCurrentDateIndex(0); // Start at the beginning
             
+            // 3. Update Parent Meta
             if (onMetaLoaded) {
                 onMetaLoaded({
                     title: "Market Physics Engine",
@@ -59,7 +61,7 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
             }
             setLoading(false);
             
-            // 3. Trigger "Explosion" animation after a brief delay
+            // 4. Trigger Entrance Animation
             setTimeout(() => setHasExploded(true), 500);
 
         } catch (err) {
@@ -77,7 +79,7 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
     const dateKey = dates[currentDateIndex];
     const rawData = historyData[dateKey] || [];
 
-    // If we haven't exploded yet, force everything to 0,0 (The Big Bang)
+    // If we haven't exploded yet, force everything to 0,0
     if (!hasExploded) {
         return rawData.map(d => ({ ...d, x: 0, y: 0 }));
     }
@@ -95,15 +97,15 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
   };
 
   const handleReset = () => {
-    setHasExploded(false); // Reset to center
+    setHasExploded(false); // Collapse to center
     setCurrentDateIndex(0);
     setTimeout(() => setHasExploded(true), 500); // Re-explode
   };
 
   // --- STYLES ---
   const getColor = (entry) => {
-    if (entry.sentiment > 0.2) return '#22c55e'; 
-    if (entry.sentiment < -0.2) return '#ef4444';
+    if (entry.sentiment > 0.2) return '#22c55e'; // Green
+    if (entry.sentiment < -0.2) return '#ef4444'; // Red
     if (MAG_7.includes(entry.ticker)) return THEME.MAG7;
     if (CHAOS.includes(entry.ticker)) return THEME.CHAOS;
     return THEME.NOISE;
@@ -123,21 +125,19 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
   );
 
   const currentDate = dates[currentDateIndex] || "--";
-  // Calculate progress for the bar
   const progressPercent = dates.length > 1 ? ((currentDateIndex + 1) / dates.length) * 100 : 0;
 
   return (
     <div className="map-wrapper">
         
-        {/* 1. TIMELINE CONTROLS */}
+        {/* 1. CONTROLS (Top Left - Matching your existing styles) */}
         <div className="map-controls-group" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '8px' }}>
             
-            <div style={{ display: 'flex', gap: '6px' }}>
-                {/* Reset Animation */}
+            <div style={{ display: 'flex', gap: '4px' }}>
                 <button 
                     className="map-control-btn"
                     onClick={handleReset}
-                    title="Replay Entrance"
+                    title="Reset Animation"
                 >
                     <RotateCcw size={14} />
                 </button>
@@ -146,16 +146,14 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
                     cursor: 'default', 
                     borderColor: 'rgba(56, 189, 248, 0.3)', 
                     background: 'rgba(15, 23, 42, 0.8)',
-                    minWidth: '120px',
-                    justifyContent: 'center',
-                    padding: '6px 16px'
+                    minWidth: '100px',
+                    justifyContent: 'center'
                 }}>
-                    <span className="control-text" style={{ color: 'var(--accent)', fontSize: '0.8rem' }}>
+                    <span className="control-text" style={{ color: 'var(--accent)' }}>
                         {currentDate}
                     </span>
                 </div>
 
-                {/* Navigation */}
                 <button 
                     className="map-control-btn"
                     onClick={handleStepBack}
@@ -192,8 +190,8 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
             </div>
         </div>
 
-        {/* 2. LEGEND */}
-        <div className="map-empty-state-hint" style={{ top: 'auto', bottom: '16px', right: '16px', pointerEvents: 'none' }}>
+        {/* 2. LEGEND (Bottom Right) */}
+        <div className="map-empty-state-hint" style={{ top: 'auto', bottom: '16px', right: '16px', pointerEvents: 'none', background: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(4px)', border: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.7rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: THEME.MAG7 }}></span>
@@ -205,20 +203,21 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e' }}></span>
-                    <span className="text-muted">Positive</span>
+                    <span className="text-muted">Positive News</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444' }}></span>
-                    <span className="text-muted">Negative</span>
+                    <span className="text-muted">Negative News</span>
                 </div>
             </div>
         </div>
 
-        {/* 3. CHART ENGINE */}
+        {/* 3. CHART */}
         <ResponsiveContainer width="100%" height="100%">
           <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-            {/* LOCKED AXIS: Essential for the "Physics" feel. 
-                If the axis scales move, the dots don't look like they are drifting.
+            {/* We lock the axis domain to fixed values [-120, 120]. 
+                This ensures the "camera" doesn't zoom in/out, creating the 
+                illusion that the dots are moving through a fixed space.
             */}
             <XAxis type="number" dataKey="x" domain={[-120, 120]} hide />
             <YAxis type="number" dataKey="y" domain={[-120, 120]} hide />
@@ -235,11 +234,13 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
                                     <span className="tooltip-date">{data.date}</span>
                                 </div>
                                 {data.headline && (
-                                    <div className="tooltip-title">"{data.headline}"</div>
+                                    <div className="tooltip-title" style={{ fontStyle: 'italic', marginBottom: '8px' }}>
+                                        "{data.headline}"
+                                    </div>
                                 )}
                                 <div className="tooltip-footer">
                                     <span className="tooltip-label">Sentiment</span>
-                                    <span className={data.sentiment > 0 ? "text-green" : data.sentiment < 0 ? "text-red" : "text-muted"}>
+                                    <span style={{ color: data.sentiment > 0 ? '#22c55e' : data.sentiment < 0 ? '#ef4444' : '#94a3b8', fontWeight: 'bold' }}>
                                         {data.sentiment > 0 ? '+' : ''}{data.sentiment}
                                     </span>
                                 </div>
@@ -253,26 +254,27 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
             <Scatter 
                 name="Physics" 
                 data={currentFrameData} 
-                isAnimationActive={false} // <--- CRITICAL: Disable Recharts internal animation
+                isAnimationActive={false} // Disable Recharts default animation to prevent "exploding from center"
             >
-              {currentFrameData.map((entry) => {
+              {currentFrameData.map((entry, index) => {
                   const color = getColor(entry);
                   const radius = getRadius(entry.ticker);
-                  const opacity = hasExploded ? 0.8 : 0; // Fade in during explosion
+                  // Only show dots after the "Big Bang" flag is true
+                  const opacity = hasExploded ? (color !== THEME.NOISE ? 0.9 : 0.4) : 0; 
                   const isHighlighted = color !== THEME.NOISE;
                   
                   return (
                     <Cell 
-                      key={`cell-${entry.ticker}`} 
+                      key={`cell-${entry.ticker}`} // Keying by Ticker is vital for the CSS transition to work
                       fill={color}
                       r={radius}
-                      fillOpacity={isHighlighted ? 0.9 : 0.4}
+                      fillOpacity={opacity}
                       stroke={isHighlighted ? '#fff' : 'none'}
                       strokeWidth={isHighlighted ? 1 : 0}
-                      // CSS TRANSITION: This handles the smooth drift from Day 1 -> Day 2
+                      // CSS Transition handles the smooth drift between dates
                       style={{ 
-                          transition: 'cx 1s cubic-bezier(0.25, 1, 0.5, 1), cy 1s cubic-bezier(0.25, 1, 0.5, 1), fill 0.5s ease',
-                          opacity: hasExploded ? 1 : 0
+                          transition: 'cx 0.5s ease-in-out, cy 0.5s ease-in-out, fill 0.5s ease',
+                          opacity: opacity // Fade in
                       }} 
                     />
                   );
