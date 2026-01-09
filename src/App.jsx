@@ -9,7 +9,6 @@ function App() {
   const [selectedNode, setSelectedNode] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load Data
   useEffect(() => {
     fetch('/data/market_physics_history.json') 
       .then(res => {
@@ -28,24 +27,23 @@ function App() {
   }, []);
 
   return (
-    // MASTER LAYOUT: Lock to screen on Desktop, Scroll on Mobile
-    <div className="app-container flex flex-col h-screen overflow-hidden mobile-scroll">
+    <div className="app-container h-screen flex flex-col overflow-hidden">
       
-      {/* 1. Header (Fixed Height) */}
-      <div className="sticky-header-group flex-shrink-0 z-20 bg-app">
+      {/* 1. Header (Fixed) */}
+      <div className="sticky-header-group flex-shrink-0 z-20 bg-[var(--bg-app)]">
         <Header />
       </div>
 
-      {/* 2. Main Workspace (Fills remaining height) */}
+      {/* 2. Main Grid (Fills remaining height) */}
       <main className="bento-grid flex-1 min-h-0 pb-6 pt-2">
         
         {/* LEFT: VISUALIZATION (75%) 
-            - Desktop: Spans 3 cols, full height.
-            - Mobile: Spans 4 cols, FIXED height (critical for canvas stability).
+            - Desktop: md:col-span-3, h-full (locks to screen)
+            - Mobile: col-span-4, h-[500px] (fixed height so it doesn't collapse)
         */}
-        <div className="span-4 md:col-span-3 h-[450px] md:h-full min-h-0"> 
+        <div className="col-span-4 md:col-span-3 h-[500px] md:h-full min-h-0 relative"> 
           {isLoading ? (
-             <div className="panel h-full flex flex-col items-center justify-center">
+             <div className="panel ai-hero-card h-full flex flex-col items-center justify-center">
                 <div className="scan-line mb-8 w-1/3"></div>
                 <div className="text-accent font-mono text-xs tracking-[0.2em] animate-pulse">
                   BOOTING PHYSICS ENGINE...
@@ -60,24 +58,24 @@ function App() {
         </div>
 
         {/* RIGHT: AGENT PANEL (25%) 
-            - Desktop: Spans 1 col, full height.
-            - Mobile: Spans 4 cols, auto height (scrolls).
+            - Desktop: md:col-span-1, h-full
+            - Mobile: col-span-4, h-auto (scrolls naturally below map)
         */}
-        <div className="span-4 md:col-span-1 h-auto md:h-full min-h-0 overflow-hidden">
+        <div className="col-span-4 md:col-span-1 h-auto md:h-full min-h-0 overflow-hidden">
            <AgentPanel selectedNode={selectedNode} />
         </div>
 
       </main>
 
-      {/* 3. Footer (Desktop Only - Clean Look) */}
+      {/* 3. Footer (Desktop Only) */}
       <div className="flex-shrink-0 hidden md:block">
          <Footer />
       </div>
-      
-      {/* Mobile Scroll Helper CSS */}
+
+      {/* Mobile Scroll Override */}
       <style>{`
         @media (max-width: 768px) {
-          .app-container.mobile-scroll {
+          .app-container {
             height: auto !important;
             overflow: auto !important;
           }
