@@ -1,17 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { X, CloudCog, Database, FileJson, Layout, ChevronDown } from 'lucide-react';
+import { X, Database, Cpu, Brain, Layout, ChevronDown } from 'lucide-react';
 
-const ArchitectureModal = ({ isOpen, onClose }) => {
-  // Track which step is expanded on mobile (null = none)
-  const [activeStep, setActiveStep] = useState(null);
+interface ArchitectureModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
 
-  const toggleStep = (stepIndex) => {
+const ArchitectureModal: React.FC<ArchitectureModalProps> = ({ isOpen, onClose }) => {
+  const [activeStep, setActiveStep] = useState<number | null>(null);
+
+  const toggleStep = (stepIndex: number) => {
     setActiveStep(activeStep === stepIndex ? null : stepIndex);
   };
 
-  // Close on Escape key
   useEffect(() => {
-    const handleEsc = (e) => {
+    const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleEsc);
@@ -27,41 +30,37 @@ const ArchitectureModal = ({ isOpen, onClose }) => {
         {/* Header */}
         <div className="modal-header">
           <div className="modal-title-wrapper">
-            <span className="modal-title">THE STATIC PIPELINE</span>
-            <span className="tag ml-2">Latency: &lt;50ms</span>
+            <span className="modal-title">HYBRID INTELLIGENCE PIPELINE</span>
+            <span className="tag ml-2">Latency: &lt;16ms (60fps)</span>
           </div>
           <button className="panel-toggle-btn" onClick={onClose}>
             <X size={20} />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="arch-container">
-          <div className="arch-intro">
-            High-performance architecture: Decoupling compute (Snowflake) from serving (S3).
-          </div>
-
-          {/* THE FLOW DIAGRAM */}
+        {/* Diagram Area */}
+        <div className="arch-diagram">
+          
           <div className="arch-flow">
             
-            {/* STEP 1: INGESTION & ORCHESTRATION */}
+            {/* STEP 1: INGESTION */}
             <div 
               className={`arch-node ${activeStep === 1 ? 'active' : ''}`} 
               onClick={() => toggleStep(1)}
             >
               <div className="arch-node-header">
-                <div className="arch-icon-box color-orange">
-                  <CloudCog size={24} />
+                <div className="arch-icon-box color-purple">
+                    <Database size={24} />
                 </div>
                 <div className="arch-meta">
-                    <div className="arch-label">INGESTION & TRANSFORM</div>
-                    <div className="arch-tech">MWAA (Airflow)</div>
+                    <div className="arch-label">DATA INGESTION</div>
+                    <div className="arch-tech">Python / Pandas</div>
                 </div>
-                {/* Mobile Chevron Indicator */}
                 <ChevronDown size={16} className="mobile-chevron" />
               </div>
               <div className="arch-desc">
-                DAGs ingest market data, load to Snowflake, and execute <strong>dbt transformations</strong>.
+                Nightly scripts scrape 2,000+ news articles and market ticks (Polygon.io).
+                Data is normalized and cleaned for vectorization.
               </div>
             </div>
 
@@ -70,23 +69,24 @@ const ArchitectureModal = ({ isOpen, onClose }) => {
               <span className="mobile-arrow">↓</span>
             </div>
 
-            {/* STEP 2: WAREHOUSE */}
+            {/* STEP 2: INTELLIGENCE */}
             <div 
               className={`arch-node ${activeStep === 2 ? 'active' : ''}`} 
               onClick={() => toggleStep(2)}
             >
               <div className="arch-node-header">
                 <div className="arch-icon-box color-blue">
-                  <Database size={24} />
+                    <Brain size={24} />
                 </div>
                 <div className="arch-meta">
-                    <div className="arch-label">WAREHOUSE</div>
-                    <div className="arch-tech">Snowflake Data Lake</div>
+                    <div className="arch-label">KNOWLEDGE GRAPH</div>
+                    <div className="arch-tech">Supabase / OpenAI</div>
                 </div>
                 <ChevronDown size={16} className="mobile-chevron" />
               </div>
               <div className="arch-desc">
-                The System of Record. Stores raw JSON ingestion and materialized <strong>incremental dbt models</strong>.
+                Articles are embedded (text-embedding-3-small) and stored in pgvector.
+                Graph connections ("Synapses") are built based on co-occurrence.
               </div>
             </div>
 
@@ -95,23 +95,24 @@ const ArchitectureModal = ({ isOpen, onClose }) => {
               <span className="mobile-arrow">↓</span>
             </div>
 
-            {/* STEP 3: SERVING LAYER */}
+            {/* STEP 3: PHYSICS ENGINE */}
             <div 
               className={`arch-node ${activeStep === 3 ? 'active' : ''}`} 
               onClick={() => toggleStep(3)}
             >
               <div className="arch-node-header">
                 <div className="arch-icon-box color-green">
-                  <FileJson size={24} />
+                    <Cpu size={24} />
                 </div>
                 <div className="arch-meta">
-                    <div className="arch-label">PUBLISHING DAG</div>
-                    <div className="arch-tech">Airflow → S3 (JSON)</div>
+                    <div className="arch-label">PHYSICS CALC</div>
+                    <div className="arch-tech">t-SNE / SciKit-Learn</div>
                 </div>
                 <ChevronDown size={16} className="mobile-chevron" />
               </div>
               <div className="arch-desc">
-                "The Exporter." Reads modeled data, serializes to static JSON, and pushes to <strong>S3</strong>.
+                High-dimensional market data is projected into 2D space.
+                Velocity and Energy are calculated to simulate fluid dynamics.
               </div>
             </div>
 
@@ -130,13 +131,14 @@ const ArchitectureModal = ({ isOpen, onClose }) => {
                     <Layout size={24} />
                 </div>
                 <div className="arch-meta">
-                    <div className="arch-label">UI LAYER</div>
-                    <div className="arch-tech">React / Vite</div>
+                    <div className="arch-label">VISUALIZATION</div>
+                    <div className="arch-tech">React / DeckGL</div>
                 </div>
                 <ChevronDown size={16} className="mobile-chevron" />
               </div>
               <div className="arch-desc">
-                Fetches pre-computed JSON from S3. No database queries on page load.
+                WebGL renders 250+ particles at 60fps.
+                The Agent uses RAG (Retrieval Augmented Generation) to explain the data.
               </div>
             </div>
 
@@ -145,7 +147,7 @@ const ArchitectureModal = ({ isOpen, onClose }) => {
           {/* Footer */}
           <div className="arch-footer">
             <div className="arch-cicd">
-              <span className="text-accent">CI/CD:</span> Infrastructure & Models managed via GitHub Actions.
+              <span className="text-accent">CI/CD:</span> Full Stack Monorepo deployed via Vercel & GitHub Actions.
             </div>
           </div>
         </div>

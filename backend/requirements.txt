@@ -1,0 +1,16 @@
+# Data Science & Math (The Engine)
+numpy>=1.26.0
+pandas>=2.1.0
+scipy>=1.11.0
+scikit-learn>=1.4.0   # Ensures 'n_iter' and 'learning_rate' params work
+
+# API & Networking
+httpx>=0.25.0
+tenacity>=8.2.0
+
+# Database & Environment
+supabase>=2.3.0
+python-dotenv>=1.0.0
+
+# NLP
+textblob>=0.17.1
