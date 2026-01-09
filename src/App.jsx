@@ -9,6 +9,7 @@ function App() {
   const [selectedNode, setSelectedNode] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Load Data
   useEffect(() => {
     fetch('/data/market_physics_history.json') 
       .then(res => {
@@ -27,31 +28,28 @@ function App() {
   }, []);
 
   return (
-    // MD: Desktop (Locked Screen), Base: Mobile (Scrollable)
+    // Desktop: Locked Viewport (h-screen). Mobile: Scrollable (min-h-screen).
     <div className="app-container flex flex-col h-auto md:h-screen md:overflow-hidden min-h-screen">
       
-      {/* Header stays fixed at top */}
-      <div className="sticky-header-group flex-shrink-0">
+      {/* Fixed Header */}
+      <div className="sticky-header-group flex-shrink-0 z-50 bg-[var(--bg-app)]">
         <Header />
       </div>
 
-      {/* Main Grid 
-          - Mobile: Flex Column (Scrollable)
-          - Desktop: Bento Grid (Locked)
-      */}
-      <main className="bento-grid flex-1 min-h-0 pt-2 pb-4">
+      {/* Main Grid Content */}
+      <main className="bento-grid flex-1 min-h-0 pb-4 pt-2">
         
-        {/* LEFT: VISUALIZATION ENGINE 
-            - Mobile: Fixed height (400px) to ensure map is usable but leaves room
-            - Desktop: Full height of the grid area
+        {/* LEFT: VISUALIZATION ENGINE (3/4 Width on Desktop) 
+            - Mobile: Fixed height (450px)
+            - Desktop: Fills available vertical space
         */}
         <div className="col-span-4 md:col-span-3 h-[450px] md:h-full"> 
-          <div className="panel ai-hero-card p-0 overflow-hidden relative h-full w-full">
+          <div className="h-full w-full"> 
             {isLoading ? (
-               <div className="w-full h-full flex flex-col items-center justify-center">
+               <div className="panel h-full flex flex-col items-center justify-center">
                   <div className="scan-line mb-8 w-1/2"></div>
-                  <div className="text-[#e879f9] font-mono text-sm tracking-widest animate-pulse">
-                    INITIALIZING PHYSICS...
+                  <div className="text-accent font-mono text-sm tracking-widest animate-pulse">
+                    INITIALIZING PHYSICS ENGINE...
                   </div>
                </div>
             ) : (
@@ -63,9 +61,9 @@ function App() {
           </div>
         </div>
 
-        {/* RIGHT: AGENT PANEL 
-            - Mobile: Auto height (grows with content)
-            - Desktop: Full height (scrolls internally)
+        {/* RIGHT: AGENT PANEL (1/4 Width on Desktop) 
+            - Mobile: Auto height
+            - Desktop: Fills vertical space
         */}
         <div className="col-span-4 md:col-span-1 h-auto md:h-full min-h-[400px]">
            <AgentPanel selectedNode={selectedNode} />
@@ -73,7 +71,7 @@ function App() {
 
       </main>
 
-      {/* Footer pinned only on Desktop */}
+      {/* Footer (Desktop Only to save space) */}
       <div className="flex-shrink-0 hidden md:block">
          <Footer />
       </div>
