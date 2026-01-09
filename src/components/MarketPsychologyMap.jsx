@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useMemo, useRef } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { ScatterChart, Scatter, XAxis, YAxis, ResponsiveContainer, Cell, Tooltip } from 'recharts';
-import { Play, Pause, SkipBack, ChevronLeft, ChevronRight } from 'lucide-react';
+import { SkipBack, ChevronLeft, ChevronRight } from 'lucide-react';
 
 // --- CONFIGURATION ---
 const MAG_7 = ['AAPL', 'MSFT', 'NVDA', 'GOOGL', 'AMZN', 'META', 'TSLA', 'AMD'];
@@ -17,7 +17,6 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
   const [historyData, setHistoryData] = useState({}); 
   const [dates, setDates] = useState([]);
   const [currentDateIndex, setCurrentDateIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // --- DATA LOADING ---
@@ -49,7 +48,7 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
                     title: "Market Physics Engine",
                     inspector: {
                         tag: "PHYSICS ENGINE",
-                        description: "Visualizing semantic drift. Use the playback controls to watch how news narratives push and pull stocks into different 'gravity wells' over time.",
+                        description: "Visualizing semantic drift. Use the controls to step through time and watch how news narratives push and pull stocks into different 'gravity wells'.",
                         sql_logic: "-- VECTOR AGGREGATION\nSELECT ticker, AVG(embedding) \nFROM news_vectors \nGROUP BY ticker, date",
                         dbt_logic: "models/marts/physics/mrt_daily_forces.py"
                     }
@@ -64,23 +63,6 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
     fetchData();
   }, [onMetaLoaded]);
 
-  // --- ANIMATION LOOP ---
-  useEffect(() => {
-    let interval;
-    if (isPlaying) {
-      interval = setInterval(() => {
-        setCurrentDateIndex(prev => {
-          if (prev >= dates.length - 1) {
-            setIsPlaying(false); 
-            return prev;
-          }
-          return prev + 1;
-        });
-      }, 500);
-    }
-    return () => clearInterval(interval);
-  }, [isPlaying, dates.length]);
-
   // --- FRAME DATA ---
   const currentFrameData = useMemo(() => {
     if (!dates.length) return [];
@@ -90,12 +72,10 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
 
   // --- HANDLERS ---
   const handleStepBack = () => {
-    setIsPlaying(false);
     setCurrentDateIndex(prev => (prev > 0 ? prev - 1 : prev));
   };
 
   const handleStepForward = () => {
-    setIsPlaying(false);
     setCurrentDateIndex(prev => (prev < dates.length - 1 ? prev + 1 : prev));
   };
 
@@ -146,24 +126,23 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
                     onClick={handleStepBack}
                     title="Previous Day"
                     disabled={currentDateIndex === 0}
+                    style={{ minWidth: '40px', justifyContent: 'center' }}
                 >
-                    <ChevronLeft size={14} />
+                    <ChevronLeft size={16} />
                 </button>
 
-                {/* Play/Pause */}
-                <button 
-                    className={`map-control-btn ${isPlaying ? 'active' : ''}`}
-                    onClick={() => {
-                        if (currentDateIndex >= dates.length - 1) setCurrentDateIndex(0);
-                        setIsPlaying(!isPlaying);
-                    }}
-                    style={{ minWidth: '80px', justifyContent: 'center' }}
-                >
-                    {isPlaying ? <Pause size={14} /> : <Play size={14} />}
-                    <span className="control-text desktop-only-text">
-                        {isPlaying ? 'STOP' : 'PLAY'}
+                {/* Date Display (Center) */}
+                <div className="map-control-btn" style={{ 
+                    cursor: 'default', 
+                    borderColor: 'rgba(56, 189, 248, 0.3)', 
+                    background: 'rgba(15, 23, 42, 0.8)',
+                    minWidth: '100px',
+                    justifyContent: 'center'
+                }}>
+                    <span className="control-text" style={{ color: 'var(--accent)' }}>
+                        {currentDate}
                     </span>
-                </button>
+                </div>
 
                 {/* Forward Step */}
                 <button 
@@ -171,16 +150,10 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
                     onClick={handleStepForward}
                     title="Next Day"
                     disabled={currentDateIndex === dates.length - 1}
+                    style={{ minWidth: '40px', justifyContent: 'center' }}
                 >
-                    <ChevronRight size={14} />
+                    <ChevronRight size={16} />
                 </button>
-
-                {/* Date Display */}
-                <div className="map-control-btn" style={{ cursor: 'default', borderColor: 'transparent', background: 'rgba(30, 41, 59, 0.4)', marginLeft: '8px' }}>
-                    <span className="control-text" style={{ color: 'var(--accent)' }}>
-                        {currentDate}
-                    </span>
-                </div>
             </div>
 
             {/* Progress Bar */}
@@ -225,7 +198,6 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
         {/* 3. CHART ENGINE */}
         <ResponsiveContainer width="100%" height="100%">
           <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-            {/* Locked Domain prevents axis jumping */}
             <XAxis type="number" dataKey="x" domain={[-120, 120]} hide />
             <YAxis type="number" dataKey="y" domain={[-120, 120]} hide />
             
@@ -259,7 +231,7 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
             <Scatter 
                 name="Physics" 
                 data={currentFrameData} 
-                isAnimationActive={false} // <--- FIX: Disables "Explosion" effect
+                isAnimationActive={false} // Disable Recharts entrance animation
             >
               {currentFrameData.map((entry, index) => {
                   const color = getColor(entry);
@@ -274,7 +246,7 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
                       fillOpacity={isHighlighted ? 0.9 : 0.4}
                       stroke={isHighlighted ? '#fff' : 'none'}
                       strokeWidth={isHighlighted ? 1 : 0}
-                      // CSS Transition handles the drift smoothly instead of Recharts
+                      // CSS Transition handles the glide
                       style={{ transition: 'all 0.5s ease-in-out' }} 
                     />
                   );
