@@ -28,53 +28,66 @@ function App() {
   }, []);
 
   return (
-    // Desktop: Locked Viewport (h-screen). Mobile: Scrollable (min-h-screen).
-    <div className="app-container flex flex-col h-auto md:h-screen md:overflow-hidden min-h-screen">
+    // MASTER LAYOUT: Lock to screen on Desktop, Scroll on Mobile
+    <div className="app-container flex flex-col h-screen overflow-hidden mobile-scroll">
       
-      {/* Fixed Header */}
-      <div className="sticky-header-group flex-shrink-0 z-50 bg-[var(--bg-app)]">
+      {/* 1. Header (Fixed Height) */}
+      <div className="sticky-header-group flex-shrink-0 z-20 bg-app">
         <Header />
       </div>
 
-      {/* Main Grid Content */}
-      <main className="bento-grid flex-1 min-h-0 pb-4 pt-2">
+      {/* 2. Main Workspace (Fills remaining height) */}
+      <main className="bento-grid flex-1 min-h-0 pb-6 pt-2">
         
-        {/* LEFT: VISUALIZATION ENGINE (3/4 Width on Desktop) 
-            - Mobile: Fixed height (450px)
-            - Desktop: Fills available vertical space
+        {/* LEFT: VISUALIZATION (75%) 
+            - Desktop: Spans 3 cols, full height.
+            - Mobile: Spans 4 cols, FIXED height (critical for canvas stability).
         */}
-        <div className="col-span-4 md:col-span-3 h-[450px] md:h-full"> 
-          <div className="h-full w-full"> 
-            {isLoading ? (
-               <div className="panel h-full flex flex-col items-center justify-center">
-                  <div className="scan-line mb-8 w-1/2"></div>
-                  <div className="text-accent font-mono text-sm tracking-widest animate-pulse">
-                    INITIALIZING PHYSICS ENGINE...
-                  </div>
-               </div>
-            ) : (
-              <MarketGalaxy 
-                data={historyData} 
-                onNodeClick={setSelectedNode} 
-              />
-            )}
-          </div>
+        <div className="span-4 md:col-span-3 h-[450px] md:h-full min-h-0"> 
+          {isLoading ? (
+             <div className="panel h-full flex flex-col items-center justify-center">
+                <div className="scan-line mb-8 w-1/3"></div>
+                <div className="text-accent font-mono text-xs tracking-[0.2em] animate-pulse">
+                  BOOTING PHYSICS ENGINE...
+                </div>
+             </div>
+          ) : (
+            <MarketGalaxy 
+              data={historyData} 
+              onNodeClick={setSelectedNode} 
+            />
+          )}
         </div>
 
-        {/* RIGHT: AGENT PANEL (1/4 Width on Desktop) 
-            - Mobile: Auto height
-            - Desktop: Fills vertical space
+        {/* RIGHT: AGENT PANEL (25%) 
+            - Desktop: Spans 1 col, full height.
+            - Mobile: Spans 4 cols, auto height (scrolls).
         */}
-        <div className="col-span-4 md:col-span-1 h-auto md:h-full min-h-[400px]">
+        <div className="span-4 md:col-span-1 h-auto md:h-full min-h-0 overflow-hidden">
            <AgentPanel selectedNode={selectedNode} />
         </div>
 
       </main>
 
-      {/* Footer (Desktop Only to save space) */}
+      {/* 3. Footer (Desktop Only - Clean Look) */}
       <div className="flex-shrink-0 hidden md:block">
          <Footer />
       </div>
+      
+      {/* Mobile Scroll Helper CSS */}
+      <style>{`
+        @media (max-width: 768px) {
+          .app-container.mobile-scroll {
+            height: auto !important;
+            overflow: auto !important;
+          }
+          .bento-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+          }
+        }
+      `}</style>
     </div>
   );
 }
