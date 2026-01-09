@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "clsx": "^2.0.0",
+    "d3-array": "^3.2.4",
     "lucide-react": "^0.294.0",
     "plotly.js": "^2.35.3",
     "plotly.js-basic-dist": "^3.3.1",
@@ -20,6 +21,7 @@
     "recharts": "^2.15.0"
   },
   "devDependencies": {
+    "@types/d3-array": "^3.2.2",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.2.0",
