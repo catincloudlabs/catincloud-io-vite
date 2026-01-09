@@ -234,14 +234,13 @@ function App() {
         
         <Suspense fallback={<div className="span-4 h-tall flex items-center justify-center text-muted animate-pulse">Initializing AI Models...</div>}>
 
-            {/* 2. HERO: MARKET PHYSICS ENGINE */}
+            {/* 2. HERO: MARKET PSYCHOLOGY */}
             <div className="span-4 h-tall area-cluster">
                <InspectorCard 
                  className="ai-hero-card"
-                 // DYNAMIC TITLE UPGRADE:
-                 title={mapMeta?.title || "Market Physics Engine"}
-                 tag="PHYSICS ENGINE" 
-                 desc={mapMeta?.inspector?.description || "Initializing simulation..."}
+                 title="Market Psychology Map"
+                 tag="AI MODEL" 
+                 desc="t-SNE Clustering Using OpenAI Embeddings"
                  headerControls={renderMetric("Fear/Greed", "NEUTRAL", "text-blue-500")}
                  sqlCode={mapMeta?.inspector?.sql_logic}
                  dbtCode={mapMeta?.inspector?.dbt_logic}
