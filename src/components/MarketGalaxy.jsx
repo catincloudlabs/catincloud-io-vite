@@ -15,7 +15,7 @@ const MarketGalaxy = ({ data, onNodeClick }) => {
     controls 
   } = useMarketPhysics(data);
 
-  // --- 1. Bounds Calculation ---
+  // --- 1. Dynamic Camera Bounds ---
   const frameBounds = useMemo(() => {
     const points = Object.values(currentFrameData);
     if (points.length === 0) return { minX: -10, maxX: 10, minY: -10, maxY: 10 };
@@ -30,6 +30,7 @@ const MarketGalaxy = ({ data, onNodeClick }) => {
 
     const xSpan = maxX - minX || 1;
     const ySpan = maxY - minY || 1;
+    // 15% Padding
     return {
       minX: minX - xSpan * 0.15,
       maxX: maxX + xSpan * 0.15,
@@ -38,22 +39,29 @@ const MarketGalaxy = ({ data, onNodeClick }) => {
     };
   }, [currentFrameData]);
 
-  // --- 2. Robust Resize Logic ---
+  // --- 2. Robust Resize Observer ---
   useEffect(() => {
     if (!containerRef.current) return;
+    
     const resizeObserver = new ResizeObserver((entries) => {
-      // Wrap in AnimationFrame to prevent loop error
-      window.requestAnimationFrame(() => {
-        if (!Array.isArray(entries) || !entries.length) return;
-        const { width, height } = entries[0].contentRect;
-        setDimensions({ width, height });
-      });
+      for (const entry of entries) {
+        // Use animation frame to avoid resize loop error
+        window.requestAnimationFrame(() => {
+            if (entry.contentRect.width > 0 && entry.contentRect.height > 0) {
+                setDimensions({
+                    width: entry.contentRect.width,
+                    height: entry.contentRect.height
+                });
+            }
+        });
+      }
     });
+
     resizeObserver.observe(containerRef.current);
     return () => resizeObserver.disconnect();
   }, []);
 
-  // --- 3. Render Loop ---
+  // --- 3. The Render Loop ---
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || dimensions.width === 0) return;
@@ -61,7 +69,7 @@ const MarketGalaxy = ({ data, onNodeClick }) => {
     const ctx = canvas.getContext('2d');
     const dpr = window.devicePixelRatio || 1;
 
-    // A. Grab Theme Colors (Exact Match)
+    // A. Grab Theme Colors directly from CSS Variables
     const style = getComputedStyle(document.body);
     const cAccent = style.getPropertyValue('--accent').trim();
     const cGreen = style.getPropertyValue('--green').trim();
@@ -69,7 +77,7 @@ const MarketGalaxy = ({ data, onNodeClick }) => {
     const cText = style.getPropertyValue('--text-main').trim();
     const cBorder = style.getPropertyValue('--border').trim();
 
-    // B. Setup Canvas (High-DPI)
+    // B. High-DPI Scaling (Sharpness Fix)
     canvas.width = dimensions.width * dpr;
     canvas.height = dimensions.height * dpr;
     ctx.scale(dpr, dpr);
@@ -81,7 +89,7 @@ const MarketGalaxy = ({ data, onNodeClick }) => {
     // C. Clear & Grid
     ctx.clearRect(0, 0, width, height);
     
-    // Grid Lines (Subtle Tech Look)
+    // Technical Grid
     ctx.strokeStyle = cBorder; 
     ctx.lineWidth = 0.5;
     ctx.globalAlpha = 0.2; 
@@ -96,18 +104,15 @@ const MarketGalaxy = ({ data, onNodeClick }) => {
         const x = xScale(stock.x);
         const y = yScale(stock.y);
         
-        let color = cAccent; 
+        let color = cAccent;
         if (stock.sentiment > 0.15) color = cGreen;
         if (stock.sentiment < -0.15) color = cRed;
         
         const isHovered = hoveredNode?.ticker === stock.ticker;
-        const isFast = stock.velocity > 4;
-        
-        // Dynamic Radius
-        const radius = isHovered ? 6 : Math.max(3, Math.min(5, 3 + (stock.velocity || 0))); 
+        const isOutlier = stock.velocity > 4;
 
-        // Glow
-        if (isHovered || isFast) {
+        // Dynamic Glow
+        if (isHovered || isOutlier) {
           ctx.shadowBlur = 15;
           ctx.shadowColor = color;
         } else {
@@ -115,36 +120,35 @@ const MarketGalaxy = ({ data, onNodeClick }) => {
         }
         
         ctx.beginPath();
-        ctx.arc(x, y, radius, 0, 2 * Math.PI);
-        ctx.fillStyle = isHovered ? '#fff' : color;
+        ctx.arc(x, y, isHovered ? 5 : 3, 0, 2 * Math.PI);
+        ctx.fillStyle = isHovered ? '#ffffff' : color;
         ctx.fill();
         ctx.shadowBlur = 0;
 
-        // E. Labels (Clean)
-        if (isHovered || isFast) {
+        // Labels (Clean: Only show on hover or outliers)
+        if (isHovered || isOutlier) {
             ctx.fillStyle = cText;
-            ctx.font = isHovered ? 'bold 12px "JetBrains Mono"' : '10px "JetBrains Mono"';
-            
-            // Offset label
+            ctx.font = isHovered ? 'bold 11px "JetBrains Mono", monospace' : '10px "JetBrains Mono", monospace';
             ctx.fillText(stock.ticker, x + 10, y + 4);
             
-            // Tech Line
+            // Connector Line
             if (isHovered) {
-                ctx.strokeStyle = color;
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(x, y);
-                ctx.lineTo(x + 8, y + 2);
-                ctx.stroke();
+              ctx.strokeStyle = color;
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.moveTo(x, y);
+              ctx.lineTo(x + 8, y + 2);
+              ctx.stroke();
             }
         }
     });
 
   }, [currentFrameData, dimensions, hoveredNode, frameBounds]);
 
-  // Handle Interactions
+  // Interaction Logic
   const handleInteraction = (e) => {
     if (!onNodeClick || !currentFrameData || !canvasRef.current) return;
+    
     const rect = canvasRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -172,39 +176,39 @@ const MarketGalaxy = ({ data, onNodeClick }) => {
   };
 
   return (
-    // THE PANEL WRAPPER
+    // Uses AI-HERO-CARD class for the border glow
     <div className="panel ai-hero-card h-full flex flex-col p-0 overflow-hidden relative">
       
-      {/* 1. Header (Strict Theme Compliance) */}
-      <div className="panel-header" style={{ margin: 0, padding: '16px 20px', borderBottom: '1px solid rgba(192, 132, 252, 0.2)' }}>
+      {/* Header - Enforcing styles.css layout */}
+      <div className="panel-header" style={{ margin: 0, padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
         <div className="panel-header-identity">
-            <span className="panel-title text-purple-300">MARKET GALAXY</span>
+            <span className="panel-title text-accent">MARKET GALAXY</span>
             <span className="tag" style={{ color: '#e879f9', background: 'rgba(192,132,252,0.1)', borderColor: 'rgba(192,132,252,0.3)' }}>
               PHYSICS ENGINE
             </span>
         </div>
         
-        {/* Controls */}
         <div className="panel-header-controls gap-3">
-            <span className="text-sm font-mono text-[#e879f9]" style={{ textShadow: '0 0 10px rgba(232,121,249,0.3)' }}>
+            <span className="text-sm font-mono text-accent">
               {currentDate || "SYNC..."}
             </span>
 
+            {/* Controls using panel-toggle-btn from styles.css */}
             <div className="flex items-center gap-1">
-                <button onClick={controls.stepBack} className="map-control-btn hover:text-[#e879f9] hover:border-[#e879f9]">
+                <button onClick={controls.stepBack} className="panel-toggle-btn hover:text-white" title="Rewind">
                   <ChevronLeft size={14} />
                 </button>
-                <button onClick={() => controls.setIsPlaying(!controls.isPlaying)} className={`map-control-btn hover:text-[#e879f9] hover:border-[#e879f9] ${controls.isPlaying ? 'text-[#e879f9] border-[#e879f9]' : ''}`}>
+                <button onClick={() => controls.setIsPlaying(!controls.isPlaying)} className={`panel-toggle-btn ${controls.isPlaying ? 'text-accent' : ''}`} title="Play/Pause">
                   {controls.isPlaying ? <Pause size={14} /> : <Play size={14} />}
                 </button>
-                <button onClick={controls.stepForward} className="map-control-btn hover:text-[#e879f9] hover:border-[#e879f9]">
+                <button onClick={controls.stepForward} className="panel-toggle-btn hover:text-white" title="Advance">
                   <ChevronRight size={14} />
                 </button>
             </div>
         </div>
       </div>
 
-      {/* 2. Canvas Container (Isolates Layout) */}
+      {/* Canvas Container: flex-1 ensures it fills available space without pushing */}
       <div className="flex-1 relative min-h-0 bg-[var(--bg-app)]" ref={containerRef}>
         <canvas 
             ref={canvasRef}
@@ -217,9 +221,9 @@ const MarketGalaxy = ({ data, onNodeClick }) => {
         {/* Overlay Hint */}
         {!hoveredNode && (
             <div className="absolute bottom-4 left-4 pointer-events-none">
-                <div className="flex items-center gap-2 text-[10px] text-muted font-mono opacity-70">
-                    <Activity size={12} className="text-[#e879f9]" />
-                    <span>SYSTEM READY • SELECT NODE</span>
+                <div className="flex items-center gap-2 text-[10px] text-muted font-mono opacity-60">
+                    <MousePointer2 size={12} />
+                    <span>INTERACT TO INSPECT</span>
                 </div>
             </div>
         )}

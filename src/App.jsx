@@ -29,19 +29,19 @@ function App() {
   return (
     <div className="app-container h-screen flex flex-col overflow-hidden">
       
-      {/* 1. Header (Fixed) */}
+      {/* 1. Header (Fixed Height) */}
       <div className="sticky-header-group flex-shrink-0 z-20 bg-[var(--bg-app)]">
         <Header />
       </div>
 
-      {/* 2. Main Grid (Fills remaining height) */}
-      <main className="bento-grid flex-1 min-h-0 pb-6 pt-2">
+      {/* 2. Main Grid (Fills remaining height) 
+          - Desktop Update: Added 'md:grid-rows-1' to lock row height to 1fr.
+            This prevents the 'auto' rows from growing infinitely.
+      */}
+      <main className="bento-grid flex-1 min-h-0 pb-6 pt-2 md:grid-rows-1">
         
-        {/* LEFT: VISUALIZATION (75%) 
-            - Desktop: md:col-span-3, h-full (locks to screen)
-            - Mobile: col-span-4, h-[500px] (fixed height so it doesn't collapse)
-        */}
-        <div className="col-span-4 md:col-span-3 h-[500px] md:h-full min-h-0 relative"> 
+        {/* LEFT: VISUALIZATION (75%) */}
+        <div className="col-span-4 md:col-span-3 h-[500px] md:h-full relative min-h-0"> 
           {isLoading ? (
              <div className="panel ai-hero-card h-full flex flex-col items-center justify-center">
                 <div className="scan-line mb-8 w-1/3"></div>
@@ -57,11 +57,8 @@ function App() {
           )}
         </div>
 
-        {/* RIGHT: AGENT PANEL (25%) 
-            - Desktop: md:col-span-1, h-full
-            - Mobile: col-span-4, h-auto (scrolls naturally below map)
-        */}
-        <div className="col-span-4 md:col-span-1 h-auto md:h-full min-h-0 overflow-hidden">
+        {/* RIGHT: AGENT PANEL (25%) */}
+        <div className="col-span-4 md:col-span-1 h-auto md:h-full min-h-0 relative overflow-hidden">
            <AgentPanel selectedNode={selectedNode} />
         </div>
 
