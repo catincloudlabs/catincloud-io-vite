@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { ScatterChart, Scatter, XAxis, YAxis, ResponsiveContainer, Cell, Tooltip, Legend } from 'recharts';
-import { ChevronLeft, ChevronRight, Info, RotateCcw } from 'lucide-react';
+import { ScatterChart, Scatter, XAxis, YAxis, ResponsiveContainer, Cell, Tooltip } from 'recharts';
+import { ChevronLeft, ChevronRight, RotateCcw, Calendar, Play, Pause } from 'lucide-react';
 
 // --- CONFIGURATION ---
 const MAG_7 = ['AAPL', 'MSFT', 'NVDA', 'GOOGL', 'AMZN', 'META', 'TSLA', 'AMD'];
@@ -98,8 +98,9 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
 
     // 3. Determine Opacity
     const opacity = category === 'Noise' ? 0.3 : 0.9;
+    const fill = CHART_COLORS[category];
 
-    return { fill: CHART_COLORS[category], radius, opacity, category };
+    return { fill, radius, opacity, category };
   };
 
   if (loading) return (
@@ -114,38 +115,68 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
   return (
     <div className="map-wrapper">
         
-        {/* --- CONTROLS (Top Left) --- */}
-        <div className="map-controls-group" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '10px' }}>
+        {/* --- CONTROLS (Top Left - Reusing your existing style classes) --- */}
+        <div className="map-controls-group" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '12px' }}>
+            
             <div style={{ display: 'flex', gap: '8px' }}>
-                <button className="map-control-btn" onClick={handleReset} title="Reset">
+                {/* Reset Button */}
+                <button 
+                    className="map-control-btn" 
+                    onClick={handleReset} 
+                    title="Reset Timeline"
+                >
                     <RotateCcw size={14} />
                 </button>
                 
-                <button className="map-control-btn" onClick={handleStepBack} disabled={currentDateIndex === 0}>
+                {/* Back Button */}
+                <button 
+                    className="map-control-btn" 
+                    onClick={handleStepBack} 
+                    disabled={currentDateIndex === 0}
+                    style={{ opacity: currentDateIndex === 0 ? 0.5 : 1 }}
+                >
                     <ChevronLeft size={16} />
                 </button>
 
-                <div className="map-control-btn" style={{ minWidth: '110px', justifyContent: 'center', borderColor: 'var(--accent)', color: 'var(--accent)' }}>
+                {/* Date Display (Styled like a button but static) */}
+                <div 
+                    className="map-control-btn active-focus" 
+                    style={{ cursor: 'default', minWidth: '110px', justifyContent: 'center' }}
+                >
+                   <Calendar size={14} className="mr-2" />
                    <span className="control-text">{currentDate}</span>
                 </div>
 
-                <button className="map-control-btn" onClick={handleStepForward} disabled={currentDateIndex === dates.length - 1}>
+                {/* Forward Button */}
+                <button 
+                    className="map-control-btn" 
+                    onClick={handleStepForward} 
+                    disabled={currentDateIndex === dates.length - 1}
+                    style={{ opacity: currentDateIndex === dates.length - 1 ? 0.5 : 1 }}
+                >
                     <ChevronRight size={16} />
                 </button>
             </div>
             
-            {/* Simple Progress Bar */}
-            <div style={{ width: '100%', height: '2px', background: 'rgba(255,255,255,0.1)' }}>
-                <div style={{ width: `${progressPercent}%`, height: '100%', background: 'var(--accent)', transition: 'width 0.3s ease' }} />
+            {/* Progress Bar */}
+            <div style={{ width: '100%', height: '2px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
+                <div 
+                    style={{ 
+                        width: `${progressPercent}%`, 
+                        height: '100%', 
+                        background: 'var(--accent)', 
+                        transition: 'width 0.3s ease' 
+                    }} 
+                />
             </div>
         </div>
 
         {/* --- LEGEND (Bottom Right) --- */}
-        <div className="map-empty-state-hint" style={{ top: 'auto', bottom: '16px', right: '16px', pointerEvents: 'none', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
+        <div className="map-empty-state-hint" style={{ top: 'auto', bottom: '16px', right: '16px', pointerEvents: 'none', flexDirection: 'column', alignItems: 'flex-start', gap: '6px', background: 'rgba(15, 23, 42, 0.8)', padding: '12px' }}>
             {Object.entries(CHART_COLORS).map(([label, color]) => (
                 <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px' }}>
-                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: color }}></span>
-                    <span style={{ color: '#94a3b8' }}>{label}</span>
+                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: color, boxShadow: `0 0 8px ${color}40` }}></span>
+                    <span style={{ color: '#94a3b8', fontWeight: 500 }}>{label}</span>
                 </div>
             ))}
         </div>
@@ -153,7 +184,7 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
         {/* --- CHART --- */}
         <ResponsiveContainer width="100%" height="100%">
           <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-            {/* Fixed Domain allows dots to "travel" across the screen */}
+            {/* Fixed Domain allows dots to "travel" across the screen without axes resizing */}
             <XAxis type="number" dataKey="x" domain={[-120, 120]} hide />
             <YAxis type="number" dataKey="y" domain={[-120, 120]} hide />
             
@@ -175,8 +206,12 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
                                 )}
                                 <div className="tooltip-footer" style={{ marginTop: '8px' }}>
                                     <span className="tooltip-label">Sentiment</span>
-                                    <span style={{ color: data.sentiment > 0 ? 'var(--green)' : data.sentiment < 0 ? 'var(--red)' : 'var(--text-muted)' }}>
-                                        {data.sentiment}
+                                    <span style={{ 
+                                        color: data.sentiment > 0 ? 'var(--green)' : data.sentiment < 0 ? 'var(--red)' : 'var(--text-muted)',
+                                        fontWeight: 'bold',
+                                        marginLeft: 'auto'
+                                    }}>
+                                        {data.sentiment > 0 ? '+' : ''}{data.sentiment}
                                     </span>
                                 </div>
                             </div>
@@ -188,7 +223,7 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
 
             <Scatter 
                 data={currentFrameData} 
-                isAnimationActive={false} // CRITICAL: We handle animation via CSS
+                isAnimationActive={false} // CRITICAL: Disable Recharts entrance animation to prevent "exploding from center"
             >
               {currentFrameData.map((entry) => {
                   const style = getAttributes(entry);
@@ -201,7 +236,8 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
                       stroke={style.category !== 'Noise' ? '#fff' : 'none'}
                       strokeWidth={1}
                       style={{ 
-                          transition: 'cx 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94), cy 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94), fill 0.5s ease',
+                          // CSS TRANSITION: This is what handles the smooth glide between days
+                          transition: 'cx 0.5s cubic-bezier(0.25, 1, 0.5, 1), cy 0.5s cubic-bezier(0.25, 1, 0.5, 1), fill 0.3s ease',
                           cursor: 'pointer'
                       }}
                     />
