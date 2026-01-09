@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X, Database, Cpu, Brain, Layout, ChevronDown } from 'lucide-react';
+import { X, Database, Cpu, Brain, Layout} from 'lucide-react';
 
 interface ArchitectureModalProps {
   isOpen: boolean;
@@ -7,11 +7,7 @@ interface ArchitectureModalProps {
 }
 
 const ArchitectureModal: React.FC<ArchitectureModalProps> = ({ isOpen, onClose }) => {
-  const [activeStep, setActiveStep] = useState<number | null>(null);
-
-  const toggleStep = (stepIndex: number) => {
-    setActiveStep(activeStep === stepIndex ? null : stepIndex);
-  };
+  const [activeStep, setActiveStep] = useState<number | null>(1); // Default to first step active
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -30,11 +26,12 @@ const ArchitectureModal: React.FC<ArchitectureModalProps> = ({ isOpen, onClose }
         {/* Header */}
         <div className="modal-header">
           <div className="modal-title-wrapper">
-            <span className="modal-title">HYBRID INTELLIGENCE PIPELINE</span>
-            <span className="tag ml-2">Latency: &lt;16ms (60fps)</span>
+            <Cpu size={16} className="text-accent" />
+            <span className="modal-title">SYSTEM_ARCHITECTURE</span>
+            <span className="tag ml-2">LIVE</span>
           </div>
           <button className="panel-toggle-btn" onClick={onClose}>
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
@@ -43,24 +40,22 @@ const ArchitectureModal: React.FC<ArchitectureModalProps> = ({ isOpen, onClose }
           
           <div className="arch-flow">
             
-            {/* STEP 1: INGESTION */}
+            {/* STEP 1 */}
             <div 
               className={`arch-node ${activeStep === 1 ? 'active' : ''}`} 
-              onClick={() => toggleStep(1)}
+              onClick={() => setActiveStep(1)}
             >
               <div className="arch-node-header">
-                <div className="arch-icon-box color-purple">
-                    <Database size={24} />
+                <div className="arch-icon-box">
+                    <Database size={20} />
                 </div>
                 <div className="arch-meta">
-                    <div className="arch-label">DATA INGESTION</div>
+                    <div className="arch-label">01. INGESTION</div>
                     <div className="arch-tech">Python / Pandas</div>
                 </div>
-                <ChevronDown size={16} className="mobile-chevron" />
               </div>
               <div className="arch-desc">
-                Nightly scripts scrape 2,000+ news articles and market ticks (Polygon.io).
-                Data is normalized and cleaned for vectorization.
+                Daily scraping of 2,000+ market articles. Data normalization and cleaning.
               </div>
             </div>
 
@@ -69,24 +64,22 @@ const ArchitectureModal: React.FC<ArchitectureModalProps> = ({ isOpen, onClose }
               <span className="mobile-arrow">↓</span>
             </div>
 
-            {/* STEP 2: INTELLIGENCE */}
+            {/* STEP 2 */}
             <div 
               className={`arch-node ${activeStep === 2 ? 'active' : ''}`} 
-              onClick={() => toggleStep(2)}
+              onClick={() => setActiveStep(2)}
             >
               <div className="arch-node-header">
-                <div className="arch-icon-box color-blue">
-                    <Brain size={24} />
+                <div className="arch-icon-box">
+                    <Brain size={20} />
                 </div>
                 <div className="arch-meta">
-                    <div className="arch-label">KNOWLEDGE GRAPH</div>
-                    <div className="arch-tech">Supabase / OpenAI</div>
+                    <div className="arch-label">02. SYNTHESIS</div>
+                    <div className="arch-tech">OpenAI / Supabase</div>
                 </div>
-                <ChevronDown size={16} className="mobile-chevron" />
               </div>
               <div className="arch-desc">
-                Articles are embedded (text-embedding-3-small) and stored in pgvector.
-                Graph connections ("Synapses") are built based on co-occurrence.
+                Vector embedding generation (text-embedding-3). Semantic graph construction.
               </div>
             </div>
 
@@ -95,24 +88,22 @@ const ArchitectureModal: React.FC<ArchitectureModalProps> = ({ isOpen, onClose }
               <span className="mobile-arrow">↓</span>
             </div>
 
-            {/* STEP 3: PHYSICS ENGINE */}
+            {/* STEP 3 */}
             <div 
               className={`arch-node ${activeStep === 3 ? 'active' : ''}`} 
-              onClick={() => toggleStep(3)}
+              onClick={() => setActiveStep(3)}
             >
               <div className="arch-node-header">
-                <div className="arch-icon-box color-green">
-                    <Cpu size={24} />
+                <div className="arch-icon-box">
+                    <Cpu size={20} />
                 </div>
                 <div className="arch-meta">
-                    <div className="arch-label">PHYSICS CALC</div>
-                    <div className="arch-tech">t-SNE / SciKit-Learn</div>
+                    <div className="arch-label">03. PHYSICS</div>
+                    <div className="arch-tech">t-SNE / SciKit</div>
                 </div>
-                <ChevronDown size={16} className="mobile-chevron" />
               </div>
               <div className="arch-desc">
-                High-dimensional market data is projected into 2D space.
-                Velocity and Energy are calculated to simulate fluid dynamics.
+                High-dimensional projection to 2D space. Velocity/Mass calculation.
               </div>
             </div>
 
@@ -121,24 +112,22 @@ const ArchitectureModal: React.FC<ArchitectureModalProps> = ({ isOpen, onClose }
               <span className="mobile-arrow">↓</span>
             </div>
 
-            {/* STEP 4: PRESENTATION */}
+            {/* STEP 4 */}
             <div 
               className={`arch-node ${activeStep === 4 ? 'active' : ''}`} 
-              onClick={() => toggleStep(4)}
+              onClick={() => setActiveStep(4)}
             >
               <div className="arch-node-header">
-                <div className="arch-icon-box color-yellow">
-                    <Layout size={24} />
+                <div className="arch-icon-box">
+                    <Layout size={20} />
                 </div>
                 <div className="arch-meta">
-                    <div className="arch-label">VISUALIZATION</div>
+                    <div className="arch-label">04. RENDER</div>
                     <div className="arch-tech">React / DeckGL</div>
                 </div>
-                <ChevronDown size={16} className="mobile-chevron" />
               </div>
               <div className="arch-desc">
-                WebGL renders 250+ particles at 60fps.
-                The Agent uses RAG (Retrieval Augmented Generation) to explain the data.
+                60fps WebGL particle system. Real-time RAG agent interaction.
               </div>
             </div>
 
@@ -146,9 +135,7 @@ const ArchitectureModal: React.FC<ArchitectureModalProps> = ({ isOpen, onClose }
 
           {/* Footer */}
           <div className="arch-footer">
-            <div className="arch-cicd">
-              <span className="text-accent">CI/CD:</span> Full Stack Monorepo deployed via Vercel & GitHub Actions.
-            </div>
+            <span className="text-accent">PIPELINE STATUS:</span> OPTIMIZED (16ms Latency)
           </div>
         </div>
       </div>
