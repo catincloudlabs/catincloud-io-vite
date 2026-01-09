@@ -1,15 +1,17 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { ScatterChart, Scatter, XAxis, YAxis, ResponsiveContainer, Cell, Tooltip } from 'recharts';
-import { Play, Pause, SkipBack, Target, Activity } from 'lucide-react';
+import { Play, Pause, SkipBack, Search, FastForward } from 'lucide-react';
 
 // --- CONFIGURATION ---
+// We highlight these specifically to show the "Physics" contrast
 const MAG_7 = ['AAPL', 'MSFT', 'NVDA', 'GOOGL', 'AMZN', 'META', 'TSLA', 'AMD'];
 const CHAOS = ['GME', 'AMC', 'DJT', 'PLTR', 'SOUN', 'BTDR', 'MSTR'];
 
 const THEME = {
-  MAG7: '#4ade80',   // Green
-  CHAOS: '#e879f9',  // Pink/Purple
-  NOISE: '#334155'   // Slate
+  MAG7: '#4ade80',   // Neon Green
+  CHAOS: '#e879f9',  // Neon Purple
+  NOISE: '#334155',  // Muted Slate
+  HOVER: '#ffffff'   // White
 };
 
 export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
@@ -20,17 +22,15 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [loading, setLoading] = useState(true);
   
-  // Interaction
-  const [hoveredTicker, setHoveredTicker] = useState(null);
-
   // --- DATA LOADING ---
   useEffect(() => {
     const fetchData = async () => {
         try {
+            // FETCH THE NEW PHYSICS FILE
             const res = await fetch('/data/market_physics_history.json');
             const json = await res.json();
             
-            // 1. Group by Date
+            // 1. Group flat list by Date
             const grouped = {};
             const uniqueDates = new Set();
             
@@ -40,12 +40,13 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
                 uniqueDates.add(row.date);
             });
 
-            // 2. Sort Dates
+            // 2. Sort Dates (Oldest to Newest)
             const sortedDates = Array.from(uniqueDates).sort();
             
             setHistoryData(grouped);
             setDates(sortedDates);
-            setCurrentDateIndex(sortedDates.length - 1); // Start at end
+            // Start at the end (Today)
+            setCurrentDateIndex(sortedDates.length - 1); 
             
             if (onMetaLoaded) {
                 onMetaLoaded({
@@ -73,13 +74,14 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
     if (isPlaying) {
       interval = setInterval(() => {
         setCurrentDateIndex(prev => {
+          // Stop if we reach the end
           if (prev >= dates.length - 1) {
-            setIsPlaying(false); // Stop at end
+            setIsPlaying(false);
             return prev;
           }
           return prev + 1;
         });
-      }, 800); // 800ms per frame for smooth drift
+      }, 800); // 800ms per frame = Smooth drifting
     }
     return () => clearInterval(interval);
   }, [isPlaying, dates.length]);
@@ -91,12 +93,7 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
     return historyData[dateKey] || [];
   }, [dates, currentDateIndex, historyData]);
 
-  // --- HANDLERS ---
-  const handlePlayPause = () => {
-    if (currentDateIndex >= dates.length - 1) setCurrentDateIndex(0); // Restart if at end
-    setIsPlaying(!isPlaying);
-  };
-
+  // --- STYLING HELPERS ---
   const getColor = (ticker) => {
     if (MAG_7.includes(ticker)) return THEME.MAG7;
     if (CHAOS.includes(ticker)) return THEME.CHAOS;
@@ -105,9 +102,14 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
 
   const getRadius = (ticker) => {
     if (isMobile) return 4;
-    if (MAG_7.includes(ticker)) return 8;
+    if (MAG_7.includes(ticker)) return 8; // Hero stocks bigger
     if (CHAOS.includes(ticker)) return 6;
-    return 3;
+    return 3; // Noise smaller
+  };
+
+  const getOpacity = (ticker) => {
+    if (MAG_7.includes(ticker) || CHAOS.includes(ticker)) return 0.9;
+    return 0.3; // Fade the noise
   };
 
   if (loading) return (
@@ -117,31 +119,38 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
   );
 
   return (
-    <div className="map-wrapper relative flex flex-col h-full">
+    <div className="map-wrapper relative flex flex-col h-full bg-slate-900/50 rounded-lg overflow-hidden border border-slate-700">
         
-        {/* --- OVERLAY: TIMELINE CONTROLS --- */}
-        <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
-            <div className="flex items-center gap-2 bg-slate-900/80 backdrop-blur border border-slate-700 p-2 rounded-lg shadow-xl">
+        {/* --- TIMELINE CONTROLS (Top Left) --- */}
+        <div className="absolute top-4 left-4 z-20 flex flex-col gap-2 w-64">
+            <div className="flex items-center gap-2 bg-slate-900/90 backdrop-blur border border-slate-700 p-2 rounded-lg shadow-xl">
+                
+                {/* Reset */}
                 <button 
                     onClick={() => setCurrentDateIndex(0)} 
                     className="p-2 hover:bg-slate-700 rounded text-slate-400 hover:text-white transition-colors"
-                    title="Reset Timeline"
+                    title="Reset to Start"
                 >
                     <SkipBack size={16} />
                 </button>
                 
+                {/* Play/Pause */}
                 <button 
-                    onClick={handlePlayPause}
-                    className={`p-2 rounded font-bold transition-colors flex items-center gap-2 ${isPlaying ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}
+                    onClick={() => {
+                        if (currentDateIndex >= dates.length - 1) setCurrentDateIndex(0);
+                        setIsPlaying(!isPlaying);
+                    }}
+                    className={`flex-1 p-2 rounded font-bold transition-colors flex items-center justify-center gap-2 ${isPlaying ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-green-500/20 text-green-400 border border-green-500/30'}`}
                 >
                     {isPlaying ? <Pause size={16} /> : <Play size={16} />}
-                    <span className="text-xs font-mono">{isPlaying ? 'PAUSE' : 'PLAY'}</span>
+                    <span className="text-xs font-mono">{isPlaying ? 'HALT' : 'RUN'}</span>
                 </button>
 
                 <div className="h-6 w-px bg-slate-700 mx-1"></div>
 
-                <div className="flex flex-col px-2">
-                    <span className="text-[10px] text-slate-500 font-mono uppercase tracking-wider">Simulation Date</span>
+                {/* Date Display */}
+                <div className="flex flex-col px-2 min-w-[80px]">
+                    <span className="text-[10px] text-slate-500 font-mono uppercase tracking-wider">T-Date</span>
                     <span className="text-sm font-mono font-bold text-accent">
                         {dates[currentDateIndex] || "--"}
                     </span>
@@ -149,23 +158,23 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
             </div>
             
             {/* PROGRESS BAR */}
-            <div className="w-full bg-slate-800 h-1 rounded-full overflow-hidden">
+            <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden border border-slate-700/50">
                 <div 
-                    className="h-full bg-accent transition-all duration-500 ease-out"
+                    className="h-full bg-accent transition-all duration-500 ease-out shadow-[0_0_10px_rgba(56,189,248,0.5)]"
                     style={{ width: `${((currentDateIndex + 1) / dates.length) * 100}%` }}
                 />
             </div>
         </div>
 
-        {/* --- OVERLAY: LEGEND --- */}
-        <div className="absolute bottom-4 right-4 z-20 bg-slate-900/80 backdrop-blur border border-slate-700 p-3 rounded-lg text-xs font-mono">
-            <div className="flex items-center gap-2 mb-1">
-                <span className="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.5)]"></span>
-                <span className="text-slate-300">Mag 7 (Rational)</span>
+        {/* --- LEGEND (Bottom Right) --- */}
+        <div className="absolute bottom-4 right-4 z-20 bg-slate-900/90 backdrop-blur border border-slate-700 p-3 rounded-lg text-xs font-mono shadow-xl">
+            <div className="flex items-center gap-2 mb-1.5">
+                <span className="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.8)]"></span>
+                <span className="text-slate-300 font-bold">Mag 7 (Signal)</span>
             </div>
-            <div className="flex items-center gap-2 mb-1">
-                <span className="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(232,121,249,0.5)]"></span>
-                <span className="text-slate-300">Chaos (Retail)</span>
+            <div className="flex items-center gap-2 mb-1.5">
+                <span className="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(232,121,249,0.8)]"></span>
+                <span className="text-slate-300 font-bold">Chaos (Retail)</span>
             </div>
             <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-slate-600"></span>
@@ -173,23 +182,32 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
             </div>
         </div>
 
-        {/* --- CHART --- */}
+        {/* --- PHYSICS CHART --- */}
         <ResponsiveContainer width="100%" height="100%">
-          <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-            {/* Hide Axis for clean "Space" look */}
-            <XAxis type="number" dataKey="x" domain={[-100, 100]} hide />
-            <YAxis type="number" dataKey="y" domain={[-100, 100]} hide />
+          <ScatterChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+            {/* Domain locked to [-100, 100] to prevent axis jumping during animation.
+                This creates the "Space" effect where dots drift through a static void.
+            */}
+            <XAxis type="number" dataKey="x" domain={[-120, 120]} hide />
+            <YAxis type="number" dataKey="y" domain={[-120, 120]} hide />
             
             <Tooltip 
-                cursor={{ strokeDasharray: '3 3' }}
+                cursor={{ strokeDasharray: '3 3', stroke: '#475569' }}
                 content={({ active, payload }) => {
                     if (active && payload && payload.length) {
                         const data = payload[0].payload;
                         return (
-                            <div className="bg-slate-800 border border-slate-600 p-3 rounded shadow-xl">
-                                <div className="text-accent font-bold font-mono">{data.ticker}</div>
-                                <div className="text-xs text-slate-400">{data.date}</div>
-                                <div className="text-[10px] text-slate-500 mt-1">Coordinates: {data.x.toFixed(1)}, {data.y.toFixed(1)}</div>
+                            <div className="bg-slate-900 border border-slate-600 p-3 rounded shadow-2xl backdrop-blur-md">
+                                <div className="flex items-center justify-between gap-4 mb-1">
+                                    <span className="text-accent font-bold font-mono text-lg">{data.ticker}</span>
+                                    <span className={`text-[10px] px-1.5 py-0.5 rounded ${MAG_7.includes(data.ticker) ? 'bg-green-500/20 text-green-400' : CHAOS.includes(data.ticker) ? 'bg-purple-500/20 text-purple-400' : 'bg-slate-700 text-slate-400'}`}>
+                                        {MAG_7.includes(data.ticker) ? 'MAG7' : CHAOS.includes(data.ticker) ? 'CHAOS' : 'EQUITY'}
+                                    </span>
+                                </div>
+                                <div className="text-xs text-slate-400 font-mono">{data.date}</div>
+                                <div className="text-[10px] text-slate-500 mt-2 font-mono">
+                                    X: {data.x.toFixed(1)} | Y: {data.y.toFixed(1)}
+                                </div>
                             </div>
                         );
                     }
@@ -200,23 +218,23 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
             <Scatter 
                 name="Physics" 
                 data={currentFrameData} 
-                fill="#8884d8"
-                animationDuration={800} // Matches interval for smooth transition
+                animationDuration={800} // Matches interval for linear drift effect
+                animationEasing="ease-in-out"
             >
               {currentFrameData.map((entry, index) => {
                   const color = getColor(entry.ticker);
                   const radius = getRadius(entry.ticker);
+                  const opacity = getOpacity(entry.ticker);
                   const isHighlighted = color !== THEME.NOISE;
                   
                   return (
                     <Cell 
-                      key={`cell-${entry.ticker}`} // Key by Ticker to allow Recharts to animate positions
+                      key={`cell-${entry.ticker}`} // KEY IS CRITICAL: Allows React to animate the *same* dot moving
                       fill={color}
                       r={radius}
+                      fillOpacity={opacity}
                       stroke={isHighlighted ? '#fff' : 'none'}
-                      strokeWidth={1}
-                      fillOpacity={isHighlighted ? 0.9 : 0.3}
-                      className={isHighlighted ? 'transition-all duration-700 ease-in-out' : ''}
+                      strokeWidth={isHighlighted ? 1 : 0}
                     />
                   );
               })}
