@@ -41,6 +41,7 @@ const MarketGalaxy = ({ data, onNodeClick }) => {
     };
   }, [currentFrameData]);
 
+  // Handle Resize
   useEffect(() => {
     const updateSize = () => {
       if (containerRef.current) {
@@ -64,14 +65,12 @@ const MarketGalaxy = ({ data, onNodeClick }) => {
     const { width, height } = dimensions;
     const pixelRatio = window.devicePixelRatio || 1;
 
-    // COLORS
-    const colorBlue = '#38bdf8';   // Default Data Color (Blue)
+    // Theme Colors (Hardcoded to match CSS for Canvas perf)
+    const colorBlue = '#38bdf8';   
     const colorGreen = '#22c55e';
     const colorRed = '#ef4444';
     const colorTextMain = '#f8fafc';
-    
-    // Theme Accents (Purple for UI/Grid)
-    const colorGrid = 'rgba(192, 132, 252, 0.15)'; 
+    const colorGrid = 'rgba(51, 65, 85, 0.3)'; // --border with opacity
 
     canvas.width = width * pixelRatio;
     canvas.height = height * pixelRatio;
@@ -83,7 +82,7 @@ const MarketGalaxy = ({ data, onNodeClick }) => {
     // Clear
     ctx.clearRect(0, 0, width, height);
     
-    // Draw Purple Grid (AI Theme Background)
+    // Grid
     ctx.strokeStyle = colorGrid; 
     ctx.lineWidth = 0.5;
     ctx.beginPath();
@@ -91,21 +90,19 @@ const MarketGalaxy = ({ data, onNodeClick }) => {
     for (let i = 0; i < height; i += 100) { ctx.moveTo(0, i); ctx.lineTo(width, i); }
     ctx.stroke();
 
-    // Draw Particles
+    // Particles
     Object.values(currentFrameData).forEach(stock => {
         const x = xScale(stock.x);
         const y = yScale(stock.y);
         
-        // Color Logic: Neutral is Blue
         let color = colorBlue;
         if (stock.sentiment > 0.15) color = colorGreen;
         if (stock.sentiment < -0.15) color = colorRed;
         
         const radius = Math.max(3, Math.min(8, 3 + (stock.velocity || 0))); 
 
-        // Glow Effect
         if (stock.velocity > 2 || hoveredNode?.ticker === stock.ticker) {
-          ctx.shadowBlur = 15;
+          ctx.shadowBlur = 10;
           ctx.shadowColor = color;
         } else {
           ctx.shadowBlur = 0;
@@ -117,7 +114,6 @@ const MarketGalaxy = ({ data, onNodeClick }) => {
         ctx.fill();
         ctx.shadowBlur = 0; 
 
-        // Labels
         if (hoveredNode?.ticker === stock.ticker || stock.velocity > 2) {
             ctx.fillStyle = colorTextMain;
             ctx.font = '700 11px "JetBrains Mono"';
@@ -157,39 +153,36 @@ const MarketGalaxy = ({ data, onNodeClick }) => {
   };
 
   return (
-    // AI Hero Container (Purple Glow)
-    <div className="panel ai-hero-card h-tall relative flex flex-col p-0" ref={containerRef}>
+    <div className="panel h-tall" ref={containerRef} style={{ padding: 0, overflow: 'hidden' }}>
       
-      {/* Header (Purple Text) */}
-      <div className="panel-header" style={{ margin: 0, padding: '16px', borderBottom: '1px solid rgba(192, 132, 252, 0.2)' }}>
+      {/* Header */}
+      <div className="panel-header" style={{ margin: 0, padding: '16px', borderBottom: '1px solid var(--border)' }}>
         <div className="panel-header-identity">
-            <span className="panel-title text-purple-300">MARKET GALAXY</span>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[rgba(192,132,252,0.15)] text-[#e879f9] border border-[rgba(192,132,252,0.3)]">
-              PHYSICS ENGINE
-            </span>
+            <span className="panel-title">MARKET GALAXY</span>
+            <span className="tag tag-blue">PHYSICS ENGINE</span>
         </div>
         
-        <div className="panel-header-controls gap-2">
-            <span className="text-sm font-mono text-[#e879f9] mr-4 shadow-purple-500/50 drop-shadow-sm">
+        <div className="panel-header-controls" style={{ gap: '16px' }}>
+            <span className="text-sm font-mono text-accent">
               {currentDate || "LOADING..."}
             </span>
 
             <div className="map-controls-group" style={{ position: 'static' }}>
-                <button onClick={controls.stepBack} className="map-control-btn hover:text-[#e879f9] hover:border-[#e879f9]">
+                <button onClick={controls.stepBack} className="map-control-btn">
                   <ChevronLeft size={14} />
                 </button>
-                <button onClick={() => controls.setIsPlaying(!controls.isPlaying)} className={`map-control-btn hover:text-[#e879f9] hover:border-[#e879f9] ${controls.isPlaying ? 'text-[#e879f9] border-[#e879f9]' : ''}`}>
+                <button onClick={() => controls.setIsPlaying(!controls.isPlaying)} className={`map-control-btn ${controls.isPlaying ? 'active' : ''}`}>
                   {controls.isPlaying ? <Pause size={14} /> : <Play size={14} />}
                 </button>
-                <button onClick={controls.stepForward} className="map-control-btn hover:text-[#e879f9] hover:border-[#e879f9]">
+                <button onClick={controls.stepForward} className="map-control-btn">
                   <ChevronRight size={14} />
                 </button>
             </div>
         </div>
       </div>
 
-      {/* Canvas */}
-      <div className="flex-1 relative cursor-crosshair">
+      {/* Canvas Area */}
+      <div className="chart-content-area relative cursor-crosshair bg-app">
         <canvas 
             ref={canvasRef}
             style={{ width: '100%', height: '100%' }}
@@ -197,9 +190,9 @@ const MarketGalaxy = ({ data, onNodeClick }) => {
             className="block"
         />
         {!hoveredNode && (
-            <div className="map-empty-state-hint" style={{ bottom: '16px', top: 'auto', right: 'auto', left: '16px', borderColor: 'rgba(192, 132, 252, 0.3)' }}>
-                <div className="hint-text text-purple-200">
-                    <Activity size={12} className="text-[#e879f9]" />
+            <div className="map-empty-state-hint" style={{ bottom: '16px', top: 'auto', right: 'auto', left: '16px' }}>
+                <div className="hint-text">
+                    <Activity size={12} className="text-accent" />
                     <span>SELECT A PARTICLE TO ANALYZE</span>
                 </div>
             </div>
