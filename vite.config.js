@@ -17,35 +17,27 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // 1. Caches React Core
+          // 1. React Vendor (Keep this)
           if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
             return 'react-vendor';
           }
           
-          // 2. Caches ALL Plotly related code (The Fix)
-          // This catches 'plotly.js', 'react-plotly.js', and your 'plotly-custom.js'
-          // keeping them in the same scope so registration works.
-          if (id.includes('plotly')) {
-            return 'plotly';
+          // 2. D3 Vendor (New)
+          // Groups d3-array, d3-scale, etc. into one cacheable file
+          if (id.includes('node_modules/d3-')) {
+            return 'd3-vendor';
           }
 
-          // 3. Caches Recharts
-          if (id.includes('recharts')) {
-            return 'recharts';
-          }
-
-          // 4. Caches Syntax Highlighter (Heavy)
-          if (id.includes('react-syntax-highlighter') || id.includes('refractor')) {
-            return 'syntax';
-          }
-
-          // 5. Caches Icons
+          // 3. Icons (Keep if using Lucide)
           if (id.includes('lucide-react')) {
             return 'icons';
           }
+
+          // REMOVED: Plotly, Recharts, SyntaxHighlighter
+          // (Ensure you npm uninstall these packages to keep node_modules clean)
         }
       }
     },
-    chunkSizeWarningLimit: 1500 
+    chunkSizeWarningLimit: 1000 // Lowered slightly as D3/Canvas is lighter than Plotly
   }
 })
