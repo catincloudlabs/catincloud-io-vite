@@ -1,0 +1,390 @@
+/* --- GLOBAL RESET (Fixes the scrollbar issue) --- */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+:root {
+  --background: #020617;
+  --text-primary: #ffffff;
+  --text-muted: #94a3b8;
+  --accent-green: #22c55e;
+  --accent-purple: #c084fc;
+  --accent-blue: #3b82f6;
+  --glass-bg: rgba(15, 23, 42, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--background);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  overflow: hidden; 
+}
+
+/* --- 1. HEADER --- */
+.app-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  background: linear-gradient(to bottom, rgba(2, 6, 23, 0.95), rgba(2, 6, 23, 0));
+  z-index: 2000;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.header-chronometer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.chrono-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-sans);
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  color: var(--accent-green);
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.chrono-value {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: white;
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+}
+
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.nav-link {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  transition: color 0.2s;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.nav-link:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-separator {
+  color: #334155;
+  font-size: 0.8rem;
+}
+
+/* --- 2. MODALS --- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  animation: fadeIn 0.2s forwards;
+}
+
+.modal-box {
+  background: #0f172a;
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  width: 90%;
+  max-width: 600px;
+  max-height: 85vh;
+  overflow-y: auto;
+  position: relative;
+  transform: scale(0.95);
+  animation: scaleIn 0.2s forwards;
+}
+
+.architecture-modal { max-width: 800px; }
+.bio-modal { max-width: 500px; }
+
+.modal-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--glass-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  background: #0f172a;
+  z-index: 10;
+}
+
+.modal-title {
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  font-size: 0.9rem;
+  color: white;
+}
+
+.panel-toggle-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.panel-toggle-btn:hover { color: white; }
+
+/* --- 3. ARCHITECTURE DIAGRAM --- */
+.arch-diagram {
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.arch-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (min-width: 768px) {
+  .arch-flow {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+}
+
+.arch-node {
+  flex: 1;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.arch-node:hover, .arch-node.active {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.2);
+}
+
+.arch-node-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.arch-icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.05);
+}
+
+.color-purple { color: #c084fc; background: rgba(192, 132, 252, 0.1); }
+.color-blue { color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
+.color-green { color: #22c55e; background: rgba(34, 197, 94, 0.1); }
+.color-yellow { color: #facc15; background: rgba(250, 204, 21, 0.1); }
+
+.arch-label { font-weight: 700; font-size: 0.8rem; color: white; }
+.arch-tech { font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono); }
+.arch-desc { font-size: 0.85rem; line-height: 1.5; color: #cbd5e1; }
+.arch-arrow {
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  color: var(--text-muted);
+  padding: 10px;
+}
+.mobile-arrow { display: block; }
+.desktop-arrow { display: none; }
+
+@media (min-width: 768px) {
+  .mobile-arrow { display: none; }
+  .desktop-arrow { display: block; margin-top: 24px; }
+}
+
+/* --- 4. BIO MODAL --- */
+.bio-content { padding: 24px; }
+.bio-grid { display: flex; gap: 20px; align-items: center; }
+.bio-avatar img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid var(--accent-green);
+}
+.bio-name { margin: 0; font-size: 1.5rem; font-weight: 700; }
+.bio-role { color: var(--accent-green); margin: 4px 0 8px 0; font-family: var(--font-mono); font-size: 0.85rem; }
+.bio-desc { font-size: 0.9rem; line-height: 1.5; color: #cbd5e1; margin: 0; }
+.bio-h3 { font-size: 0.75rem; color: var(--text-muted); letter-spacing: 0.1em; margin-bottom: 12px; margin-top: 0;}
+.stack-grid { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 24px; }
+.stack-item { background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; font-family: var(--font-mono); }
+.bio-divider { height: 1px; background: var(--glass-border); margin: 20px 0; }
+.contact-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.contact-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 16px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  color: white;
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+.contact-btn:hover { background: rgba(255,255,255,0.1); border-color: white; }
+.btn-primary { background: var(--accent-green); color: black; border-color: var(--accent-green); font-weight: 600; }
+.btn-primary:hover { background: #4ade80; }
+
+/* --- 5. AGENT PANEL WRAPPER --- */
+.agent-panel-wrapper {
+  position: absolute;
+  top: 70px;
+  right: 20px;
+  width: 300px;
+  max-height: calc(100vh - 100px);
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+/* Terminal Styling */
+.agent-terminal {
+  width: 100%;
+  max-height: 100%;
+  background-color: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px; 
+  color: #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+.terminal-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.02);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.terminal-input-area {
+  padding: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+}
+
+.terminal-input {
+  /* FIXED: Use flex-1 instead of width: 100% to prevent overflow */
+  flex: 1;
+  min-width: 0; /* Important for flex child */
+  
+  background: transparent;
+  border: none;
+  color: var(--accent-green);
+  outline: none;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+.terminal-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* --- 6. TIMELINE SLIDER --- */
+.timeline-slider-container {
+  position: absolute;
+  bottom: 30px;
+  left: 165px; 
+  transform: none; 
+  width: 90%;
+  max-width: 600px;
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(12px);
+  padding: 12px 20px;
+  border-radius: 99px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 40px -10px rgba(0,0,0,0.5);
+  transition: all 0.3s ease;
+}
+
+.timeline-slider-container div {
+  font-size: 0.7rem;
+  margin-top: 6px;
+  opacity: 0.7;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+}
+
+@media (max-width: 768px) {
+  .app-header { padding: 0 12px; }
+  .chrono-value { font-size: 1.1rem; }
+  .desktop-only { display: none; }
+  .agent-panel-wrapper {
+    top: 60px;
+    right: 10px;
+    width: 260px;
+  }
+  .timeline-slider-container {
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 95%;
+  }
+}
+
+@keyframes fadeIn { to { opacity: 1; } }
+@keyframes scaleIn { to { transform: scale(1); } }

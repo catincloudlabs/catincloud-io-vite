@@ -1,12 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { X, Terminal, Github, Linkedin, Mail, Globe, Bot } from 'lucide-react'; 
+import React, { useEffect } from 'react';
+import { X, Terminal, Github, Linkedin, Mail, Globe } from 'lucide-react'; 
 
-const BioModal = ({ isOpen, onClose }) => {
-  const [imgError, setImgError] = useState(false);
+interface BioModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
 
-  // Close on Escape
+const BioModal: React.FC<BioModalProps> = ({ isOpen, onClose }) => {
+
   useEffect(() => {
-    const handleEsc = (e) => {
+    const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleEsc);
@@ -36,46 +39,34 @@ const BioModal = ({ isOpen, onClose }) => {
           {/* PROFILE SECTION */}
           <div className="bio-grid">
             <div className="bio-avatar">
-              {!imgError ? (
-                <img 
-                  src="/avatar.jpg" 
-                  alt="Profile" 
-                  className="bio-profile-img" 
-                  onError={() => setImgError(true)}
-                />
-              ) : (
-                <div className="avatar-placeholder">
-                  <Bot size={48} />
-                </div>
-              )}
+              <img 
+                src="/avatar.jpg" 
+                alt="Profile" 
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none'; 
+                }} 
+              />
             </div>
-            
-            <div className="bio-details">
+            <div className="bio-text">
               <h2 className="bio-name">Dave Anaya</h2>
-              <div className="bio-role">Lead Cloud & Data Architect</div>
-              
-              <div className="bio-text">
-                <p>
-                  Specialized in building high-performance data pipelines and 
-                  interactive analytics applications.
-                </p>
-                <p>
-                  I bridge the gap between <strong>Back-End Data Engineering</strong> (Snowflake, dbt, Airflow) 
-                  and <strong>Front-End Delivery</strong> (React, Visualization).
-                </p>
-              </div>
+              <p className="bio-role">Senior Data Engineer & Architect</p>
+              <p className="bio-desc">
+                Specializing in high-performance data pipelines, real-time visualization, 
+                and bridging the gap between Data Science and Product Engineering.
+              </p>
             </div>
           </div>
 
           <div className="manual-divider bio-divider" />
 
           {/* TECH STACK */}
-          <h3 className="bio-h3">ACTIVE_STACK</h3>
+          <h3 className="bio-h3">CURRENT STACK</h3>
           <div className="stack-grid">
-            <div className="stack-item"><span className="text-accent">Compute:</span> Snowflake, Python (Pandas)</div>
-            <div className="stack-item"><span className="text-accent">Orchestration:</span> Airflow (MWAA)</div>
-            <div className="stack-item"><span className="text-accent">Transformation:</span> dbt Core, SQL</div>
-            <div className="stack-item"><span className="text-accent">Interface:</span> React, Vite, Plotly.js</div>
+            <div className="stack-item"><span className="text-accent">Core:</span> Python, TypeScript, SQL</div>
+            <div className="stack-item"><span className="text-accent">Data:</span> Supabase, PostgreSQL, pgvector</div>
+            <div className="stack-item"><span className="text-accent">AI/ML:</span> OpenAI Embeddings, SciKit-Learn</div>
+            <div className="stack-item"><span className="text-accent">Visual:</span> React, DeckGL, D3.js</div>
           </div>
 
           <div className="manual-divider bio-divider" />
@@ -96,10 +87,9 @@ const BioModal = ({ isOpen, onClose }) => {
               <span>Email</span>
             </a>
             
-            {/* Main Site Link */}
             <a href="https://catincloudlabs.com" target="_blank" rel="noreferrer" className="contact-btn btn-primary">
               <Globe size={18} />
-              <span>Main Site</span>
+              <span>Portfolio</span>
             </a>
           </div>
 
