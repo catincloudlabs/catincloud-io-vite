@@ -1,358 +1,269 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
-import { ScatterChart, Scatter, XAxis, YAxis, ResponsiveContainer, Cell, Legend } from 'recharts';
-import { X, TrendingUp, TrendingDown, Activity, Info, Eye, EyeOff, Target, FileText, Database } from 'lucide-react';
+import { ScatterChart, Scatter, XAxis, YAxis, ResponsiveContainer, Cell, Tooltip } from 'recharts';
+import { Play, Pause, SkipBack, Info } from 'lucide-react';
 
-const CHART_COLORS = {
-  'Justified Optimism': '#4ade80',
-  'Bull Trap': '#f87171',
-  'Justified Fear': '#ef4444',
-  'Bear Trap': '#60a5fa',
-  'Noise': '#334155'
-};
+// --- CONFIGURATION ---
+const MAG_7 = ['AAPL', 'MSFT', 'NVDA', 'GOOGL', 'AMZN', 'META', 'TSLA', 'AMD'];
+const CHAOS = ['GME', 'AMC', 'DJT', 'PLTR', 'SOUN', 'BTDR', 'MSTR'];
 
-// --- INSIGHT PANEL ---
-const InsightPanel = ({ clusterId, label, insights, onClose, rawArticles, isLocked }) => {
-  const data = insights[clusterId];
-  const [viewMode, setViewMode] = useState('narrative'); // 'narrative' | 'sources'
-
-  const sourceArticles = useMemo(() => {
-    if (!rawArticles) return [];
-    return rawArticles
-      .filter(node => node.cluster_id === clusterId)
-      .sort((a, b) => new Date(b.published_at) - new Date(a.published_at));
-  }, [rawArticles, clusterId]);
-
-  if (!data) return null;
-
-  const themeColor = CHART_COLORS[label] || '#94a3b8';
-
-  return (
-    <div className="insight-panel-dock" style={{ '--panel-accent': themeColor }}>
-      <div className="dock-header">
-         <div className="dock-title-group">
-            <div className="dock-indicator" />
-            <div>
-              <h3 className="dock-title">{label}</h3>
-              <p className="dock-subtitle">
-                {isLocked ? 'Analysis Locked' : 'Previewing Cluster'} • ID: {clusterId}
-              </p>
-            </div>
-         </div>
-         {/* Only show Close button if locked (clicked) */}
-         {isLocked && (
-             <button onClick={onClose} className="dock-close-btn">
-               <X size={18} />
-             </button>
-         )}
-      </div>
-
-      <div className="dock-body custom-scrollbar">
-        {viewMode === 'narrative' ? (
-          <>
-            <div className="dock-sentiment-box">
-               {data.sentiment === 'Bullish' && <TrendingUp size={16} className="text-green" />}
-               {data.sentiment === 'Bearish' && <TrendingDown size={16} className="text-red" />}
-               {data.sentiment === 'Neutral' && <Activity size={16} className="text-muted" />}
-               <span className="dock-sentiment-text">{data.sentiment} Sentiment</span>
-            </div>
-            <div className="dock-section">
-              <h4 className="dock-section-title">
-                <Info size={12} className="mr-2" /> Narrative Analysis
-              </h4>
-              <p className="dock-text">{data.summary}</p>
-            </div>
-            {data.takeaways && data.takeaways.length > 0 && (
-              <div className="dock-section">
-                <h4 className="dock-section-title">Key Events</h4>
-                <ul className="dock-list">
-                  {data.takeaways.map((item, i) => (
-                      <li key={i} className="dock-list-item">
-                         <span className="dock-bullet" />
-                         {item}
-                      </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="dock-section">
-             <h4 className="dock-section-title mb-4">
-               <Database size={12} className="mr-2" /> Underlying Signals ({sourceArticles.length})
-             </h4>
-             <div className="overflow-x-auto">
-               <table className="dock-table">
-                 <thead>
-                   <tr>
-                     <th>Ticker</th>
-                     <th>Headline</th>
-                     <th className="text-right">Sent.</th>
-                   </tr>
-                 </thead>
-                 <tbody>
-                   {sourceArticles.map((row, i) => (
-                     <tr key={i}>
-                       <td className="font-mono text-xs text-slate-300">{row.ticker}</td>
-                       <td className="max-w-[140px] truncate" title={row.title}>{row.title}</td>
-                       <td className={`text-right font-mono ${row.sentiment > 0 ? 'text-green' : 'text-red'}`}>
-                         {row.sentiment > 0 ? '+' : ''}{row.sentiment?.toFixed(2)}
-                       </td>
-                     </tr>
-                   ))}
-                 </tbody>
-               </table>
-             </div>
-          </div>
-        )}
-      </div>
-
-      <div className="dock-footer">
-         <button 
-           className="dock-action-btn"
-           onClick={() => setViewMode(viewMode === 'narrative' ? 'sources' : 'narrative')}
-         >
-           {viewMode === 'narrative' ? (
-             <> <Database size={12} /> Sources </>
-           ) : (
-             <> <FileText size={12} /> Summary </>
-           )}
-         </button>
-      </div>
-    </div>
-  );
+// Theme Colors (Matching CSS Variables)
+const THEME = {
+  MAG7: '#4ade80',   // var(--green)
+  CHAOS: '#e879f9',  // Purple (Custom)
+  NOISE: '#334155',  // var(--border) / Slate
 };
 
 export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
-  const [chartData, setChartData] = useState([]);
-  const [insightData, setInsightData] = useState({});
+  // --- STATE ---
+  const [historyData, setHistoryData] = useState({}); // { "2025-12-10": [...] }
+  const [dates, setDates] = useState([]);
+  const [currentDateIndex, setCurrentDateIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [loading, setLoading] = useState(true);
-  
-  // --- VIEW STATES ---
-  const [showNoise, setShowNoise] = useState(true);
-  const [focusMode, setFocusMode] = useState(false);
-  const [hoveredLegend, setHoveredLegend] = useState(null);
-  
-  // --- INTERACTION STATES ---
-  const [lockedCluster, setLockedCluster] = useState(null);  // Clicked (Persistent)
-  const [hoveredCluster, setHoveredCluster] = useState(null); // Hovered (Ephemeral)
-  const hoverTimer = useRef(null); // Timer for hover delay
-  
-  // --- MOBILE RESET LOGIC ---
-  const [chartResetKey, setChartResetKey] = useState(0);
-  const [shouldAnimate, setShouldAnimate] = useState(true);
 
+  // --- DATA LOADING ---
   useEffect(() => {
     const fetchData = async () => {
         try {
-            const [mapRes, feedRes] = await Promise.all([
-                fetch('/data/market_psychology_map.json'),
-                fetch('/data/market_cluster_feed.json')
-            ]);
-            const mapJson = await mapRes.json();
-            const feedJson = feedRes.ok ? await feedRes.json() : { data: [] };
+            // Load the Physics History
+            const res = await fetch('/data/market_physics_history.json');
+            const json = await res.json();
+            
+            // 1. Group flat list by Date
+            const grouped = {};
+            const uniqueDates = new Set();
+            
+            json.data.forEach(row => {
+                if (!grouped[row.date]) grouped[row.date] = [];
+                grouped[row.date].push(row);
+                uniqueDates.add(row.date);
+            });
 
-            setChartData(mapJson.data || []);
-            setInsightData(feedJson.data.reduce((acc, item) => ({ ...acc, [item.id]: item }), {}));
-
-            if (onMetaLoaded && mapJson.meta) {
+            // 2. Sort Dates (Oldest to Newest)
+            const sortedDates = Array.from(uniqueDates).sort();
+            
+            setHistoryData(grouped);
+            setDates(sortedDates);
+            setCurrentDateIndex(sortedDates.length - 1); // Start at most recent
+            
+            // 3. Inject Metadata for Parent Card
+            if (onMetaLoaded) {
                 onMetaLoaded({
-                    ...mapJson.meta,
+                    title: "Market Physics Engine",
                     inspector: {
-                        ...mapJson.meta.inspector,
-                        description: `${mapJson.meta.inspector.description}\n\n[RAG ENRICHMENT]: Analyzed by OpenAI Embeddings.`
+                        tag: "PHYSICS ENGINE",
+                        description: "Visualizing semantic drift over time. Stocks move based on changing news narratives, creating 'gravity wells' of sentiment.",
+                        sql_logic: "-- VECTOR AGGREGATION\nSELECT ticker, AVG(embedding) \nFROM news_vectors \nGROUP BY ticker, date",
+                        dbt_logic: "models/marts/physics/mrt_daily_forces.py"
                     }
                 });
             }
             setLoading(false);
         } catch (err) {
-            console.error("Fetch error:", err);
+            console.error("Physics Engine Load Error:", err);
             setLoading(false);
         }
     };
     fetchData();
   }, [onMetaLoaded]);
 
-  const sortedData = useMemo(() => {
-    let data = [...chartData];
-    if (!showNoise) data = data.filter(d => d.label !== 'Noise');
-    if (focusMode) data = data.filter(d => Math.abs(d.sentiment || 0) > 0.6);
-
-    return data.sort((a, b) => {
-      if (a.label === 'Noise' && b.label !== 'Noise') return -1;
-      if (a.label !== 'Noise' && b.label === 'Noise') return 1;
-      return 0;
-    });
-  }, [chartData, showNoise, focusMode]); 
-
-  // --- HANDLERS ---
-
-  // 1. Smart Hover (Desktop): Debounced to prevent flickering
-  const handleNodeMouseEnter = (nodeProps) => {
-    if (isMobile) return; 
-    
-    // Clear any pending close actions
-    if (hoverTimer.current) clearTimeout(hoverTimer.current);
-
-    const data = nodeProps.payload;
-    if (data && data.cluster_id !== undefined && data.label !== 'Noise') {
-        // Wait 300ms before showing panel
-        hoverTimer.current = setTimeout(() => {
-            setHoveredCluster({ id: data.cluster_id, label: data.label });
-        }, 300);
-    }
-  };
-
-  // 2. Mouse Leave: Cancel timer or clear state
-  const handleNodeMouseLeave = () => {
-    if (isMobile) return;
-    if (hoverTimer.current) clearTimeout(hoverTimer.current);
-    setHoveredCluster(null);
-  };
-
-  // 3. Click (Lock selection)
-  const handleNodeClick = (nodeProps) => {
-    if (hoverTimer.current) clearTimeout(hoverTimer.current); // Stop hover logic immediately
-    const data = nodeProps.payload;
-    if (data && data.cluster_id !== undefined && data.label !== 'Noise') {
-        setLockedCluster({
-            id: data.cluster_id,
-            label: data.label
+  // --- ANIMATION LOOP ---
+  useEffect(() => {
+    let interval;
+    if (isPlaying) {
+      interval = setInterval(() => {
+        setCurrentDateIndex(prev => {
+          if (prev >= dates.length - 1) {
+            setIsPlaying(false); // Stop at end
+            return prev;
+          }
+          return prev + 1;
         });
+      }, 800); // 800ms per frame
     }
+    return () => clearInterval(interval);
+  }, [isPlaying, dates.length]);
+
+  // --- MEMOIZED FRAME ---
+  const currentFrameData = useMemo(() => {
+    if (!dates.length) return [];
+    const dateKey = dates[currentDateIndex];
+    return historyData[dateKey] || [];
+  }, [dates, currentDateIndex, historyData]);
+
+  // --- STYLES ---
+  const getColor = (entry) => {
+    // Sentiment Override (Bright Green/Red)
+    if (entry.sentiment > 0.2) return '#22c55e'; 
+    if (entry.sentiment < -0.2) return '#ef4444';
+
+    // Sector Fallback
+    if (MAG_7.includes(entry.ticker)) return THEME.MAG7;
+    if (CHAOS.includes(entry.ticker)) return THEME.CHAOS;
+    return THEME.NOISE;
   };
 
-  // 4. Background Click (Dismiss Lock)
-  const handleChartBackgroundClick = (e) => {
-    if (lockedCluster && (!e || !e.activePayload)) {
-        handlePanelClose();
-    }
+  const getRadius = (ticker) => {
+    if (isMobile) return 4;
+    if (MAG_7.includes(ticker)) return 8; 
+    if (CHAOS.includes(ticker)) return 6;
+    return 3; 
   };
 
-  const handlePanelClose = () => {
-    setLockedCluster(null);
-    setHoveredCluster(null);
-    setShouldAnimate(false);
-    setChartResetKey(prev => prev + 1);
+  const getOpacity = (ticker) => {
+    if (MAG_7.includes(ticker) || CHAOS.includes(ticker)) return 0.9;
+    return 0.4; 
   };
 
-  const chartMargins = isMobile 
-    ? { top: 10, right: 10, bottom: 60, left: 10 } 
-    : { top: 20, right: 20, bottom: 20, left: 20 };
-
-  const handleLegendEnter = (o) => setHoveredLegend(o.value);
-  const handleLegendLeave = () => setHoveredLegend(null);
-
-  // Determine what to show: Locked takes precedence over Hovered
-  const activeDisplayCluster = lockedCluster || hoveredCluster;
-
+  // --- RENDER ---
   if (loading) return (
      <div className="map-loading-container">
-        <div className="map-loading-text">Initializing Neural Map...</div>
+        <div className="map-loading-text">Initializing Physics Engine...</div>
      </div>
   );
+
+  const currentDate = dates[currentDateIndex] || "--";
+  const progressPercent = dates.length > 1 ? (currentDateIndex / (dates.length - 1)) * 100 : 0;
 
   return (
     <div className="map-wrapper">
         
-        {(!activeDisplayCluster || !isMobile) && (
-            <div className="map-controls-group">
+        {/* 1. TIMELINE CONTROLS (Top Left) */}
+        <div className="map-controls-group" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '8px' }}>
+            
+            <div style={{ display: 'flex', gap: '8px' }}>
                 <button 
-                    className={`map-control-btn ${!showNoise ? 'active' : ''}`}
-                    onClick={() => setShowNoise(!showNoise)}
-                    title={showNoise ? "Hide Noise" : "Show Noise"}
+                    className="map-control-btn"
+                    onClick={() => setCurrentDateIndex(0)}
+                    title="Reset to Start"
                 >
-                    {showNoise ? <Eye size={14} /> : <EyeOff size={14} />}
-                    <span className="control-text desktop-only-text">Noise</span>
+                    <SkipBack size={14} />
                 </button>
 
                 <button 
-                    className={`map-control-btn ${focusMode ? 'active-focus' : ''}`}
-                    onClick={() => setFocusMode(!focusMode)}
-                    title="Focus Mode (High Sentiment Magnitude Only)"
+                    className={`map-control-btn ${isPlaying ? 'active' : ''}`}
+                    onClick={() => {
+                        if (currentDateIndex >= dates.length - 1) setCurrentDateIndex(0);
+                        setIsPlaying(!isPlaying);
+                    }}
                 >
-                    <Target size={14} />
-                    <span className="control-text desktop-only-text">Focus</span>
+                    {isPlaying ? <Pause size={14} /> : <Play size={14} />}
+                    <span className="control-text desktop-only-text">
+                        {isPlaying ? 'PAUSE' : 'PLAY'}
+                    </span>
                 </button>
+
+                <div className="map-control-btn" style={{ cursor: 'default', borderColor: 'transparent', background: 'rgba(30, 41, 59, 0.4)' }}>
+                    <span className="control-text" style={{ color: 'var(--accent)' }}>
+                        {currentDate}
+                    </span>
+                </div>
             </div>
-        )}
 
-        {!activeDisplayCluster && (
-           <div className="map-empty-state-hint">
-              <span className="hint-text">
-                  {isMobile ? 'Tap a cluster to analyze' : 'Hover to preview, click to lock'}
-              </span>
-           </div>
-        )}
+            {/* Progress Bar (Custom Style using Theme Vars) */}
+            <div style={{ 
+                width: '100%', 
+                height: '4px', 
+                background: 'rgba(255,255,255,0.1)', 
+                borderRadius: '2px',
+                overflow: 'hidden'
+            }}>
+                <div style={{ 
+                    width: `${progressPercent}%`, 
+                    height: '100%', 
+                    background: 'var(--accent)',
+                    transition: 'width 0.8s linear'
+                }} />
+            </div>
+        </div>
 
+        {/* 2. LEGEND (Bottom Right - Mimicking .dock-sentiment-box style) */}
+        <div className="map-empty-state-hint" style={{ top: 'auto', bottom: '16px', right: '16px', pointerEvents: 'none' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.7rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: THEME.MAG7 }}></span>
+                    <span className="text-muted">Mag 7 (Signal)</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: THEME.CHAOS }}></span>
+                    <span className="text-muted">Chaos (Retail)</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: THEME.NOISE }}></span>
+                    <span className="text-muted">Market Noise</span>
+                </div>
+            </div>
+        </div>
+
+        {/* 3. CHART ENGINE */}
         <ResponsiveContainer width="100%" height="100%">
-          <ScatterChart 
-            key={chartResetKey} 
-            margin={chartMargins}
-            onClick={handleChartBackgroundClick} 
-          >
-            <XAxis type="number" dataKey="x" hide domain={['dataMin', 'dataMax']} />
-            <YAxis type="number" dataKey="y" hide domain={['dataMin', 'dataMax']} />
+          <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+            {/* Lock Domain to prevent axis jumping. 
+               The t-SNE logic usually outputs coords between -100 and 100.
+            */}
+            <XAxis type="number" dataKey="x" domain={[-120, 120]} hide />
+            <YAxis type="number" dataKey="y" domain={[-120, 120]} hide />
             
-            <Legend 
-                verticalAlign="bottom" 
-                height={36} 
-                iconType="circle" 
-                wrapperStyle={{ fontSize: '11px', color: '#94a3b8', paddingTop: '10px', cursor: 'pointer' }}
-                onMouseEnter={handleLegendEnter}
-                onMouseLeave={handleLegendLeave}
+            {/* Using the CSS .custom-tooltip class structure */}
+            <Tooltip 
+                cursor={{ strokeDasharray: '3 3', stroke: '#475569' }}
+                content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        return (
+                            <div className="custom-tooltip">
+                                <div className="tooltip-header">
+                                    <span className="tooltip-ticker">{data.ticker}</span>
+                                    <span className="tooltip-date">{data.date}</span>
+                                </div>
+                                
+                                {data.headline && (
+                                    <div className="tooltip-title">
+                                        "{data.headline}"
+                                    </div>
+                                )}
+                                
+                                <div className="tooltip-footer">
+                                    <span className="tooltip-label">Sentiment</span>
+                                    <span className={data.sentiment > 0 ? "text-green" : data.sentiment < 0 ? "text-red" : "text-muted"}>
+                                        {data.sentiment > 0 ? '+' : ''}{data.sentiment}
+                                    </span>
+                                </div>
+                            </div>
+                        );
+                    }
+                    return null;
+                }}
             />
-            
+
             <Scatter 
-                name="Clusters" 
-                data={sortedData} 
-                onClick={(props) => handleNodeClick(props)} 
-                onMouseEnter={(props) => handleNodeMouseEnter(props)}
-                onMouseLeave={handleNodeMouseLeave}
-                cursor="pointer"
-                fill="#64748b"
-                isAnimationActive={shouldAnimate}
+                name="Physics" 
+                data={currentFrameData} 
+                animationDuration={800} 
+                animationEasing="linear"
             >
-              {sortedData.map((entry, index) => {
-                  const isNoise = entry.label === 'Noise';
-                  const sentMagnitude = Math.abs(entry.sentiment || 0);
-                  const isHighMagnitude = !isNoise && sentMagnitude > 0.7; 
-                  const radius = isMobile 
-                    ? (isNoise ? 5 : Math.min(40, 15 + (sentMagnitude * 25))) 
-                    : (isNoise ? 2 : Math.min(12, 4 + (sentMagnitude * 8)));
-
-                  let opacity = isNoise ? 0.2 : 0.8;
+              {currentFrameData.map((entry, index) => {
+                  const color = getColor(entry);
+                  const radius = getRadius(entry.ticker);
+                  const opacity = getOpacity(entry.ticker);
+                  const isHighlighted = color !== THEME.NOISE;
                   
-                  if (hoveredLegend) {
-                      opacity = (hoveredLegend === entry.label) ? 1 : 0.1;
-                  } else if (activeDisplayCluster) {
-                      opacity = (activeDisplayCluster.id === entry.cluster_id) ? 1 : 0.1;
-                  }
-
                   return (
                     <Cell 
-                      key={`cell-${index}`} 
-                      fill={CHART_COLORS[entry.label] || CHART_COLORS['Noise']} 
-                      stroke={isHighMagnitude ? CHART_COLORS[entry.label] : 'none'}
-                      opacity={opacity}
-                      r={radius} 
-                      className={isHighMagnitude ? 'node-pulse cursor-pointer' : (isNoise ? 'node-noise' : 'node-standard cursor-pointer')}
+                      key={`cell-${entry.ticker}`} 
+                      fill={color}
+                      r={radius}
+                      fillOpacity={opacity}
+                      stroke={isHighlighted ? '#fff' : 'none'}
+                      strokeWidth={isHighlighted ? 1 : 0}
+                      // Apply CSS transition class if highlighted for smoother color shifts
+                      className={isHighlighted ? 'node-standard' : 'node-noise'}
                     />
                   );
               })}
             </Scatter>
           </ScatterChart>
         </ResponsiveContainer>
-
-        {activeDisplayCluster && (
-            <InsightPanel 
-                clusterId={activeDisplayCluster.id}
-                label={activeDisplayCluster.label}
-                insights={insightData}
-                rawArticles={chartData} 
-                onClose={handlePanelClose} 
-                isLocked={!!lockedCluster} 
-            />
-        )}
     </div>
   );
 }
