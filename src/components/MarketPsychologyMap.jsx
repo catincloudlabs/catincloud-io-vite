@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { ScatterChart, Scatter, XAxis, YAxis, ResponsiveContainer, Cell, Tooltip } from 'recharts';
-import { ChevronLeft, ChevronRight, RotateCcw, Calendar, Play, Pause } from 'lucide-react';
+import { ChevronLeft, ChevronRight, RotateCcw, Calendar } from 'lucide-react';
 
 // --- CONFIGURATION ---
 const MAG_7 = ['AAPL', 'MSFT', 'NVDA', 'GOOGL', 'AMZN', 'META', 'TSLA', 'AMD'];
@@ -21,7 +21,7 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
   const [currentDateIndex, setCurrentDateIndex] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // --- LOAD DATA ---
+  // --- DATA LOADING ---
   useEffect(() => {
     const fetchData = async () => {
         try {
@@ -98,9 +98,8 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
 
     // 3. Determine Opacity
     const opacity = category === 'Noise' ? 0.3 : 0.9;
-    const fill = CHART_COLORS[category];
 
-    return { fill, radius, opacity, category };
+    return { fill: CHART_COLORS[category], radius, opacity, category };
   };
 
   if (loading) return (
@@ -111,80 +110,56 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
 
   const currentDate = dates[currentDateIndex] || "--";
   const progressPercent = dates.length > 1 ? ((currentDateIndex + 1) / dates.length) * 100 : 0;
+  
+  // Use existing margin logic from your file
+  const chartMargins = isMobile 
+    ? { top: 10, right: 10, bottom: 60, left: 10 } 
+    : { top: 20, right: 20, bottom: 20, left: 20 };
 
   return (
     <div className="map-wrapper">
         
-        {/* --- CONTROLS (Top Left - Reusing your existing style classes) --- */}
-        <div className="map-controls-group" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '12px' }}>
-            
+        {/* --- CONTROLS (Top Left) --- */}
+        <div className="map-controls-group" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '10px' }}>
             <div style={{ display: 'flex', gap: '8px' }}>
-                {/* Reset Button */}
-                <button 
-                    className="map-control-btn" 
-                    onClick={handleReset} 
-                    title="Reset Timeline"
-                >
+                <button className="map-control-btn" onClick={handleReset} title="Reset">
                     <RotateCcw size={14} />
                 </button>
                 
-                {/* Back Button */}
-                <button 
-                    className="map-control-btn" 
-                    onClick={handleStepBack} 
-                    disabled={currentDateIndex === 0}
-                    style={{ opacity: currentDateIndex === 0 ? 0.5 : 1 }}
-                >
+                <button className="map-control-btn" onClick={handleStepBack} disabled={currentDateIndex === 0}>
                     <ChevronLeft size={16} />
                 </button>
 
-                {/* Date Display (Styled like a button but static) */}
-                <div 
-                    className="map-control-btn active-focus" 
-                    style={{ cursor: 'default', minWidth: '110px', justifyContent: 'center' }}
-                >
+                <div className="map-control-btn active-focus" style={{ minWidth: '110px', justifyContent: 'center', borderColor: 'var(--accent)', color: 'var(--accent)', cursor: 'default' }}>
                    <Calendar size={14} className="mr-2" />
-                   <span className="control-text">{currentDate}</span>
+                   <span className="control-text desktop-only-text">{currentDate}</span>
                 </div>
 
-                {/* Forward Button */}
-                <button 
-                    className="map-control-btn" 
-                    onClick={handleStepForward} 
-                    disabled={currentDateIndex === dates.length - 1}
-                    style={{ opacity: currentDateIndex === dates.length - 1 ? 0.5 : 1 }}
-                >
+                <button className="map-control-btn" onClick={handleStepForward} disabled={currentDateIndex === dates.length - 1}>
                     <ChevronRight size={16} />
                 </button>
             </div>
             
-            {/* Progress Bar */}
-            <div style={{ width: '100%', height: '2px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
-                <div 
-                    style={{ 
-                        width: `${progressPercent}%`, 
-                        height: '100%', 
-                        background: 'var(--accent)', 
-                        transition: 'width 0.3s ease' 
-                    }} 
-                />
+            {/* Simple Progress Bar */}
+            <div style={{ width: '100%', height: '2px', background: 'rgba(255,255,255,0.1)' }}>
+                <div style={{ width: `${progressPercent}%`, height: '100%', background: 'var(--accent)', transition: 'width 0.3s ease' }} />
             </div>
         </div>
 
         {/* --- LEGEND (Bottom Right) --- */}
-        <div className="map-empty-state-hint" style={{ top: 'auto', bottom: '16px', right: '16px', pointerEvents: 'none', flexDirection: 'column', alignItems: 'flex-start', gap: '6px', background: 'rgba(15, 23, 42, 0.8)', padding: '12px' }}>
+        <div className="map-empty-state-hint" style={{ top: 'auto', bottom: '16px', right: '16px', pointerEvents: 'none', flexDirection: 'column', alignItems: 'flex-start', gap: '4px', background: 'rgba(15, 23, 42, 0.8)', padding: '12px' }}>
             {Object.entries(CHART_COLORS).map(([label, color]) => (
                 <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px' }}>
-                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: color, boxShadow: `0 0 8px ${color}40` }}></span>
-                    <span style={{ color: '#94a3b8', fontWeight: 500 }}>{label}</span>
+                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: color }}></span>
+                    <span style={{ color: '#94a3b8' }}>{label}</span>
                 </div>
             ))}
         </div>
 
         {/* --- CHART --- */}
         <ResponsiveContainer width="100%" height="100%">
-          <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-            {/* Fixed Domain allows dots to "travel" across the screen without axes resizing */}
+          <ScatterChart margin={chartMargins}>
+            {/* Fixed Domain allows dots to "travel" across the screen */}
             <XAxis type="number" dataKey="x" domain={[-120, 120]} hide />
             <YAxis type="number" dataKey="y" domain={[-120, 120]} hide />
             
@@ -206,12 +181,8 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
                                 )}
                                 <div className="tooltip-footer" style={{ marginTop: '8px' }}>
                                     <span className="tooltip-label">Sentiment</span>
-                                    <span style={{ 
-                                        color: data.sentiment > 0 ? 'var(--green)' : data.sentiment < 0 ? 'var(--red)' : 'var(--text-muted)',
-                                        fontWeight: 'bold',
-                                        marginLeft: 'auto'
-                                    }}>
-                                        {data.sentiment > 0 ? '+' : ''}{data.sentiment}
+                                    <span style={{ color: data.sentiment > 0 ? 'var(--green)' : data.sentiment < 0 ? 'var(--red)' : 'var(--text-muted)' }}>
+                                        {data.sentiment}
                                     </span>
                                 </div>
                             </div>
@@ -223,21 +194,21 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
 
             <Scatter 
                 data={currentFrameData} 
-                isAnimationActive={false} // CRITICAL: Disable Recharts entrance animation to prevent "exploding from center"
+                isAnimationActive={false} // CRITICAL: Disable Recharts default animation so we can control it via CSS
             >
               {currentFrameData.map((entry) => {
                   const style = getAttributes(entry);
                   return (
                     <Cell 
-                      key={entry.ticker} // Stable key ensures element reuse for CSS transition
+                      key={entry.ticker} // STABLE KEY: This is the secret. It keeps the same DOM element between renders so CSS can animate it.
                       fill={style.fill}
                       r={style.radius}
                       fillOpacity={style.opacity}
                       stroke={style.category !== 'Noise' ? '#fff' : 'none'}
                       strokeWidth={1}
                       style={{ 
-                          // CSS TRANSITION: This is what handles the smooth glide between days
-                          transition: 'cx 0.5s cubic-bezier(0.25, 1, 0.5, 1), cy 0.5s cubic-bezier(0.25, 1, 0.5, 1), fill 0.3s ease',
+                          // CSS TRANSITION: Matches your 'map-control-btn' feel but tailored for SVG coords
+                          transition: 'cx 0.6s cubic-bezier(0.22, 1, 0.36, 1), cy 0.6s cubic-bezier(0.22, 1, 0.36, 1), fill 0.4s ease',
                           cursor: 'pointer'
                       }}
                     />
