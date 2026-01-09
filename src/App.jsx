@@ -9,7 +9,7 @@ function App() {
   const [selectedNode, setSelectedNode] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Data Fetching
+  // --- Data Loading (Unchanged) ---
   useEffect(() => {
     fetch('/data/market_physics_history.json') 
       .then(res => {
@@ -28,40 +28,43 @@ function App() {
   }, []);
 
   return (
-    // MASTER CONTAINER
-    // Desktop: h-screen + overflow-hidden (Locks the window)
-    // Mobile: min-h-screen (Allows scrolling)
-    <div className="app-container flex flex-col h-auto md:h-screen md:overflow-hidden min-h-screen">
+    // 1. MASTER CONTAINER: Locked to Screen Height (Desktop)
+    //    Uses 'app-container' for horizontal constraints but forces vertical locking.
+    <div className="app-container" style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       
-      {/* 1. HEADER (Fixed Height) 
-          Flex-shrink-0 prevents it from being squashed 
-      */}
-      <div className="sticky-header-group flex-shrink-0 z-50 bg-[var(--bg-app)]">
+      {/* 2. HEADER: Fixed Height, Pinned to Top */}
+      <div className="sticky-header-group" style={{ flexShrink: 0, zIndex: 50, background: 'var(--bg-app)' }}>
         <Header />
       </div>
 
-      {/* 2. MAIN STAGE (The Grid)
-          flex-1: Fills all remaining vertical space
-          min-h-0: CRITICAL. Allows flex child to shrink below content size (prevents overflow loops)
-          md:grid-rows-1: Overrides styles.css 'auto' rows to lock height on desktop
+      {/* 3. MAIN WORKSPACE: The Rigid Grid 
+          - flex-1: Fills strictly the remaining height between Header and Footer.
+          - min-height: 0: CRITICAL. Allows this container to shrink below its content size, preventing the "explosion" loop.
       */}
-      <main className="bento-grid flex-1 min-h-0 pb-6 pt-2 md:grid-rows-1">
+      <main className="bento-grid" style={{ 
+          flex: 1, 
+          minHeight: 0, 
+          paddingTop: '8px', 
+          paddingBottom: '24px',
+          // DESKTOP OVERRIDE: Force single row to stop infinite expansion
+          gridTemplateRows: '1fr' 
+      }}>
         
-        {/* LEFT PANEL: VISUALIZATION (75%) 
-            - Desktop: Spans 3 cols, h-full (locks to grid row height)
-            - Mobile: Spans 4 cols, h-[500px] (fixed height ensures map is usable)
-            - relative: Establishes context for absolute children (canvas)
+        {/* LEFT PANEL: Market Galaxy (75% Width)
+            - relative: Keeps absolute children (canvas) contained.
+            - overflow: hidden: Ensures nothing spills out.
         */}
-        <div className="col-span-4 md:col-span-3 h-[500px] md:h-full relative min-h-0"> 
+        <div className="span-4 lg:col-span-3" style={{ height: '100%', position: 'relative', overflow: 'hidden' }}>
+          
           {isLoading ? (
-             <div className="panel ai-hero-card h-full flex flex-col items-center justify-center">
-                <div className="scan-line mb-8 w-1/3"></div>
-                <div className="text-accent font-mono text-xs tracking-[0.2em] animate-pulse">
+             <div className="panel ai-hero-card" style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div className="scan-line" style={{ width: '33%', marginBottom: '32px' }}></div>
+                <div className="text-accent" style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', letterSpacing: '0.2em' }}>
                   BOOTING PHYSICS ENGINE...
                 </div>
              </div>
           ) : (
-            // We pass data down. The child component will handle its own internal sizing.
+            // The Galaxy component will expand to fill this rigid container
             <MarketGalaxy 
               data={historyData} 
               onNodeClick={setSelectedNode} 
@@ -69,37 +72,45 @@ function App() {
           )}
         </div>
 
-        {/* RIGHT PANEL: INTELLIGENCE (25%) 
-            - Desktop: Spans 1 col, h-full
-            - Mobile: Spans 4 cols, h-auto (natural scroll flow)
+        {/* RIGHT PANEL: Agent Interface (25% Width) 
+            - height: 100%: Locks to the same height as the Galaxy map.
         */}
-        <div className="col-span-4 md:col-span-1 h-auto md:h-full min-h-0 relative overflow-hidden">
+        <div className="span-4 lg:col-span-1" style={{ height: '100%', minHeight: 0 }}>
            <AgentPanel selectedNode={selectedNode} />
         </div>
 
       </main>
 
-      {/* 3. FOOTER (Desktop Only) 
-          Hidden on mobile to save precious vertical screen real estate 
-      */}
-      <div className="flex-shrink-0 hidden md:block">
+      {/* 4. FOOTER: Hidden on Mobile to save space, Visible on Desktop */}
+      <div className="desktop-only" style={{ flexShrink: 0 }}>
          <Footer />
       </div>
 
-      {/* 4. MOBILE OVERRIDES 
-          Force the container to scroll normally on small screens
+      {/* 5. MOBILE RESPONSIVENESS OVERRIDES 
+          We use a style tag to cleanly un-lock the view on phones without polluting the JSX.
       */}
       <style>{`
         @media (max-width: 768px) {
+          /* Unlock height so phones scroll naturally */
           .app-container {
             height: auto !important;
             overflow: auto !important;
+            min-height: 100vh;
           }
-          /* Ensure grid behaves as a stack on mobile */
+          /* Stack the grid vertically */
           .bento-grid {
             display: flex;
             flex-direction: column;
-            gap: 24px;
+            gap: 16px;
+            grid-template-rows: none !important;
+          }
+          /* Fix map height on mobile so it's usable */
+          .span-4.lg\\:col-span-3 {
+            height: 450px !important;
+          }
+          /* Allow agent panel to grow with text */
+          .span-4.lg\\:col-span-1 {
+            height: auto !important;
           }
         }
       `}</style>
