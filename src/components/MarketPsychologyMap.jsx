@@ -76,7 +76,7 @@ export default function MarketPsychologyMap({ onMetaLoaded, isMobile }) {
           }
           return prev + 1;
         });
-      }, 500); // Faster frame rate for stop-motion feel
+      }, 500);
     }
     return () => clearInterval(interval);
   }, [isPlaying, dates.length]);
