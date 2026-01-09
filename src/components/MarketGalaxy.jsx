@@ -64,12 +64,14 @@ const MarketGalaxy = ({ data, onNodeClick }) => {
     const { width, height } = dimensions;
     const pixelRatio = window.devicePixelRatio || 1;
 
-    // AI HERO COLORS (Hardcoded from your styles.css for Canvas performance)
-    const colorPurple = '#e879f9'; 
+    // COLORS
+    const colorBlue = '#38bdf8';   // Default Data Color (Blue)
     const colorGreen = '#22c55e';
     const colorRed = '#ef4444';
     const colorTextMain = '#f8fafc';
-    const colorGrid = 'rgba(192, 132, 252, 0.15)'; // Purple-tinted grid
+    
+    // Theme Accents (Purple for UI/Grid)
+    const colorGrid = 'rgba(192, 132, 252, 0.15)'; 
 
     canvas.width = width * pixelRatio;
     canvas.height = height * pixelRatio;
@@ -81,7 +83,7 @@ const MarketGalaxy = ({ data, onNodeClick }) => {
     // Clear
     ctx.clearRect(0, 0, width, height);
     
-    // Draw Purple Grid
+    // Draw Purple Grid (AI Theme Background)
     ctx.strokeStyle = colorGrid; 
     ctx.lineWidth = 0.5;
     ctx.beginPath();
@@ -94,14 +96,14 @@ const MarketGalaxy = ({ data, onNodeClick }) => {
         const x = xScale(stock.x);
         const y = yScale(stock.y);
         
-        // Default color is now AI Purple
-        let color = colorPurple;
+        // Color Logic: Neutral is Blue
+        let color = colorBlue;
         if (stock.sentiment > 0.15) color = colorGreen;
         if (stock.sentiment < -0.15) color = colorRed;
         
         const radius = Math.max(3, Math.min(8, 3 + (stock.velocity || 0))); 
 
-        // Purple Glow for active items
+        // Glow Effect
         if (stock.velocity > 2 || hoveredNode?.ticker === stock.ticker) {
           ctx.shadowBlur = 15;
           ctx.shadowColor = color;
@@ -155,13 +157,13 @@ const MarketGalaxy = ({ data, onNodeClick }) => {
   };
 
   return (
-    // Added 'ai-hero-card' class for the outer glow
+    // AI Hero Container (Purple Glow)
     <div className="panel ai-hero-card h-tall relative flex flex-col p-0" ref={containerRef}>
       
+      {/* Header (Purple Text) */}
       <div className="panel-header" style={{ margin: 0, padding: '16px', borderBottom: '1px solid rgba(192, 132, 252, 0.2)' }}>
         <div className="panel-header-identity">
             <span className="panel-title text-purple-300">MARKET GALAXY</span>
-            {/* Custom Purple Tag Style */}
             <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[rgba(192,132,252,0.15)] text-[#e879f9] border border-[rgba(192,132,252,0.3)]">
               PHYSICS ENGINE
             </span>
@@ -186,6 +188,7 @@ const MarketGalaxy = ({ data, onNodeClick }) => {
         </div>
       </div>
 
+      {/* Canvas */}
       <div className="flex-1 relative cursor-crosshair">
         <canvas 
             ref={canvasRef}
