@@ -9,6 +9,7 @@ function App() {
   const [selectedNode, setSelectedNode] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Data Fetching
   useEffect(() => {
     fetch('/data/market_physics_history.json') 
       .then(res => {
@@ -27,20 +28,30 @@ function App() {
   }, []);
 
   return (
-    <div className="app-container h-screen flex flex-col overflow-hidden">
+    // MASTER CONTAINER
+    // Desktop: h-screen + overflow-hidden (Locks the window)
+    // Mobile: min-h-screen (Allows scrolling)
+    <div className="app-container flex flex-col h-auto md:h-screen md:overflow-hidden min-h-screen">
       
-      {/* 1. Header (Fixed Height) */}
-      <div className="sticky-header-group flex-shrink-0 z-20 bg-[var(--bg-app)]">
+      {/* 1. HEADER (Fixed Height) 
+          Flex-shrink-0 prevents it from being squashed 
+      */}
+      <div className="sticky-header-group flex-shrink-0 z-50 bg-[var(--bg-app)]">
         <Header />
       </div>
 
-      {/* 2. Main Grid (Fills remaining height) 
-          - Desktop Update: Added 'md:grid-rows-1' to lock row height to 1fr.
-            This prevents the 'auto' rows from growing infinitely.
+      {/* 2. MAIN STAGE (The Grid)
+          flex-1: Fills all remaining vertical space
+          min-h-0: CRITICAL. Allows flex child to shrink below content size (prevents overflow loops)
+          md:grid-rows-1: Overrides styles.css 'auto' rows to lock height on desktop
       */}
       <main className="bento-grid flex-1 min-h-0 pb-6 pt-2 md:grid-rows-1">
         
-        {/* LEFT: VISUALIZATION (75%) */}
+        {/* LEFT PANEL: VISUALIZATION (75%) 
+            - Desktop: Spans 3 cols, h-full (locks to grid row height)
+            - Mobile: Spans 4 cols, h-[500px] (fixed height ensures map is usable)
+            - relative: Establishes context for absolute children (canvas)
+        */}
         <div className="col-span-4 md:col-span-3 h-[500px] md:h-full relative min-h-0"> 
           {isLoading ? (
              <div className="panel ai-hero-card h-full flex flex-col items-center justify-center">
@@ -50,6 +61,7 @@ function App() {
                 </div>
              </div>
           ) : (
+            // We pass data down. The child component will handle its own internal sizing.
             <MarketGalaxy 
               data={historyData} 
               onNodeClick={setSelectedNode} 
@@ -57,29 +69,37 @@ function App() {
           )}
         </div>
 
-        {/* RIGHT: AGENT PANEL (25%) */}
+        {/* RIGHT PANEL: INTELLIGENCE (25%) 
+            - Desktop: Spans 1 col, h-full
+            - Mobile: Spans 4 cols, h-auto (natural scroll flow)
+        */}
         <div className="col-span-4 md:col-span-1 h-auto md:h-full min-h-0 relative overflow-hidden">
            <AgentPanel selectedNode={selectedNode} />
         </div>
 
       </main>
 
-      {/* 3. Footer (Desktop Only) */}
+      {/* 3. FOOTER (Desktop Only) 
+          Hidden on mobile to save precious vertical screen real estate 
+      */}
       <div className="flex-shrink-0 hidden md:block">
          <Footer />
       </div>
 
-      {/* Mobile Scroll Override */}
+      {/* 4. MOBILE OVERRIDES 
+          Force the container to scroll normally on small screens
+      */}
       <style>{`
         @media (max-width: 768px) {
           .app-container {
             height: auto !important;
             overflow: auto !important;
           }
+          /* Ensure grid behaves as a stack on mobile */
           .bento-grid {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 24px;
           }
         }
       `}</style>
