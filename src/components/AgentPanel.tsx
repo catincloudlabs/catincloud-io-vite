@@ -12,7 +12,10 @@ interface AgentPanelProps {
 }
 
 export function AgentPanel({ currentFrame, history, selectedTicker, onOpenArch, onOpenBio }: AgentPanelProps) {
-  const [isExpanded, setIsExpanded] = useState(true);
+  // Default to collapsed on mobile (check width on mount)
+  const [isExpanded, setIsExpanded] = useState(() => {
+    return typeof window !== 'undefined' && window.innerWidth > 768;
+  });
   
   const [messages, setMessages] = useState<Array<{type: 'agent' | 'user', text: string}>>([
     { 
@@ -132,13 +135,7 @@ Market Phase: ${avgEnergy > 25 ? "HIGH VOLATILITY" : "CONSOLIDATION"}`;
   if (!currentFrame) return null;
 
   return (
-    <div 
-      className="agent-terminal"
-      style={{ 
-        // UPDATED: Fixed height when expanded to fill the available space
-        height: isExpanded ? 'calc(100vh - 100px)' : 'auto' 
-      }}
-    >
+    <div className={`agent-terminal ${isExpanded ? 'expanded' : 'collapsed'}`}>
       
       {/* HEADER */}
       <div className="terminal-header">
@@ -158,7 +155,6 @@ Market Phase: ${avgEnergy > 25 ? "HIGH VOLATILITY" : "CONSOLIDATION"}`;
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button 
                 onClick={onOpenArch}
-                title="System Architecture"
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 2 }}
                 onMouseEnter={e => e.currentTarget.style.color = '#fff'}
                 onMouseLeave={e => e.currentTarget.style.color = '#64748b'}
@@ -168,7 +164,6 @@ Market Phase: ${avgEnergy > 25 ? "HIGH VOLATILITY" : "CONSOLIDATION"}`;
             
             <button 
                 onClick={onOpenBio}
-                title="User Bio"
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 2, marginRight: '8px' }}
                 onMouseEnter={e => e.currentTarget.style.color = '#fff'}
                 onMouseLeave={e => e.currentTarget.style.color = '#64748b'}
@@ -194,8 +189,8 @@ Market Phase: ${avgEnergy > 25 ? "HIGH VOLATILITY" : "CONSOLIDATION"}`;
             flex: 1, 
             padding: '16px', 
             overflowY: 'auto', 
-            display: 'flex', flexDirection: 'column', gap: '8px'
-            // UPDATED: Removed minHeight to rely on flex filling the fixed parent height
+            display: 'flex', flexDirection: 'column', gap: '8px',
+            minHeight: '150px'
           }}>
             {messages.map((msg, i) => {
               const isUser = msg.type === 'user';
@@ -217,7 +212,6 @@ Market Phase: ${avgEnergy > 25 ? "HIGH VOLATILITY" : "CONSOLIDATION"}`;
             <div ref={chatEndRef} />
           </div>
 
-          {/* SUGGESTIONS */}
           <div style={{ 
             padding: '8px 12px', 
             borderTop: '1px solid rgba(255,255,255,0.05)',
@@ -243,7 +237,6 @@ Market Phase: ${avgEnergy > 25 ? "HIGH VOLATILITY" : "CONSOLIDATION"}`;
             ))}
           </div>
 
-          {/* INPUT */}
           <div className="terminal-input-area">
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ color: '#22c55e' }}>$</span>

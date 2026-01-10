@@ -1,11 +1,6 @@
 {
-    "name": "CatInCloud Terminal",
+    "name": "CatInCloud | Market Galaxy",
     "short_name": "CatInCloud",
-    "description": "Live market data pipeline and volatility analysis.",
-    "start_url": "/",
-    "display": "standalone",
-    "background_color": "#0f172a",
-    "theme_color": "#0f172a",
     "icons": [
         {
             "src": "/android-chrome-192x192.png",
@@ -17,5 +12,8 @@
             "sizes": "512x512",
             "type": "image/png"
         }
-    ]
+    ],
+    "theme_color": "#020617",
+    "background_color": "#020617",
+    "display": "standalone"
 }

@@ -9,7 +9,7 @@ import { OrthographicView } from '@deck.gl/core';
 import { Delaunay } from 'd3-delaunay';
 import { GraphConnection } from '../hooks/useKnowledgeGraph'; 
 
-// --- TYPES ---
+// ... [Keep Types] ...
 export type HydratedNode = {
   ticker: string;
   x: number;
@@ -34,20 +34,19 @@ interface MarketMapProps {
   graphConnections?: GraphConnection[];   
 }
 
-// --- CONFIG ---
+// --- RESPONSIVE CONFIG ---
+const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
 const INITIAL_VIEW_STATE = {
-  // Shifted X to 50: This points the camera to the "right", 
-  // which visually moves the map contents (centered at 0,0) to the LEFT.
-  // This fills the empty space on the left and clears the right for the Agent Panel.
-  target: [65, 10, 0],
-  zoom: 1.0, 
+  target: isMobile ? [0, 40, 0] : [65, 10, 0], 
+  zoom: isMobile ? 0.6 : 1.0, 
   minZoom: 0.1,
   maxZoom: 10
 };
 
 export function MarketMap({ data, history, onNodeClick, selectedTicker, graphConnections }: MarketMapProps) {
   
-  // 1. Calculate Trails (History)
+  // ... [Keep trailData logic] ...
   const trailData = useMemo(() => {
     if (!history || !data) return [];
     const currentIndex = history.findIndex(f => f.date === data.date);
@@ -72,7 +71,7 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
 
   }, [data, history]); 
 
-  // 2. Calculate Knowledge Graph Lines (Synapses)
+  // ... [Keep synapseData logic] ...
   const synapseData = useMemo(() => {
     if (!selectedTicker || !graphConnections || !data) return [];
 
@@ -92,7 +91,7 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
   }, [selectedTicker, graphConnections, data]);
 
 
-  // 3. Calculate Voronoi
+  // ... [Keep voronoiData logic] ...
   const voronoiData = useMemo(() => {
     if (!data?.nodes || data.nodes.length < 3) return [];
     const points = data.nodes.map(d => [d.x, d.y] as [number, number]);
@@ -108,8 +107,7 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
 
   if (!data) return null;
 
-  // --- LAYERS ---
-
+  // ... [Keep Layers] ...
   const cellLayer = new PolygonLayer({
     id: 'voronoi-cells',
     data: voronoiData,

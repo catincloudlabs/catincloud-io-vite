@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { X, Terminal, Github, Linkedin, Mail, Globe } from 'lucide-react'; 
+import { X, Terminal, Github, Linkedin, Mail, Globe, MapPin } from 'lucide-react'; 
 
 interface BioModalProps {
   isOpen: boolean;
@@ -23,13 +23,13 @@ const BioModal: React.FC<BioModalProps> = ({ isOpen, onClose }) => {
       <div className="modal-box bio-modal" onClick={e => e.stopPropagation()}>
         
         {/* Header */}
-        <div className="modal-header bio-header">
+        <div className="modal-header">
           <div className="modal-title-wrapper">
-            <Terminal size={16} className="text-purple mr-2" />
-            <span className="modal-title">dave@root:~$ whoami</span>
+            <Terminal size={16} className="text-accent" />
+            <span className="modal-title">USER_RECORD: DAVE_ANAYA</span>
           </div>
           <button className="panel-toggle-btn" onClick={onClose}>
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
@@ -51,45 +51,56 @@ const BioModal: React.FC<BioModalProps> = ({ isOpen, onClose }) => {
             <div className="bio-text">
               <h2 className="bio-name">Dave Anaya</h2>
               <p className="bio-role">Senior Data Engineer & Architect</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.7rem', color: '#94a3b8', marginBottom: '8px' }}>
+                <MapPin size={12} />
+                <span>Minneapolis, MN</span>
+              </div>
               <p className="bio-desc">
-                Specializing in high-performance data pipelines, real-time visualization, 
-                and bridging the gap between Data Science and Product Engineering.
+                Building high-performance data pipelines and real-time visualization systems. 
+                Bridging Data Science and Product Engineering.
               </p>
             </div>
           </div>
 
-          <div className="manual-divider bio-divider" />
+          <div className="bio-divider" />
 
           {/* TECH STACK */}
-          <h3 className="bio-h3">CURRENT STACK</h3>
+          <h3 className="bio-h3">TECHNICAL_STACK</h3>
           <div className="stack-grid">
-            <div className="stack-item"><span className="text-accent">Core:</span> Python, TypeScript, SQL</div>
-            <div className="stack-item"><span className="text-accent">Data:</span> Supabase, PostgreSQL, pgvector</div>
-            <div className="stack-item"><span className="text-accent">AI/ML:</span> OpenAI Embeddings, SciKit-Learn</div>
-            <div className="stack-item"><span className="text-accent">Visual:</span> React, DeckGL, D3.js</div>
+            <div className="stack-item">
+                <span className="text-accent">LANG:</span> Python, TypeScript, SQL, Rust
+            </div>
+            <div className="stack-item">
+                <span className="text-accent">DATA:</span> Supabase, PostgreSQL, pgvector, Redis
+            </div>
+            <div className="stack-item">
+                <span className="text-accent">ML/AI:</span> OpenAI, SciKit-Learn, PyTorch
+            </div>
+            <div className="stack-item">
+                <span className="text-accent">VISUAL:</span> React, DeckGL, D3.js, WebGL
+            </div>
           </div>
 
-          <div className="manual-divider bio-divider" />
+          <div className="bio-divider" />
 
           {/* CONTACT LINKS */}
-          <h3 className="bio-h3">CONNECT</h3>
+          <h3 className="bio-h3">UPLINK</h3>
           <div className="contact-row">
             <a href="https://github.com/catincloudlabs" target="_blank" rel="noreferrer" className="contact-btn">
-              <Github size={18} />
-              <span>GitHub</span>
+              <Github size={14} />
+              <span>GITHUB</span>
             </a>
             <a href="https://linkedin.com/in/dave-anaya/" target="_blank" rel="noreferrer" className="contact-btn">
-              <Linkedin size={18} />
-              <span>LinkedIn</span>
+              <Linkedin size={14} />
+              <span>LINKEDIN</span>
             </a>
             <a href="mailto:dave@catincloudlabs.com" className="contact-btn">
-              <Mail size={18} />
-              <span>Email</span>
+              <Mail size={14} />
+              <span>EMAIL</span>
             </a>
-            
             <a href="https://catincloudlabs.com" target="_blank" rel="noreferrer" className="contact-btn btn-primary">
-              <Globe size={18} />
-              <span>Portfolio</span>
+              <Globe size={14} />
+              <span>PORTFOLIO</span>
             </a>
           </div>
 
