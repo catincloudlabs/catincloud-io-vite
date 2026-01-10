@@ -1,5 +1,5 @@
 // @ts-ignore
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 // @ts-ignore
 import DeckGL from '@deck.gl/react';
 // @ts-ignore
@@ -44,16 +44,24 @@ const INITIAL_VIEW_STATE = {
 
 export function MarketMap({ data, history, onNodeClick, selectedTicker, graphConnections }: MarketMapProps) {
   
-  // --- 0. METRICS ---
-  // Calculate dynamic thresholds so the visual works on quiet days AND crazy days
+  // --- 1. HEARTBEAT SYSTEM ---
+  // We toggle this boolean every 2 seconds to trigger the GPU transition
+  const [pulse, setPulse] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPulse(p => !p);
+    }, 2000); // 2-second breath cycle (Inhale... Exhale)
+    return () => clearInterval(interval);
+  }, []);
+
+  // --- 2. METRICS ---
   const { maxEnergy, highEnergyThreshold, superEnergyThreshold } = useMemo(() => {
     if (!data?.nodes || data.nodes.length === 0) return { maxEnergy: 0, highEnergyThreshold: 0, superEnergyThreshold: 0 };
     
     const energies = data.nodes.map(n => n.energy);
     const max = Math.max(...energies);
     
-    // "High Energy" = Top 25% of the current range
-    // "Super Energy" = Top 10% (The market movers)
     return { 
         maxEnergy: max, 
         highEnergyThreshold: max * 0.5, 
@@ -61,26 +69,23 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
     };
   }, [data]);
 
-  // --- 1. SORTING ---
+  // --- 3. SORTING ---
   const sortedNodes = useMemo(() => {
     if (!data?.nodes) return [];
     return [...data.nodes].sort((a, b) => {
-      // 1. Selected is ALWAYS top
       if (a.ticker === selectedTicker) return 1;
       if (b.ticker === selectedTicker) return -1;
       
-      // 2. Connected nodes next
       const aConn = graphConnections?.some(c => c.target === a.ticker);
       const bConn = graphConnections?.some(c => c.target === b.ticker);
       if (aConn && !bConn) return 1;
       if (!aConn && bConn) return -1;
 
-      // 3. High Energy nodes pop to top (so halos aren't covered)
       return a.energy - b.energy;
     });
   }, [data, selectedTicker, graphConnections]);
 
-  // --- 2. TRAIL LOGIC ---
+  // --- 4. TRAIL LOGIC ---
   const trailData = useMemo(() => {
     if (!history || !data) return [];
     
@@ -116,7 +121,7 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
 
   }, [data, history, selectedTicker, highEnergyThreshold]); 
 
-  // --- 3. SYNAPSE LOGIC ---
+  // --- 5. SYNAPSE LOGIC ---
   const synapseData = useMemo(() => {
     if (!selectedTicker || !graphConnections || !data) return [];
 
@@ -135,7 +140,7 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
 
   }, [selectedTicker, graphConnections, data]);
 
-  // --- 4. VORONOI LOGIC ---
+  // --- 6. VORONOI LOGIC ---
   const voronoiData = useMemo(() => {
     if (!data?.nodes || data.nodes.length < 3) return [];
     const points = data.nodes.map(d => [d.x, d.y] as [number, number]);
@@ -205,57 +210,85 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
     getPosition: (d: HydratedNode) => [d.x, d.y],
     radiusUnits: 'common', 
     
-    // --- SIZE: The Great Equalizer ---
-    // Instead of scaling with Energy, we keep it tight.
+    // Size is mostly uniform to prevent clutter
     getRadius: (d: HydratedNode) => {
-        if (d.ticker === selectedTicker) return 5; // User Selection = Big
-        if (graphConnections?.some(c => c.target === d.ticker)) return 3.5; // Linked = Medium
-        
-        return 2.5; // Everyone else = Small uniform dots
+        if (d.ticker === selectedTicker) return 5;
+        if (graphConnections?.some(c => c.target === d.ticker)) return 3.5;
+        return 2.5;
     },
 
     getFillColor: (d: HydratedNode) => {
-        // Selected/Connected = Gold/White Highlight
         if (d.ticker === selectedTicker) return [255, 255, 255, 255]; 
         if (graphConnections?.some(c => c.target === d.ticker)) return [255, 215, 0, 255]; 
 
-        // Sentiment = Green/Red
         if (d.sentiment > 0.1) return [0, 255, 100, 255];   
         if (d.sentiment < -0.1) return [255, 50, 50, 255];  
         
-        // Neutral = Ghostly Grey
         return [60, 70, 80, 150]; 
     },
     
     stroked: true,
     
-    // --- ENERGY: The "Voltage" Ring ---
-    // If Energy is high, we give it a thick white border (Halo)
+    // --- ANIMATED HALOS ---
     getLineWidth: (d: HydratedNode) => {
-        if (d.ticker === selectedTicker) return 1;
-        if (d.energy > superEnergyThreshold) return 1.2; // Massive Energy = Thick Ring
-        if (d.energy > highEnergyThreshold) return 0.6;  // High Energy = Visible Ring
-        return 0; // Low Energy = No Ring (Clean look)
+        // SELECTED: Always pulses noticeably
+        if (d.ticker === selectedTicker) {
+            return pulse ? 3 : 1; 
+        }
+        
+        // SUPER ENERGY: "Heartbeat" pulse
+        if (d.energy > superEnergyThreshold) {
+            return pulse ? 2 : 0.8; // Expands and contracts
+        } 
+
+        // HIGH ENERGY: Subtle shimmer
+        if (d.energy > highEnergyThreshold) {
+            return pulse ? 1 : 0.5;
+        }  
+        
+        return 0; 
     },
     
     getLineColor: (d: HydratedNode) => {
-        if (d.energy > superEnergyThreshold) return [255, 255, 255, 180]; // Pure White Halo
-        if (d.energy > highEnergyThreshold) return [255, 255, 255, 80];  // Soft White Halo
+        // SELECTED: Strong White
+        if (d.ticker === selectedTicker) {
+             return pulse ? [255, 255, 255, 150] : [255, 255, 255, 255];
+        }
+
+        // SUPER ENERGY: Glassy White -> Faint White
+        if (d.energy > superEnergyThreshold) {
+            return pulse ? [255, 255, 255, 100] : [255, 255, 255, 200]; 
+        }
+
+        // HIGH ENERGY: Very faint
+        if (d.energy > highEnergyThreshold) {
+            return pulse ? [255, 255, 255, 50] : [255, 255, 255, 100];  
+        }
+        
         return [0, 0, 0, 0];
     },
 
-    lineWidthUnits: 'common', // Scales with zoom naturally
+    lineWidthUnits: 'common',
     pickable: true,
     autoHighlight: true,
     highlightColor: [255, 255, 255, 100],
-    onClick: (info: any) => {
-      if (info.object && onNodeClick) onNodeClick(info.object);
+    
+    // --- CRITICAL: GPU ANIMATION SETTINGS ---
+    transitions: {
+        getLineWidth: 2000, // 2 seconds to morph width
+        getLineColor: 2000, // 2 seconds to morph color
     },
+    
+    // Tell Deck.GL to recalculate these accessors when 'pulse' changes
     updateTriggers: {
         getRadius: [selectedTicker, graphConnections],
         getFillColor: [selectedTicker, graphConnections],
-        getLineWidth: [maxEnergy],
-        getLineColor: [maxEnergy]
+        getLineWidth: [maxEnergy, pulse, selectedTicker], // <--- PULSE ADDED
+        getLineColor: [maxEnergy, pulse, selectedTicker]  // <--- PULSE ADDED
+    },
+
+    onClick: (info: any) => {
+      if (info.object && onNodeClick) onNodeClick(info.object);
     }
   });
 
