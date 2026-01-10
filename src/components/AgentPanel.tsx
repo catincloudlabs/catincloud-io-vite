@@ -9,7 +9,7 @@ interface AgentPanelProps {
   history?: MarketFrame[];
   selectedTicker: string | null;
   graphConnections?: GraphConnection[];
-  isLoading?: boolean; // <--- NEW PROP
+  isLoading?: boolean;
   onOpenArch: () => void;
   onOpenBio: () => void;
 }
@@ -32,7 +32,7 @@ export function AgentPanel({ currentFrame, history, selectedTicker, graphConnect
   
   const [inputValue, setInputValue] = useState("");
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const lastTickerRef = useRef<string | null>(null); // Prevents double-firing
+  const lastTickerRef = useRef<string | null>(null); 
 
   const suggestions = ["PHYSICS", "LEGEND", "STRATEGY"];
 
@@ -62,38 +62,33 @@ export function AgentPanel({ currentFrame, history, selectedTicker, graphConnect
     }
 
     const velocity = Math.sqrt(node.vx**2 + node.vy**2).toFixed(1);
-    const sentiment = node.sentiment > 0.1 ? "POS" : node.sentiment < -0.1 ? "NEG" : "NEU";
     
     // 2. Intelligence Data
     let intelligenceReport = "";
     if (graphConnections && graphConnections.length > 0) {
-      const peers = graphConnections.map(c => c.target).join(', ');
-      const topNarrative = graphConnections[0]?.articles[0] 
-        ? `"${graphConnections[0].articles[0]}"` 
-        : "Sector Correlation";
+      const peers = graphConnections.slice(0, 3).map(c => c.target).join(', ');
+      const topArticle = graphConnections[0]?.articles[0];
+      const narrative = topArticle ? `"${topArticle}"` : "Sector Correlation";
 
       intelligenceReport = `
------------------------
-NETWORK INTEL:
-• Links: ${graphConnections.length} Active Nodes
+🧠 NETWORK INTEL:
 • Cluster: [${peers}]
-• Driver: ${topNarrative}`;
+• Driver: ${narrative}`;
     } else {
       intelligenceReport = `
------------------------
-NETWORK INTEL:
-• No significant correlation detected.
+🧠 NETWORK INTEL:
+• No major signal detected.
 • Idiosyncratic movement.`;
     }
 
-    return `TARGET: ${ticker}
-Status: ${sentiment} (${node.sentiment.toFixed(2)})
-Trend:  ${trend}
-Energy: ${node.energy.toFixed(0)}
-Vel:    ${velocity}${intelligenceReport}`;
+    // TACTICAL FORMAT
+    return `🎯 TARGET: ${ticker}
+📊 PHYSICS:
+• Trend:  ${trend}
+• Energy: ${node.energy.toFixed(0)} | Vel: ${velocity}${intelligenceReport}`;
   };
 
-  // --- SMART EFFECT: Handles "Loading" state to prevent double-speak ---
+  // --- SMART EFFECT ---
   useEffect(() => {
     if (!selectedTicker) return;
 
@@ -115,17 +110,17 @@ Vel:    ${velocity}${intelligenceReport}`;
 
   }, [selectedTicker, graphConnections, isLoading]); 
 
-  // Reset ref when selectedTicker is nulled or changed explicitly by user click
+  // Reset ref if user specifically deselects (optional, helps with re-clicking)
   useEffect(() => {
-     if (selectedTicker && selectedTicker !== lastTickerRef.current) {
-         // New selection detected, but we wait for !isLoading in the other effect
+     if (!selectedTicker) {
+         lastTickerRef.current = null;
      }
   }, [selectedTicker]);
+
 
   const handleCommand = (cmd: string) => {
       setMessages(prev => [...prev, { type: 'user', text: cmd }]);
       
-      // Simple Commands don't need DB data
       setTimeout(() => {
          let response = "";
          const q = cmd.toUpperCase();
@@ -156,7 +151,7 @@ Vel:    ${velocity}${intelligenceReport}`;
           onClick={() => setIsExpanded(!isExpanded)}
           style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, cursor: 'pointer' }}
         >
-          {/* Status Light: Blinks when loading */}
+          {/* Status Light */}
           <div style={{ 
             width: '6px', height: '6px', borderRadius: '50%', 
             background: isLoading ? '#fbbf24' : '#22c55e', 
@@ -164,7 +159,7 @@ Vel:    ${velocity}${intelligenceReport}`;
             transition: 'all 0.3s ease'
           }} />
           <span style={{ fontWeight: 600, letterSpacing: '0.1em', fontSize: '0.75rem', color: '#94a3b8' }}>
-            {isLoading ? "ANALYZING NETWORK..." : "INTELLIGENCE"}
+            {isLoading ? "DECRYPTING..." : "INTELLIGENCE"}
           </span>
         </div>
 
@@ -206,11 +201,10 @@ Vel:    ${velocity}${intelligenceReport}`;
               );
             })}
             
-            {/* Loading Indicator inside chat */}
             {isLoading && (
                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#fbbf24', fontSize: '0.75rem', padding: '10px 12px' }}>
                     <Loader2 size={14} className="animate-spin" />
-                    <span>Decrypting Knowledge Graph...</span>
+                    <span>Accessing Knowledge Graph...</span>
                  </div>
             )}
             

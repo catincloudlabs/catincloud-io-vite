@@ -9,20 +9,28 @@ export interface GraphConnection {
 
 export function useKnowledgeGraph(ticker: string | null) {
   const [connections, setConnections] = useState<GraphConnection[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [internalLoading, setInternalLoading] = useState(false);
+  const [lastFetchedTicker, setLastFetchedTicker] = useState<string | null>(null);
+
+  // CRITICAL FIX: Derived state. 
+  // If the requested 'ticker' doesn't match the data we have ('lastFetchedTicker'),
+  // we are effectively loading/stale. This prevents the UI from rendering 
+  // old data (or empty data) while the fetch effect is still waking up.
+  const loading = internalLoading || (ticker !== lastFetchedTicker);
 
   useEffect(() => {
     if (!ticker) {
       setConnections([]);
+      setLastFetchedTicker(null);
       return;
     }
 
     const fetchGraph = async () => {
-      setLoading(true); // Start loading
+      setInternalLoading(true);
       console.log(`🔍 [Graph] Fetching intel for ${ticker}...`);
       
       try {
-        // 1. Get all News IDs mentioning this ticker
+        // 1. Get News IDs
         const { data: newsEdges } = await supabase
           .from('knowledge_graph')
           .select('source_node') 
@@ -32,6 +40,7 @@ export function useKnowledgeGraph(ticker: string | null) {
         if (!newsEdges || newsEdges.length === 0) {
           console.log(`⚠️ [Graph] No news edges found for ${ticker}`);
           setConnections([]);
+          setLastFetchedTicker(ticker); // Mark as fetched (even if empty)
           return;
         }
 
@@ -58,6 +67,7 @@ export function useKnowledgeGraph(ticker: string | null) {
 
         if (!relatedEdges || relatedEdges.length === 0) {
           setConnections([]);
+          setLastFetchedTicker(ticker);
           return;
         }
 
@@ -85,11 +95,14 @@ export function useKnowledgeGraph(ticker: string | null) {
 
         console.log(`✅ [Graph] Found ${sortedConnections.length} connections for ${ticker}`);
         setConnections(sortedConnections);
+        setLastFetchedTicker(ticker); // Sync complete
 
       } catch (e) {
         console.error("Graph Error:", e);
+        setConnections([]); 
+        setLastFetchedTicker(ticker); // Ensure we don't hang in loading state
       } finally {
-        setLoading(false); // Finished
+        setInternalLoading(false);
       }
     };
 
