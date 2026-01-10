@@ -52,7 +52,7 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
     const currentIndex = history.findIndex(f => f.date === data.date);
     if (currentIndex <= 0) return [];
 
-    // UPDATED: 10 Frames = Exactly 2 Business Weeks (Trading Days)
+    // 10 Frames = Exactly 2 Business Weeks (Trading Days)
     const LOOKBACK_FRAMES = 10; 
     const lookback = Math.max(0, currentIndex - LOOKBACK_FRAMES);
     const recentHistory = history.slice(lookback, currentIndex + 1);
