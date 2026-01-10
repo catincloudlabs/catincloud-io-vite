@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 
 export interface GraphConnection {
-  target: string; // The related ticker (e.g. "AMD")
-  strength: number; // How strongly related?
-  articles: string[]; // Headlines linking them
+  target: string; 
+  strength: number; 
+  articles: string[]; // Now populated with real headlines
 }
 
 export function useKnowledgeGraph(ticker: string | null) {
@@ -20,63 +20,86 @@ export function useKnowledgeGraph(ticker: string | null) {
     const fetchGraph = async () => {
       setLoading(true);
       
-      // 1. Find news IDs related to this ticker
-      // We look for edges where this ticker is the target
-      // (Assuming your ingest.py creates Ticker -> News edges or News -> Ticker)
-      // Based on your ingest.py, it links News ID -> Ticker.
-      // So we find all News IDs that point to THIS ticker.
-      
-      // Step A: Get Articles for Ticker
-      const { data: newsEdges } = await supabase
-        .from('knowledge_graph')
-        .select('source_node') // This is the News ID
-        .eq('target_node', ticker)
-        .eq('edge_type', 'MENTIONS');
+      try {
+        // 1. Get all News IDs mentioning this ticker
+        const { data: newsEdges } = await supabase
+          .from('knowledge_graph')
+          .select('source_node') // This is the News ID
+          .eq('target_node', ticker)
+          .eq('edge_type', 'MENTIONS');
 
-      if (!newsEdges || newsEdges.length === 0) {
-        setConnections([]);
+        if (!newsEdges || newsEdges.length === 0) {
+          setConnections([]);
+          setLoading(false);
+          return;
+        }
+
+        const newsIds = newsEdges.map(e => e.source_node);
+
+        // 2. Fetch the Headlines for these News IDs (The "Why")
+        const { data: newsArticles } = await supabase
+          .from('news_vectors')
+          .select('id, headline')
+          .in('id', newsIds);
+
+        const headlineMap = new Map<string, string>();
+        if (newsArticles) {
+          newsArticles.forEach(a => headlineMap.set(str(a.id), a.headline));
+        }
+
+        // 3. Find OTHER tickers linked by these same News IDs
+        const { data: relatedEdges } = await supabase
+          .from('knowledge_graph')
+          .select('target_node, source_node')
+          .in('source_node', newsIds) 
+          .neq('target_node', ticker) // Exclude self
+          .eq('edge_type', 'MENTIONS');
+
+        if (!relatedEdges) {
+          setConnections([]);
+          setLoading(false);
+          return;
+        }
+
+        // 4. Aggregate: Count strength AND collect headlines
+        const tally: Record<string, { count: number, headlines: Set<string> }> = {};
+        
+        relatedEdges.forEach(edge => {
+          if (!tally[edge.target_node]) {
+            tally[edge.target_node] = { count: 0, headlines: new Set() };
+          }
+          tally[edge.target_node].count += 1;
+          
+          const hl = headlineMap.get(str(edge.source_node));
+          if (hl) tally[edge.target_node].headlines.add(hl);
+        });
+
+        // 5. Format for UI
+        const sortedConnections = Object.entries(tally)
+          .map(([target, data]) => ({
+              target,
+              strength: data.count,
+              articles: Array.from(data.headlines).slice(0, 3) // Top 3 headlines per link
+          }))
+          .sort((a, b) => b.strength - a.strength)
+          .slice(0, 6); // Top 6 strong connections
+
+        setConnections(sortedConnections);
+
+      } catch (e) {
+        console.error("Graph Error:", e);
+      } finally {
         setLoading(false);
-        return;
       }
-
-      const newsIds = newsEdges.map(e => e.source_node);
-
-      // Step B: Find OTHER tickers mentioned in those SAME articles
-      const { data: relatedEdges } = await supabase
-        .from('knowledge_graph')
-        .select('target_node, source_node')
-        .in('source_node', newsIds) 
-        .neq('target_node', ticker) // Exclude self
-        .eq('edge_type', 'MENTIONS');
-
-      if (!relatedEdges) {
-        setConnections([]);
-        setLoading(false);
-        return;
-      }
-
-      // Step C: Aggregate counts (Strength)
-      const tally: Record<string, number> = {};
-      relatedEdges.forEach(edge => {
-        tally[edge.target_node] = (tally[edge.target_node] || 0) + 1;
-      });
-
-      // Format for UI
-      const sortedConnections = Object.entries(tally)
-        .map(([target, strength]) => ({
-            target,
-            strength,
-            articles: [] // We can fetch specific headlines in a v2 optimization
-        }))
-        .sort((a, b) => b.strength - a.strength)
-        .slice(0, 5); // Top 5 connections only
-
-      setConnections(sortedConnections);
-      setLoading(false);
     };
 
     fetchGraph();
   }, [ticker]);
 
   return { connections, loading };
+}
+
+// Helper to handle potentially numeric IDs safely
+function str(val: any): string {
+  return String(val);
 }

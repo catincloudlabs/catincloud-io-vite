@@ -19,6 +19,7 @@ function App() {
   const [isArchOpen, setArchOpen] = useState(false);
   const [isBioOpen, setBioOpen] = useState(false);
 
+  // The brain hook
   const { connections } = useKnowledgeGraph(selectedTicker);
 
   useEffect(() => {
@@ -88,15 +89,16 @@ function App() {
         graphConnections={connections}       
       />
 
-      {/* Header (Purely Visual) */}
+      {/* Header */}
       <Header dateLabel={currentDateLabel} />
 
-      {/* Agent Panel (With System Controls) */}
+      {/* Agent Panel (Now wired with Intelligence) */}
       <div className="agent-panel-wrapper">
         <AgentPanel 
           currentFrame={currentFrameData} 
           history={frames || []}
           selectedTicker={selectedTicker}
+          graphConnections={connections} // <--- WIRED HERE
           onOpenArch={() => setArchOpen(true)}
           onOpenBio={() => setBioOpen(true)}
         />
@@ -120,7 +122,6 @@ function App() {
         </div>
       </div>
 
-      {/* Render Modals at Root Level */}
       <ArchitectureModal isOpen={isArchOpen} onClose={() => setArchOpen(false)} />
       <BioModal isOpen={isBioOpen} onClose={() => setBioOpen(false)} />
     </div>

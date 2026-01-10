@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { MarketFrame } from '../App';
+import { GraphConnection } from '../hooks/useKnowledgeGraph';
 // @ts-ignore
 import { Network, User, Minus, Plus } from 'lucide-react';
 
@@ -7,12 +8,12 @@ interface AgentPanelProps {
   currentFrame: MarketFrame | null;
   history?: MarketFrame[];
   selectedTicker: string | null;
+  graphConnections?: GraphConnection[]; 
   onOpenArch: () => void;
   onOpenBio: () => void;
 }
 
-export function AgentPanel({ currentFrame, history, selectedTicker, onOpenArch, onOpenBio }: AgentPanelProps) {
-  // Default to collapsed on mobile (check width on mount)
+export function AgentPanel({ currentFrame, history, selectedTicker, graphConnections, onOpenArch, onOpenBio }: AgentPanelProps) {
   const [isExpanded, setIsExpanded] = useState(() => {
     return typeof window !== 'undefined' && window.innerWidth > 768;
   });
@@ -75,6 +76,7 @@ export function AgentPanel({ currentFrame, history, selectedTicker, onOpenArch, 
       
       if (!node) return `ERR: Data for ${ticker} incomplete.`;
 
+      // 1. Physics Data
       let trend = "STABLE";
       if (history && history.length > 5) {
         const pastFrame = history[Math.max(0, history.indexOf(currentFrame) - 5)];
@@ -89,13 +91,33 @@ export function AgentPanel({ currentFrame, history, selectedTicker, onOpenArch, 
       const velocity = Math.sqrt(node.vx**2 + node.vy**2).toFixed(1);
       const sentiment = node.sentiment > 0.1 ? "POS" : node.sentiment < -0.1 ? "NEG" : "NEU";
       
-      return `Target: ${ticker}
+      // 2. Intelligence Data (Knowledge Graph)
+      let intelligenceReport = "";
+      if (graphConnections && graphConnections.length > 0) {
+        const peers = graphConnections.map(c => c.target).join(', ');
+        const topNarrative = graphConnections[0]?.articles[0] 
+          ? `"${graphConnections[0].articles[0]}"` 
+          : "Sector Correlation";
+
+        intelligenceReport = `
+-----------------------
+NETWORK INTEL:
+• Links: ${graphConnections.length} Active Nodes
+• Cluster: [${peers}]
+• Driver: ${topNarrative}`;
+      } else {
+        intelligenceReport = `
+-----------------------
+NETWORK INTEL:
+• No significant correlation detected.
+• Idiosyncratic movement.`;
+      }
+
+      return `TARGET: ${ticker}
 Status: ${sentiment} (${node.sentiment.toFixed(2)})
 Trend:  ${trend}
 Energy: ${node.energy.toFixed(0)}
-Vel:    ${velocity}
-
-"${node.headline}"`;
+Vel:    ${velocity}${intelligenceReport}`;
     }
 
     if (q.includes('MARKET') || q.includes('TREND') || q.includes('SCAN')) {
@@ -115,7 +137,7 @@ Market Phase: ${avgEnergy > 25 ? "HIGH VOLATILITY" : "CONSOLIDATION"}`;
     const response = generateResponse(selectedTicker);
     setMessages(prev => [...prev, { type: 'agent', text: response }]);
     setIsExpanded(true);
-  }, [selectedTicker]); 
+  }, [selectedTicker, graphConnections]);
 
   const handleCommand = (cmd: string) => {
       setMessages(prev => [...prev, { type: 'user', text: cmd }]);
@@ -136,12 +158,10 @@ Market Phase: ${avgEnergy > 25 ? "HIGH VOLATILITY" : "CONSOLIDATION"}`;
 
   return (
     <div className={`agent-terminal ${isExpanded ? 'expanded' : 'collapsed'}`}>
-      
-      {/* HEADER */}
       <div className="terminal-header">
         <div 
           onClick={() => setIsExpanded(!isExpanded)}
-          style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, cursor: 'pointer' }}
         >
           <div style={{ 
             width: '6px', height: '6px', borderRadius: '50%', 
@@ -156,23 +176,16 @@ Market Phase: ${avgEnergy > 25 ? "HIGH VOLATILITY" : "CONSOLIDATION"}`;
             <button 
                 onClick={onOpenArch}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 2 }}
-                onMouseEnter={e => e.currentTarget.style.color = '#fff'}
-                onMouseLeave={e => e.currentTarget.style.color = '#64748b'}
             >
                 <Network size={14} />
             </button>
-            
             <button 
                 onClick={onOpenBio}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 2, marginRight: '8px' }}
-                onMouseEnter={e => e.currentTarget.style.color = '#fff'}
-                onMouseLeave={e => e.currentTarget.style.color = '#64748b'}
             >
                 <User size={14} />
             </button>
-
             <div style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)' }}></div>
-
             <button 
                 onClick={() => setIsExpanded(!isExpanded)}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex' }}
@@ -182,7 +195,6 @@ Market Phase: ${avgEnergy > 25 ? "HIGH VOLATILITY" : "CONSOLIDATION"}`;
         </div>
       </div>
 
-      {/* LOG AREA */}
       {isExpanded && (
         <>
           <div style={{ 
@@ -229,8 +241,6 @@ Market Phase: ${avgEnergy > 25 ? "HIGH VOLATILITY" : "CONSOLIDATION"}`;
                       color: '#94a3b8', fontSize: '0.65rem', padding: '4px 8px', cursor: 'pointer',
                       fontFamily: 'var(--font-mono)'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.borderColor = '#22c55e'}
-                  onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'}
                 >
                     {s}
                 </button>
