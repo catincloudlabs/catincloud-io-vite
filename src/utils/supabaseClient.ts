@@ -10,7 +10,7 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error("⚠️ Supabase Env Variables missing! Check your .env file.");
+  console.error("⚠️ Supabase Env Variables missing!! Check your .env file.");
 }
 
 export const supabase = createClient(
