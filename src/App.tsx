@@ -92,7 +92,7 @@ function App() {
       {/* Header */}
       <Header dateLabel={currentDateLabel} />
 
-      {/* Agent Panel (Now wired with Intelligence) */}
+      {/* Agent Panel */}
       <div className="agent-panel-wrapper">
         <AgentPanel 
           currentFrame={currentFrameData} 
