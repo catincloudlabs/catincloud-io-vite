@@ -7,7 +7,7 @@
   Cross-Origin-Embedder-Policy: unsafe-none
   Cross-Origin-Resource-Policy: same-origin
   X-Permitted-Cross-Domain-Policies: none
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://catincloud.io https://*.catincloud.io; connect-src 'self' https://cloudflareinsights.com https://*.cloudflareinsights.com https://catincloud.io https://*.supabase.co wss://*.supabase.co; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://catincloud.io https://*.catincloud.io https://*.pages.dev; connect-src 'self' https://cloudflareinsights.com https://*.cloudflareinsights.com https://catincloud.io https://*.pages.dev https://*.supabase.co wss://*.supabase.co; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests
   Vary: Accept-Encoding
   Cache-Control: no-cache
 
@@ -24,11 +24,9 @@
 /.well-known/security.txt
   Cache-Control: public, max-age=86400
 
-# DASHBOARD DATA (CRITICAL: Force revalidation)
 /data/*.json
   Cache-Control: no-cache, must-revalidate
 
-# VITE ASSETS (Long Cache)
 /assets/*.js
   Cache-Control: public, max-age=31536000, immutable
   Content-Type: application/javascript; charset=utf-8
