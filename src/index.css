@@ -379,7 +379,6 @@ body {
   top: 70px;
   right: 20px;
   width: 300px;
-  /* Removed height constraint here; handled by child */
   overflow-y: visible; 
   display: flex;
   flex-direction: column;
