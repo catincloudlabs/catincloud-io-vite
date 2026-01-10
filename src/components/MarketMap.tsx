@@ -73,7 +73,7 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
   const sortedNodes = useMemo(() => {
     if (!data?.nodes) return [];
 
-    // <--- NEW: FILTER OUT NOISE
+    // <--- FILTER OUT NOISE
     const cleanNodes = data.nodes.filter(n => {
         // 1. Remove Warrants (e.g., OXY.WS)
         if (n.ticker.includes('.WS')) return false;
