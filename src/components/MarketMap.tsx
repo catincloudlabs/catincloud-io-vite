@@ -29,6 +29,7 @@ interface MarketMapProps {
   data: MarketFrame;
   history?: MarketFrame[];
   onNodeClick?: (node: HydratedNode) => void;
+  onBackgroundClick?: () => void; // <--- NEW PROP
   selectedTicker?: string | null;         
   graphConnections?: GraphConnection[];   
 }
@@ -42,16 +43,15 @@ const INITIAL_VIEW_STATE = {
   maxZoom: 10
 };
 
-export function MarketMap({ data, history, onNodeClick, selectedTicker, graphConnections }: MarketMapProps) {
+export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selectedTicker, graphConnections }: MarketMapProps) {
   
   // --- 1. HEARTBEAT SYSTEM ---
-  // We toggle this boolean every 2 seconds to trigger the GPU transition
   const [pulse, setPulse] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setPulse(p => !p);
-    }, 2000); // 2-second breath cycle (Inhale... Exhale)
+    }, 2000); 
     return () => clearInterval(interval);
   }, []);
 
@@ -69,41 +69,28 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
     };
   }, [data]);
 
-  // --- 3. SORTING & FILTERING (The Cleaner) ---
+  // --- 3. SORTING & FILTERING ---
   const sortedNodes = useMemo(() => {
     if (!data?.nodes) return [];
 
-    // <--- FILTER OUT NOISE
+    // FILTER OUT NOISE (Warrants, Preferreds, Glitches)
     const cleanNodes = data.nodes.filter(n => {
-        // 1. Remove Warrants (e.g., OXY.WS)
         if (n.ticker.includes('.WS')) return false;
-        
-        // 2. Remove Preferreds (e.g., JPMpC - usually denote by lowercase 'p')
-        // Safe because regular tickers are always UPPERCASE
         if (n.ticker.includes('p')) return false;
-        
-        // 3. Remove known Test/Glitch Data
         if (n.ticker === 'XYZ') return false;
-        
-        // 4. Remove generic ADRs (5 letters ending in Y) to reduce duplicates
-        // Exception: Keep major ones like SONY
         if (n.ticker.length === 5 && n.ticker.endsWith('Y') && !['SONY', 'BAYRY'].includes(n.ticker)) return false; 
-        
         return true;
     });
 
     return [...cleanNodes].sort((a, b) => {
-      // Always put Selected ticker on top
       if (a.ticker === selectedTicker) return 1;
       if (b.ticker === selectedTicker) return -1;
       
-      // Then put Connected tickers on top
       const aConn = graphConnections?.some(c => c.target === a.ticker);
       const bConn = graphConnections?.some(c => c.target === b.ticker);
       if (aConn && !bConn) return 1;
       if (!aConn && bConn) return -1;
 
-      // Finally, sort by Energy (High energy on top to show Halos)
       return a.energy - b.energy;
     });
   }, [data, selectedTicker, graphConnections]);
@@ -165,21 +152,17 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
 
   // --- 6. VORONOI LOGIC ---
   const voronoiData = useMemo(() => {
-    // Safety check: Delaunay needs at least 3 points
-    // Use sortedNodes (which are filtered) to ensure Voronoi matches dots
     if (!sortedNodes || sortedNodes.length < 3) return [];
-    
     const points = sortedNodes.map(d => [d.x, d.y] as [number, number]);
     const delaunay = Delaunay.from(points);
     const voronoi = delaunay.voronoi([-400, -400, 400, 400]);
-    
     // @ts-ignore
     const polygons = Array.from(voronoi.cellPolygons());
     return polygons.map((polygon: any, i: number) => ({
       polygon,
       node: sortedNodes[i]
     }));
-  }, [sortedNodes]); // Changed dependency from 'data' to 'sortedNodes'
+  }, [sortedNodes]);
 
   if (!data) return null;
 
@@ -236,87 +219,46 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
     data: sortedNodes,
     getPosition: (d: HydratedNode) => [d.x, d.y],
     radiusUnits: 'common', 
-    
-    // Size is mostly uniform to prevent clutter
     getRadius: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return 5;
         if (graphConnections?.some(c => c.target === d.ticker)) return 3.5;
         return 2.5;
     },
-
     getFillColor: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return [255, 255, 255, 255]; 
         if (graphConnections?.some(c => c.target === d.ticker)) return [255, 215, 0, 255]; 
-
         if (d.sentiment > 0.1) return [0, 255, 100, 255];   
         if (d.sentiment < -0.1) return [255, 50, 50, 255];  
-        
         return [60, 70, 80, 150]; 
     },
-    
     stroked: true,
-    
-    // --- ANIMATED HALOS ---
     getLineWidth: (d: HydratedNode) => {
-        // SELECTED: Always pulses noticeably
-        if (d.ticker === selectedTicker) {
-            return pulse ? 3 : 1; 
-        }
-        
-        // SUPER ENERGY: "Heartbeat" pulse
-        if (d.energy > superEnergyThreshold) {
-            return pulse ? 2 : 0.8; // Expands and contracts
-        } 
-
-        // HIGH ENERGY: Subtle shimmer
-        if (d.energy > highEnergyThreshold) {
-            return pulse ? 1 : 0.5;
-        }  
-        
+        if (d.ticker === selectedTicker) return pulse ? 3 : 1; 
+        if (d.energy > superEnergyThreshold) return pulse ? 2 : 0.8; 
+        if (d.energy > highEnergyThreshold) return pulse ? 1 : 0.5;
         return 0; 
     },
-    
     getLineColor: (d: HydratedNode) => {
-        // SELECTED: Strong White
-        if (d.ticker === selectedTicker) {
-             return pulse ? [255, 255, 255, 150] : [255, 255, 255, 255];
-        }
-
-        // SUPER ENERGY: Glassy White -> Faint White
-        if (d.energy > superEnergyThreshold) {
-            return pulse ? [255, 255, 255, 100] : [255, 255, 255, 200]; 
-        }
-
-        // HIGH ENERGY: Very faint
-        if (d.energy > highEnergyThreshold) {
-            return pulse ? [255, 255, 255, 50] : [255, 255, 255, 100];  
-        }
-        
+        if (d.ticker === selectedTicker) return pulse ? [255, 255, 255, 150] : [255, 255, 255, 255];
+        if (d.energy > superEnergyThreshold) return pulse ? [255, 255, 255, 100] : [255, 255, 255, 200]; 
+        if (d.energy > highEnergyThreshold) return pulse ? [255, 255, 255, 50] : [255, 255, 255, 100];  
         return [0, 0, 0, 0];
     },
-
     lineWidthUnits: 'common',
     pickable: true,
     autoHighlight: true,
     highlightColor: [255, 255, 255, 100],
-    
-    // --- CRITICAL: GPU ANIMATION SETTINGS ---
     transitions: {
-        getLineWidth: 2000, // 2 seconds to morph width
-        getLineColor: 2000, // 2 seconds to morph color
+        getLineWidth: 2000,
+        getLineColor: 2000,
     },
-    
-    // Tell Deck.GL to recalculate these accessors when 'pulse' changes
     updateTriggers: {
         getRadius: [selectedTicker, graphConnections],
         getFillColor: [selectedTicker, graphConnections],
         getLineWidth: [maxEnergy, pulse, selectedTicker], 
         getLineColor: [maxEnergy, pulse, selectedTicker] 
     },
-
-    onClick: (info: any) => {
-      if (info.object && onNodeClick) onNodeClick(info.object);
-    }
+    // <--- REMOVED onClick HERE. Delegated to parent DeckGL.
   });
 
   return (
@@ -326,6 +268,18 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
       controller={true}
       layers={[cellLayer, trailLayer, synapseLayer, dotLayer]} 
       style={{ backgroundColor: '#020617' }}
+      
+      // <--- NEW: TOP LEVEL CLICK HANDLER
+      onClick={(info: any) => {
+         if (info.object) {
+            // User clicked a NODE (dotLayer)
+            if (onNodeClick) onNodeClick(info.object);
+         } else {
+            // User clicked EMPTY SPACE
+            if (onBackgroundClick) onBackgroundClick();
+         }
+      }}
+      
       // @ts-ignore
       getTooltip={({object}) => object && object.ticker && {
         html: `

@@ -93,6 +93,7 @@ function App() {
         data={{ date: currentDateLabel, nodes: displayNodes }} 
         history={frames || []}
         onNodeClick={(node) => setSelectedTicker(node.ticker)}
+        onBackgroundClick={() => setSelectedTicker(null)}
         selectedTicker={selectedTicker}      
         graphConnections={connections}       
       />
