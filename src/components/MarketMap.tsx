@@ -9,7 +9,6 @@ import { OrthographicView } from '@deck.gl/core';
 import { Delaunay } from 'd3-delaunay';
 import { GraphConnection } from '../hooks/useKnowledgeGraph'; 
 
-// ... [Keep Types] ...
 export type HydratedNode = {
   ticker: string;
   x: number;
@@ -34,7 +33,6 @@ interface MarketMapProps {
   graphConnections?: GraphConnection[];   
 }
 
-// --- RESPONSIVE CONFIG ---
 const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
 const INITIAL_VIEW_STATE = {
@@ -46,20 +44,55 @@ const INITIAL_VIEW_STATE = {
 
 export function MarketMap({ data, history, onNodeClick, selectedTicker, graphConnections }: MarketMapProps) {
   
-  // ... [Keep trailData logic] ...
+  // --- 1. SORTING (Visual Cleansing) ---
+  // Ensure "boring" nodes are drawn first (background), and "active" nodes last (foreground).
+  const sortedNodes = useMemo(() => {
+    if (!data?.nodes) return [];
+    return [...data.nodes].sort((a, b) => {
+      // 1. Selected always on top
+      if (a.ticker === selectedTicker) return 1;
+      if (b.ticker === selectedTicker) return -1;
+      
+      // 2. Connected nodes next on top
+      const aConn = graphConnections?.some(c => c.target === a.ticker);
+      const bConn = graphConnections?.some(c => c.target === b.ticker);
+      if (aConn && !bConn) return 1;
+      if (!aConn && bConn) return -1;
+
+      // 3. High Energy / Sentiment on top of low energy
+      const aScore = a.energy + Math.abs(a.sentiment * 5);
+      const bScore = b.energy + Math.abs(b.sentiment * 5);
+      return aScore - bScore;
+    });
+  }, [data, selectedTicker, graphConnections]);
+
+  // --- 2. TRAIL LOGIC (10 Day Lookback) ---
   const trailData = useMemo(() => {
     if (!history || !data) return [];
+    
     const currentIndex = history.findIndex(f => f.date === data.date);
     if (currentIndex <= 0) return [];
 
-    const lookback = Math.max(0, currentIndex - 5);
+    const LOOKBACK_FRAMES = 10; 
+    const lookback = Math.max(0, currentIndex - LOOKBACK_FRAMES);
     const recentHistory = history.slice(lookback, currentIndex + 1);
+
+    const TRAIL_ENERGY_THRESHOLD = 0.8; 
+
+    const activeTickers = new Set(
+      data.nodes
+        .filter(n => n.energy > TRAIL_ENERGY_THRESHOLD || n.ticker === selectedTicker) 
+        .map(n => n.ticker)
+    );
+
     const pathsByTicker: Record<string, number[][]> = {};
     
     recentHistory.forEach(frame => {
       frame.nodes.forEach(node => {
-        if (!pathsByTicker[node.ticker]) pathsByTicker[node.ticker] = [];
-        pathsByTicker[node.ticker].push([node.x, node.y]);
+        if (activeTickers.has(node.ticker)) {
+          if (!pathsByTicker[node.ticker]) pathsByTicker[node.ticker] = [];
+          pathsByTicker[node.ticker].push([node.x, node.y]);
+        }
       });
     });
 
@@ -69,9 +102,9 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
       sentiment: data.nodes.find(n => n.ticker === ticker)?.sentiment || 0
     }));
 
-  }, [data, history]); 
+  }, [data, history, selectedTicker]); 
 
-  // ... [Keep synapseData logic] ...
+  // --- 3. SYNAPSE LOGIC ---
   const synapseData = useMemo(() => {
     if (!selectedTicker || !graphConnections || !data) return [];
 
@@ -90,8 +123,7 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
 
   }, [selectedTicker, graphConnections, data]);
 
-
-  // ... [Keep voronoiData logic] ...
+  // --- 4. VORONOI LOGIC ---
   const voronoiData = useMemo(() => {
     if (!data?.nodes || data.nodes.length < 3) return [];
     const points = data.nodes.map(d => [d.x, d.y] as [number, number]);
@@ -107,19 +139,19 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
 
   if (!data) return null;
 
-  // ... [Keep Layers] ...
+  // --- LAYERS ---
   const cellLayer = new PolygonLayer({
     id: 'voronoi-cells',
     data: voronoiData,
     getPolygon: (d: any) => d.polygon,
     getFillColor: (d: any) => {
       const s = d.node.sentiment;
-      if (s > 0.1) return [0, 255, 100, 10];   
-      if (s < -0.1) return [255, 50, 50, 10];  
+      if (s > 0.1) return [0, 255, 100, 5];   
+      if (s < -0.1) return [255, 50, 50, 5];  
       return [0, 0, 0, 0]; 
     },
     stroked: true,
-    getLineColor: [255, 255, 255, 5], 
+    getLineColor: [255, 255, 255, 3],
     getLineWidth: 0.5,
     lineWidthUnits: 'pixels',
     pickable: false 
@@ -146,32 +178,39 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
     data: synapseData,
     getSourcePosition: (d: any) => d.from,
     getTargetPosition: (d: any) => d.to,
-    getColor: [255, 215, 0, 200], // Gold
+    getColor: [255, 215, 0, 200],
     getWidth: (d: any) => Math.max(1, d.strength * 0.5), 
     widthUnits: 'pixels'
   });
 
   const dotLayer = new ScatterplotLayer({
     id: 'market-particles',
-    data: data.nodes,
+    data: sortedNodes, // <--- CHANGED FROM data.nodes TO sortedNodes
     getPosition: (d: HydratedNode) => [d.x, d.y],
     radiusUnits: 'common', 
+    
     getRadius: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return 4; 
-        const isConnected = graphConnections?.some(c => c.target === d.ticker);
-        if (isConnected) return 3; 
-        return 1.5 + (d.energy || 0) / 20; 
+        if (graphConnections?.some(c => c.target === d.ticker)) return 3; 
+        
+        const isActive = d.energy > 0.5 || Math.abs(d.sentiment) > 0.1;
+        if (isActive) return 1.5 + (d.energy / 10);
+
+        return 0.8; 
     },
+
     getFillColor: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return [255, 255, 255, 255]; 
         if (graphConnections?.some(c => c.target === d.ticker)) return [255, 215, 0, 255]; 
 
         if (d.sentiment > 0.1) return [0, 255, 100, 255];   
         if (d.sentiment < -0.1) return [255, 50, 50, 255];  
-        return [200, 200, 200, 150]; 
+        
+        // <--- COLOR TWEAK: Darker Slate instead of bright white fog
+        return [60, 70, 80, 40]; 
     },
     stroked: true,
-    getLineColor: [0, 0, 0, 200], 
+    getLineColor: [0, 0, 0, 100], 
     getLineWidth: 0.5, 
     lineWidthUnits: 'common',
     pickable: true,
