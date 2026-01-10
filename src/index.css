@@ -379,7 +379,7 @@ body {
   top: 70px;
   right: 20px;
   width: 300px;
-  overflow-y: visible; 
+  overflow-y: visible;
   display: flex;
   flex-direction: column;
   z-index: 1000;
@@ -462,13 +462,13 @@ body {
   transition: all 0.3s ease;
 }
 
-/* CUSTOM RANGE SLIDER (Touch Friendly) */
+/* CUSTOM RANGE SLIDER (Touch Friendly - Sized Down) */
 input[type=range] {
   -webkit-appearance: none; 
-  appearance: none; /* Fixed: Added standard property */
+  appearance: none;
   width: 100%;
   background: transparent;
-  height: 40px; /* Big touch target height */
+  height: 30px; /* Reduced from 40px */
   margin: 0;
   cursor: pointer;
 }
@@ -488,14 +488,14 @@ input[type=range]::-webkit-slider-runnable-track {
 
 /* Thumb */
 input[type=range]::-webkit-slider-thumb {
-  height: 28px; /* Large visual thumb */
-  width: 28px;
+  height: 24px; /* Reduced from 28px */
+  width: 24px;
   border-radius: 50%;
   background: var(--accent-green);
   cursor: pointer;
   -webkit-appearance: none;
-  margin-top: -12px; /* Center on track */
-  box-shadow: 0 0 15px rgba(34, 197, 94, 0.5);
+  margin-top: -10px; /* Center (half thumb - half track) */
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
   border: 2px solid #fff; 
 }
 
@@ -509,18 +509,18 @@ input[type=range]::-moz-range-track {
 }
 
 input[type=range]::-moz-range-thumb {
-  height: 28px;
-  width: 28px;
+  height: 24px;
+  width: 24px;
   border: 2px solid #fff;
   border-radius: 50%;
   background: var(--accent-green);
   cursor: pointer;
-  box-shadow: 0 0 15px rgba(34, 197, 94, 0.5);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
 }
 
 .timeline-slider-container div {
   font-size: 0.7rem;
-  margin-top: 0; /* Tighten up spacing */
+  margin-top: 0; 
   opacity: 0.7;
   font-weight: 500;
   letter-spacing: 0.05em;
@@ -533,16 +533,16 @@ input[type=range]::-moz-range-thumb {
   .chrono-value { font-size: 1.1rem; }
   .desktop-only { display: none; }
   
-  /* MOBILE FIX: Anchor to BOTTOM to avoid top-notch/browser bar issues */
+  /* MOBILE FIX: Anchor Agent Panel higher to clear slider */
   .agent-panel-wrapper {
     top: auto; 
-    bottom: 100px;
+    bottom: 130px; /* Increased separation */
     left: 12px;
     right: 12px;
     width: auto;
   }
   
-  /* MOBILE HEIGHTS: Grow upwards to 75% screen (Less blank space at top) */
+  /* MOBILE HEIGHTS */
   .agent-terminal.expanded {
     height: 75vh; 
   }
