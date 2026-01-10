@@ -78,7 +78,6 @@ function App() {
   );
 
   return (
-    // UPDATED: height: '100dvh' fixes the mobile browser bar issue
     <div style={{ width: '100vw', height: '100dvh', position: 'relative', overflow: 'hidden', background: '#020617' }}>
       
       {/* 4. Map Layer */}
@@ -99,7 +98,6 @@ function App() {
           currentFrame={currentFrameData} 
           history={frames || []}
           selectedTicker={selectedTicker}
-          // FIX: Pass the missing props here
           onOpenArch={() => setArchOpen(true)}
           onOpenBio={() => setBioOpen(true)}
         />
