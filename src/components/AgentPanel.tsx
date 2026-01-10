@@ -64,22 +64,29 @@ export function AgentPanel({ currentFrame, history, selectedTicker, graphConnect
 
     const velocity = Math.sqrt(node.vx**2 + node.vy**2).toFixed(1);
     
-    // 2. Relative Physics (Sector Alpha)
+    // 2. Relative Physics (Sector Alpha) with FALLBACK
     let sectorContext = "";
     const sectorTicker = SECTOR_MAP[ticker];
-    if (sectorTicker) {
-        const sectorNode = currentFrame.nodes.find(n => n.ticker === sectorTicker);
-        if (sectorNode) {
-             const stockVel = Math.sqrt(node.vx**2 + node.vy**2);
-             const sectorVel = Math.sqrt(sectorNode.vx**2 + sectorNode.vy**2);
-             const alpha = stockVel - sectorVel;
-             
-             const sectorName = SECTOR_NAMES[sectorTicker] || sectorTicker;
-             
-             if (alpha > 2.0) sectorContext = `\n• Alpha:  High Rel. Vel vs ${sectorName} (+${alpha.toFixed(1)})`;
-             else if (alpha < -2.0) sectorContext = `\n• Alpha:  Lagging ${sectorName} (${alpha.toFixed(1)})`;
-             else sectorContext = `\n• Alpha:  Correlated with ${sectorName}`;
-        }
+    
+    // Fallback: If no specific sector mapping exists, default to SPY
+    const benchmarkTicker = sectorTicker || 'SPY';
+    
+    // Find the benchmark node. 
+    // Priority 1: The specific sector (e.g. SMH)
+    // Priority 2: SPY (if SMH is missing from this frame)
+    const sectorNode = currentFrame.nodes.find(n => n.ticker === benchmarkTicker) 
+                    || currentFrame.nodes.find(n => n.ticker === 'SPY');
+
+    if (sectorNode && sectorNode.ticker !== ticker) {
+         const stockVel = Math.sqrt(node.vx**2 + node.vy**2);
+         const sectorVel = Math.sqrt(sectorNode.vx**2 + sectorNode.vy**2);
+         const alpha = stockVel - sectorVel;
+         
+         const benchmarkName = SECTOR_NAMES[sectorNode.ticker] || sectorNode.ticker;
+         
+         if (alpha > 2.0) sectorContext = `\n• Alpha:  High Rel. Vel vs ${benchmarkName} (+${alpha.toFixed(1)})`;
+         else if (alpha < -2.0) sectorContext = `\n• Alpha:  Lagging ${benchmarkName} (${alpha.toFixed(1)})`;
+         else sectorContext = `\n• Alpha:  Correlated with ${benchmarkName}`;
     }
 
     // 3. Intelligence Data
