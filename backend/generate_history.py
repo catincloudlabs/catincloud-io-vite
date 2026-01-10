@@ -196,12 +196,12 @@ if __name__ == "__main__":
         if prev_matrix is not None:
             embeddings_stabilized = align_to_reference(
                 source_matrix=prev_matrix, 
-                target_matrix=embeddings_scaled, # Use the scaled version
+                target_matrix=embeddings_scaled,
                 source_tickers=prev_tickers, 
                 target_tickers=current_tickers
             )
         else:
-            embeddings_stabilized = embeddings_scaled # Use the scaled version
+            embeddings_stabilized = embeddings_scaled
             
         # 4. Save
         for i, row in df.iterrows():
