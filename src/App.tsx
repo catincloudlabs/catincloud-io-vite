@@ -19,7 +19,8 @@ function App() {
   const [isArchOpen, setArchOpen] = useState(false);
   const [isBioOpen, setBioOpen] = useState(false);
 
-  const { connections } = useKnowledgeGraph(selectedTicker);
+  // The brain hook
+  const { connections, loading } = useKnowledgeGraph(selectedTicker);
 
   useEffect(() => {
     setError(null);
@@ -34,7 +35,15 @@ function App() {
         if (!jsonPayload?.data) throw new Error("JSON missing 'data' field");
         // @ts-ignore
         const hydratedFrames = hydrateMarketData(jsonPayload.data);
+        
+        // 1. Set Data
         setFrames(hydratedFrames);
+        
+        // 2. Set Default Time to "NOW" (The end of the dataset)
+        // This ensures the recruiter sees the latest state immediately.
+        if (hydratedFrames.length > 0) {
+            setTimelineProgress(hydratedFrames.length - 1);
+        }
       })
       .catch((err) => {
         console.error("Critical Data Error:", err);
@@ -88,15 +97,17 @@ function App() {
         graphConnections={connections}       
       />
 
-      {/* Header (Purely Visual) */}
+      {/* Header */}
       <Header dateLabel={currentDateLabel} />
 
-      {/* Agent Panel (With System Controls) */}
+      {/* Agent Panel */}
       <div className="agent-panel-wrapper">
         <AgentPanel 
           currentFrame={currentFrameData} 
           history={frames || []}
           selectedTicker={selectedTicker}
+          graphConnections={connections}
+          isLoading={loading}
           onOpenArch={() => setArchOpen(true)}
           onOpenBio={() => setBioOpen(true)}
         />
@@ -120,7 +131,6 @@ function App() {
         </div>
       </div>
 
-      {/* Render Modals at Root Level */}
       <ArchitectureModal isOpen={isArchOpen} onClose={() => setArchOpen(false)} />
       <BioModal isOpen={isBioOpen} onClose={() => setBioOpen(false)} />
     </div>

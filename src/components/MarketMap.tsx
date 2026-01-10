@@ -1,5 +1,5 @@
 // @ts-ignore
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 // @ts-ignore
 import DeckGL from '@deck.gl/react';
 // @ts-ignore
@@ -44,29 +44,71 @@ const INITIAL_VIEW_STATE = {
 
 export function MarketMap({ data, history, onNodeClick, selectedTicker, graphConnections }: MarketMapProps) {
   
-  // --- 1. SORTING (Visual Cleansing) ---
-  // Ensure "boring" nodes are drawn first (background), and "active" nodes last (foreground).
+  // --- 1. HEARTBEAT SYSTEM ---
+  // We toggle this boolean every 2 seconds to trigger the GPU transition
+  const [pulse, setPulse] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPulse(p => !p);
+    }, 2000); // 2-second breath cycle (Inhale... Exhale)
+    return () => clearInterval(interval);
+  }, []);
+
+  // --- 2. METRICS ---
+  const { maxEnergy, highEnergyThreshold, superEnergyThreshold } = useMemo(() => {
+    if (!data?.nodes || data.nodes.length === 0) return { maxEnergy: 0, highEnergyThreshold: 0, superEnergyThreshold: 0 };
+    
+    const energies = data.nodes.map(n => n.energy);
+    const max = Math.max(...energies);
+    
+    return { 
+        maxEnergy: max, 
+        highEnergyThreshold: max * 0.5, 
+        superEnergyThreshold: max * 0.8 
+    };
+  }, [data]);
+
+  // --- 3. SORTING & FILTERING (The Cleaner) ---
   const sortedNodes = useMemo(() => {
     if (!data?.nodes) return [];
-    return [...data.nodes].sort((a, b) => {
-      // 1. Selected always on top
+
+    // <--- FILTER OUT NOISE
+    const cleanNodes = data.nodes.filter(n => {
+        // 1. Remove Warrants (e.g., OXY.WS)
+        if (n.ticker.includes('.WS')) return false;
+        
+        // 2. Remove Preferreds (e.g., JPMpC - usually denote by lowercase 'p')
+        // Safe because regular tickers are always UPPERCASE
+        if (n.ticker.includes('p')) return false;
+        
+        // 3. Remove known Test/Glitch Data
+        if (n.ticker === 'XYZ') return false;
+        
+        // 4. Remove generic ADRs (5 letters ending in Y) to reduce duplicates
+        // Exception: Keep major ones like SONY
+        if (n.ticker.length === 5 && n.ticker.endsWith('Y') && !['SONY', 'BAYRY'].includes(n.ticker)) return false; 
+        
+        return true;
+    });
+
+    return [...cleanNodes].sort((a, b) => {
+      // Always put Selected ticker on top
       if (a.ticker === selectedTicker) return 1;
       if (b.ticker === selectedTicker) return -1;
       
-      // 2. Connected nodes next on top
+      // Then put Connected tickers on top
       const aConn = graphConnections?.some(c => c.target === a.ticker);
       const bConn = graphConnections?.some(c => c.target === b.ticker);
       if (aConn && !bConn) return 1;
       if (!aConn && bConn) return -1;
 
-      // 3. High Energy / Sentiment on top of low energy
-      const aScore = a.energy + Math.abs(a.sentiment * 5);
-      const bScore = b.energy + Math.abs(b.sentiment * 5);
-      return aScore - bScore;
+      // Finally, sort by Energy (High energy on top to show Halos)
+      return a.energy - b.energy;
     });
   }, [data, selectedTicker, graphConnections]);
 
-  // --- 2. TRAIL LOGIC (10 Day Lookback) ---
+  // --- 4. TRAIL LOGIC ---
   const trailData = useMemo(() => {
     if (!history || !data) return [];
     
@@ -77,11 +119,9 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
     const lookback = Math.max(0, currentIndex - LOOKBACK_FRAMES);
     const recentHistory = history.slice(lookback, currentIndex + 1);
 
-    const TRAIL_ENERGY_THRESHOLD = 0.8; 
-
     const activeTickers = new Set(
       data.nodes
-        .filter(n => n.energy > TRAIL_ENERGY_THRESHOLD || n.ticker === selectedTicker) 
+        .filter(n => n.energy > highEnergyThreshold || n.ticker === selectedTicker) 
         .map(n => n.ticker)
     );
 
@@ -102,9 +142,9 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
       sentiment: data.nodes.find(n => n.ticker === ticker)?.sentiment || 0
     }));
 
-  }, [data, history, selectedTicker]); 
+  }, [data, history, selectedTicker, highEnergyThreshold]); 
 
-  // --- 3. SYNAPSE LOGIC ---
+  // --- 5. SYNAPSE LOGIC ---
   const synapseData = useMemo(() => {
     if (!selectedTicker || !graphConnections || !data) return [];
 
@@ -123,19 +163,23 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
 
   }, [selectedTicker, graphConnections, data]);
 
-  // --- 4. VORONOI LOGIC ---
+  // --- 6. VORONOI LOGIC ---
   const voronoiData = useMemo(() => {
-    if (!data?.nodes || data.nodes.length < 3) return [];
-    const points = data.nodes.map(d => [d.x, d.y] as [number, number]);
+    // Safety check: Delaunay needs at least 3 points
+    // Use sortedNodes (which are filtered) to ensure Voronoi matches dots
+    if (!sortedNodes || sortedNodes.length < 3) return [];
+    
+    const points = sortedNodes.map(d => [d.x, d.y] as [number, number]);
     const delaunay = Delaunay.from(points);
     const voronoi = delaunay.voronoi([-400, -400, 400, 400]);
+    
     // @ts-ignore
     const polygons = Array.from(voronoi.cellPolygons());
     return polygons.map((polygon: any, i: number) => ({
       polygon,
-      node: data.nodes[i]
+      node: sortedNodes[i]
     }));
-  }, [data]);
+  }, [sortedNodes]); // Changed dependency from 'data' to 'sortedNodes'
 
   if (!data) return null;
 
@@ -178,25 +222,26 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
     data: synapseData,
     getSourcePosition: (d: any) => d.from,
     getTargetPosition: (d: any) => d.to,
-    getColor: [255, 215, 0, 200],
-    getWidth: (d: any) => Math.max(1, d.strength * 0.5), 
-    widthUnits: 'pixels'
+    getColor: [255, 215, 0, 255], 
+    getWidth: (d: any) => Math.max(2, d.strength * 0.8), 
+    widthUnits: 'pixels',
+    updateTriggers: {
+        getWidth: [graphConnections],
+        getColor: [graphConnections]
+    }
   });
 
   const dotLayer = new ScatterplotLayer({
     id: 'market-particles',
-    data: sortedNodes, // <--- CHANGED FROM data.nodes TO sortedNodes
+    data: sortedNodes,
     getPosition: (d: HydratedNode) => [d.x, d.y],
     radiusUnits: 'common', 
     
+    // Size is mostly uniform to prevent clutter
     getRadius: (d: HydratedNode) => {
-        if (d.ticker === selectedTicker) return 4; 
-        if (graphConnections?.some(c => c.target === d.ticker)) return 3; 
-        
-        const isActive = d.energy > 0.5 || Math.abs(d.sentiment) > 0.1;
-        if (isActive) return 1.5 + (d.energy / 10);
-
-        return 0.8; 
+        if (d.ticker === selectedTicker) return 5;
+        if (graphConnections?.some(c => c.target === d.ticker)) return 3.5;
+        return 2.5;
     },
 
     getFillColor: (d: HydratedNode) => {
@@ -206,22 +251,71 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
         if (d.sentiment > 0.1) return [0, 255, 100, 255];   
         if (d.sentiment < -0.1) return [255, 50, 50, 255];  
         
-        // <--- COLOR TWEAK: Darker Slate instead of bright white fog
-        return [60, 70, 80, 40]; 
+        return [60, 70, 80, 150]; 
     },
+    
     stroked: true,
-    getLineColor: [0, 0, 0, 100], 
-    getLineWidth: 0.5, 
+    
+    // --- ANIMATED HALOS ---
+    getLineWidth: (d: HydratedNode) => {
+        // SELECTED: Always pulses noticeably
+        if (d.ticker === selectedTicker) {
+            return pulse ? 3 : 1; 
+        }
+        
+        // SUPER ENERGY: "Heartbeat" pulse
+        if (d.energy > superEnergyThreshold) {
+            return pulse ? 2 : 0.8; // Expands and contracts
+        } 
+
+        // HIGH ENERGY: Subtle shimmer
+        if (d.energy > highEnergyThreshold) {
+            return pulse ? 1 : 0.5;
+        }  
+        
+        return 0; 
+    },
+    
+    getLineColor: (d: HydratedNode) => {
+        // SELECTED: Strong White
+        if (d.ticker === selectedTicker) {
+             return pulse ? [255, 255, 255, 150] : [255, 255, 255, 255];
+        }
+
+        // SUPER ENERGY: Glassy White -> Faint White
+        if (d.energy > superEnergyThreshold) {
+            return pulse ? [255, 255, 255, 100] : [255, 255, 255, 200]; 
+        }
+
+        // HIGH ENERGY: Very faint
+        if (d.energy > highEnergyThreshold) {
+            return pulse ? [255, 255, 255, 50] : [255, 255, 255, 100];  
+        }
+        
+        return [0, 0, 0, 0];
+    },
+
     lineWidthUnits: 'common',
     pickable: true,
     autoHighlight: true,
     highlightColor: [255, 255, 255, 100],
-    onClick: (info: any) => {
-      if (info.object && onNodeClick) onNodeClick(info.object);
+    
+    // --- CRITICAL: GPU ANIMATION SETTINGS ---
+    transitions: {
+        getLineWidth: 2000, // 2 seconds to morph width
+        getLineColor: 2000, // 2 seconds to morph color
     },
+    
+    // Tell Deck.GL to recalculate these accessors when 'pulse' changes
     updateTriggers: {
         getRadius: [selectedTicker, graphConnections],
-        getFillColor: [selectedTicker, graphConnections]
+        getFillColor: [selectedTicker, graphConnections],
+        getLineWidth: [maxEnergy, pulse, selectedTicker], 
+        getLineColor: [maxEnergy, pulse, selectedTicker] 
+    },
+
+    onClick: (info: any) => {
+      if (info.object && onNodeClick) onNodeClick(info.object);
     }
   });
 
@@ -236,7 +330,11 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
       getTooltip={({object}) => object && object.ticker && {
         html: `
           <div style="padding: 12px; background: rgba(10,10,10,0.95); color: white; border: 1px solid #444; border-radius: 8px; font-family: 'Inter', sans-serif;">
-            <strong>${object.ticker}</strong>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <strong>$${object.ticker}</strong>
+              <span style="font-size:0.7em; opacity:0.7;">VOL: ${object.energy.toFixed(0)}</span>
+            </div>
+            <div style="font-size:0.8em; opacity:0.8;">${object.headline || "No headline"}</div>
           </div>
         `
       }}
