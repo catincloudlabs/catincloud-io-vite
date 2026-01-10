@@ -20,7 +20,7 @@ function App() {
   const [isBioOpen, setBioOpen] = useState(false);
 
   // The brain hook
-  const { connections } = useKnowledgeGraph(selectedTicker);
+  const { connections, loading } = useKnowledgeGraph(selectedTicker);
 
   useEffect(() => {
     setError(null);
@@ -98,7 +98,8 @@ function App() {
           currentFrame={currentFrameData} 
           history={frames || []}
           selectedTicker={selectedTicker}
-          graphConnections={connections} // <--- WIRED HERE
+          graphConnections={connections}
+          isLoading={loading}
           onOpenArch={() => setArchOpen(true)}
           onOpenBio={() => setBioOpen(true)}
         />

@@ -2,18 +2,19 @@ import { useState, useEffect, useRef } from 'react';
 import { MarketFrame } from '../App';
 import { GraphConnection } from '../hooks/useKnowledgeGraph';
 // @ts-ignore
-import { Network, User, Minus, Plus } from 'lucide-react';
+import { Network, User, Minus, Plus, Loader2 } from 'lucide-react';
 
 interface AgentPanelProps {
   currentFrame: MarketFrame | null;
   history?: MarketFrame[];
   selectedTicker: string | null;
-  graphConnections?: GraphConnection[]; 
+  graphConnections?: GraphConnection[];
+  isLoading?: boolean; // <--- NEW PROP
   onOpenArch: () => void;
   onOpenBio: () => void;
 }
 
-export function AgentPanel({ currentFrame, history, selectedTicker, graphConnections, onOpenArch, onOpenBio }: AgentPanelProps) {
+export function AgentPanel({ currentFrame, history, selectedTicker, graphConnections, isLoading, onOpenArch, onOpenBio }: AgentPanelProps) {
   const [isExpanded, setIsExpanded] = useState(() => {
     return typeof window !== 'undefined' && window.innerWidth > 768;
   });
@@ -31,6 +32,8 @@ export function AgentPanel({ currentFrame, history, selectedTicker, graphConnect
   
   const [inputValue, setInputValue] = useState("");
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const lastTickerRef = useRef<string | null>(null); // Prevents double-firing
+
   const suggestions = ["PHYSICS", "LEGEND", "STRATEGY"];
 
   useEffect(() => {
@@ -39,110 +42,104 @@ export function AgentPanel({ currentFrame, history, selectedTicker, graphConnect
     }
   }, [messages, isExpanded]);
 
-  const generateResponse = (query: string) => {
-    const q = query.toUpperCase();
-
-    if (q.includes("PHYSICS")) {
-      return `PHYSICS ENGINE DOCS:
-• ENERGY (Size): Volume/Liquidity.
-• VELOCITY (Speed): Price Momentum.
-• POSITION (X/Y): Sector correlation.`;
-    }
-
-    if (q.includes("LEGEND")) {
-      return `VISUAL DECODER:
-🟢 GREEN: Positive Sentiment
-🔴 RED: Negative Sentiment
-🟡 GOLD: Knowledge Graph Link`;
-    }
-
-    if (q.includes("STRATEGY")) {
-      return `TACTICAL GUIDE:
-1. MOMENTUM: Watch high velocity nodes.
-2. CATALYSTS: High Energy pulls mass.
-3. DIVERGENCE: Watch cluster breakouts.`;
-    }
-
+  // --- REPORT GENERATOR ---
+  const generateResponse = (ticker: string) => {
     if (!currentFrame) return "System initializing...";
 
-    const words = q.split(' ');
-    const foundTicker = words.find(word => 
-      currentFrame.nodes.some(n => n.ticker === word || n.ticker === word.replace('$', ''))
-    );
+    const node = currentFrame.nodes.find(n => n.ticker === ticker);
+    if (!node) return `ERR: No physics data for ${ticker}.`;
 
-    if (foundTicker) {
-      const ticker = foundTicker.replace('$', '');
-      const node = currentFrame.nodes.find(n => n.ticker === ticker);
-      
-      if (!node) return `ERR: Data for ${ticker} incomplete.`;
-
-      // 1. Physics Data
-      let trend = "STABLE";
-      if (history && history.length > 5) {
-        const pastFrame = history[Math.max(0, history.indexOf(currentFrame) - 5)];
-        const pastNode = pastFrame?.nodes.find(n => n.ticker === ticker);
-        if (pastNode) {
-            const energyDelta = node.energy - pastNode.energy;
-            if (energyDelta > 5) trend = "ACCELERATING";
-            else if (energyDelta < -5) trend = "DECELERATING";
-        }
+    // 1. Physics Data
+    let trend = "STABLE";
+    if (history && history.length > 5) {
+      const pastFrame = history[Math.max(0, history.indexOf(currentFrame) - 5)];
+      const pastNode = pastFrame?.nodes.find(n => n.ticker === ticker);
+      if (pastNode) {
+          const energyDelta = node.energy - pastNode.energy;
+          if (energyDelta > 5) trend = "ACCELERATING";
+          else if (energyDelta < -5) trend = "DECELERATING";
       }
+    }
 
-      const velocity = Math.sqrt(node.vx**2 + node.vy**2).toFixed(1);
-      const sentiment = node.sentiment > 0.1 ? "POS" : node.sentiment < -0.1 ? "NEG" : "NEU";
-      
-      // 2. Intelligence Data (Knowledge Graph)
-      let intelligenceReport = "";
-      if (graphConnections && graphConnections.length > 0) {
-        const peers = graphConnections.map(c => c.target).join(', ');
-        const topNarrative = graphConnections[0]?.articles[0] 
-          ? `"${graphConnections[0].articles[0]}"` 
-          : "Sector Correlation";
+    const velocity = Math.sqrt(node.vx**2 + node.vy**2).toFixed(1);
+    const sentiment = node.sentiment > 0.1 ? "POS" : node.sentiment < -0.1 ? "NEG" : "NEU";
+    
+    // 2. Intelligence Data
+    let intelligenceReport = "";
+    if (graphConnections && graphConnections.length > 0) {
+      const peers = graphConnections.map(c => c.target).join(', ');
+      const topNarrative = graphConnections[0]?.articles[0] 
+        ? `"${graphConnections[0].articles[0]}"` 
+        : "Sector Correlation";
 
-        intelligenceReport = `
+      intelligenceReport = `
 -----------------------
 NETWORK INTEL:
 • Links: ${graphConnections.length} Active Nodes
 • Cluster: [${peers}]
 • Driver: ${topNarrative}`;
-      } else {
-        intelligenceReport = `
+    } else {
+      intelligenceReport = `
 -----------------------
 NETWORK INTEL:
 • No significant correlation detected.
 • Idiosyncratic movement.`;
-      }
+    }
 
-      return `TARGET: ${ticker}
+    return `TARGET: ${ticker}
 Status: ${sentiment} (${node.sentiment.toFixed(2)})
 Trend:  ${trend}
 Energy: ${node.energy.toFixed(0)}
 Vel:    ${velocity}${intelligenceReport}`;
-    }
-
-    if (q.includes('MARKET') || q.includes('TREND') || q.includes('SCAN')) {
-       const avgEnergy = currentFrame.nodes.reduce((a,b) => a + b.energy, 0) / currentFrame.nodes.length;
-       return `SCAN: ${currentFrame.date}
-Energy: ${avgEnergy.toFixed(1)} / 100
-Nodes:  ${currentFrame.nodes.length}
-
-Market Phase: ${avgEnergy > 25 ? "HIGH VOLATILITY" : "CONSOLIDATION"}`;
-    }
-
-    return "Unknown command. Try 'PHYSICS', 'LEGEND', or input a ticker symbol.";
   };
 
+  // --- SMART EFFECT: Handles "Loading" state to prevent double-speak ---
   useEffect(() => {
     if (!selectedTicker) return;
+
+    // 1. If we are still loading, do nothing (wait for data)
+    if (isLoading) return;
+
+    // 2. If we already spoke about this ticker *with this data*, stop.
+    // (This simple check prevents the double-fire on strict mode re-renders)
+    if (lastTickerRef.current === selectedTicker) {
+        // Optional: We could check if connections changed significantly, but usually
+        // we just want to speak once per selection.
+        // For now, we allow re-speaking only if the user clicks a DIFFERENT ticker.
+        return; 
+    }
+
+    // 3. Generate and Send
     const response = generateResponse(selectedTicker);
     setMessages(prev => [...prev, { type: 'agent', text: response }]);
     setIsExpanded(true);
-  }, [selectedTicker, graphConnections]);
+    
+    // 4. Mark as spoken
+    lastTickerRef.current = selectedTicker;
 
+  }, [selectedTicker, graphConnections, isLoading]); 
+
+  // Reset ref when selectedTicker is nulled or changed explicitly by user click
+  useEffect(() => {
+     if (selectedTicker && selectedTicker !== lastTickerRef.current) {
+         // New selection detected, but we wait for !isLoading in the other effect
+     }
+  }, [selectedTicker]);
+
+
+  // ... (Keep handleCommand, handleKeyDown, Render Logic same as before)
   const handleCommand = (cmd: string) => {
       setMessages(prev => [...prev, { type: 'user', text: cmd }]);
+      
+      // Simple Commands don't need DB data
       setTimeout(() => {
-         const response = generateResponse(cmd);
+         let response = "";
+         const q = cmd.toUpperCase();
+         if (q.includes("PHYSICS")) response = "PHYSICS ENGINE DOCS:\n• ENERGY (Size): Volume/Liquidity.\n• VELOCITY (Speed): Price Momentum.";
+         else if (q.includes("LEGEND")) response = "VISUAL DECODER:\n🟢 GREEN: Positive\n🔴 RED: Negative\n🟡 GOLD: Knowledge Graph Link";
+         else if (q.includes("STRATEGY")) response = "TACTICAL GUIDE:\n1. MOMENTUM: Watch high velocity.\n2. CATALYSTS: High Energy pulls mass.";
+         else response = "Unknown command.";
+         
          setMessages(prev => [...prev, { type: 'agent', text: response }]);
       }, 300);
   };
@@ -158,51 +155,45 @@ Market Phase: ${avgEnergy > 25 ? "HIGH VOLATILITY" : "CONSOLIDATION"}`;
 
   return (
     <div className={`agent-terminal ${isExpanded ? 'expanded' : 'collapsed'}`}>
+      
+      {/* HEADER */}
       <div className="terminal-header">
         <div 
           onClick={() => setIsExpanded(!isExpanded)}
           style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, cursor: 'pointer' }}
         >
+          {/* Status Light: Blinks when loading */}
           <div style={{ 
             width: '6px', height: '6px', borderRadius: '50%', 
-            background: '#22c55e', boxShadow: '0 0 8px #22c55e'
+            background: isLoading ? '#fbbf24' : '#22c55e', 
+            boxShadow: isLoading ? '0 0 8px #fbbf24' : '0 0 8px #22c55e',
+            transition: 'all 0.3s ease'
           }} />
           <span style={{ fontWeight: 600, letterSpacing: '0.1em', fontSize: '0.75rem', color: '#94a3b8' }}>
-            INTELLIGENCE
+            {isLoading ? "ANALYZING NETWORK..." : "INTELLIGENCE"}
           </span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <button 
-                onClick={onOpenArch}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 2 }}
-            >
+        {/* ... (Keep Icons) ... */}
+         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button onClick={onOpenArch} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 2 }}>
                 <Network size={14} />
             </button>
-            <button 
-                onClick={onOpenBio}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 2, marginRight: '8px' }}
-            >
+            <button onClick={onOpenBio} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 2, marginRight: '8px' }}>
                 <User size={14} />
             </button>
             <div style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)' }}></div>
-            <button 
-                onClick={() => setIsExpanded(!isExpanded)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex' }}
-            >
+            <button onClick={() => setIsExpanded(!isExpanded)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex' }}>
                 {isExpanded ? <Minus size={14} /> : <Plus size={14} />}
             </button>
         </div>
       </div>
 
+      {/* BODY */}
       {isExpanded && (
         <>
           <div style={{ 
-            flex: 1, 
-            padding: '16px', 
-            overflowY: 'auto', 
-            display: 'flex', flexDirection: 'column', gap: '8px',
-            minHeight: '150px'
+            flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', minHeight: '150px'
           }}>
             {messages.map((msg, i) => {
               const isUser = msg.type === 'user';
@@ -221,27 +212,24 @@ Market Phase: ${avgEnergy > 25 ? "HIGH VOLATILITY" : "CONSOLIDATION"}`;
                 </div>
               );
             })}
+            
+            {/* Loading Indicator inside chat */}
+            {isLoading && (
+                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#fbbf24', fontSize: '0.75rem', padding: '10px 12px' }}>
+                    <Loader2 size={14} className="animate-spin" />
+                    <span>Decrypting Knowledge Graph...</span>
+                 </div>
+            )}
+            
             <div ref={chatEndRef} />
           </div>
 
-          <div style={{ 
-            padding: '8px 12px', 
-            borderTop: '1px solid rgba(255,255,255,0.05)',
-            display: 'flex', gap: '8px', flexWrap: 'wrap',
-            flexShrink: 0
-          }}>
+          <div style={{ padding: '8px 12px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', gap: '8px', flexWrap: 'wrap', flexShrink: 0 }}>
             {suggestions.map(s => (
-                <button 
-                  key={s}
-                  onClick={() => handleCommand(s)}
-                  style={{
-                      background: 'rgba(255,255,255,0.1)',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      borderRadius: '4px',
-                      color: '#94a3b8', fontSize: '0.65rem', padding: '4px 8px', cursor: 'pointer',
-                      fontFamily: 'var(--font-mono)'
-                  }}
-                >
+                <button key={s} onClick={() => handleCommand(s)} style={{
+                      background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px',
+                      color: '#94a3b8', fontSize: '0.65rem', padding: '4px 8px', cursor: 'pointer', fontFamily: 'var(--font-mono)'
+                  }}>
                     {s}
                 </button>
             ))}
@@ -251,12 +239,8 @@ Market Phase: ${avgEnergy > 25 ? "HIGH VOLATILITY" : "CONSOLIDATION"}`;
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ color: '#22c55e' }}>$</span>
               <input 
-                type="text" 
-                className="terminal-input"
-                placeholder="Query system..." 
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={handleKeyDown}
+                type="text" className="terminal-input" placeholder="Query system..." 
+                value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={handleKeyDown}
               />
             </div>
           </div>
