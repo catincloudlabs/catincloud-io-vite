@@ -8,14 +8,14 @@ export default defineConfig({
     tailwindcss(),
   ],
   server: {
-    port: 3000
-    // proxy: {
-    //   '/data': {
-    //     target: 'https://catincloud.io', 
-    //     changeOrigin: true,
-    //     secure: false
-    //   }
-    // }
+    port: 3000,
+    proxy: {
+      '/data': {
+        target: 'https://catincloud.io', 
+        changeOrigin: true,
+        secure: false
+      }
+    }
   },
   build: {
     rollupOptions: {
