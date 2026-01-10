@@ -9,7 +9,7 @@ import { OrthographicView } from '@deck.gl/core';
 import { Delaunay } from 'd3-delaunay';
 import { GraphConnection } from '../hooks/useKnowledgeGraph'; 
 
-// --- TYPES ---
+// ... [Keep Types] ...
 export type HydratedNode = {
   ticker: string;
   x: number;
@@ -34,18 +34,21 @@ interface MarketMapProps {
   graphConnections?: GraphConnection[];   
 }
 
-// --- CONFIG ---
+// --- RESPONSIVE CONFIG ---
+const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
 const INITIAL_VIEW_STATE = {
-  // Shifted X to 50: This points the camera to the "right", 
-  // which visually moves the map contents (centered at 0,0) to the LEFT.
-  // This fills the empty space on the left and clears the right for the Agent Panel.
-  target: [65, 10, 0],
-  zoom: 1.0, 
+  // Mobile: Center [0,0,0], Zoom out (0.6)
+  // Desktop: Shift Right [65, 10, 0], Zoom normal (1.0)
+  target: isMobile ? [0, 0, 0] : [65, 10, 0], 
+  zoom: isMobile ? 0.6 : 1.0, 
   minZoom: 0.1,
   maxZoom: 10
 };
 
 export function MarketMap({ data, history, onNodeClick, selectedTicker, graphConnections }: MarketMapProps) {
+  
+  // ... [Keep all logic: trailData, synapseData, voronoiData] ...
   
   // 1. Calculate Trails (History)
   const trailData = useMemo(() => {
@@ -108,8 +111,7 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
 
   if (!data) return null;
 
-  // --- LAYERS ---
-
+  // ... [Keep Layers] ...
   const cellLayer = new PolygonLayer({
     id: 'voronoi-cells',
     data: voronoiData,

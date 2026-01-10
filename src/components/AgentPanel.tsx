@@ -12,7 +12,10 @@ interface AgentPanelProps {
 }
 
 export function AgentPanel({ currentFrame, history, selectedTicker, onOpenArch, onOpenBio }: AgentPanelProps) {
-  const [isExpanded, setIsExpanded] = useState(true);
+  // MOBILE POLISH: Default to collapsed on small screens
+  const [isExpanded, setIsExpanded] = useState(() => {
+    return typeof window !== 'undefined' && window.innerWidth > 768;
+  });
   
   const [messages, setMessages] = useState<Array<{type: 'agent' | 'user', text: string}>>([
     { 
