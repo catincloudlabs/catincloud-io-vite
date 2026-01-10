@@ -4,7 +4,7 @@ import { MarketMap, HydratedNode, MarketFrame } from './components/MarketMap';
 import { AgentPanel } from './components/AgentPanel';
 import Header from './components/Header';
 import { useKnowledgeGraph } from './hooks/useKnowledgeGraph';
-// 1. New Imports for Modals
+
 import ArchitectureModal from './components/ArchitectureModal';
 import BioModal from './components/BioModal';
 
@@ -16,7 +16,6 @@ function App() {
   const [timelineProgress, setTimelineProgress] = useState(0);
   const [selectedTicker, setSelectedTicker] = useState<string | null>(null);
 
-  // 2. Lifted State: Manage Modals at the App level
   const [isArchOpen, setArchOpen] = useState(false);
   const [isBioOpen, setBioOpen] = useState(false);
 
@@ -80,7 +79,7 @@ function App() {
   return (
     <div style={{ width: '100vw', height: '100dvh', position: 'relative', overflow: 'hidden', background: '#020617' }}>
       
-      {/* 4. Map Layer */}
+      {/* Map Layer */}
       <MarketMap 
         data={{ date: currentDateLabel, nodes: displayNodes }} 
         history={frames || []}
@@ -89,10 +88,10 @@ function App() {
         graphConnections={connections}       
       />
 
-      {/* 5. Header (Purely Visual) */}
+      {/* Header (Purely Visual) */}
       <Header dateLabel={currentDateLabel} />
 
-      {/* 6. Agent Panel (With System Controls) */}
+      {/* Agent Panel (With System Controls) */}
       <div className="agent-panel-wrapper">
         <AgentPanel 
           currentFrame={currentFrameData} 
@@ -103,7 +102,7 @@ function App() {
         />
       </div>
 
-      {/* 7. Slider */}
+      {/* Slider */}
       <div className="timeline-slider-container">
         <input 
           type="range" 
@@ -121,7 +120,7 @@ function App() {
         </div>
       </div>
 
-      {/* 8. Render Modals at Root Level */}
+      {/* Render Modals at Root Level */}
       <ArchitectureModal isOpen={isArchOpen} onClose={() => setArchOpen(false)} />
       <BioModal isOpen={isBioOpen} onClose={() => setBioOpen(false)} />
     </div>
