@@ -35,7 +35,15 @@ function App() {
         if (!jsonPayload?.data) throw new Error("JSON missing 'data' field");
         // @ts-ignore
         const hydratedFrames = hydrateMarketData(jsonPayload.data);
+        
+        // 1. Set Data
         setFrames(hydratedFrames);
+        
+        // 2. Set Default Time to "NOW" (The end of the dataset)
+        // This ensures the recruiter sees the latest state immediately.
+        if (hydratedFrames.length > 0) {
+            setTimelineProgress(hydratedFrames.length - 1);
+        }
       })
       .catch((err) => {
         console.error("Critical Data Error:", err);
