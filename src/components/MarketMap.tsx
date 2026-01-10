@@ -38,7 +38,7 @@ interface MarketMapProps {
 const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
 const INITIAL_VIEW_STATE = {
-  // Mobile: Center [0,0,0], Zoom out (0.6)
+  // Mobile: Center [0,0,0], Zoom out (0.6) to see whole cluster
   // Desktop: Shift Right [65, 10, 0], Zoom normal (1.0)
   target: isMobile ? [0, 0, 0] : [65, 10, 0], 
   zoom: isMobile ? 0.6 : 1.0, 
@@ -48,9 +48,7 @@ const INITIAL_VIEW_STATE = {
 
 export function MarketMap({ data, history, onNodeClick, selectedTicker, graphConnections }: MarketMapProps) {
   
-  // ... [Keep all logic: trailData, synapseData, voronoiData] ...
-  
-  // 1. Calculate Trails (History)
+  // ... [Keep trailData logic] ...
   const trailData = useMemo(() => {
     if (!history || !data) return [];
     const currentIndex = history.findIndex(f => f.date === data.date);
@@ -75,7 +73,7 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
 
   }, [data, history]); 
 
-  // 2. Calculate Knowledge Graph Lines (Synapses)
+  // ... [Keep synapseData logic] ...
   const synapseData = useMemo(() => {
     if (!selectedTicker || !graphConnections || !data) return [];
 
@@ -95,7 +93,7 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
   }, [selectedTicker, graphConnections, data]);
 
 
-  // 3. Calculate Voronoi
+  // ... [Keep voronoiData logic] ...
   const voronoiData = useMemo(() => {
     if (!data?.nodes || data.nodes.length < 3) return [];
     const points = data.nodes.map(d => [d.x, d.y] as [number, number]);

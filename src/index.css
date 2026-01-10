@@ -379,8 +379,7 @@ body {
   top: 70px;
   right: 20px;
   width: 300px;
-  max-height: calc(100vh - 100px);
-  overflow-y: hidden;
+  overflow-y: visible; /* UPDATED: Let the terminal child handle height/scroll */
   display: flex;
   flex-direction: column;
   z-index: 1000;
@@ -390,8 +389,7 @@ body {
 /* Terminal Styling */
 .agent-terminal {
   width: 100%;
-  max-height: 100%;
-  background-color: rgba(15, 23, 42, 0.85);
+  background-color: rgba(15, 23, 42, 0.9);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 4px; 
@@ -402,6 +400,15 @@ body {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   font-family: var(--font-mono);
   font-size: 0.8rem;
+  transition: height 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* HEIGHT STATES (Desktop) */
+.agent-terminal.expanded {
+  height: calc(100vh - 100px);
+}
+.agent-terminal.collapsed {
+  height: auto;
 }
 
 .terminal-header {
@@ -466,25 +473,22 @@ body {
 /* --- RESPONSIVE SCALING (Mobile Polish) --- */
 @media (max-width: 768px) {
   /* 1. Header: Slightly tighter padding */
-  .app-header {
-    padding: 0 16px;
-  }
-  
-  .chrono-value {
-    font-size: 1rem; /* Smaller date font */
-  }
-  
-  .desktop-only {
-    display: none;
-  }
+  .app-header { padding: 0 12px; }
+  .chrono-value { font-size: 1.1rem; }
+  .desktop-only { display: none; }
   
   /* 2. Agent Panel: Full Width "Heads Up" Display */
   .agent-panel-wrapper {
-    top: 64px;       /* Just below header */
-    left: 12px;      /* Align with left gutter */
-    right: 12px;     /* Align with right gutter */
-    width: auto;     /* Let left/right dictate width */
-    max-height: 50vh; /* Limit height so it doesn't cover the slider */
+    /* UPDATED: Push down to 80px to clear header/notch safely */
+    top: 80px; 
+    left: 12px;
+    right: 12px;
+    width: auto;
+  }
+  
+  /* HEIGHT STATES (Mobile) */
+  .agent-terminal.expanded {
+    height: 60vh; /* Don't cover the whole screen on mobile */
   }
   
   /* 3. Slider: Bottom Center */
@@ -497,7 +501,6 @@ body {
     padding: 12px 16px;
   }
   
-  /* Adjust modals for mobile padding */
   .modal-box {
     width: 95%;
     max-height: 80vh;
