@@ -64,7 +64,7 @@ export function AgentPanel({ currentFrame, history, selectedTicker, graphConnect
 
     const velocity = Math.sqrt(node.vx**2 + node.vy**2).toFixed(1);
     
-    // 2. Relative Physics (Sector Alpha) with FALLBACK
+    // 2. Relative Physics (Sector Alpha) with fallback
     let sectorContext = "";
     const sectorTicker = SECTOR_MAP[ticker];
     
