@@ -1,4 +1,3 @@
-import React from 'react';
 // @ts-ignore
 import { Activity, Cpu, Network, Terminal } from 'lucide-react';
 
