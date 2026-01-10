@@ -6,12 +6,17 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from supabase import create_client, Client
 from openai import OpenAI
-from tenacity import retry, wait_random_exponential, stop_after_attempt
+from tenacity import retry, wait_random_exponential, stop_after_attempt, retry_if_exception_type
 
 # 1. SETUP
 load_dotenv()
 MASSIVE_KEY = os.getenv("MASSIVE_API_KEY")
 MASSIVE_BASE_URL = "https://api.polygon.io" 
+
+# Use a Global Session for Connection Pooling (Fixes Socket Exhaustion)
+session = requests.Session()
+adapter = requests.adapters.HTTPAdapter(pool_connections=20, pool_maxsize=20)
+session.mount('https://', adapter)
 
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 supabase: Client = create_client(
@@ -22,7 +27,7 @@ supabase: Client = create_client(
 # --- CONFIGURATION ---
 MAX_WORKERS = 10 
 NEWS_LOOKBACK_LIMIT = 3
-DB_BATCH_SIZE = 50 
+DB_BATCH_SIZE = 25 # Reduced batch size for stability
 
 # --- MARKET UNIVERSE ---
 TICKER_UNIVERSE = [
@@ -60,14 +65,15 @@ def get_embedding(text):
 # --- PHASE 1: STOCK DATA ---
 
 def fetch_single_stock(ticker):
-    """ Fetches OHLC data for a single stock. """
+    """ Fetches OHLC data for a single stock using pooled session. """
     yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
     url = f"{MASSIVE_BASE_URL}/v1/open-close/{ticker}/{yesterday}?adjusted=true&apiKey={MASSIVE_KEY}"
     
     attempts = 0
     while attempts < 3:
         try:
-            resp = requests.get(url, timeout=10)
+            # USE SESSION HERE
+            resp = session.get(url, timeout=10)
             if resp.status_code == 429:
                 time.sleep(2)
                 attempts += 1
@@ -91,7 +97,6 @@ def fetch_single_stock(ticker):
 def upload_stock_batch(records):
     if not records: return
     try:
-        # FIX 1: Added on_conflict="ticker,date" to prevent duplicate key errors
         supabase.table("stocks_ohlc").upsert(
             records, 
             on_conflict="ticker,date"
@@ -105,7 +110,8 @@ def upload_stock_batch(records):
 def fetch_ticker_news(ticker):
     url = f"{MASSIVE_BASE_URL}/v2/reference/news?ticker={ticker}&limit={NEWS_LOOKBACK_LIMIT}&apiKey={MASSIVE_KEY}"
     try:
-        resp = requests.get(url, timeout=10)
+        # USE SESSION HERE
+        resp = session.get(url, timeout=10)
         if resp.status_code == 200:
             return resp.json().get("results", [])
     except Exception:
@@ -132,7 +138,6 @@ def process_article_embedding(article):
             "embedding": vector
         }
         
-        # We pass the URL in the edge stub to link it later
         edge_stubs = []
         for t in article.get("tickers", []):
             edge_stubs.append({
@@ -145,43 +150,38 @@ def process_article_embedding(article):
     except Exception as e:
         return None, []
 
+# FIX 3: Add Retry Logic to Uploads to handle 10054/10013 errors gracefully
+@retry(stop=stop_after_attempt(5), wait=wait_random_exponential(min=2, max=10))
 def upload_news_batch(vectors, edges):
-    """ 
-    FIX 2: Batch Uploader to prevent Socket Exhaustion (WinError 10035).
-    Reuses connections instead of opening 500+ at once.
-    """
     if not vectors: return
-    try:
-        # 1. Upload Vectors
-        res = supabase.table("news_vectors").upsert(
-            vectors, 
-            on_conflict="url"
-        ).execute()
+    
+    # 1. Upload Vectors
+    res = supabase.table("news_vectors").upsert(
+        vectors, 
+        on_conflict="url"
+    ).execute()
+    
+    # 2. Map URLs to new IDs for Edges
+    if res.data:
+        url_to_id = {item['url']: item['id'] for item in res.data}
+        final_edges = []
         
-        # 2. Map URLs to new IDs for Edges
-        if res.data:
-            url_to_id = {item['url']: item['id'] for item in res.data}
-            final_edges = []
-            
-            for stub in edges:
-                article_id = url_to_id.get(stub['source_url'])
-                if article_id:
-                    final_edges.append({
-                        "source_node": str(article_id),
-                        "target_node": stub['target_node'],
-                        "edge_type": "MENTIONS",
-                        "weight": stub['weight']
-                    })
-            
-            if final_edges:
-                supabase.table("knowledge_graph").upsert(
-                    final_edges, 
-                    on_conflict="source_node,target_node,edge_type",
-                    ignore_duplicates=True
-                ).execute()
-                
-    except Exception as e:
-        print(f" ❌ Batch Upload Error: {str(e)[:100]}")
+        for stub in edges:
+            article_id = url_to_id.get(stub['source_url'])
+            if article_id:
+                final_edges.append({
+                    "source_node": str(article_id),
+                    "target_node": stub['target_node'],
+                    "edge_type": "MENTIONS",
+                    "weight": stub['weight']
+                })
+        
+        if final_edges:
+            supabase.table("knowledge_graph").upsert(
+                final_edges, 
+                on_conflict="source_node,target_node,edge_type",
+                ignore_duplicates=True
+            ).execute()
 
 # --- MAIN EXECUTION ---
 
@@ -219,13 +219,11 @@ if __name__ == "__main__":
     print(f"   > Found {len(unique_articles)} unique relevant stories.")
     print(f"   > Processing Embeddings & Graph Edges...")
 
-    # Batch Processing
     page_vectors = []
     page_edges = []
     processed_count = 0
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        # Map inputs to the worker function
         futures = list(executor.map(process_article_embedding, unique_articles.values()))
         
         for vec, edges in futures:
@@ -233,18 +231,28 @@ if __name__ == "__main__":
                 page_vectors.append(vec)
                 page_edges.extend(edges)
             
-            # Flush batch every 50 items
-            if len(page_vectors) >= 50:
-                upload_news_batch(page_vectors, page_edges)
-                processed_count += len(page_vectors)
-                print(f"     ... processed {processed_count}/{len(unique_articles)}")
+            if len(page_vectors) >= DB_BATCH_SIZE:
+                try:
+                    upload_news_batch(page_vectors, page_edges)
+                    processed_count += len(page_vectors)
+                    print(f"     ... processed {processed_count}/{len(unique_articles)}")
+                except Exception as e:
+                    print(f" ❌ Skipping batch due to persistent error: {e}")
+                
+                # RESET
                 page_vectors = []
                 page_edges = []
+                
+                # FIX 4: Tiny sleep to let OS reclaim sockets
+                time.sleep(0.5)
 
-        # Flush remaining
         if page_vectors:
-            upload_news_batch(page_vectors, page_edges)
-            print(f"     ... processed {len(unique_articles)}/{len(unique_articles)}")
+            try:
+                upload_news_batch(page_vectors, page_edges)
+                print(f"     ... processed {len(unique_articles)}/{len(unique_articles)}")
+            except Exception as e:
+                print(f" ❌ Error uploading final batch: {e}")
 
     duration = time.time() - start_time
     print(f"\n✨ SYSTEM UPDATE COMPLETE in {duration:.2f} seconds.")
+    
