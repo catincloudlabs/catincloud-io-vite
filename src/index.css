@@ -403,7 +403,7 @@ body {
   transition: height 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-/* DESKTOP HEIGHTS */
+/* HEIGHT STATES (Desktop) */
 .agent-terminal.expanded {
   height: calc(100vh - 100px);
 }
@@ -462,42 +462,98 @@ body {
   transition: all 0.3s ease;
 }
 
+/* CUSTOM RANGE SLIDER (Touch Friendly) */
+input[type=range] {
+  -webkit-appearance: none; 
+  appearance: none; /* Fixed: Added standard property */
+  width: 100%;
+  background: transparent;
+  height: 40px; /* Big touch target height */
+  margin: 0;
+  cursor: pointer;
+}
+
+input[type=range]:focus {
+  outline: none;
+}
+
+/* Track */
+input[type=range]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 4px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+/* Thumb */
+input[type=range]::-webkit-slider-thumb {
+  height: 28px; /* Large visual thumb */
+  width: 28px;
+  border-radius: 50%;
+  background: var(--accent-green);
+  cursor: pointer;
+  -webkit-appearance: none;
+  margin-top: -12px; /* Center on track */
+  box-shadow: 0 0 15px rgba(34, 197, 94, 0.5);
+  border: 2px solid #fff; 
+}
+
+/* Firefox Support */
+input[type=range]::-moz-range-track {
+  width: 100%;
+  height: 4px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+input[type=range]::-moz-range-thumb {
+  height: 28px;
+  width: 28px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--accent-green);
+  cursor: pointer;
+  box-shadow: 0 0 15px rgba(34, 197, 94, 0.5);
+}
+
 .timeline-slider-container div {
   font-size: 0.7rem;
-  margin-top: 6px;
+  margin-top: 0; /* Tighten up spacing */
   opacity: 0.7;
   font-weight: 500;
   letter-spacing: 0.05em;
+  pointer-events: none; 
 }
 
 /* --- RESPONSIVE SCALING (Mobile Polish) --- */
 @media (max-width: 768px) {
-  /* 1. Header: Slightly tighter padding */
   .app-header { padding: 0 12px; }
   .chrono-value { font-size: 1.1rem; }
   .desktop-only { display: none; }
   
-  /* 2. Agent Panel: Bottom-Anchored "Drawer" Layout */
+  /* MOBILE FIX: Anchor to BOTTOM to avoid top-notch/browser bar issues */
   .agent-panel-wrapper {
-    top: auto;        /* RELEASE TOP */
-    bottom: 100px;    /* ANCHOR BOTTOM (Just above the slider) */
+    top: auto; 
+    bottom: 100px; /* Anchored just above the slider */
     left: 12px;
     right: 12px;
     width: auto;
   }
   
-  /* MOBILE HEIGHTS: Grow upwards to 50% screen */
+  /* MOBILE HEIGHTS: Grow upwards to 75% screen (Less blank space at top) */
   .agent-terminal.expanded {
-    height: 50vh; 
+    height: 75vh; 
   }
   
-  /* 3. Slider: Bottom Center */
+  /* Slider: Bottom Center */
   .timeline-slider-container {
     bottom: 24px;
     left: 12px;
     right: 12px;
     width: auto;
-    transform: none; /* Reset desktop transform */
+    transform: none; 
     padding: 12px 16px;
   }
   
