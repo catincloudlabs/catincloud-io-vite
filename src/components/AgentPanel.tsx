@@ -43,7 +43,7 @@ export function AgentPanel({ currentFrame, history, selectedTicker, graphConnect
     }
   }, [messages, isExpanded]);
 
-  // --- REPORT GENERATOR ---
+  // --- Report Generator ---
   const generateResponse = (ticker: string) => {
     if (!currentFrame) return "System initializing...";
 
