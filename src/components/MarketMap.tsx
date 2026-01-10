@@ -233,14 +233,14 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
     // If Energy is high, we give it a thick white border (Halo)
     getLineWidth: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return 1;
-        if (d.energy > superEnergyThreshold) return 2.5; // Massive Energy = Thick Ring
-        if (d.energy > highEnergyThreshold) return 1.5;  // High Energy = Visible Ring
+        if (d.energy > superEnergyThreshold) return 1.2; // Massive Energy = Thick Ring
+        if (d.energy > highEnergyThreshold) return 0.6;  // High Energy = Visible Ring
         return 0; // Low Energy = No Ring (Clean look)
     },
     
     getLineColor: (d: HydratedNode) => {
-        if (d.energy > superEnergyThreshold) return [255, 255, 255, 255]; // Pure White Halo
-        if (d.energy > highEnergyThreshold) return [255, 255, 255, 150];  // Soft White Halo
+        if (d.energy > superEnergyThreshold) return [255, 255, 255, 180]; // Pure White Halo
+        if (d.energy > highEnergyThreshold) return [255, 255, 255, 80];  // Soft White Halo
         return [0, 0, 0, 0];
     },
 
