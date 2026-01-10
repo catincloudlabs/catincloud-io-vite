@@ -24,7 +24,7 @@ supabase: Client = create_client(
 )
 
 # CONFIG
-HISTORY_DAYS = 32
+HISTORY_DAYS = 71
 PERPLEXITY = 30  
 TARGET_CANVAS_SIZE = 150 # Will result in coordinates from -150 to +150
 

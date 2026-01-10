@@ -16,9 +16,11 @@ POLYGON_BASE_URL = "https://api.polygon.io"
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 supabase: Client = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SERVICE_KEY"))
 
-# --- CONFIGURATION ---
-BACKFILL_DAYS = 30
-MAX_WORKERS = 20  # Increased for higher IO throughput on embeddings
+# --- CONFIGURATION: TARGETED REGIME ---
+# "The AI Catalyst Window"
+START_DATE = "2025-11-01"
+END_DATE = datetime.now().strftime('%Y-%m-%d')
+MAX_WORKERS = 20 
 DB_BATCH_SIZE = 200
 
 # The Curated Universe (242 Tickers)
@@ -73,26 +75,17 @@ def upload_news_batch(vectors, edges):
     if not vectors: return
     try:
         # 1. Upload Vectors (Must happen first to get IDs)
-        # We REMOVED ignore_duplicates=True because we need the 'id' back from the upsert.
-        # on_conflict="url" ensures we update if it exists or insert if new.
         res = supabase.table("news_vectors").upsert(
             vectors, 
             on_conflict="url"
         ).execute()
         
         # 2. Map new IDs to edges
-        # This is the tricky part with batching: resolving which edge belongs to which new ID.
-        # Strategy: To keep it robust/simple for backfill, we process graph edges individually 
-        # or rely on the fact that `vectors` and `res.data` *usually* preserve order, 
-        # but matching by URL is safer.
-        
         if res.data:
-            # Create a lookup map: URL -> ID
             url_to_id = {item['url']: item['id'] for item in res.data}
             
             final_edges = []
             for edge_stub in edges:
-                # edge_stub is {url, target, weight}
                 article_id = url_to_id.get(edge_stub['source_url'])
                 if article_id:
                     final_edges.append({
@@ -117,10 +110,8 @@ def upload_news_batch(vectors, edges):
 
 @retry(stop=stop_after_attempt(5), wait=wait_random_exponential(min=1, max=10))
 def fetch_ticker_history(ticker):
-    end_date = datetime.now().strftime('%Y-%m-%d')
-    start_date = (datetime.now() - timedelta(days=BACKFILL_DAYS)).strftime('%Y-%m-%d')
-    
-    url = f"{POLYGON_BASE_URL}/v2/aggs/ticker/{ticker}/range/1/day/{start_date}/{end_date}?adjusted=true&sort=asc&apiKey={MASSIVE_KEY}"
+    # UPDATED: Use hardcoded dates instead of relative math
+    url = f"{POLYGON_BASE_URL}/v2/aggs/ticker/{ticker}/range/1/day/{START_DATE}/{END_DATE}?adjusted=true&sort=asc&apiKey={MASSIVE_KEY}"
     
     resp = requests.get(url, timeout=15)
     
@@ -160,7 +151,6 @@ def process_single_article(article):
         return None, []
 
     try:
-        # The expensive network call
         vector = get_embedding(text_content)
         
         vector_record = {
@@ -173,7 +163,6 @@ def process_single_article(article):
         
         edge_stubs = []
         for t in article.get("tickers", []):
-             # Pass URL temporarily so we can link it back to ID later
             edge_stubs.append({
                 "source_url": url,
                 "target_node": t,
@@ -182,14 +171,13 @@ def process_single_article(article):
             
         return vector_record, edge_stubs
     except Exception as e:
-        # print(f"Skip: {e}") 
         return None, []
 
 def backfill_news():
-    print(f"\n📰 Starting Parallel News Backfill (Last {BACKFILL_DAYS} Days)...")
+    print(f"\n📰 Starting Parallel News Backfill ({START_DATE} to {END_DATE})...")
     
-    start_date = (datetime.now() - timedelta(days=BACKFILL_DAYS)).strftime('%Y-%m-%d')
-    url = f"{POLYGON_BASE_URL}/v2/reference/news?published_utc.gte={start_date}&limit=1000&sort=published_utc&order=desc&apiKey={MASSIVE_KEY}"
+    # UPDATED: Use both .gte (start) and .lte (end) to bound the regime
+    url = f"{POLYGON_BASE_URL}/v2/reference/news?published_utc.gte={START_DATE}&published_utc.lte={END_DATE}&limit=1000&sort=published_utc&order=desc&apiKey={MASSIVE_KEY}"
     
     total_processed = 0
     next_url = url
@@ -211,7 +199,6 @@ def backfill_news():
             page_vectors = []
             page_edges = []
             
-            # Parallel Processing of the Page
             with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
                 results = list(executor.map(process_single_article, articles))
                 
@@ -220,13 +207,11 @@ def backfill_news():
                         page_vectors.append(vec)
                         page_edges.extend(edges)
             
-            # Batch Upload results from this page
-            # Splitting into smaller chunks for DB safety
             chunk_size = 50
             for i in range(0, len(page_vectors), chunk_size):
                 upload_news_batch(
                     page_vectors[i:i+chunk_size], 
-                    page_edges # We can pass all edges; the helper filters by URL match
+                    page_edges 
                 )
                 
             total_processed += len(page_vectors)
