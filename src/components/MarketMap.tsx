@@ -52,7 +52,8 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
     const currentIndex = history.findIndex(f => f.date === data.date);
     if (currentIndex <= 0) return [];
 
-    const LOOKBACK_FRAMES = 14; // 2 Weeks
+    // UPDATED: 10 Frames = Exactly 2 Business Weeks (Trading Days)
+    const LOOKBACK_FRAMES = 10; 
     const lookback = Math.max(0, currentIndex - LOOKBACK_FRAMES);
     const recentHistory = history.slice(lookback, currentIndex + 1);
 
@@ -128,13 +129,12 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
     getPolygon: (d: any) => d.polygon,
     getFillColor: (d: any) => {
       const s = d.node.sentiment;
-      // Darker cells to let dots pop
       if (s > 0.1) return [0, 255, 100, 5];   
       if (s < -0.1) return [255, 50, 50, 5];  
       return [0, 0, 0, 0]; 
     },
     stroked: true,
-    getLineColor: [255, 255, 255, 3], // Fainter lines
+    getLineColor: [255, 255, 255, 3], 
     getLineWidth: 0.5,
     lineWidthUnits: 'pixels',
     pickable: false 
@@ -174,30 +174,24 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
     
     // --- NOISE REDUCTION: SIZE ---
     getRadius: (d: HydratedNode) => {
-        // Priority 1: Selection
         if (d.ticker === selectedTicker) return 4; 
         if (graphConnections?.some(c => c.target === d.ticker)) return 3; 
         
-        // Priority 2: High Energy or Sentiment -> Standard Size
         const isActive = d.energy > 0.5 || Math.abs(d.sentiment) > 0.1;
         if (isActive) return 1.5 + (d.energy / 10);
 
-        // Priority 3: Noise -> Tiny dots
         return 0.8; 
     },
 
     // --- NOISE REDUCTION: COLOR & OPACITY ---
     getFillColor: (d: HydratedNode) => {
-        // Highlight Selected
         if (d.ticker === selectedTicker) return [255, 255, 255, 255]; 
         if (graphConnections?.some(c => c.target === d.ticker)) return [255, 215, 0, 255]; 
 
-        // Sentiment Colors (Green/Red)
         if (d.sentiment > 0.1) return [0, 255, 100, 255];   
         if (d.sentiment < -0.1) return [255, 50, 50, 255];  
         
-        // Noise (Neutral & Low Energy) -> Ghostly Faint
-        // Dropped from 150 alpha to 40 alpha
+        // Ghostly faint for inactive nodes
         return [150, 160, 170, 40]; 
     },
     stroked: true,
