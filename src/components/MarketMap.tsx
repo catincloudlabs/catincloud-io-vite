@@ -9,7 +9,6 @@ import { OrthographicView } from '@deck.gl/core';
 import { Delaunay } from 'd3-delaunay';
 import { GraphConnection } from '../hooks/useKnowledgeGraph'; 
 
-// ... [Keep Types] ...
 export type HydratedNode = {
   ticker: string;
   x: number;
@@ -46,32 +45,55 @@ const INITIAL_VIEW_STATE = {
 
 export function MarketMap({ data, history, onNodeClick, selectedTicker, graphConnections }: MarketMapProps) {
   
-  // ... [Keep trailData logic] ...
+  // --- 1. SMART TRAIL LOGIC (The "Quality" Update) ---
   const trailData = useMemo(() => {
     if (!history || !data) return [];
+    
+    // A. Find Current Time
     const currentIndex = history.findIndex(f => f.date === data.date);
     if (currentIndex <= 0) return [];
 
-    const lookback = Math.max(0, currentIndex - 5);
+    // B. Window Config: 14 Frames (~2 Weeks rolling window)
+    const LOOKBACK_FRAMES = 14; 
+    const lookback = Math.max(0, currentIndex - LOOKBACK_FRAMES);
     const recentHistory = history.slice(lookback, currentIndex + 1);
+
+    // C. Energy Gating (The Clutter Killer)
+    // We only show trails for:
+    // 1. High Energy nodes (active movers)
+    // 2. The user's currently selected ticker (always show context)
+    const ENERGY_THRESHOLD = 0.8; 
+
+    const activeTickers = new Set(
+      data.nodes
+        .filter(n => n.energy > ENERGY_THRESHOLD || n.ticker === selectedTicker) 
+        .map(n => n.ticker)
+    );
+
+    // D. Build Paths
     const pathsByTicker: Record<string, number[][]> = {};
     
     recentHistory.forEach(frame => {
       frame.nodes.forEach(node => {
-        if (!pathsByTicker[node.ticker]) pathsByTicker[node.ticker] = [];
-        pathsByTicker[node.ticker].push([node.x, node.y]);
+        // Only collect points if this ticker is currently "Active"
+        if (activeTickers.has(node.ticker)) {
+          if (!pathsByTicker[node.ticker]) pathsByTicker[node.ticker] = [];
+          pathsByTicker[node.ticker].push([node.x, node.y]);
+        }
       });
     });
 
     return Object.keys(pathsByTicker).map(ticker => ({
       ticker,
       path: pathsByTicker[ticker],
+      // Color trails by their *current* sentiment
       sentiment: data.nodes.find(n => n.ticker === ticker)?.sentiment || 0
     }));
 
-  }, [data, history]); 
+  }, [data, history, selectedTicker]); 
 
-  // ... [Keep synapseData logic] ...
+
+  // --- 2. SYNAPSE LOGIC (Knowledge Graph) ---
   const synapseData = useMemo(() => {
     if (!selectedTicker || !graphConnections || !data) return [];
 
@@ -91,7 +113,7 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
   }, [selectedTicker, graphConnections, data]);
 
 
-  // ... [Keep voronoiData logic] ...
+  // --- 3. VORONOI LOGIC (Background Cells) ---
   const voronoiData = useMemo(() => {
     if (!data?.nodes || data.nodes.length < 3) return [];
     const points = data.nodes.map(d => [d.x, d.y] as [number, number]);
@@ -107,7 +129,7 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
 
   if (!data) return null;
 
-  // ... [Keep Layers] ...
+  // --- LAYERS ---
   const cellLayer = new PolygonLayer({
     id: 'voronoi-cells',
     data: voronoiData,
