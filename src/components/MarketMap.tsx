@@ -44,29 +44,27 @@ const INITIAL_VIEW_STATE = {
 
 export function MarketMap({ data, history, onNodeClick, selectedTicker, graphConnections }: MarketMapProps) {
   
-  // --- 1. SORTING (Visual Cleansing) ---
-  // Ensure "boring" nodes are drawn first (background), and "active" nodes last (foreground).
+  // --- 1. SORTING ---
   const sortedNodes = useMemo(() => {
     if (!data?.nodes) return [];
     return [...data.nodes].sort((a, b) => {
-      // 1. Selected always on top
+      // Selected/Connected always on top
       if (a.ticker === selectedTicker) return 1;
       if (b.ticker === selectedTicker) return -1;
       
-      // 2. Connected nodes next on top
       const aConn = graphConnections?.some(c => c.target === a.ticker);
       const bConn = graphConnections?.some(c => c.target === b.ticker);
       if (aConn && !bConn) return 1;
       if (!aConn && bConn) return -1;
 
-      // 3. High Energy / Sentiment on top of low energy
+      // Energy sort
       const aScore = a.energy + Math.abs(a.sentiment * 5);
       const bScore = b.energy + Math.abs(b.sentiment * 5);
       return aScore - bScore;
     });
   }, [data, selectedTicker, graphConnections]);
 
-  // --- 2. TRAIL LOGIC (10 Day Lookback) ---
+  // --- 2. TRAIL LOGIC ---
   const trailData = useMemo(() => {
     if (!history || !data) return [];
     
@@ -178,14 +176,24 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
     data: synapseData,
     getSourcePosition: (d: any) => d.from,
     getTargetPosition: (d: any) => d.to,
-    getColor: [255, 215, 0, 200],
-    getWidth: (d: any) => Math.max(1, d.strength * 0.5), 
-    widthUnits: 'pixels'
+    
+    // <--- FIX 1: Max Opacity (200 -> 255) to pop against trails
+    getColor: [255, 215, 0, 255], 
+    
+    // <--- FIX 2: Thicker Lines (Min 2px) for better visibility
+    getWidth: (d: any) => Math.max(2, d.strength * 0.8), 
+    widthUnits: 'pixels',
+
+    // <--- FIX 3: Force update when data changes
+    updateTriggers: {
+        getWidth: [graphConnections],
+        getColor: [graphConnections]
+    }
   });
 
   const dotLayer = new ScatterplotLayer({
     id: 'market-particles',
-    data: sortedNodes, // <--- CHANGED FROM data.nodes TO sortedNodes
+    data: sortedNodes,
     getPosition: (d: HydratedNode) => [d.x, d.y],
     radiusUnits: 'common', 
     
@@ -206,7 +214,6 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
         if (d.sentiment > 0.1) return [0, 255, 100, 255];   
         if (d.sentiment < -0.1) return [255, 50, 50, 255];  
         
-        // <--- COLOR TWEAK: Darker Slate instead of bright white fog
         return [60, 70, 80, 40]; 
     },
     stroked: true,
