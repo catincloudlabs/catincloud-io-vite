@@ -472,14 +472,15 @@ body {
 
 /* --- RESPONSIVE SCALING (Mobile Polish) --- */
 @media (max-width: 768px) {
+  /* 1. Header: Slightly tighter padding */
   .app-header { padding: 0 12px; }
   .chrono-value { font-size: 1.1rem; }
   .desktop-only { display: none; }
   
-  /* MOBILE FIX: Anchor to BOTTOM to avoid top-notch/browser bar issues */
+  /* 2. Agent Panel: Bottom-Anchored "Drawer" Layout */
   .agent-panel-wrapper {
-    top: auto; 
-    bottom: 100px; /* Above the slider */
+    top: auto;        /* RELEASE TOP */
+    bottom: 100px;    /* ANCHOR BOTTOM (Just above the slider) */
     left: 12px;
     right: 12px;
     width: auto;
@@ -490,12 +491,13 @@ body {
     height: 50vh; 
   }
   
+  /* 3. Slider: Bottom Center */
   .timeline-slider-container {
     bottom: 24px;
     left: 12px;
     right: 12px;
     width: auto;
-    transform: none;
+    transform: none; /* Reset desktop transform */
     padding: 12px 16px;
   }
   

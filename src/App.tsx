@@ -64,7 +64,7 @@ function App() {
   }, [frames, timelineProgress]);
 
   if (error) return (
-    <div style={{ background: '#020617', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+    <div style={{ background: '#020617', height: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
       <h1 style={{ color: '#ef4444' }}>System Error</h1>
       <p style={{ color: '#94a3b8' }}>{error}</p>
       <button onClick={() => window.location.reload()} style={{ marginTop: 20, padding: '10px 20px' }}>Retry</button>
@@ -72,13 +72,14 @@ function App() {
   );
 
   if (!frames) return (
-    <div style={{ background: '#020617', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+    <div style={{ background: '#020617', height: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
       <h1>Loading Physics Engine...</h1>
     </div>
   );
 
   return (
-    <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden', background: '#020617' }}>
+    // UPDATED: height: '100dvh' fixes the mobile browser bar issue
+    <div style={{ width: '100vw', height: '100dvh', position: 'relative', overflow: 'hidden', background: '#020617' }}>
       
       {/* 4. Map Layer */}
       <MarketMap 
