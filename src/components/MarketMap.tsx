@@ -45,37 +45,30 @@ const INITIAL_VIEW_STATE = {
 
 export function MarketMap({ data, history, onNodeClick, selectedTicker, graphConnections }: MarketMapProps) {
   
-  // --- 1. SMART TRAIL LOGIC (The "Quality" Update) ---
+  // --- 1. SMART TRAIL LOGIC ---
   const trailData = useMemo(() => {
     if (!history || !data) return [];
     
-    // A. Find Current Time
     const currentIndex = history.findIndex(f => f.date === data.date);
     if (currentIndex <= 0) return [];
 
-    // B. Window Config: 14 Frames (~2 Weeks rolling window)
-    const LOOKBACK_FRAMES = 14; 
+    const LOOKBACK_FRAMES = 14; // 2 Weeks
     const lookback = Math.max(0, currentIndex - LOOKBACK_FRAMES);
     const recentHistory = history.slice(lookback, currentIndex + 1);
 
-    // C. Energy Gating (The Clutter Killer)
-    // We only show trails for:
-    // 1. High Energy nodes (active movers)
-    // 2. The user's currently selected ticker (always show context)
-    const ENERGY_THRESHOLD = 0.8; 
+    // High Threshold for Trails (Only show history for significant movers)
+    const TRAIL_ENERGY_THRESHOLD = 0.8; 
 
     const activeTickers = new Set(
       data.nodes
-        .filter(n => n.energy > ENERGY_THRESHOLD || n.ticker === selectedTicker) 
+        .filter(n => n.energy > TRAIL_ENERGY_THRESHOLD || n.ticker === selectedTicker) 
         .map(n => n.ticker)
     );
 
-    // D. Build Paths
     const pathsByTicker: Record<string, number[][]> = {};
     
     recentHistory.forEach(frame => {
       frame.nodes.forEach(node => {
-        // Only collect points if this ticker is currently "Active"
         if (activeTickers.has(node.ticker)) {
           if (!pathsByTicker[node.ticker]) pathsByTicker[node.ticker] = [];
           pathsByTicker[node.ticker].push([node.x, node.y]);
@@ -86,14 +79,13 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
     return Object.keys(pathsByTicker).map(ticker => ({
       ticker,
       path: pathsByTicker[ticker],
-      // Color trails by their *current* sentiment
       sentiment: data.nodes.find(n => n.ticker === ticker)?.sentiment || 0
     }));
 
   }, [data, history, selectedTicker]); 
 
 
-  // --- 2. SYNAPSE LOGIC (Knowledge Graph) ---
+  // --- 2. SYNAPSE LOGIC ---
   const synapseData = useMemo(() => {
     if (!selectedTicker || !graphConnections || !data) return [];
 
@@ -113,7 +105,7 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
   }, [selectedTicker, graphConnections, data]);
 
 
-  // --- 3. VORONOI LOGIC (Background Cells) ---
+  // --- 3. VORONOI LOGIC ---
   const voronoiData = useMemo(() => {
     if (!data?.nodes || data.nodes.length < 3) return [];
     const points = data.nodes.map(d => [d.x, d.y] as [number, number]);
@@ -136,12 +128,13 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
     getPolygon: (d: any) => d.polygon,
     getFillColor: (d: any) => {
       const s = d.node.sentiment;
-      if (s > 0.1) return [0, 255, 100, 10];   
-      if (s < -0.1) return [255, 50, 50, 10];  
+      // Darker cells to let dots pop
+      if (s > 0.1) return [0, 255, 100, 5];   
+      if (s < -0.1) return [255, 50, 50, 5];  
       return [0, 0, 0, 0]; 
     },
     stroked: true,
-    getLineColor: [255, 255, 255, 5], 
+    getLineColor: [255, 255, 255, 3], // Fainter lines
     getLineWidth: 0.5,
     lineWidthUnits: 'pixels',
     pickable: false 
@@ -168,7 +161,7 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
     data: synapseData,
     getSourcePosition: (d: any) => d.from,
     getTargetPosition: (d: any) => d.to,
-    getColor: [255, 215, 0, 200], // Gold
+    getColor: [255, 215, 0, 200],
     getWidth: (d: any) => Math.max(1, d.strength * 0.5), 
     widthUnits: 'pixels'
   });
@@ -178,22 +171,37 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
     data: data.nodes,
     getPosition: (d: HydratedNode) => [d.x, d.y],
     radiusUnits: 'common', 
+    
+    // --- NOISE REDUCTION: SIZE ---
     getRadius: (d: HydratedNode) => {
+        // Priority 1: Selection
         if (d.ticker === selectedTicker) return 4; 
-        const isConnected = graphConnections?.some(c => c.target === d.ticker);
-        if (isConnected) return 3; 
-        return 1.5 + (d.energy || 0) / 20; 
+        if (graphConnections?.some(c => c.target === d.ticker)) return 3; 
+        
+        // Priority 2: High Energy or Sentiment -> Standard Size
+        const isActive = d.energy > 0.5 || Math.abs(d.sentiment) > 0.1;
+        if (isActive) return 1.5 + (d.energy / 10);
+
+        // Priority 3: Noise -> Tiny dots
+        return 0.8; 
     },
+
+    // --- NOISE REDUCTION: COLOR & OPACITY ---
     getFillColor: (d: HydratedNode) => {
+        // Highlight Selected
         if (d.ticker === selectedTicker) return [255, 255, 255, 255]; 
         if (graphConnections?.some(c => c.target === d.ticker)) return [255, 215, 0, 255]; 
 
+        // Sentiment Colors (Green/Red)
         if (d.sentiment > 0.1) return [0, 255, 100, 255];   
         if (d.sentiment < -0.1) return [255, 50, 50, 255];  
-        return [200, 200, 200, 150]; 
+        
+        // Noise (Neutral & Low Energy) -> Ghostly Faint
+        // Dropped from 150 alpha to 40 alpha
+        return [150, 160, 170, 40]; 
     },
     stroked: true,
-    getLineColor: [0, 0, 0, 200], 
+    getLineColor: [0, 0, 0, 100], 
     getLineWidth: 0.5, 
     lineWidthUnits: 'common',
     pickable: true,
