@@ -101,11 +101,7 @@ Vel:    ${velocity}${intelligenceReport}`;
     if (isLoading) return;
 
     // 2. If we already spoke about this ticker *with this data*, stop.
-    // (This simple check prevents the double-fire on strict mode re-renders)
     if (lastTickerRef.current === selectedTicker) {
-        // Optional: We could check if connections changed significantly, but usually
-        // we just want to speak once per selection.
-        // For now, we allow re-speaking only if the user clicks a DIFFERENT ticker.
         return; 
     }
 
