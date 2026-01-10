@@ -38,7 +38,7 @@ interface MarketMapProps {
 const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
 const INITIAL_VIEW_STATE = {
-  target: isMobile ? [0, 25, 0] : [65, 10, 0], 
+  target: isMobile ? [0, 40, 0] : [65, 10, 0], 
   zoom: isMobile ? 0.6 : 1.0, 
   minZoom: 0.1,
   maxZoom: 10
