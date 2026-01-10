@@ -69,18 +69,41 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
     };
   }, [data]);
 
-  // --- 3. SORTING ---
+  // --- 3. SORTING & FILTERING (The Cleaner) ---
   const sortedNodes = useMemo(() => {
     if (!data?.nodes) return [];
-    return [...data.nodes].sort((a, b) => {
+
+    // <--- NEW: FILTER OUT NOISE
+    const cleanNodes = data.nodes.filter(n => {
+        // 1. Remove Warrants (e.g., OXY.WS)
+        if (n.ticker.includes('.WS')) return false;
+        
+        // 2. Remove Preferreds (e.g., JPMpC - usually denote by lowercase 'p')
+        // Safe because regular tickers are always UPPERCASE
+        if (n.ticker.includes('p')) return false;
+        
+        // 3. Remove known Test/Glitch Data
+        if (n.ticker === 'XYZ') return false;
+        
+        // 4. Remove generic ADRs (5 letters ending in Y) to reduce duplicates
+        // Exception: Keep major ones like SONY
+        if (n.ticker.length === 5 && n.ticker.endsWith('Y') && !['SONY', 'BAYRY'].includes(n.ticker)) return false; 
+        
+        return true;
+    });
+
+    return [...cleanNodes].sort((a, b) => {
+      // Always put Selected ticker on top
       if (a.ticker === selectedTicker) return 1;
       if (b.ticker === selectedTicker) return -1;
       
+      // Then put Connected tickers on top
       const aConn = graphConnections?.some(c => c.target === a.ticker);
       const bConn = graphConnections?.some(c => c.target === b.ticker);
       if (aConn && !bConn) return 1;
       if (!aConn && bConn) return -1;
 
+      // Finally, sort by Energy (High energy on top to show Halos)
       return a.energy - b.energy;
     });
   }, [data, selectedTicker, graphConnections]);
@@ -142,17 +165,21 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
 
   // --- 6. VORONOI LOGIC ---
   const voronoiData = useMemo(() => {
-    if (!data?.nodes || data.nodes.length < 3) return [];
-    const points = data.nodes.map(d => [d.x, d.y] as [number, number]);
+    // Safety check: Delaunay needs at least 3 points
+    // Use sortedNodes (which are filtered) to ensure Voronoi matches dots
+    if (!sortedNodes || sortedNodes.length < 3) return [];
+    
+    const points = sortedNodes.map(d => [d.x, d.y] as [number, number]);
     const delaunay = Delaunay.from(points);
     const voronoi = delaunay.voronoi([-400, -400, 400, 400]);
+    
     // @ts-ignore
     const polygons = Array.from(voronoi.cellPolygons());
     return polygons.map((polygon: any, i: number) => ({
       polygon,
-      node: data.nodes[i]
+      node: sortedNodes[i]
     }));
-  }, [data]);
+  }, [sortedNodes]); // Changed dependency from 'data' to 'sortedNodes'
 
   if (!data) return null;
 
@@ -283,8 +310,8 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
     updateTriggers: {
         getRadius: [selectedTicker, graphConnections],
         getFillColor: [selectedTicker, graphConnections],
-        getLineWidth: [maxEnergy, pulse, selectedTicker], // <--- PULSE ADDED
-        getLineColor: [maxEnergy, pulse, selectedTicker]  // <--- PULSE ADDED
+        getLineWidth: [maxEnergy, pulse, selectedTicker], 
+        getLineColor: [maxEnergy, pulse, selectedTicker] 
     },
 
     onClick: (info: any) => {
