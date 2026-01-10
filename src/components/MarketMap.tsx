@@ -44,23 +44,39 @@ const INITIAL_VIEW_STATE = {
 
 export function MarketMap({ data, history, onNodeClick, selectedTicker, graphConnections }: MarketMapProps) {
   
+  // --- 0. METRICS ---
+  // Calculate dynamic thresholds so the visual works on quiet days AND crazy days
+  const { maxEnergy, highEnergyThreshold, superEnergyThreshold } = useMemo(() => {
+    if (!data?.nodes || data.nodes.length === 0) return { maxEnergy: 0, highEnergyThreshold: 0, superEnergyThreshold: 0 };
+    
+    const energies = data.nodes.map(n => n.energy);
+    const max = Math.max(...energies);
+    
+    // "High Energy" = Top 25% of the current range
+    // "Super Energy" = Top 10% (The market movers)
+    return { 
+        maxEnergy: max, 
+        highEnergyThreshold: max * 0.5, 
+        superEnergyThreshold: max * 0.8 
+    };
+  }, [data]);
+
   // --- 1. SORTING ---
   const sortedNodes = useMemo(() => {
     if (!data?.nodes) return [];
     return [...data.nodes].sort((a, b) => {
-      // Selected/Connected always on top
+      // 1. Selected is ALWAYS top
       if (a.ticker === selectedTicker) return 1;
       if (b.ticker === selectedTicker) return -1;
       
+      // 2. Connected nodes next
       const aConn = graphConnections?.some(c => c.target === a.ticker);
       const bConn = graphConnections?.some(c => c.target === b.ticker);
       if (aConn && !bConn) return 1;
       if (!aConn && bConn) return -1;
 
-      // Energy sort
-      const aScore = a.energy + Math.abs(a.sentiment * 5);
-      const bScore = b.energy + Math.abs(b.sentiment * 5);
-      return aScore - bScore;
+      // 3. High Energy nodes pop to top (so halos aren't covered)
+      return a.energy - b.energy;
     });
   }, [data, selectedTicker, graphConnections]);
 
@@ -75,11 +91,9 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
     const lookback = Math.max(0, currentIndex - LOOKBACK_FRAMES);
     const recentHistory = history.slice(lookback, currentIndex + 1);
 
-    const TRAIL_ENERGY_THRESHOLD = 0.8; 
-
     const activeTickers = new Set(
       data.nodes
-        .filter(n => n.energy > TRAIL_ENERGY_THRESHOLD || n.ticker === selectedTicker) 
+        .filter(n => n.energy > highEnergyThreshold || n.ticker === selectedTicker) 
         .map(n => n.ticker)
     );
 
@@ -100,7 +114,7 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
       sentiment: data.nodes.find(n => n.ticker === ticker)?.sentiment || 0
     }));
 
-  }, [data, history, selectedTicker]); 
+  }, [data, history, selectedTicker, highEnergyThreshold]); 
 
   // --- 3. SYNAPSE LOGIC ---
   const synapseData = useMemo(() => {
@@ -176,15 +190,9 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
     data: synapseData,
     getSourcePosition: (d: any) => d.from,
     getTargetPosition: (d: any) => d.to,
-    
-    // <--- FIX 1: Max Opacity (200 -> 255) to pop against trails
     getColor: [255, 215, 0, 255], 
-    
-    // <--- FIX 2: Thicker Lines (Min 2px) for better visibility
     getWidth: (d: any) => Math.max(2, d.strength * 0.8), 
     widthUnits: 'pixels',
-
-    // <--- FIX 3: Force update when data changes
     updateTriggers: {
         getWidth: [graphConnections],
         getColor: [graphConnections]
@@ -197,29 +205,46 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
     getPosition: (d: HydratedNode) => [d.x, d.y],
     radiusUnits: 'common', 
     
+    // --- SIZE: The Great Equalizer ---
+    // Instead of scaling with Energy, we keep it tight.
     getRadius: (d: HydratedNode) => {
-        if (d.ticker === selectedTicker) return 4; 
-        if (graphConnections?.some(c => c.target === d.ticker)) return 3; 
+        if (d.ticker === selectedTicker) return 5; // User Selection = Big
+        if (graphConnections?.some(c => c.target === d.ticker)) return 3.5; // Linked = Medium
         
-        const isActive = d.energy > 0.5 || Math.abs(d.sentiment) > 0.1;
-        if (isActive) return 1.5 + (d.energy / 10);
-
-        return 0.8; 
+        return 2.5; // Everyone else = Small uniform dots
     },
 
     getFillColor: (d: HydratedNode) => {
+        // Selected/Connected = Gold/White Highlight
         if (d.ticker === selectedTicker) return [255, 255, 255, 255]; 
         if (graphConnections?.some(c => c.target === d.ticker)) return [255, 215, 0, 255]; 
 
+        // Sentiment = Green/Red
         if (d.sentiment > 0.1) return [0, 255, 100, 255];   
         if (d.sentiment < -0.1) return [255, 50, 50, 255];  
         
-        return [60, 70, 80, 40]; 
+        // Neutral = Ghostly Grey
+        return [60, 70, 80, 150]; 
     },
+    
     stroked: true,
-    getLineColor: [0, 0, 0, 100], 
-    getLineWidth: 0.5, 
-    lineWidthUnits: 'common',
+    
+    // --- ENERGY: The "Voltage" Ring ---
+    // If Energy is high, we give it a thick white border (Halo)
+    getLineWidth: (d: HydratedNode) => {
+        if (d.ticker === selectedTicker) return 1;
+        if (d.energy > superEnergyThreshold) return 2.5; // Massive Energy = Thick Ring
+        if (d.energy > highEnergyThreshold) return 1.5;  // High Energy = Visible Ring
+        return 0; // Low Energy = No Ring (Clean look)
+    },
+    
+    getLineColor: (d: HydratedNode) => {
+        if (d.energy > superEnergyThreshold) return [255, 255, 255, 255]; // Pure White Halo
+        if (d.energy > highEnergyThreshold) return [255, 255, 255, 150];  // Soft White Halo
+        return [0, 0, 0, 0];
+    },
+
+    lineWidthUnits: 'common', // Scales with zoom naturally
     pickable: true,
     autoHighlight: true,
     highlightColor: [255, 255, 255, 100],
@@ -228,7 +253,9 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
     },
     updateTriggers: {
         getRadius: [selectedTicker, graphConnections],
-        getFillColor: [selectedTicker, graphConnections]
+        getFillColor: [selectedTicker, graphConnections],
+        getLineWidth: [maxEnergy],
+        getLineColor: [maxEnergy]
     }
   });
 
@@ -243,7 +270,11 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
       getTooltip={({object}) => object && object.ticker && {
         html: `
           <div style="padding: 12px; background: rgba(10,10,10,0.95); color: white; border: 1px solid #444; border-radius: 8px; font-family: 'Inter', sans-serif;">
-            <strong>${object.ticker}</strong>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <strong>$${object.ticker}</strong>
+              <span style="font-size:0.7em; opacity:0.7;">VOL: ${object.energy.toFixed(0)}</span>
+            </div>
+            <div style="font-size:0.8em; opacity:0.8;">${object.headline || "No headline"}</div>
           </div>
         `
       }}
