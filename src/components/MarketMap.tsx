@@ -33,7 +33,6 @@ interface MarketMapProps {
   graphConnections?: GraphConnection[];   
 }
 
-// --- RESPONSIVE CONFIG ---
 const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
 const INITIAL_VIEW_STATE = {
@@ -45,19 +44,39 @@ const INITIAL_VIEW_STATE = {
 
 export function MarketMap({ data, history, onNodeClick, selectedTicker, graphConnections }: MarketMapProps) {
   
-  // --- 1. SMART TRAIL LOGIC ---
+  // --- 1. SORTING (Visual Cleansing) ---
+  // Ensure "boring" nodes are drawn first (background), and "active" nodes last (foreground).
+  const sortedNodes = useMemo(() => {
+    if (!data?.nodes) return [];
+    return [...data.nodes].sort((a, b) => {
+      // 1. Selected always on top
+      if (a.ticker === selectedTicker) return 1;
+      if (b.ticker === selectedTicker) return -1;
+      
+      // 2. Connected nodes next on top
+      const aConn = graphConnections?.some(c => c.target === a.ticker);
+      const bConn = graphConnections?.some(c => c.target === b.ticker);
+      if (aConn && !bConn) return 1;
+      if (!aConn && bConn) return -1;
+
+      // 3. High Energy / Sentiment on top of low energy
+      const aScore = a.energy + Math.abs(a.sentiment * 5);
+      const bScore = b.energy + Math.abs(b.sentiment * 5);
+      return aScore - bScore;
+    });
+  }, [data, selectedTicker, graphConnections]);
+
+  // --- 2. TRAIL LOGIC (10 Day Lookback) ---
   const trailData = useMemo(() => {
     if (!history || !data) return [];
     
     const currentIndex = history.findIndex(f => f.date === data.date);
     if (currentIndex <= 0) return [];
 
-    // 10 Frames = Exactly 2 Business Weeks (Trading Days)
     const LOOKBACK_FRAMES = 10; 
     const lookback = Math.max(0, currentIndex - LOOKBACK_FRAMES);
     const recentHistory = history.slice(lookback, currentIndex + 1);
 
-    // High Threshold for Trails (Only show history for significant movers)
     const TRAIL_ENERGY_THRESHOLD = 0.8; 
 
     const activeTickers = new Set(
@@ -85,8 +104,7 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
 
   }, [data, history, selectedTicker]); 
 
-
-  // --- 2. SYNAPSE LOGIC ---
+  // --- 3. SYNAPSE LOGIC ---
   const synapseData = useMemo(() => {
     if (!selectedTicker || !graphConnections || !data) return [];
 
@@ -105,8 +123,7 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
 
   }, [selectedTicker, graphConnections, data]);
 
-
-  // --- 3. VORONOI LOGIC ---
+  // --- 4. VORONOI LOGIC ---
   const voronoiData = useMemo(() => {
     if (!data?.nodes || data.nodes.length < 3) return [];
     const points = data.nodes.map(d => [d.x, d.y] as [number, number]);
@@ -134,7 +151,7 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
       return [0, 0, 0, 0]; 
     },
     stroked: true,
-    getLineColor: [255, 255, 255, 3], 
+    getLineColor: [255, 255, 255, 3],
     getLineWidth: 0.5,
     lineWidthUnits: 'pixels',
     pickable: false 
@@ -168,11 +185,10 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
 
   const dotLayer = new ScatterplotLayer({
     id: 'market-particles',
-    data: data.nodes,
+    data: sortedNodes, // <--- CHANGED FROM data.nodes TO sortedNodes
     getPosition: (d: HydratedNode) => [d.x, d.y],
     radiusUnits: 'common', 
     
-    // --- NOISE REDUCTION: SIZE ---
     getRadius: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return 4; 
         if (graphConnections?.some(c => c.target === d.ticker)) return 3; 
@@ -183,7 +199,6 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
         return 0.8; 
     },
 
-    // --- NOISE REDUCTION: COLOR & OPACITY ---
     getFillColor: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return [255, 255, 255, 255]; 
         if (graphConnections?.some(c => c.target === d.ticker)) return [255, 215, 0, 255]; 
@@ -191,8 +206,8 @@ export function MarketMap({ data, history, onNodeClick, selectedTicker, graphCon
         if (d.sentiment > 0.1) return [0, 255, 100, 255];   
         if (d.sentiment < -0.1) return [255, 50, 50, 255];  
         
-        // Ghostly faint for inactive nodes
-        return [150, 160, 170, 40]; 
+        // <--- COLOR TWEAK: Darker Slate instead of bright white fog
+        return [60, 70, 80, 40]; 
     },
     stroked: true,
     getLineColor: [0, 0, 0, 100], 
