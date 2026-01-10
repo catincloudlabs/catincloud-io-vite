@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X, Database, Cpu, Brain, Layout} from 'lucide-react';
+import { X, Database, Cpu, Brain, Layout } from 'lucide-react';
 
 interface ArchitectureModalProps {
   isOpen: boolean;
@@ -7,7 +7,7 @@ interface ArchitectureModalProps {
 }
 
 const ArchitectureModal: React.FC<ArchitectureModalProps> = ({ isOpen, onClose }) => {
-  const [activeStep, setActiveStep] = useState<number | null>(1); // Default to first step active
+  const [activeStep, setActiveStep] = useState<number | null>(1); 
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
