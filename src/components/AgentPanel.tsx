@@ -174,7 +174,6 @@ Vel:    ${velocity}${intelligenceReport}`;
           </span>
         </div>
 
-        {/* ... (Keep Icons) ... */}
          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button onClick={onOpenArch} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 2 }}>
                 <Network size={14} />
