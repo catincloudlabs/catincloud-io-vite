@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { MarketFrame } from '../App';
 import { GraphConnection } from '../hooks/useKnowledgeGraph';
+import { SECTOR_MAP, SECTOR_NAMES } from '../utils/sectorMap';
 // @ts-ignore
 import { Network, User, Minus, Plus, Loader2 } from 'lucide-react';
 
@@ -22,7 +23,7 @@ export function AgentPanel({ currentFrame, history, selectedTicker, graphConnect
   const [messages, setMessages] = useState<Array<{type: 'agent' | 'user', text: string}>>([
     { 
       type: 'agent', 
-      text: `SYSTEM ONLINE v2.4.0
+      text: `SYSTEM ONLINE v2.5.0
 -----------------------
 > "Physics": Explains motion model.
 > "Legend": Decodes signals.
@@ -63,12 +64,32 @@ export function AgentPanel({ currentFrame, history, selectedTicker, graphConnect
 
     const velocity = Math.sqrt(node.vx**2 + node.vy**2).toFixed(1);
     
-    // 2. Intelligence Data
+    // 2. Relative Physics (Sector Alpha)
+    let sectorContext = "";
+    const sectorTicker = SECTOR_MAP[ticker];
+    if (sectorTicker) {
+        const sectorNode = currentFrame.nodes.find(n => n.ticker === sectorTicker);
+        if (sectorNode) {
+             const stockVel = Math.sqrt(node.vx**2 + node.vy**2);
+             const sectorVel = Math.sqrt(sectorNode.vx**2 + sectorNode.vy**2);
+             const alpha = stockVel - sectorVel;
+             
+             const sectorName = SECTOR_NAMES[sectorTicker] || sectorTicker;
+             
+             if (alpha > 2.0) sectorContext = `\n• Alpha:  High Rel. Vel vs ${sectorName} (+${alpha.toFixed(1)})`;
+             else if (alpha < -2.0) sectorContext = `\n• Alpha:  Lagging ${sectorName} (${alpha.toFixed(1)})`;
+             else sectorContext = `\n• Alpha:  Correlated with ${sectorName}`;
+        }
+    }
+
+    // 3. Intelligence Data
     let intelligenceReport = "";
     if (graphConnections && graphConnections.length > 0) {
       const peers = graphConnections.slice(0, 3).map(c => c.target).join(', ');
       const topArticle = graphConnections[0]?.articles[0];
-      const narrative = topArticle ? `"${topArticle}"` : "Sector Correlation";
+      // Truncate headline if too long
+      const shortHeadline = topArticle && topArticle.length > 50 ? topArticle.substring(0, 47) + "..." : topArticle;
+      const narrative = shortHeadline ? `"${shortHeadline}"` : "Sector Correlation";
 
       intelligenceReport = `
 🧠 NETWORK INTEL:
@@ -85,7 +106,7 @@ export function AgentPanel({ currentFrame, history, selectedTicker, graphConnect
     return `🎯 TARGET: ${ticker}
 📊 PHYSICS:
 • Trend:  ${trend}
-• Energy: ${node.energy.toFixed(0)} | Vel: ${velocity}${intelligenceReport}`;
+• Energy: ${node.energy.toFixed(0)} | Vel: ${velocity}${sectorContext}${intelligenceReport}`;
   };
 
   // --- SMART EFFECT ---
@@ -110,13 +131,12 @@ export function AgentPanel({ currentFrame, history, selectedTicker, graphConnect
 
   }, [selectedTicker, graphConnections, isLoading]); 
 
-  // Reset ref if user specifically deselects (optional, helps with re-clicking)
+  // Reset ref if user specifically deselects
   useEffect(() => {
      if (!selectedTicker) {
          lastTickerRef.current = null;
      }
   }, [selectedTicker]);
-
 
   const handleCommand = (cmd: string) => {
       setMessages(prev => [...prev, { type: 'user', text: cmd }]);
