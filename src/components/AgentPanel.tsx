@@ -126,8 +126,6 @@ Vel:    ${velocity}${intelligenceReport}`;
      }
   }, [selectedTicker]);
 
-
-  // ... (Keep handleCommand, handleKeyDown, Render Logic same as before)
   const handleCommand = (cmd: string) => {
       setMessages(prev => [...prev, { type: 'user', text: cmd }]);
       
