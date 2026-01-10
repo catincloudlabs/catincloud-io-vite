@@ -542,9 +542,9 @@ input[type=range]::-moz-range-thumb {
     width: auto;
   }
   
-  /* MOBILE HEIGHTS */
+  /* MOBILE HEIGHTS: Capped at 55vh to avoid top cut-off */
   .agent-terminal.expanded {
-    height: 75vh; 
+    height: 55vh; 
   }
   
   /* Slider: Bottom Center */

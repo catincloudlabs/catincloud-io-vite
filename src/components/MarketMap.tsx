@@ -38,9 +38,9 @@ interface MarketMapProps {
 const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
 const INITIAL_VIEW_STATE = {
-  // Mobile: Center [0,0,0], Zoom out (0.6) to see whole cluster
-  // Desktop: Shift Right [65, 10, 0], Zoom normal (1.0)
-  target: isMobile ? [0, 0, 0] : [65, 10, 0], 
+  // Mobile: Target [0, -40, 0] -> Looks at a lower point, pushing data UP
+  // Desktop: Target [65, 10, 0] -> Shifts focus right
+  target: isMobile ? [0, -40, 0] : [65, 10, 0], 
   zoom: isMobile ? 0.6 : 1.0, 
   minZoom: 0.1,
   maxZoom: 10
