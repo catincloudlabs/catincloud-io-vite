@@ -1,36 +1,27 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
-export default defineConfig({
-  plugins: [
-    react(),
-    tailwindcss(),
-  ],
-  server: {
-    port: 3000,
-    proxy: {
-      '/data': {
-        target: 'https://catincloud.io', 
-        changeOrigin: true,
-        secure: false
-      }
-    }
-  },
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: (id: string) => {
-          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
-            return 'react-vendor';
-          }
-          if (id.includes('plotly')) return 'plotly';
-          if (id.includes('recharts')) return 'recharts';
-          if (id.includes('react-syntax-highlighter') || id.includes('refractor')) return 'syntax';
-          if (id.includes('lucide-react')) return 'icons';
-        }
-      }
-    },
-    chunkSizeWarningLimit: 1500 
+export default defineConfig(({ mode }) => {
+  // Load env vars available to the build process
+  const env = loadEnv(mode, process.cwd(), '');
+
+  // --- CLOUDFLARE DEBUG LOG ---
+  console.log("🔍 CLOUDFLARE BUILD DEBUG:");
+  console.log("------------------------------------------------");
+  console.log("Target Mode:", mode);
+  console.log("VITE_SUPABASE_URL:", env.VITE_SUPABASE_URL ? "✅ DETECTED" : "❌ MISSING");
+  console.log("VITE_ANON_KEY:", env.VITE_SUPABASE_ANON_KEY ? "✅ DETECTED" : "❌ MISSING");
+  
+  if (env.VITE_SUPABASE_URL) {
+      console.log("Value Preview:", env.VITE_SUPABASE_URL.substring(0, 15) + "...");
   }
+  console.log("------------------------------------------------");
+  // -----------------------------
+
+  return {
+    plugins: [react(), tailwindcss()],
+    server: { port: 3000 },
+    build: { chunkSizeWarningLimit: 1500 }
+  };
 });
