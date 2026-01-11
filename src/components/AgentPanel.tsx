@@ -116,13 +116,13 @@ export function AgentPanel({
     if (isExpanded) scrollToBottom();
   }, [messages.length, isExpanded]);
 
-  // Ticker Selection: Friendly Assistant Notification
+  // Ticker Selection: Friendly Chat Initiation
   useEffect(() => {
     if (!selectedTicker || !currentFrame || isLoading) return;
     if (lastTickerRef.current === selectedTicker) return;
 
-    // UPDATED: Friendly, helpful prompt
-    addSystemMessage(`**Ticker Selected:** ${selectedTicker}\nHow can I help?`);
+    // Friendly opening
+    addSystemMessage(`I'm ready to discuss **${selectedTicker}**. What would you like to know?`);
     
     lastTickerRef.current = selectedTicker;
     setIsExpanded(true);

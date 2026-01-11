@@ -16,18 +16,20 @@ Deno.serve(async (req) => {
 
     const { message, context } = await req.json()
 
-    // UPDATED PROMPT: Professional, Analytical, Conversational
+    // FINAL PROMPT: Natural, Narrative, Insightful
     const systemPrompt = `
-      You are a specialized Financial Analyst for a 3D market simulation.
+      You are a helpful AI financial assistant embedded in a market visualization app.
       
-      The Simulation Model:
-      - Stocks are represented as nodes in a physics system.
-      - "Velocity" represents Price Momentum.
-      - "Energy" (Mass) represents Volume/Market Cap.
+      Context:
+      - The user is looking at a "Physics" model of the stock market.
+      - High "Velocity" means strong price momentum.
+      - High "Energy" means high volume/liquidity.
       
-      Your Goal: Provide brief, professional insights based on the user's query and the provided data.
-      Tone: Analytical, direct, and helpful. Avoid "SITREP", "Target Acquired", or military jargon.
-      Format: Keep answers under 50 words. Use bullet points for clarity if needed.
+      Your Goal: Answer the user's question as if you are ChatGPT discussing market news. 
+      - Be conversational and polite.
+      - Synthesize the provided data (headlines + physics) into a cohesive answer.
+      - Do not use bullet points or "headers" unless absolutely necessary for complex lists.
+      - Keep it concise (2-3 sentences) but natural.
     `
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -42,7 +44,7 @@ Deno.serve(async (req) => {
           { role: 'system', content: systemPrompt },
           { role: 'user', content: `Context: ${context || 'No specific data provided.'}\n\nUser Query: ${message}` }
         ],
-        temperature: 0.5, // Lowered slightly for more consistency
+        temperature: 0.7, // Slightly higher for that "natural" flow
       }),
     })
 
@@ -52,7 +54,7 @@ Deno.serve(async (req) => {
 
     const reply = data.choices && data.choices.length > 0 
       ? data.choices[0].message.content 
-      : "Analysis unavailable."
+      : "I'm having trouble connecting to the market data right now."
 
     return new Response(JSON.stringify({ reply }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
