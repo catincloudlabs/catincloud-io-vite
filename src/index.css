@@ -707,3 +707,101 @@ input[type=range]::-moz-range-thumb {
   cursor: not-allowed;
   filter: grayscale(100%);
 }
+
+/* --- 5. AGENT PANEL WRAPPER (Bloomberg/Linear Style) --- */
+.agent-terminal {
+  width: 100%;
+  /* deeply distinct glass background */
+  background: rgba(10, 15, 30, 0.75);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  
+  /* thin, high-contrast borders for "precision" feel */
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.15); /* lighter top edge catches 'light' */
+  box-shadow: 
+    0 20px 40px -10px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(0, 0, 0, 0.2); /* distinct inner shadow ring */
+    
+  border-radius: 12px;
+  color: #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: height 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.terminal-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.01);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* INPUT AREA - darker to anchor the bottom */
+.terminal-input-area {
+  padding: 12px;
+  background: rgba(2, 6, 23, 0.6); 
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+/* --- MESSAGE BUBBLES --- */
+.terminal-body {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  font-family: var(--font-sans); /* The Agent speaks in natural language */
+  font-size: 0.9rem; /* Slightly larger for readability */
+}
+
+/* User Bubble - subtle gradient, almost invisible */
+.msg-user {
+  align-self: flex-end;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
+  padding: 8px 14px;
+  border-radius: 16px 16px 2px 16px;
+  font-size: 0.85rem;
+}
+
+/* Agent Bubble - clean, distinct text */
+.msg-agent {
+  align-self: flex-start;
+  /* No background, just text for a cleaner "interface" look */
+  color: #cbd5e1;
+  padding: 4px 0; 
+  max-width: 95%;
+  line-height: 1.6;
+}
+
+/* DATA HIGHLIGHTS - The "Financial Terminal" pop */
+.term-bold {
+  font-family: var(--font-mono); /* Data is always Mono */
+  font-weight: 600;
+  color: #fbbf24; /* Amber/Gold for numbers/tickers */
+  background: rgba(251, 191, 36, 0.1);
+  padding: 0 4px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  letter-spacing: -0.02em;
+  border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+/* BLINKING CURSOR - High Tech Feel */
+.typing-cursor::after {
+  content: '▋';
+  display: inline-block;
+  color: #10b981;
+  margin-left: 4px;
+  font-size: 0.8em;
+  animation: blink 1s step-end infinite;
+}
