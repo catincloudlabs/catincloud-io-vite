@@ -6,7 +6,6 @@ const corsHeaders = {
 }
 
 // Deno.serve is built globally into the Supabase Edge Runtime.
-// No imports are required.
 Deno.serve(async (req) => {
   // 1. Handle CORS Preflight
   if (req.method === 'OPTIONS') {
@@ -14,12 +13,11 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // 2. Securely get Key from Environment
-    // Make sure you ran: npx supabase secrets set OPENAI_API_KEY=sk-...
+    // 2. Securely get Key from Environment (NO keys.ts import)
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')
     
     if (!OPENAI_API_KEY) {
-      throw new Error('Missing OPENAI_API_KEY environment variable')
+      throw new Error('Missing OPENAI_API_KEY secret. Run: npx supabase secrets set OPENAI_API_KEY=...')
     }
 
     const { message, context } = await req.json()
@@ -60,7 +58,6 @@ Deno.serve(async (req) => {
       throw new Error(`OpenAI Error: ${data.error.message}`)
     }
 
-    // Check if choices exist to prevent crash on empty response
     const reply = data.choices && data.choices.length > 0 
       ? data.choices[0].message.content 
       : "No intel received from HQ."
@@ -72,6 +69,7 @@ Deno.serve(async (req) => {
 
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : String(err)
+    console.error("Oracle Error:", errorMessage) // Logs to Supabase Dashboard
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
