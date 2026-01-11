@@ -3,7 +3,7 @@ import { MarketFrame } from '../App';
 import { GraphConnection } from '../hooks/useKnowledgeGraph';
 import { useAgentOracle } from '../hooks/useAgentOracle';
 // @ts-ignore
-import { Network, User, Minus, Plus, Loader2, SendHorizontal } from 'lucide-react';
+import { Network, User, Minus, Plus, Loader2, SendHorizontal, Sparkles } from 'lucide-react';
 
 interface AgentPanelProps {
   currentFrame: MarketFrame | null;
@@ -16,7 +16,6 @@ interface AgentPanelProps {
 
 /**
  * HELPER: Formats raw data into a structured context for the AI.
- * NOW INCLUDES: Simulation Date to ground the AI in the correct timeline.
  */
 const getSystemContext = (
   ticker: string, 
@@ -73,7 +72,7 @@ const TypewriterMessage = ({ text, type, onTyping }: { text: string, type: strin
         clearInterval(timer);
         setIsComplete(true);
       }
-    }, 8); // Slightly smoother speed for sans-serif
+    }, 8); 
 
     return () => clearInterval(timer);
   }, [text, shouldAnimate, onTyping]);
@@ -115,7 +114,6 @@ export function AgentPanel({
     if (!selectedTicker || !currentFrame || isLoading) return;
     if (lastTickerRef.current === selectedTicker) return;
 
-    // Friendly, context-aware opening
     addSystemMessage(`**${selectedTicker}** selected. Analyzing real-time metrics for ${currentFrame.date}...`);
     
     lastTickerRef.current = selectedTicker;
@@ -126,18 +124,12 @@ export function AgentPanel({
     if (!selectedTicker) lastTickerRef.current = null;
   }, [selectedTicker]);
 
-  const handleCommand = async () => {
-    const query = inputValue.trim();
+  const handleCommand = async (textOverride?: string) => {
+    const query = textOverride || inputValue.trim();
     if (!query) return;
 
     setInputValue("");
-    const upper = query.toUpperCase();
     
-    if (upper === "PHYSICS") {
-      addSystemMessage("**Physics Model:**\n• **Energy:** Volume/Liquidity\n• **Velocity:** Price Momentum");
-      return;
-    }
-
     // INJECT: Now passing currentFrame (with date) to the helper
     const context = selectedTicker && currentFrame 
       ? getSystemContext(selectedTicker, currentFrame, graphConnections || [])
@@ -150,6 +142,23 @@ export function AgentPanel({
     if (e.key === 'Enter') handleCommand();
   };
 
+  // --- SMART CHIPS LOGIC ---
+  const getSuggestions = () => {
+    if (selectedTicker) {
+      return [
+        { label: `Analyze $${selectedTicker}`, prompt: `Analyze the price action and sentiment for ${selectedTicker}.` },
+        { label: "News Summary", prompt: `What are the latest headlines for ${selectedTicker}?` },
+        { label: "Risk Factors", prompt: `What are the potential downsides or risks for ${selectedTicker}?` }
+      ];
+    }
+    return [
+      { label: "Market Overview", prompt: "Give me a high-level summary of the current market state." },
+      { label: "Explain Physics", prompt: "How does this simulation work? What do Energy and Velocity represent?" },
+      { label: "Who built this?", prompt: "Who created this dashboard and what is their tech stack?" }
+    ];
+  };
+  // -------------------------
+
   if (!currentFrame) return null;
 
   const isBusy = isLoading || isAiLoading;
@@ -161,21 +170,21 @@ export function AgentPanel({
       <div className="terminal-header" onClick={() => setIsExpanded(!isExpanded)}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
           <div style={{ 
-            width: '6px', height: '6px', borderRadius: '50%', 
-            background: isBusy ? '#fbbf24' : '#22c55e', 
-            boxShadow: isBusy ? '0 0 8px #fbbf24' : '0 0 8px #22c55e',
+            width: '8px', height: '8px', borderRadius: '2px', // Square dot = more technical
+            background: isBusy ? '#fbbf24' : '#10b981', 
+            boxShadow: isBusy ? '0 0 8px #fbbf24' : 'none',
             transition: 'all 0.3s ease'
           }} />
           <span style={{ fontWeight: 600, letterSpacing: '0.05em', fontSize: '0.75rem', color: '#94a3b8' }}>
-            {isAiLoading ? "PROCESSING..." : `MARKET INTEL • ${currentFrame.date}`}
+            {isAiLoading ? "PROCESSING STREAM..." : `INTELLIGENCE • ${currentFrame.date}`}
           </span>
         </div>
 
-         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <button onClick={(e) => { e.stopPropagation(); onOpenArch(); }} className="panel-toggle-btn">
+         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <button onClick={(e) => { e.stopPropagation(); onOpenArch(); }} className="panel-toggle-btn" title="Architecture">
                 <Network size={14} />
             </button>
-            <button onClick={(e) => { e.stopPropagation(); onOpenBio(); }} className="panel-toggle-btn" style={{ marginRight: '8px' }}>
+            <button onClick={(e) => { e.stopPropagation(); onOpenBio(); }} className="panel-toggle-btn" title="Bio">
                 <User size={14} />
             </button>
             <div style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)' }}></div>
@@ -201,33 +210,50 @@ export function AgentPanel({
             {isBusy && (
                  <div style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '0.75rem', padding: '0 12px', opacity: 0.8 }}>
                     <Loader2 size={12} className="animate-spin" />
-                    <span>{isAiLoading ? "AI is typing..." : "Fetching data..."}</span>
+                    <span style={{ fontFamily: 'var(--font-mono)' }}>COMPUTING...</span>
                  </div>
             )}
             
             <div ref={chatEndRef} />
           </div>
 
-          {/* INPUT AREA (Modern) */}
-          <div className="terminal-input-area" style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.02)' }}>
+          {/* INPUT AREA */}
+          <div className="terminal-input-area" style={{ background: 'rgba(2, 6, 23, 0.5)' }}>
+            
+            {/* SUGGESTION CHIPS */}
+            <div className="chips-row">
+                <Sparkles size={12} color="#10b981" style={{ flexShrink: 0 }} />
+                {getSuggestions().map((chip, idx) => (
+                    <button 
+                        key={idx} 
+                        className="suggestion-chip"
+                        onClick={() => handleCommand(chip.prompt)}
+                        disabled={isBusy}
+                    >
+                        {chip.label}
+                    </button>
+                ))}
+            </div>
+
             <div style={{ 
                 display: 'flex', alignItems: 'center', gap: '8px', 
-                background: 'rgba(0,0,0,0.3)', padding: '8px 12px', 
-                borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' 
+                background: 'rgba(255,255,255,0.03)', padding: '8px 12px', 
+                borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)' 
             }}>
               <input 
                 type="text" className="terminal-input" 
-                placeholder="Ask about market trends..." 
+                placeholder="Query the market model..." 
                 value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={handleKeyDown}
                 autoFocus
-                style={{ fontSize: '0.9rem' }}
+                disabled={isBusy}
+                style={{ fontSize: '0.85rem' }}
               />
               <button 
                 onClick={() => handleCommand()}
-                disabled={!inputValue.trim()}
+                disabled={!inputValue.trim() || isBusy}
                 style={{ 
                     background: 'none', border: 'none', cursor: 'pointer', 
-                    color: inputValue.trim() ? '#22c55e' : '#475569',
+                    color: inputValue.trim() ? '#10b981' : '#475569',
                     transition: 'color 0.2s'
                 }}
               >
@@ -237,13 +263,14 @@ export function AgentPanel({
           </div>
           
           <div style={{ 
-            padding: '4px 0', 
+            padding: '6px 0', 
             fontSize: '0.6rem', 
             color: '#475569', 
             textAlign: 'center',
-            background: 'rgba(255,255,255,0.02)'
+            background: 'rgba(2, 6, 23, 0.8)',
+            borderTop: '1px solid rgba(255,255,255,0.05)'
           }}>
-            Simulation only. Not financial advice.
+            CAUTION: AI output may be hallucinated.
           </div>
         </>
       )}
