@@ -10,6 +10,12 @@ import BioModal from './components/BioModal';
 
 export type { MarketFrame, HydratedNode };
 
+// MAG 7 + KEY INDICES
+const WATCHLIST = [
+  "NVDA", "TSLA", "AAPL", "MSFT", "GOOGL", "AMZN", "META", 
+  "SPY", "QQQ", "IWM"
+];
+
 function App() {
   const [frames, setFrames] = useState<MarketFrame[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -99,11 +105,14 @@ function App() {
         graphConnections={connections}       
       />
 
-      {/* Header - Now controls modals */}
+      {/* Header - Now includes Watchlist control */}
       <Header 
         dateLabel={currentDateLabel} 
         onOpenArch={() => setArchOpen(true)}
         onOpenBio={() => setBioOpen(true)}
+        selectedTicker={selectedTicker}
+        onSelectTicker={setSelectedTicker}
+        watchlist={WATCHLIST}
       />
 
       {/* Agent Panel */}
@@ -116,7 +125,7 @@ function App() {
         />
       </div>
 
-      {/* Slider - CSS CLASS NOW CONTROLS POSITION (BOTTOM LEFT) */}
+      {/* Slider */}
       <div className="timeline-slider-container">
         <div className="slider-label-row">
           <span>HISTORY</span>
