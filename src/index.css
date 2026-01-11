@@ -1,19 +1,34 @@
 /* ==================================================================== */
 /* GLOBAL RESET & VARIABLES                                             */
 /* ==================================================================== */
+
 *, *::before, *::after {
   box-sizing: border-box;
 }
 
 :root {
-  --background: #020617;
+  /* 1. PALETTE UPGRADE: Deep Space & Electric Emerald */
+  --background: #030712;
+  
   --text-primary: #ffffff;
   --text-muted: #94a3b8;
-  --accent-green: #22c55e;
+  
+  --accent-green: #34d399;
+  --accent-green-dim: rgba(52, 211, 153, 0.1);
+  
   --accent-purple: #c084fc;
   --accent-blue: #3b82f6;
-  --glass-bg: rgba(15, 23, 42, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.1);
+
+  /* 2. NEW AI IDENTITY COLORS */
+  --accent-ai: #fbbf24;
+  --accent-ai-glow: rgba(251, 191, 36, 0.25);
+  
+  /* 3. HIGH-FIDELITY GLASS VARIABLES */
+  --glass-bg: rgba(10, 15, 30, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-highlight: rgba(255, 255, 255, 0.05);
+  --shadow-elevation: 0 20px 50px -12px rgba(0, 0, 0, 0.8);
+  
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 }
@@ -25,14 +40,24 @@ html, body {
   color: var(--text-primary);
   font-family: var(--font-sans);
   overflow: hidden; 
-  /* Prevent "Pull to Refresh" / Rubber-banding on the whole app */
   overscroll-behavior: none;
-  touch-action: none; /* Disables browser handling of gestures (except scrollable areas) */
+  touch-action: none; 
+}
+
+/* CINEMATIC NOISE OVERLAY */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
 }
 
 /* ==================================================================== */
 /* 1. HEADER                                                            */
 /* ==================================================================== */
+
 .app-header {
   position: absolute;
   top: 0;
@@ -43,7 +68,7 @@ html, body {
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
-  background: linear-gradient(to bottom, rgba(2, 6, 23, 0.95), rgba(2, 6, 23, 0));
+  background: linear-gradient(to bottom, rgba(3, 7, 18, 0.95), rgba(3, 7, 18, 0));
   z-index: 2000;
   box-sizing: border-box;
 }
@@ -76,14 +101,20 @@ html, body {
   font-weight: 700;
   font-size: 1.25rem;
   line-height: 1;
-  color: white;
-  letter-spacing: -0.02em;
-  text-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+  letter-spacing: -0.05em; /* Tighter for modern look */
+  font-variant-numeric: tabular-nums; /* Prevents jitter */
+  
+  /* Text Gradient */
+  background: linear-gradient(180deg, #fff, #94a3b8);
+  -webkit-background-clip: text;
+  background-clip: text; /* Standard property added */
+  -webkit-text-fill-color: transparent;
 }
 
 /* ==================================================================== */
 /* 2. MODALS (SYSTEM WINDOW STYLE)                                      */
 /* ==================================================================== */
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -102,7 +133,7 @@ html, body {
 
 .modal-box {
   background: rgba(15, 23, 42, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--glass-border);
   border-radius: 4px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
   width: 90%;
@@ -121,7 +152,7 @@ html, body {
 
 .modal-header {
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--glass-border);
   background: rgba(255, 255, 255, 0.02);
   display: flex;
   justify-content: space-between;
@@ -150,7 +181,7 @@ html, body {
   font-family: var(--font-mono);
   font-size: 0.7rem;
   color: var(--accent-green);
-  background: rgba(34, 197, 94, 0.1);
+  background: var(--accent-green-dim);
   padding: 2px 6px;
   border-radius: 2px;
 }
@@ -171,6 +202,7 @@ html, body {
 /* ==================================================================== */
 /* 3. ARCHITECTURE DIAGRAM                                              */
 /* ==================================================================== */
+
 .arch-diagram {
   padding: 24px;
   display: flex;
@@ -209,8 +241,8 @@ html, body {
 }
 
 .arch-node.active {
-  background: rgba(34, 197, 94, 0.05);
-  border-color: rgba(34, 197, 94, 0.3);
+  background: var(--accent-green-dim);
+  border-color: rgba(52, 211, 153, 0.3);
   border-left-color: var(--accent-green);
 }
 
@@ -285,6 +317,7 @@ html, body {
 /* ==================================================================== */
 /* 4. BIO MODAL                                                         */
 /* ==================================================================== */
+
 .bio-content { padding: 24px; }
 .bio-grid { display: flex; gap: 20px; align-items: flex-start; }
 
@@ -377,12 +410,12 @@ html, body {
 }
 
 .btn-primary { 
-  background: rgba(34, 197, 94, 0.1); 
-  border-color: rgba(34, 197, 94, 0.3); 
+  background: var(--accent-green-dim); 
+  border-color: rgba(52, 211, 153, 0.3); 
   color: var(--accent-green); 
 }
 .btn-primary:hover { 
-  background: rgba(34, 197, 94, 0.2); 
+  background: rgba(52, 211, 153, 0.2); 
   border-color: var(--accent-green);
 }
 
@@ -405,7 +438,7 @@ html, body {
 }
 
 /* ==================================================================== */
-/* 5. AGENT TERMINAL (MODERN BLOOMBERG/LINEAR STYLE)                    */
+/* 5. AGENT TERMINAL (THE GHOST IN THE GLASS UPGRADE)                   */
 /* ==================================================================== */
 
 /* Wrapper for Positioning */
@@ -424,24 +457,24 @@ html, body {
 /* Main Terminal Container */
 .agent-terminal {
   width: 100%;
-  /* deeply distinct glass background */
-  background: rgba(10, 15, 30, 0.75);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
   
-  /* thin, high-contrast borders for "precision" feel */
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-top: 1px solid rgba(255, 255, 255, 0.15); /* lighter top edge catches 'light' */
+  /* HIGH-FIDELITY GLASS */
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  
+  /* Precision Borders & Glows */
+  border: 1px solid var(--glass-border);
   box-shadow: 
-    0 20px 40px -10px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(0, 0, 0, 0.2); /* distinct inner shadow ring */
+    var(--shadow-elevation),
+    inset 0 1px 0 0 var(--glass-highlight); /* Top bevel light */
     
-  border-radius: 12px;
+  border-radius: 16px;
   color: #e2e8f0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: height 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* HEIGHT STATES (Desktop) */
@@ -455,7 +488,7 @@ html, body {
 /* Terminal Header */
 .terminal-header {
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--glass-border);
   background: rgba(255, 255, 255, 0.01);
   display: flex;
   align-items: center;
@@ -472,9 +505,9 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  font-family: var(--font-sans); /* The Agent speaks in natural language */
-  font-size: 0.9rem; /* Slightly larger for readability */
-  -webkit-overflow-scrolling: touch; /* Native-speed scroll on iOS */
+  font-family: var(--font-sans); 
+  font-size: 0.9rem; 
+  -webkit-overflow-scrolling: touch; 
 }
 
 /* Scrollbar Polish */
@@ -530,7 +563,7 @@ html, body {
 .term-bold {
   font-family: var(--font-mono); 
   font-weight: 600;
-  color: #fbbf24; 
+  color: var(--accent-ai); 
   background: rgba(251, 191, 36, 0.1);
   padding: 0 4px;
   border-radius: 4px;
@@ -542,8 +575,8 @@ html, body {
 /* Input Area Container */
 .terminal-input-area {
   padding: 12px;
-  background: rgba(2, 6, 23, 0.6); 
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(3, 7, 18, 0.4); 
+  border-top: 1px solid var(--glass-border);
   flex-shrink: 0;
 }
 
@@ -562,7 +595,7 @@ html, body {
   color: rgba(255, 255, 255, 0.3);
 }
 
-/* Chips (Smart Prompts) */
+/* Chips (Smart Prompts - Updated Look) */
 .chips-row {
   display: flex;
   gap: 8px;
@@ -575,24 +608,24 @@ html, body {
 .chips-row::-webkit-scrollbar { display: none; }
 
 .suggestion-chip {
-  background: rgba(16, 185, 129, 0.05);
-  border: 1px solid rgba(16, 185, 129, 0.2);
-  color: #10b981;
-  padding: 4px 10px;
-  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  padding: 6px 12px;
+  border-radius: 6px; 
   font-family: var(--font-mono);
-  font-size: 0.7rem;
-  white-space: nowrap;
-  cursor: pointer;
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   transition: all 0.2s ease;
-  letter-spacing: -0.02em;
 }
 
 .suggestion-chip:hover {
-  background: rgba(16, 185, 129, 0.15);
-  border-color: rgba(16, 185, 129, 0.6);
+  background: var(--accent-green-dim);
+  border-color: var(--accent-green);
+  color: var(--accent-green);
+  box-shadow: 0 0 15px var(--accent-green-dim);
   transform: none;
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.1);
 }
 
 .suggestion-chip:active { transform: translateY(0); }
@@ -602,7 +635,7 @@ html, body {
 .typing-cursor::after {
   content: '▋';
   display: inline-block;
-  color: #10b981;
+  color: var(--accent-green);
   margin-left: 4px;
   font-size: 0.8em;
   animation: blink 0.8s step-end infinite;
@@ -611,6 +644,7 @@ html, body {
 /* ==================================================================== */
 /* 6. TIMELINE SLIDER                                                   */
 /* ==================================================================== */
+
 .timeline-slider-container {
   position: absolute;
   bottom: 40px;
@@ -659,7 +693,7 @@ input[type=range]::-webkit-slider-thumb {
   cursor: pointer;
   -webkit-appearance: none;
   margin-top: -8px; 
-  box-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
+  box-shadow: 0 0 12px var(--accent-green-dim);
   border: 2px solid #fff; 
 }
 
@@ -679,7 +713,7 @@ input[type=range]::-moz-range-thumb {
   border-radius: 50%;
   background: var(--accent-green);
   cursor: pointer;
-  box-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
+  box-shadow: 0 0 12px var(--accent-green-dim);
 }
 
 .timeline-slider-container div {
@@ -694,6 +728,7 @@ input[type=range]::-moz-range-thumb {
 /* ==================================================================== */
 /* 7. RESPONSIVE SCALING (MOBILE POLISH)                                */
 /* ==================================================================== */
+
 @media (max-width: 768px) {
   .app-header { padding: 0 12px; }
   .chrono-value { font-size: 1.1rem; }
@@ -738,13 +773,26 @@ input[type=range]::-moz-range-thumb {
 /* ==================================================================== */
 /* 8. ANIMATIONS                                                        */
 /* ==================================================================== */
+
 @keyframes fadeIn { to { opacity: 1; } }
 @keyframes scaleIn { to { transform: scale(1); } }
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
+/* AI PULSE ANIMATION */
+@keyframes pulse-glow {
+  0% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(251, 191, 36, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
+}
+
+.pulsing-orb {
+  animation: pulse-glow 2s infinite;
+}
+
 /* ==================================================================== */
 /* 9. ACCESSIBILITY UTILITIES                                           */
 /* ==================================================================== */
+
 .sr-only {
   position: absolute;
   width: 1px;

@@ -164,7 +164,14 @@ export function AgentPanel({
   const isBusy = isLoading || isAiLoading;
 
   return (
-    <div className={`agent-terminal ${isExpanded ? 'expanded' : 'collapsed'}`}>
+    <div 
+      className={`agent-terminal ${isExpanded ? 'expanded' : 'collapsed'}`}
+      style={{
+         // THE GLANCE EFFECT: Subtle indication that the Agent is "Looking" at the selected asset
+         borderColor: selectedTicker ? 'var(--accent-green)' : undefined,
+         boxShadow: selectedTicker ? '0 0 20px rgba(34, 197, 94, 0.1)' : undefined
+      }}
+    >
       
       {/* HEADER */}
       <div 
@@ -174,15 +181,29 @@ export function AgentPanel({
         aria-expanded={isExpanded} 
         aria-label="Toggle Agent Panel"
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
-          <div style={{ 
-            width: '8px', height: '8px', borderRadius: '2px', // Square dot = more technical
-            background: isBusy ? '#fbbf24' : '#10b981', 
-            boxShadow: isBusy ? '0 0 8px #fbbf24' : 'none',
-            transition: 'all 0.3s ease'
-          }} aria-hidden="true" />
-          <span style={{ fontWeight: 600, letterSpacing: '0.05em', fontSize: '0.75rem', color: '#94a3b8' }}>
-            {isAiLoading ? "PROCESSING STREAM..." : `INTELLIGENCE • ${currentFrame.date}`}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+          
+          {/* THE HEARTBEAT INDICATOR */}
+          <div 
+            className={isBusy ? "pulsing-orb" : "static-orb"}
+            style={{ 
+              width: '8px', height: '8px', borderRadius: '50%',
+              background: isBusy ? 'var(--accent-ai)' : 'var(--accent-green)', 
+              boxShadow: isBusy ? '0 0 12px var(--accent-ai-glow)' : 'none',
+              transition: 'all 0.3s ease'
+            }} 
+            aria-hidden="true" 
+          />
+          
+          <span style={{ 
+              fontFamily: 'var(--font-mono)', 
+              fontWeight: 600, 
+              letterSpacing: '0.05em', 
+              fontSize: '0.75rem', 
+              color: isBusy ? 'var(--accent-ai)' : 'var(--text-muted)',
+              transition: 'color 0.3s ease'
+          }}>
+            {isAiLoading ? "NEURAL ENGINE ACTIVE..." : `SYSTEM READY • ${currentFrame.date}`}
           </span>
         </div>
 
@@ -203,7 +224,7 @@ export function AgentPanel({
             >
                 <User size={14} aria-hidden="true" />
             </button>
-            <div style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)' }} aria-hidden="true"></div>
+            <div style={{ width: '1px', height: '12px', background: 'var(--glass-border)' }} aria-hidden="true"></div>
             <button className="panel-toggle-btn" aria-label={isExpanded ? "Collapse Panel" : "Expand Panel"}>
                 {isExpanded ? <Minus size={14} aria-hidden="true" /> : <Plus size={14} aria-hidden="true" />}
             </button>
@@ -224,7 +245,7 @@ export function AgentPanel({
             ))}
             
             {isBusy && (
-                 <div style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '0.75rem', padding: '0 12px', opacity: 0.8 }}>
+                 <div style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontSize: '0.75rem', padding: '0 12px', opacity: 0.8 }}>
                     <Loader2 size={12} className="animate-spin" aria-hidden="true" />
                     <span style={{ fontFamily: 'var(--font-mono)' }}>COMPUTING...</span>
                  </div>
@@ -234,11 +255,11 @@ export function AgentPanel({
           </div>
 
           {/* INPUT AREA */}
-          <div className="terminal-input-area" style={{ background: 'rgba(2, 6, 23, 0.5)' }}>
+          <div className="terminal-input-area">
             
             {/* SUGGESTION CHIPS */}
             <div className="chips-row" role="group" aria-label="Quick Actions">
-                <Sparkles size={12} color="#10b981" style={{ flexShrink: 0 }} aria-hidden="true" />
+                <Sparkles size={12} color="var(--accent-green)" style={{ flexShrink: 0 }} aria-hidden="true" />
                 {getSuggestions().map((chip, idx) => (
                     <button 
                         key={idx} 
@@ -272,7 +293,7 @@ export function AgentPanel({
                 aria-label="Send Message"
                 style={{ 
                     background: 'none', border: 'none', cursor: 'pointer', 
-                    color: inputValue.trim() ? '#10b981' : '#475569',
+                    color: inputValue.trim() ? 'var(--accent-green)' : '#475569',
                     transition: 'color 0.2s'
                 }}
               >
@@ -287,7 +308,7 @@ export function AgentPanel({
             color: '#475569', 
             textAlign: 'center',
             background: 'rgba(2, 6, 23, 0.8)',
-            borderTop: '1px solid rgba(255,255,255,0.05)',
+            borderTop: '1px solid var(--glass-border)',
             opacity: 0.5
           }}>
             Simulation only. Not financial advice.
