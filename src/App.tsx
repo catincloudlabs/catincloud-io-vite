@@ -99,8 +99,12 @@ function App() {
         graphConnections={connections}       
       />
 
-      {/* Header */}
-      <Header dateLabel={currentDateLabel} />
+      {/* Header - Now handles Ticker Selection */}
+      <Header 
+        dateLabel={currentDateLabel} 
+        onSelectTicker={setSelectedTicker} 
+        selectedTicker={selectedTicker}
+      />
 
       {/* Agent Panel */}
       <div className="agent-panel-wrapper">
@@ -116,18 +120,22 @@ function App() {
 
       {/* Slider */}
       <div className="timeline-slider-container">
+        <label htmlFor="time-slider" className="sr-only">Simulation Timeline</label>
         <input 
+          id="time-slider"
           type="range" 
           min="0" 
           max={Math.max(0, frames.length - 1)} 
           step="0.01" 
           value={timelineProgress}
           onChange={(e) => setTimelineProgress(parseFloat(e.target.value))}
-          aria-label="Simulation Timeline"
+          aria-orientation="vertical"
+          aria-valuemin={0}
+          aria-valuemax={Math.max(0, frames.length - 1)}
+          aria-valuenow={timelineProgress}
           style={{ width: '100%', cursor: 'pointer' }}
         />
-        <div className="slider-labels">
-          {/* UPDATED ORDER: Top is LIVE, Bottom is ORIGIN */}
+        <div className="slider-labels" aria-hidden="true">
           <span>LIVE</span>
           <span className="mobile-only-label">PROGRESS</span>
           <span>ORIGIN</span>
