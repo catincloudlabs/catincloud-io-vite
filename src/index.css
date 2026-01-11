@@ -692,7 +692,7 @@ input[type=range]::-moz-range-track {
   border-radius: 6px;
   
   height: 30px; 
-  min-width: 140px; /* Adjusted width */
+  min-width: 120px; /* Adjusted width */
   
   transition: all 0.2s;
 }
