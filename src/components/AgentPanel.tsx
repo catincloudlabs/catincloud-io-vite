@@ -3,7 +3,7 @@ import { MarketFrame } from '../App';
 import { GraphConnection } from '../hooks/useKnowledgeGraph';
 import { useAgentOracle } from '../hooks/useAgentOracle';
 // @ts-ignore
-import { Network, User, Minus, Plus, Loader2 } from 'lucide-react';
+import { Network, User, Minus, Plus, Loader2, SendHorizontal } from 'lucide-react';
 
 interface AgentPanelProps {
   currentFrame: MarketFrame | null;
@@ -14,9 +14,6 @@ interface AgentPanelProps {
   onOpenBio: () => void;
 }
 
-/**
- * HELPER: Formats raw data into a structured context for the AI.
- */
 const getSystemContext = (
   ticker: string, 
   currentFrame: MarketFrame, 
@@ -38,9 +35,6 @@ const getSystemContext = (
   `;
 };
 
-/**
- * UTILITY: Parses bold markdown (e.g. **Text**) into JSX
- */
 const formatMessage = (text: string) => {
   const parts = text.split(/(\*\*.*?\*\*)/g);
   return parts.map((part, i) => {
@@ -51,14 +45,11 @@ const formatMessage = (text: string) => {
   });
 };
 
-/**
- * COMPONENT: Typing effect for smooth, natural text delivery
- */
 const TypewriterMessage = ({ text, type, onTyping }: { text: string, type: string, onTyping: () => void }) => {
   const [displayedText, setDisplayedText] = useState("");
   const [isComplete, setIsComplete] = useState(false);
   
-  const shouldAnimate = type === 'agent' || type === 'system';
+  const shouldAnimate = type === 'agent';
 
   useEffect(() => {
     if (!shouldAnimate) {
@@ -77,14 +68,13 @@ const TypewriterMessage = ({ text, type, onTyping }: { text: string, type: strin
         clearInterval(timer);
         setIsComplete(true);
       }
-    }, 10); // Fast, natural reading speed
+    }, 8); // Slightly smoother speed for sans-serif
 
     return () => clearInterval(timer);
   }, [text, shouldAnimate, onTyping]);
 
   return (
     <div className={`msg-row msg-${type} ${!isComplete && shouldAnimate ? 'typing-cursor' : ''}`}>
-      {type === 'user' && <span style={{ marginRight: 8, color: '#22c55e' }}>➜</span>}
       {isComplete ? formatMessage(text) : displayedText}
     </div>
   );
@@ -116,13 +106,11 @@ export function AgentPanel({
     if (isExpanded) scrollToBottom();
   }, [messages.length, isExpanded]);
 
-  // Ticker Selection: Friendly Chat Initiation
   useEffect(() => {
     if (!selectedTicker || !currentFrame || isLoading) return;
     if (lastTickerRef.current === selectedTicker) return;
 
-    // Friendly opening
-    addSystemMessage(`I'm ready to discuss **${selectedTicker}**. What would you like to know?`);
+    addSystemMessage(`**${selectedTicker}** selected. Analyzing real-time metrics...`);
     
     lastTickerRef.current = selectedTicker;
     setIsExpanded(true);
@@ -132,20 +120,15 @@ export function AgentPanel({
     if (!selectedTicker) lastTickerRef.current = null;
   }, [selectedTicker]);
 
-  const handleCommand = async (cmd: string) => {
-    const query = cmd.trim();
+  const handleCommand = async () => {
+    const query = inputValue.trim();
     if (!query) return;
 
     setInputValue("");
     const upper = query.toUpperCase();
     
-    // UPDATED: Clean documentation titles
     if (upper === "PHYSICS") {
-      addSystemMessage("**Market Physics Model:**\n• **Energy** (Size): Volume/Liquidity.\n• **Velocity** (Speed): Price Momentum.");
-      return;
-    }
-    if (upper === "LEGEND") {
-      addSystemMessage("**Map Legend:**\n🟢 **Green**: Positive Trend\n🔴 **Red**: Negative Trend\n🟡 **Gold**: News Correlation");
+      addSystemMessage("**Physics Model:**\n• **Energy:** Volume/Liquidity\n• **Velocity:** Price Momentum");
       return;
     }
 
@@ -157,7 +140,7 @@ export function AgentPanel({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') handleCommand(inputValue);
+    if (e.key === 'Enter') handleCommand();
   };
 
   if (!currentFrame) return null;
@@ -177,15 +160,15 @@ export function AgentPanel({
             transition: 'all 0.3s ease'
           }} />
           <span style={{ fontWeight: 600, letterSpacing: '0.05em', fontSize: '0.75rem', color: '#94a3b8' }}>
-            {isAiLoading ? "ANALYZING..." : isLoading ? "LOADING..." : "MARKET INSIGHTS"}
+            {isAiLoading ? "PROCESSING..." : "MARKET INTELLIGENCE"}
           </span>
         </div>
 
          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <button onClick={(e) => { e.stopPropagation(); onOpenArch(); }} className="panel-toggle-btn" title="Architecture">
+            <button onClick={(e) => { e.stopPropagation(); onOpenArch(); }} className="panel-toggle-btn">
                 <Network size={14} />
             </button>
-            <button onClick={(e) => { e.stopPropagation(); onOpenBio(); }} className="panel-toggle-btn" style={{ marginRight: '8px' }} title="About">
+            <button onClick={(e) => { e.stopPropagation(); onOpenBio(); }} className="panel-toggle-btn" style={{ marginRight: '8px' }}>
                 <User size={14} />
             </button>
             <div style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)' }}></div>
@@ -209,39 +192,51 @@ export function AgentPanel({
             ))}
             
             {isBusy && (
-                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#fbbf24', fontSize: '0.75rem', padding: '10px 12px', opacity: 0.8 }}>
-                    <Loader2 size={14} className="animate-spin" />
-                    <span className="typing-cursor">
-                      {isAiLoading ? "Analyzing..." : "Updating data..."}
-                    </span>
+                 <div style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '0.75rem', padding: '0 12px', opacity: 0.8 }}>
+                    <Loader2 size={12} className="animate-spin" />
+                    <span>{isAiLoading ? "AI is typing..." : "Fetching data..."}</span>
                  </div>
             )}
             
             <div ref={chatEndRef} />
           </div>
 
-          <div className="terminal-input-area">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ color: '#22c55e', fontWeight: 'bold' }}>›</span>
+          {/* INPUT AREA (Modern) */}
+          <div className="terminal-input-area" style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.02)' }}>
+            <div style={{ 
+                display: 'flex', alignItems: 'center', gap: '8px', 
+                background: 'rgba(0,0,0,0.3)', padding: '8px 12px', 
+                borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' 
+            }}>
               <input 
-                type="text" className="terminal-input" placeholder="Type your question here..." 
+                type="text" className="terminal-input" 
+                placeholder="Ask about market trends..." 
                 value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={handleKeyDown}
                 autoFocus
+                style={{ fontSize: '0.9rem' }}
               />
+              <button 
+                onClick={() => handleCommand()}
+                disabled={!inputValue.trim()}
+                style={{ 
+                    background: 'none', border: 'none', cursor: 'pointer', 
+                    color: inputValue.trim() ? '#22c55e' : '#475569',
+                    transition: 'color 0.2s'
+                }}
+              >
+                <SendHorizontal size={16} />
+              </button>
             </div>
           </div>
-
-          {/* DISCLAIMER FOOTER */}
+          
           <div style={{ 
-            padding: '6px 12px', 
-            background: 'rgba(0,0,0,0.3)', 
-            borderTop: '1px solid rgba(255,255,255,0.05)',
-            fontSize: '0.65rem', 
-            color: '#64748b', 
+            padding: '4px 0', 
+            fontSize: '0.6rem', 
+            color: '#475569', 
             textAlign: 'center',
-            letterSpacing: '0.02em'
+            background: 'rgba(255,255,255,0.02)'
           }}>
-            AI responses are for simulation purposes only. Not financial advice.
+            Simulation only. Not financial advice.
           </div>
         </>
       )}
