@@ -1,52 +1,37 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '../utils/supabaseClient';
 
-export interface Message {
-  type: 'agent' | 'user' | 'system';
-  text: string;
-  timestamp: number;
-}
-
 export function useAgentOracle() {
-  const [messages, setMessages] = useState<Message[]>([
-    { 
-      type: 'agent', 
-      text: `SYSTEM ONLINE v2.5.0\n-----------------------\n> "Physics": Explains motion model.\n> "Legend": Decodes signals.\n> "Strategy": Tactical guide.`,
-      timestamp: Date.now()
-    }
-  ]);
+  const [messages, setMessages] = useState<Array<{type: 'agent'|'user'|'system', text: string}>>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
 
   const sendMessage = useCallback(async (userQuery: string, context: string) => {
-    // 1. Add User Message immediately
-    const userMsg: Message = { type: 'user', text: userQuery, timestamp: Date.now() };
-    setMessages(prev => [...prev, userMsg]);
+    // Optimistic UI Update
+    setMessages(prev => [...prev, { type: 'user', text: userQuery }]);
     setIsAiLoading(true);
 
     try {
-      // 2. Invoke Supabase Edge Function
+      // THE WIRING: Matches the { message, context } in index.ts
       const { data, error } = await supabase.functions.invoke('oracle', {
-        body: { message: userQuery, context }
+        body: { 
+          message: userQuery, 
+          context: context 
+        }
       });
 
       if (error) throw error;
 
-      // 3. Add AI Response
-      const aiMsg: Message = { type: 'agent', text: data.reply, timestamp: Date.now() };
-      setMessages(prev => [...prev, aiMsg]);
+      setMessages(prev => [...prev, { type: 'agent', text: data.reply }]);
     } catch (err) {
-      setMessages(prev => [...prev, { 
-        type: 'agent', 
-        text: "ERR: Uplink failed. AI Oracle offline.", 
-        timestamp: Date.now() 
-      }]);
+      console.error(err);
+      setMessages(prev => [...prev, { type: 'agent', text: "ERR: Uplink failed. Connection refused." }]);
     } finally {
       setIsAiLoading(false);
     }
   }, []);
 
   const addSystemMessage = useCallback((text: string) => {
-    setMessages(prev => [...prev, { type: 'agent', text, timestamp: Date.now() }]);
+    setMessages(prev => [...prev, { type: 'system', text }]);
   }, []);
 
   return { messages, isAiLoading, sendMessage, addSystemMessage };

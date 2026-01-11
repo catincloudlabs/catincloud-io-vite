@@ -1,25 +1,30 @@
 // supabase/functions/oracle/index.ts
-import { serve } from "std/http/server.ts"
-import { OPENAI_API_KEY } from "./keys.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-serve(async (req) => {
+// Deno.serve is built globally into the Supabase Edge Runtime.
+// No imports are required.
+Deno.serve(async (req) => {
+  // 1. Handle CORS Preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    // We now have the key guaranteed from the file
+    // 2. Securely get Key from Environment
+    // Make sure you ran: npx supabase secrets set OPENAI_API_KEY=sk-...
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')
+    
     if (!OPENAI_API_KEY) {
-      throw new Error('Missing API Key in keys.ts')
+      throw new Error('Missing OPENAI_API_KEY environment variable')
     }
 
     const { message, context } = await req.json()
 
+    // 3. Define the Persona
     const systemPrompt = `
       You are a specialized Financial Physics Analyst. 
       You analyze a 3D force-directed market simulation where:
@@ -32,6 +37,7 @@ serve(async (req) => {
       Keep answers under 50 words.
     `
 
+    // 4. Call OpenAI
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -44,19 +50,22 @@ serve(async (req) => {
           { role: 'system', content: systemPrompt },
           { role: 'user', content: `Context: ${context || 'No specific data provided.'}\n\nUser Query: ${message}` }
         ],
-        temperature: 0.7, 
+        temperature: 0.7,
       }),
     })
 
     const data = await response.json()
     
     if (data.error) {
-       throw new Error(`OpenAI Error: ${data.error.message}`)
+      throw new Error(`OpenAI Error: ${data.error.message}`)
     }
 
-    const aiText = data.choices[0].message.content
+    // Check if choices exist to prevent crash on empty response
+    const reply = data.choices && data.choices.length > 0 
+      ? data.choices[0].message.content 
+      : "No intel received from HQ."
 
-    return new Response(JSON.stringify({ reply: aiText }), {
+    return new Response(JSON.stringify({ reply }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
@@ -65,7 +74,7 @@ serve(async (req) => {
     const errorMessage = err instanceof Error ? err.message : String(err)
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 500, 
+      status: 500,
     })
   }
 })
