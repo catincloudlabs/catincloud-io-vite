@@ -14,6 +14,10 @@ interface AgentPanelProps {
   onOpenBio: () => void;
 }
 
+/**
+ * HELPER: Formats raw data into a structured context for the AI.
+ * NOW INCLUDES: Simulation Date to ground the AI in the correct timeline.
+ */
 const getSystemContext = (
   ticker: string, 
   currentFrame: MarketFrame, 
@@ -29,6 +33,7 @@ const getSystemContext = (
   const velocity = Math.sqrt(node.vx**2 + node.vy**2).toFixed(2);
 
   return `
+    SIMULATION DATE: ${currentFrame.date} (Treat this date as "Today")
     Focus Asset: ${ticker}
     Metrics: Energy=${node.energy.toFixed(0)}, Velocity=${velocity}
     News Context: ${newsSummary}
@@ -110,7 +115,8 @@ export function AgentPanel({
     if (!selectedTicker || !currentFrame || isLoading) return;
     if (lastTickerRef.current === selectedTicker) return;
 
-    addSystemMessage(`**${selectedTicker}** selected. Analyzing real-time metrics...`);
+    // Friendly, context-aware opening
+    addSystemMessage(`**${selectedTicker}** selected. Analyzing real-time metrics for ${currentFrame.date}...`);
     
     lastTickerRef.current = selectedTicker;
     setIsExpanded(true);
@@ -132,9 +138,10 @@ export function AgentPanel({
       return;
     }
 
+    // INJECT: Now passing currentFrame (with date) to the helper
     const context = selectedTicker && currentFrame 
       ? getSystemContext(selectedTicker, currentFrame, graphConnections || [])
-      : "General market overview.";
+      : `General Market View. SIMULATION DATE: ${currentFrame?.date}`;
 
     await sendMessage(query, context);
   };
@@ -160,7 +167,7 @@ export function AgentPanel({
             transition: 'all 0.3s ease'
           }} />
           <span style={{ fontWeight: 600, letterSpacing: '0.05em', fontSize: '0.75rem', color: '#94a3b8' }}>
-            {isAiLoading ? "PROCESSING..." : "MARKET INTELLIGENCE"}
+            {isAiLoading ? "PROCESSING..." : `MARKET INTEL • ${currentFrame.date}`}
           </span>
         </div>
 
