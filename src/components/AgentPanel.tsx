@@ -15,64 +15,8 @@ interface AgentPanelProps {
 }
 
 /**
- * UTILITY: Parses bold markdown (e.g. **Text**) into JSX
+ * HELPER: Formats raw data into a structured context for the AI.
  */
-const formatMessage = (text: string) => {
-  // Split by double asterisks
-  const parts = text.split(/(\*\*.*?\*\*)/g);
-  return parts.map((part, i) => {
-    if (part.startsWith('**') && part.endsWith('**')) {
-      return <span key={i} className="term-bold">{part.slice(2, -2)}</span>;
-    }
-    return part;
-  });
-};
-
-/**
- * COMPONENT: Handles the "Sci-Fi" typing effect
- */
-const TypewriterMessage = ({ text, type, onTyping }: { text: string, type: string, onTyping: () => void }) => {
-  const [displayedText, setDisplayedText] = useState("");
-  const [isComplete, setIsComplete] = useState(false);
-  
-  // Instant render for user messages, typing for agent
-  const shouldAnimate = type === 'agent' || type === 'system';
-
-  useEffect(() => {
-    if (!shouldAnimate) {
-      setDisplayedText(text);
-      setIsComplete(true);
-      return;
-    }
-
-    let i = 0;
-    // Speed: 15ms per char (Fast but readable)
-    const timer = setInterval(() => {
-      if (i < text.length) {
-        setDisplayedText(text.slice(0, i + 1));
-        i++;
-        onTyping(); // Trigger scroll
-      } else {
-        clearInterval(timer);
-        setIsComplete(true);
-      }
-    }, 15);
-
-    return () => clearInterval(timer);
-  }, [text, shouldAnimate, onTyping]);
-
-  return (
-    <div className={`msg-row msg-${type} ${!isComplete && shouldAnimate ? 'typing-cursor' : ''}`}>
-      {type === 'user' && <span style={{ marginRight: 8 }}>➜</span>}
-      {/* We only format the text once it's fully typed to prevent 
-         markdown chars (**...**) from flickering during animation 
-      */}
-      {isComplete ? formatMessage(text) : displayedText}
-    </div>
-  );
-};
-
-// --- Context Helper ---
 const getSystemContext = (
   ticker: string, 
   currentFrame: MarketFrame, 
@@ -83,15 +27,63 @@ const getSystemContext = (
 
   const newsSummary = graph.length > 0 
     ? graph.flatMap(c => c.articles).slice(0, 5).join(' | ') 
-    : "No recent news signals.";
+    : "No recent news.";
 
   const velocity = Math.sqrt(node.vx**2 + node.vy**2).toFixed(2);
 
   return `
-    CURRENT TARGET: ${ticker}
-    PHYSICS: Energy=${node.energy.toFixed(0)}, Velocity=${velocity}
-    KNOWLEDGE GRAPH INTEL: ${newsSummary}
+    Focus Asset: ${ticker}
+    Metrics: Energy=${node.energy.toFixed(0)}, Velocity=${velocity}
+    News Context: ${newsSummary}
   `;
+};
+
+// UTILITY: Parses bold markdown (e.g. **Text**) into JSX
+const formatMessage = (text: string) => {
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <span key={i} className="term-bold">{part.slice(2, -2)}</span>;
+    }
+    return part;
+  });
+};
+
+// COMPONENT: Typing effect (Keep this, it's good UX)
+const TypewriterMessage = ({ text, type, onTyping }: { text: string, type: string, onTyping: () => void }) => {
+  const [displayedText, setDisplayedText] = useState("");
+  const [isComplete, setIsComplete] = useState(false);
+  
+  const shouldAnimate = type === 'agent' || type === 'system';
+
+  useEffect(() => {
+    if (!shouldAnimate) {
+      setDisplayedText(text);
+      setIsComplete(true);
+      return;
+    }
+
+    let i = 0;
+    const timer = setInterval(() => {
+      if (i < text.length) {
+        setDisplayedText(text.slice(0, i + 1));
+        i++;
+        onTyping(); 
+      } else {
+        clearInterval(timer);
+        setIsComplete(true);
+      }
+    }, 10); // Slightly faster typing for "pro" feel
+
+    return () => clearInterval(timer);
+  }, [text, shouldAnimate, onTyping]);
+
+  return (
+    <div className={`msg-row msg-${type} ${!isComplete && shouldAnimate ? 'typing-cursor' : ''}`}>
+      {type === 'user' && <span style={{ marginRight: 8, color: '#22c55e' }}>➜</span>}
+      {isComplete ? formatMessage(text) : displayedText}
+    </div>
+  );
 };
 
 export function AgentPanel({ 
@@ -112,28 +104,26 @@ export function AgentPanel({
   
   const { messages, isAiLoading, sendMessage, addSystemMessage } = useAgentOracle();
 
-  // Scroll Helper
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // 1. Auto-scroll when message list length changes
   useEffect(() => {
     if (isExpanded) scrollToBottom();
   }, [messages.length, isExpanded]);
 
-  // 2. Ticker Selection Logic
+  // Ticker Selection: Professional Analysis Notification
   useEffect(() => {
     if (!selectedTicker || !currentFrame || isLoading) return;
     if (lastTickerRef.current === selectedTicker) return;
 
     const context = getSystemContext(selectedTicker, currentFrame, graphConnections || []);
     
-    // Using Markdown for emphasis
-    addSystemMessage(`**TARGET ACQUIRED:** ${selectedTicker}\nAnalyzing physics and news vectors...`);
+    // UPDATED: Professional acknowledgment
+    addSystemMessage(`**Asset Selected:** ${selectedTicker}\nLoading physics metrics and news data...`);
     
-    // Log for debugging
-    console.debug("Context prepared for target:", context);
+    // Debug log
+    console.debug("Context prepared:", context);
 
     lastTickerRef.current = selectedTicker;
     setIsExpanded(true);
@@ -143,7 +133,6 @@ export function AgentPanel({
     if (!selectedTicker) lastTickerRef.current = null;
   }, [selectedTicker]);
 
-  // 3. Command Router
   const handleCommand = async (cmd: string) => {
     const query = cmd.trim();
     if (!query) return;
@@ -151,18 +140,19 @@ export function AgentPanel({
     setInputValue("");
     const upper = query.toUpperCase();
     
+    // UPDATED: Documentation titles
     if (upper === "PHYSICS") {
-      addSystemMessage("**PHYSICS ENGINE DOCS:**\n• **ENERGY** (Size): Volume/Liquidity.\n• **VELOCITY** (Speed): Price Momentum.");
+      addSystemMessage("**Model Documentation:**\n• **Energy** (Size): Volume/Liquidity.\n• **Velocity** (Speed): Price Momentum.");
       return;
     }
     if (upper === "LEGEND") {
-      addSystemMessage("**VISUAL DECODER:**\n🟢 **GREEN**: Positive\n🔴 **RED**: Negative\n🟡 **GOLD**: Knowledge Graph Link");
+      addSystemMessage("**Map Legend:**\n🟢 **Green**: Positive Trend\n🔴 **Red**: Negative Trend\n🟡 **Gold**: Active News Correlation");
       return;
     }
 
     const context = selectedTicker && currentFrame 
       ? getSystemContext(selectedTicker, currentFrame, graphConnections || [])
-      : "Viewing general market map simulation.";
+      : "General market overview.";
 
     await sendMessage(query, context);
   };
@@ -187,16 +177,17 @@ export function AgentPanel({
             boxShadow: isBusy ? '0 0 8px #fbbf24' : '0 0 8px #22c55e',
             transition: 'all 0.3s ease'
           }} />
-          <span style={{ fontWeight: 600, letterSpacing: '0.1em', fontSize: '0.75rem', color: '#94a3b8' }}>
-            {isAiLoading ? "CONSULTING ORACLE..." : isLoading ? "DECRYPTING..." : "INTELLIGENCE"}
+          {/* UPDATED: Status Labels */}
+          <span style={{ fontWeight: 600, letterSpacing: '0.05em', fontSize: '0.75rem', color: '#94a3b8' }}>
+            {isAiLoading ? "ANALYZING..." : isLoading ? "LOADING DATA..." : "MARKET INSIGHTS"}
           </span>
         </div>
 
          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <button onClick={(e) => { e.stopPropagation(); onOpenArch(); }} className="panel-toggle-btn">
+            <button onClick={(e) => { e.stopPropagation(); onOpenArch(); }} className="panel-toggle-btn" title="Architecture">
                 <Network size={14} />
             </button>
-            <button onClick={(e) => { e.stopPropagation(); onOpenBio(); }} className="panel-toggle-btn" style={{ marginRight: '8px' }}>
+            <button onClick={(e) => { e.stopPropagation(); onOpenBio(); }} className="panel-toggle-btn" style={{ marginRight: '8px' }} title="About">
                 <User size={14} />
             </button>
             <div style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)' }}></div>
@@ -223,7 +214,7 @@ export function AgentPanel({
                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#fbbf24', fontSize: '0.75rem', padding: '10px 12px', opacity: 0.8 }}>
                     <Loader2 size={14} className="animate-spin" />
                     <span className="typing-cursor">
-                      {isAiLoading ? "Uplink established. Awaiting stream..." : "Accessing Knowledge Graph..."}
+                      {isAiLoading ? "Processing query..." : "Fetching market data..."}
                     </span>
                  </div>
             )}
@@ -233,9 +224,10 @@ export function AgentPanel({
 
           <div className="terminal-input-area">
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ color: '#22c55e', fontWeight: 'bold' }}>$</span>
+              <span style={{ color: '#22c55e', fontWeight: 'bold' }}>›</span>
+              {/* UPDATED: Placeholder */}
               <input 
-                type="text" className="terminal-input" placeholder="Query intelligence..." 
+                type="text" className="terminal-input" placeholder="Ask a question about this asset..." 
                 value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={handleKeyDown}
                 autoFocus
               />
