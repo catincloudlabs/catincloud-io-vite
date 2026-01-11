@@ -789,3 +789,79 @@ input[type=range]::-moz-range-track {
     scroll-behavior: auto !important;
   }
 }
+
+/* --- LAYOUT ANCHORS (Add or Replace in index.css) --- */
+
+.app-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Pushes content to edges */
+  padding: 0 24px;
+  z-index: 50;
+  pointer-events: none; /* Let clicks pass through empty spaces */
+}
+
+/* Re-enable clicks for the children */
+.header-left, .header-right {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-icon-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.header-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--accent-green);
+  border-color: var(--accent-green);
+}
+
+.agent-panel-wrapper {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  z-index: 40;
+  /* Ensures the panel grows UP from the bottom */
+  display: flex;
+  flex-direction: column-reverse; 
+}
+
+.timeline-slider-container {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%); /* Perfectly centered */
+  width: 100%;
+  max-width: 600px;
+  padding: 0 20px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.slider-label-row {
+  display: flex; 
+  justify-content: space-between; 
+  color: var(--text-muted); 
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+}

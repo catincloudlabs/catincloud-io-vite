@@ -40,7 +40,6 @@ function App() {
         setFrames(hydratedFrames);
         
         // 2. Set Default Time to "NOW" (The end of the dataset)
-        // This ensures the recruiter sees the latest state immediately.
         if (hydratedFrames.length > 0) {
             setTimelineProgress(hydratedFrames.length - 1);
         }
@@ -71,7 +70,7 @@ function App() {
     return { displayNodes: nodes, currentDateLabel: currentFrame.date, currentFrameData: currentFrame };
   }, [frames, timelineProgress]);
 
-  // ERROR STATE - Using CSS variables for colors
+  // ERROR STATE
   if (error) return (
     <div style={{ background: 'var(--background)', height: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)' }}>
       <h1 style={{ color: '#ef4444' }}>System Error</h1>
@@ -90,7 +89,7 @@ function App() {
   return (
     <div style={{ width: '100vw', height: '100dvh', position: 'relative', overflow: 'hidden', background: 'var(--background)' }}>
       
-      {/* Map Layer */}
+      {/* Map Layer (Background) */}
       <MarketMap 
         data={{ date: currentDateLabel, nodes: displayNodes }} 
         history={frames || []}
@@ -100,23 +99,30 @@ function App() {
         graphConnections={connections}       
       />
 
-      {/* Header */}
-      <Header dateLabel={currentDateLabel} />
+      {/* Header (Top HUD) - Now controls the modals */}
+      <Header 
+        dateLabel={currentDateLabel} 
+        onOpenArch={() => setArchOpen(true)}
+        onOpenBio={() => setBioOpen(true)}
+      />
 
-      {/* Agent Panel */}
+      {/* Agent Panel (Bottom Right) */}
       <div className="agent-panel-wrapper">
         <AgentPanel 
           currentFrame={currentFrameData} 
           selectedTicker={selectedTicker}
           graphConnections={connections}
           isLoading={loading}
-          onOpenArch={() => setArchOpen(true)}
-          onOpenBio={() => setBioOpen(true)}
         />
       </div>
 
-      {/* Slider */}
+      {/* Slider (Bottom Center) */}
       <div className="timeline-slider-container">
+        <div className="slider-label-row">
+          <span>HISTORY</span>
+          <span className="slider-center-label">SIMULATION PROGRESS</span>
+          <span>TODAY</span>
+        </div>
         <input 
           type="range" 
           min="0" 
@@ -125,14 +131,8 @@ function App() {
           value={timelineProgress}
           onChange={(e) => setTimelineProgress(parseFloat(e.target.value))}
           aria-label="Simulation Timeline"
-          // Removed accentColor to allow CSS styling to take precedence
-          style={{ width: '100%', cursor: 'pointer' }}
+          style={{ width: '100%', cursor: 'pointer', display: 'block' }}
         />
-        <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', marginTop: '8px' }}>
-          <span>HISTORY</span>
-          <span style={{ opacity: 0.5 }}>SIMULATION PROGRESS</span>
-          <span>TODAY</span>
-        </div>
       </div>
 
       <ArchitectureModal isOpen={isArchOpen} onClose={() => setArchOpen(false)} />

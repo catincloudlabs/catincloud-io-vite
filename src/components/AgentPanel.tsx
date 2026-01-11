@@ -3,21 +3,15 @@ import { MarketFrame } from '../App';
 import { GraphConnection } from '../hooks/useKnowledgeGraph';
 import { useAgentOracle } from '../hooks/useAgentOracle';
 // @ts-ignore
-import { Network, User, Minus, Plus, Loader2, SendHorizontal, Sparkles, Activity } from 'lucide-react';
+import { Minus, Plus, Loader2, SendHorizontal, Sparkles, Activity } from 'lucide-react';
 
 interface AgentPanelProps {
   currentFrame: MarketFrame | null;
   selectedTicker: string | null;
   graphConnections?: GraphConnection[];
   isLoading?: boolean;
-  onOpenArch: () => void;
-  onOpenBio: () => void;
 }
 
-/**
- * HELPER: Formats raw data into a structured context for the AI.
- * INJECTS THE 70/30 PERSONALITY SPLIT HERE.
- */
 const getSystemContext = (
   ticker: string, 
   currentFrame: MarketFrame, 
@@ -32,7 +26,6 @@ const getSystemContext = (
 
   const velocity = Math.sqrt(node.vx**2 + node.vy**2).toFixed(2);
 
-  // We inject the "Persona" instructions directly into the context sent to the LLM
   return `
     [SYSTEM INSTRUCTION: Adopt a "Smart Analyst" persona. 
     - Split your response 70/30: 70% hard data/analysis, 30% conversational flow.
@@ -70,7 +63,6 @@ const TypewriterMessage = ({ text, type, onTyping }: { text: string, type: strin
     }
 
     let i = 0;
-    // Faster typing speed (5ms) for a snappier, less "retro" feel
     const timer = setInterval(() => {
       if (i < text.length) {
         setDisplayedText(text.slice(0, i + 1));
@@ -97,9 +89,7 @@ export function AgentPanel({
   currentFrame, 
   selectedTicker, 
   graphConnections, 
-  isLoading, 
-  onOpenArch, 
-  onOpenBio 
+  isLoading 
 }: AgentPanelProps) {
   const [isExpanded, setIsExpanded] = useState(() => {
     return typeof window !== 'undefined' && window.innerWidth > 768;
@@ -123,7 +113,6 @@ export function AgentPanel({
     if (!selectedTicker || !currentFrame || isLoading) return;
     if (lastTickerRef.current === selectedTicker) return;
 
-    // Cleaner system message
     addSystemMessage(`Tracking **${selectedTicker}**. Metrics loaded for ${currentFrame.date}.`);
     
     lastTickerRef.current = selectedTicker;
@@ -151,7 +140,6 @@ export function AgentPanel({
     if (e.key === 'Enter') handleCommand();
   };
 
-  // --- REFINED PROMPTS (Less "Explain Physics", more "What's happening?") ---
   const getSuggestions = () => {
     if (selectedTicker) {
       return [
@@ -162,11 +150,10 @@ export function AgentPanel({
     }
     return [
       { label: "Market Status", prompt: "Summarize the current market state." },
-      { label: "How this works", prompt: "Quickly explain how this simulation calculates velocity." },
+      { label: "Velocity?", prompt: "Quickly explain how this simulation calculates velocity." },
       { label: "Tech Stack", prompt: "What technology is powering this dashboard?" }
     ];
   };
-  // -------------------------
 
   if (!currentFrame) return null;
 
@@ -176,7 +163,6 @@ export function AgentPanel({
     <div 
       className={`agent-terminal ${isExpanded ? 'expanded' : 'collapsed'}`}
       style={{
-         // Subtle indicator, removed the heavy glowing shadow
          borderColor: selectedTicker ? 'var(--accent-green)' : 'var(--glass-border)',
       }}
       role="region"
@@ -194,15 +180,12 @@ export function AgentPanel({
         onKeyDown={(e) => e.key === 'Enter' && setIsExpanded(!isExpanded)}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
-          
-          {/* Replaced 'Orb' with a cleaner Activity Icon for a modern SaaS feel */}
           <Activity 
             size={16} 
             className={isBusy ? "icon-spin" : ""}
             color={isBusy ? "var(--accent-ai)" : "var(--accent-green)"} 
             aria-hidden="true"
           />
-          
           <span style={{ 
               fontFamily: 'var(--font-mono)', 
               fontWeight: 600, 
@@ -216,25 +199,6 @@ export function AgentPanel({
 
          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button 
-              onClick={(e) => { e.stopPropagation(); onOpenArch(); }} 
-              className="panel-toggle-btn" 
-              title="Architecture" 
-              aria-label="Open Architecture Diagram"
-            >
-                <Network size={14} aria-hidden="true" />
-            </button>
-            <button 
-              onClick={(e) => { e.stopPropagation(); onOpenBio(); }} 
-              className="panel-toggle-btn" 
-              title="Bio" 
-              aria-label="Open Developer Bio"
-            >
-                <User size={14} aria-hidden="true" />
-            </button>
-            
-            <div className="v-divider" aria-hidden="true"></div>
-            
-            <button 
               className="panel-toggle-btn" 
               aria-label={isExpanded ? "Collapse Panel" : "Expand Panel"}
             >
@@ -246,7 +210,6 @@ export function AgentPanel({
       {/* BODY */}
       {isExpanded && (
         <>
-          {/* aria-live="polite" ensures new messages are read out without interrupting */}
           <div 
             id="agent-messages"
             className="terminal-body"
@@ -275,7 +238,6 @@ export function AgentPanel({
           {/* INPUT AREA */}
           <div className="terminal-input-area">
             
-            {/* SUGGESTION CHIPS */}
             <div className="chips-row" role="group" aria-label="Suggested Queries">
                 <Sparkles size={12} color="var(--accent-green)" style={{ flexShrink: 0, opacity: 0.7 }} aria-hidden="true" />
                 {getSuggestions().map((chip, idx) => (

@@ -1,18 +1,20 @@
 import React from 'react';
-import { Clock } from 'lucide-react';
+// @ts-ignore
+import { Clock, Network, User } from 'lucide-react';
 
 interface HeaderProps {
   dateLabel: string;
+  onOpenArch: () => void;
+  onOpenBio: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ dateLabel }) => {
+const Header: React.FC<HeaderProps> = ({ dateLabel, onOpenArch, onOpenBio }) => {
   return (
     <header className="app-header">
       {/* LEFT: CHRONOMETER */}
       <div className="header-left">
         <div className="header-chronometer">
           <div className="chrono-label">
-            {/* explicit color to guarantee theme match */}
             <Clock size={10} color="var(--accent-green)" />
             <span style={{ marginLeft: '6px' }}>EVENT HORIZON</span>
           </div>
@@ -20,7 +22,25 @@ const Header: React.FC<HeaderProps> = ({ dateLabel }) => {
         </div>
       </div>
       
-      {/* RIGHT SIDE EMPTY */}
+      {/* RIGHT: META CONTROLS */}
+      <div className="header-right">
+        <button 
+          onClick={onOpenArch} 
+          className="header-icon-btn" 
+          title="Architecture" 
+          aria-label="Open Architecture Diagram"
+        >
+          <Network size={16} />
+        </button>
+        <button 
+          onClick={onOpenBio} 
+          className="header-icon-btn" 
+          title="Bio" 
+          aria-label="Open Developer Bio"
+        >
+          <User size={16} />
+        </button>
+      </div>
     </header>
   );
 };
