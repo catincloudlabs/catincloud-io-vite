@@ -386,7 +386,7 @@ html, body {
   border-color: var(--accent-green);
 }
 
-/* Small Mobile Bio Fix */
+/* RESPONSIVE BIO: Stack layout on small phones */
 @media (max-width: 600px) {
   .bio-grid {
     flex-direction: column;
