@@ -105,7 +105,6 @@ function App() {
       <div className="agent-panel-wrapper">
         <AgentPanel 
           currentFrame={currentFrameData} 
-          history={frames || []}
           selectedTicker={selectedTicker}
           graphConnections={connections}
           isLoading={loading}

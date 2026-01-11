@@ -264,7 +264,7 @@ export function AgentPanel({
           
           <div style={{ 
             padding: '6px 0', 
-            fontSize: '0.6rem', 
+            fontSize: '0.5rem', 
             color: '#475569', 
             textAlign: 'center',
             background: 'rgba(2, 6, 23, 0.8)',
