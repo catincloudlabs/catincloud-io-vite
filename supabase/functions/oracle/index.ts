@@ -1,5 +1,6 @@
 // supabase/functions/oracle/index.ts
 import { serve } from "std/http/server.ts"
+import { OPENAI_API_KEY } from "./keys.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,21 +8,18 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // 1. CORS Pre-flight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    // 2. Security Check: ensure API Key exists
-    const apiKey = Deno.env.get('OPENAI_API_KEY')
-    if (!apiKey) {
-      throw new Error('Missing OPENAI_API_KEY in environment')
+    // We now have the key guaranteed from the file
+    if (!OPENAI_API_KEY) {
+      throw new Error('Missing API Key in keys.ts')
     }
 
     const { message, context } = await req.json()
 
-    // 3. The "System Prompt" - The Personality of your Agent
     const systemPrompt = `
       You are a specialized Financial Physics Analyst. 
       You analyze a 3D force-directed market simulation where:
@@ -30,15 +28,14 @@ serve(async (req) => {
       - Volume/Market Cap is Energy (Mass).
       
       Your goal: Provide brief, tactical, military-style SITREPs based on the user's query.
-      Tone: Professional, high-tech, slightly sci-fi (like a Bloomberg terminal meeting JARVIS).
-      Keep answers under 50 words unless asked for detail.
+      Tone: Professional, high-tech, slightly sci-fi.
+      Keep answers under 50 words.
     `
 
-    // 4. Call OpenAI
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -53,14 +50,12 @@ serve(async (req) => {
 
     const data = await response.json()
     
-    // Check if OpenAI gave an error
     if (data.error) {
        throw new Error(`OpenAI Error: ${data.error.message}`)
     }
 
     const aiText = data.choices[0].message.content
 
-    // 5. Return the Intelligence
     return new Response(JSON.stringify({ reply: aiText }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,

@@ -34,3 +34,5 @@ node_modules
 # scratch paper for notes
 scratch.txt
 scratch.json
+
+supabase/functions/oracle/keys.ts
