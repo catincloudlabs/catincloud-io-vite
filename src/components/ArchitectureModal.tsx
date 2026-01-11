@@ -21,17 +21,23 @@ const ArchitectureModal: React.FC<ArchitectureModalProps> = ({ isOpen, onClose }
 
   return (
     <div className="modal-overlay" onClick={onClose} style={{ display: 'flex' }}>
-      <div className="modal-box architecture-modal" onClick={e => e.stopPropagation()}>
+      <div 
+        className="modal-box architecture-modal" 
+        onClick={e => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="arch-modal-title"
+      >
         
         {/* Header */}
         <div className="modal-header">
           <div className="modal-title-wrapper">
-            <Cpu size={16} className="text-accent" />
-            <span className="modal-title">SYSTEM_ARCHITECTURE</span>
+            <Cpu size={16} className="text-accent" aria-hidden="true" />
+            <span className="modal-title" id="arch-modal-title">SYSTEM_ARCHITECTURE</span>
             <span className="tag ml-2">LIVE</span>
           </div>
-          <button className="panel-toggle-btn" onClick={onClose}>
-            <X size={18} />
+          <button className="panel-toggle-btn" onClick={onClose} aria-label="Close Architecture Diagram">
+            <X size={18} aria-hidden="true" />
           </button>
         </div>
 
@@ -44,10 +50,12 @@ const ArchitectureModal: React.FC<ArchitectureModalProps> = ({ isOpen, onClose }
             <div 
               className={`arch-node ${activeStep === 1 ? 'active' : ''}`} 
               onClick={() => setActiveStep(1)}
+              role="button"
+              aria-label="Step 1: Ingestion"
             >
               <div className="arch-node-header">
                 <div className="arch-icon-box">
-                    <Database size={20} />
+                    <Database size={20} aria-hidden="true" />
                 </div>
                 <div className="arch-meta">
                     <div className="arch-label">01. INGESTION</div>
@@ -59,7 +67,7 @@ const ArchitectureModal: React.FC<ArchitectureModalProps> = ({ isOpen, onClose }
               </div>
             </div>
 
-            <div className="arch-arrow">
+            <div className="arch-arrow" aria-hidden="true">
               <span className="desktop-arrow">→</span>
               <span className="mobile-arrow">↓</span>
             </div>
@@ -68,10 +76,12 @@ const ArchitectureModal: React.FC<ArchitectureModalProps> = ({ isOpen, onClose }
             <div 
               className={`arch-node ${activeStep === 2 ? 'active' : ''}`} 
               onClick={() => setActiveStep(2)}
+              role="button"
+              aria-label="Step 2: Synthesis"
             >
               <div className="arch-node-header">
                 <div className="arch-icon-box">
-                    <Brain size={20} />
+                    <Brain size={20} aria-hidden="true" />
                 </div>
                 <div className="arch-meta">
                     <div className="arch-label">02. SYNTHESIS</div>
@@ -83,7 +93,7 @@ const ArchitectureModal: React.FC<ArchitectureModalProps> = ({ isOpen, onClose }
               </div>
             </div>
 
-            <div className="arch-arrow">
+            <div className="arch-arrow" aria-hidden="true">
               <span className="desktop-arrow">→</span>
               <span className="mobile-arrow">↓</span>
             </div>
@@ -92,10 +102,12 @@ const ArchitectureModal: React.FC<ArchitectureModalProps> = ({ isOpen, onClose }
             <div 
               className={`arch-node ${activeStep === 3 ? 'active' : ''}`} 
               onClick={() => setActiveStep(3)}
+              role="button"
+              aria-label="Step 3: Physics"
             >
               <div className="arch-node-header">
                 <div className="arch-icon-box">
-                    <Cpu size={20} />
+                    <Cpu size={20} aria-hidden="true" />
                 </div>
                 <div className="arch-meta">
                     <div className="arch-label">03. PHYSICS</div>
@@ -107,7 +119,7 @@ const ArchitectureModal: React.FC<ArchitectureModalProps> = ({ isOpen, onClose }
               </div>
             </div>
 
-            <div className="arch-arrow">
+            <div className="arch-arrow" aria-hidden="true">
               <span className="desktop-arrow">→</span>
               <span className="mobile-arrow">↓</span>
             </div>
@@ -116,10 +128,12 @@ const ArchitectureModal: React.FC<ArchitectureModalProps> = ({ isOpen, onClose }
             <div 
               className={`arch-node ${activeStep === 4 ? 'active' : ''}`} 
               onClick={() => setActiveStep(4)}
+              role="button"
+              aria-label="Step 4: Render"
             >
               <div className="arch-node-header">
                 <div className="arch-icon-box">
-                    <Layout size={20} />
+                    <Layout size={20} aria-hidden="true" />
                 </div>
                 <div className="arch-meta">
                     <div className="arch-label">04. RENDER</div>

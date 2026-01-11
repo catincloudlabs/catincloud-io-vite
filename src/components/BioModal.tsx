@@ -20,16 +20,22 @@ const BioModal: React.FC<BioModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-box bio-modal" onClick={e => e.stopPropagation()}>
+      <div 
+        className="modal-box bio-modal" 
+        onClick={e => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="bio-modal-title"
+      >
         
         {/* Header */}
         <div className="modal-header">
           <div className="modal-title-wrapper">
-            <Terminal size={16} className="text-accent" />
-            <span className="modal-title">USER_RECORD: DAVE_ANAYA</span>
+            <Terminal size={16} className="text-accent" aria-hidden="true" />
+            <span className="modal-title" id="bio-modal-title">USER_RECORD: DAVE_ANAYA</span>
           </div>
-          <button className="panel-toggle-btn" onClick={onClose}>
-            <X size={18} />
+          <button className="panel-toggle-btn" onClick={onClose} aria-label="Close Profile">
+            <X size={18} aria-hidden="true" />
           </button>
         </div>
 
@@ -52,7 +58,7 @@ const BioModal: React.FC<BioModalProps> = ({ isOpen, onClose }) => {
               <h2 className="bio-name">Dave Anaya</h2>
               <p className="bio-role">Senior Data Engineer & Architect</p>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.7rem', color: '#94a3b8', marginBottom: '8px' }}>
-                <MapPin size={12} />
+                <MapPin size={12} aria-hidden="true" />
                 <span>Minneapolis, MN</span>
               </div>
               <p className="bio-desc">
@@ -87,19 +93,19 @@ const BioModal: React.FC<BioModalProps> = ({ isOpen, onClose }) => {
           <h3 className="bio-h3">UPLINK</h3>
           <div className="contact-row">
             <a href="https://github.com/catincloudlabs" target="_blank" rel="noreferrer" className="contact-btn">
-              <Github size={14} />
+              <Github size={14} aria-hidden="true" />
               <span>GITHUB</span>
             </a>
             <a href="https://linkedin.com/in/dave-anaya/" target="_blank" rel="noreferrer" className="contact-btn">
-              <Linkedin size={14} />
+              <Linkedin size={14} aria-hidden="true" />
               <span>LINKEDIN</span>
             </a>
             <a href="mailto:dave@catincloudlabs.com" className="contact-btn">
-              <Mail size={14} />
+              <Mail size={14} aria-hidden="true" />
               <span>EMAIL</span>
             </a>
             <a href="https://catincloudlabs.com" target="_blank" rel="noreferrer" className="contact-btn btn-primary">
-              <Globe size={14} />
+              <Globe size={14} aria-hidden="true" />
               <span>PORTFOLIO</span>
             </a>
           </div>
