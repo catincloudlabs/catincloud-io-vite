@@ -29,7 +29,7 @@ interface MarketMapProps {
   data: MarketFrame;
   history?: MarketFrame[];
   onNodeClick?: (node: HydratedNode) => void;
-  onBackgroundClick?: () => void; // <--- NEW PROP
+  onBackgroundClick?: () => void;
   selectedTicker?: string | null;         
   graphConnections?: GraphConnection[];   
 }
@@ -41,6 +41,15 @@ const INITIAL_VIEW_STATE = {
   zoom: isMobile ? 0.6 : 1.0, 
   minZoom: 0.1,
   maxZoom: 10
+};
+
+// --- THEME CONSTANTS (Synced with index.css) ---
+const THEME = {
+  mint: [52, 211, 153],       // #34d399
+  red: [239, 68, 68],         // #ef4444
+  slate: [148, 163, 184],     // #94a3b8
+  gold: [251, 191, 36],       // #fbbf24
+  glass: [255, 255, 255]
 };
 
 export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selectedTicker, graphConnections }: MarketMapProps) {
@@ -73,7 +82,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
   const sortedNodes = useMemo(() => {
     if (!data?.nodes) return [];
 
-    // FILTER OUT NOISE (Warrants, Preferreds, Glitches)
+    // FILTER OUT NOISE
     const cleanNodes = data.nodes.filter(n => {
         if (n.ticker.includes('.WS')) return false;
         if (n.ticker.includes('p')) return false;
@@ -167,7 +176,6 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
   // --- ACCESSIBILITY SUMMARY ---
   const accessibleSummary = useMemo(() => {
     if (!data?.nodes) return [];
-    // Get top 5 highest energy nodes
     return [...data.nodes]
         .sort((a, b) => b.energy - a.energy)
         .slice(0, 5)
@@ -183,12 +191,13 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     getPolygon: (d: any) => d.polygon,
     getFillColor: (d: any) => {
       const s = d.node.sentiment;
-      if (s > 0.1) return [0, 255, 100, 5];   
-      if (s < -0.1) return [255, 50, 50, 5];  
+      // Updated to Mint/Red with very low opacity
+      if (s > 0.1) return [...THEME.mint, 5];   
+      if (s < -0.1) return [...THEME.red, 5];  
       return [0, 0, 0, 0]; 
     },
     stroked: true,
-    getLineColor: [255, 255, 255, 3],
+    getLineColor: [255, 255, 255, 5],
     getLineWidth: 0.5,
     lineWidthUnits: 'pixels',
     pickable: false 
@@ -199,9 +208,9 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     data: trailData,
     getPath: (d: any) => d.path,
     getColor: (d: any) => {
-        if (d.sentiment > 0.1) return [0, 255, 100, 100]; 
-        if (d.sentiment < -0.1) return [255, 50, 50, 100];
-        return [100, 100, 100, 50];
+        if (d.sentiment > 0.1) return [...THEME.mint, 100]; 
+        if (d.sentiment < -0.1) return [...THEME.red, 100];
+        return [...THEME.slate, 50];
     },
     getWidth: 1.5,
     widthUnits: 'pixels',
@@ -215,7 +224,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     data: synapseData,
     getSourcePosition: (d: any) => d.from,
     getTargetPosition: (d: any) => d.to,
-    getColor: [255, 215, 0, 255], 
+    getColor: [...THEME.gold, 200], 
     getWidth: (d: any) => Math.max(2, d.strength * 0.8), 
     widthUnits: 'pixels',
     updateTriggers: {
@@ -235,11 +244,11 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
         return 2.5;
     },
     getFillColor: (d: HydratedNode) => {
-        if (d.ticker === selectedTicker) return [255, 255, 255, 255]; 
-        if (graphConnections?.some(c => c.target === d.ticker)) return [255, 215, 0, 255]; 
-        if (d.sentiment > 0.1) return [0, 255, 100, 255];   
-        if (d.sentiment < -0.1) return [255, 50, 50, 255];  
-        return [60, 70, 80, 150]; 
+        if (d.ticker === selectedTicker) return [...THEME.glass, 255]; 
+        if (graphConnections?.some(c => c.target === d.ticker)) return [...THEME.gold, 255]; 
+        if (d.sentiment > 0.1) return [...THEME.mint, 255];   
+        if (d.sentiment < -0.1) return [...THEME.red, 255];  
+        return [...THEME.slate, 150]; // Muted slate for neutral nodes
     },
     stroked: true,
     getLineWidth: (d: HydratedNode) => {
@@ -249,15 +258,15 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
         return 0; 
     },
     getLineColor: (d: HydratedNode) => {
-        if (d.ticker === selectedTicker) return pulse ? [255, 255, 255, 150] : [255, 255, 255, 255];
-        if (d.energy > superEnergyThreshold) return pulse ? [255, 255, 255, 100] : [255, 255, 255, 200]; 
-        if (d.energy > highEnergyThreshold) return pulse ? [255, 255, 255, 50] : [255, 255, 255, 100];  
+        if (d.ticker === selectedTicker) return pulse ? [...THEME.mint, 150] : [...THEME.glass, 255];
+        if (d.energy > superEnergyThreshold) return pulse ? [...THEME.glass, 100] : [...THEME.glass, 200]; 
+        if (d.energy > highEnergyThreshold) return pulse ? [...THEME.glass, 50] : [...THEME.glass, 100];  
         return [0, 0, 0, 0];
     },
     lineWidthUnits: 'common',
     pickable: true,
     autoHighlight: true,
-    highlightColor: [255, 255, 255, 100],
+    highlightColor: [...THEME.mint, 100],
     transitions: {
         getLineWidth: 2000,
         getLineColor: 2000,
@@ -268,12 +277,10 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
         getLineWidth: [maxEnergy, pulse, selectedTicker], 
         getLineColor: [maxEnergy, pulse, selectedTicker] 
     },
-    // <--- REMOVED onClick HERE. Delegated to parent DeckGL.
   });
 
   return (
     <>
-        {/* SCREEN READER ONLY SUMMARY */}
         <div className="sr-only" aria-live="polite">
             <h3>Market Physics Summary</h3>
             <p>Current Simulation Date: {data.date}</p>
@@ -283,35 +290,33 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
         </div>
 
         <DeckGL
-        views={new OrthographicView({ controller: true })}
-        initialViewState={INITIAL_VIEW_STATE}
-        controller={true}
-        layers={[cellLayer, trailLayer, synapseLayer, dotLayer]} 
-        style={{ backgroundColor: '#020617' }}
-        
-        // <--- NEW: TOP LEVEL CLICK HANDLER
-        onClick={(info: any) => {
-            if (info.object) {
-                // User clicked a NODE (dotLayer)
-                if (onNodeClick) onNodeClick(info.object);
-            } else {
-                // User clicked EMPTY SPACE
-                if (onBackgroundClick) onBackgroundClick();
-            }
-        }}
-        
-        // @ts-ignore
-        getTooltip={({object}) => object && object.ticker && {
-            html: `
-            <div style="padding: 12px; background: rgba(10,10,10,0.95); color: white; border: 1px solid #444; border-radius: 8px; font-family: 'Inter', sans-serif;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                <strong>$${object.ticker}</strong>
-                <span style="font-size:0.7em; opacity:0.7;">VOL: ${object.energy.toFixed(0)}</span>
+            views={new OrthographicView({ controller: true })}
+            initialViewState={INITIAL_VIEW_STATE}
+            controller={true}
+            layers={[cellLayer, trailLayer, synapseLayer, dotLayer]} 
+            
+            // KEY FIX: Transparent background allows the CSS Slate theme to show through
+            style={{ backgroundColor: 'transparent' }} 
+            
+            onClick={(info: any) => {
+                if (info.object) {
+                    if (onNodeClick) onNodeClick(info.object);
+                } else {
+                    if (onBackgroundClick) onBackgroundClick();
+                }
+            }}
+            // @ts-ignore
+            getTooltip={({object}) => object && object.ticker && {
+                html: `
+                <div style="padding: 12px; background: rgba(15, 23, 42, 0.95); color: #f8fafc; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; font-family: 'Inter', sans-serif;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <strong>$${object.ticker}</strong>
+                    <span style="font-size:0.7em; color: #94a3b8; margin-left: 12px;">VOL: ${object.energy.toFixed(0)}</span>
+                    </div>
+                    <div style="font-size:0.8em; color: #cbd5e1;">${object.headline || "No headline"}</div>
                 </div>
-                <div style="font-size:0.8em; opacity:0.8;">${object.headline || "No headline"}</div>
-            </div>
-            `
-        }}
+                `
+            }}
         />
     </>
   );

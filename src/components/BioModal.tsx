@@ -57,7 +57,8 @@ const BioModal: React.FC<BioModalProps> = ({ isOpen, onClose }) => {
             <div className="bio-text">
               <h2 className="bio-name">Dave Anaya</h2>
               <p className="bio-role">Senior Data Engineer & Architect</p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.7rem', color: '#94a3b8', marginBottom: '8px' }}>
+              {/* UPDATED: Removed hardcoded hex, used variable */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '8px' }}>
                 <MapPin size={12} aria-hidden="true" />
                 <span>Minneapolis, MN</span>
               </div>
