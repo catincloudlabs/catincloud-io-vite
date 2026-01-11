@@ -268,7 +268,8 @@ export function AgentPanel({
             color: '#475569', 
             textAlign: 'center',
             background: 'rgba(2, 6, 23, 0.8)',
-            borderTop: '1px solid rgba(255,255,255,0.05)'
+            borderTop: '1px solid rgba(255,255,255,0.05)',
+            opacity: 0.5
           }}>
             Simulation only. Not financial advice.
           </div>

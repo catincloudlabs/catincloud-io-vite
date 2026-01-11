@@ -583,7 +583,7 @@ body {
   color: #10b981;
   margin-left: 4px;
   font-size: 0.8em;
-  animation: blink 1s step-end infinite;
+  animation: blink 0.8s step-end infinite;
 }
 
 /* ==================================================================== */
@@ -693,7 +693,7 @@ input[type=range]::-moz-range-thumb {
   
   /* Slider: Bottom Center */
   .timeline-slider-container {
-    bottom: 24px;
+    bottom: 40px;
     left: 12px;
     right: 12px;
     width: auto;
