@@ -40,7 +40,6 @@ function App() {
         setFrames(hydratedFrames);
         
         // 2. Set Default Time to "NOW" (The end of the dataset)
-        // This ensures the recruiter sees the latest state immediately.
         if (hydratedFrames.length > 0) {
             setTimelineProgress(hydratedFrames.length - 1);
         }
@@ -71,7 +70,7 @@ function App() {
     return { displayNodes: nodes, currentDateLabel: currentFrame.date, currentFrameData: currentFrame };
   }, [frames, timelineProgress]);
 
-  // ERROR STATE - Using CSS variables for colors
+  // ERROR STATE
   if (error) return (
     <div style={{ background: 'var(--background)', height: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)' }}>
       <h1 style={{ color: '#ef4444' }}>System Error</h1>
@@ -115,7 +114,7 @@ function App() {
         />
       </div>
 
-      {/* Slider */}
+      {/* Slider (Vertical on Desktop, Horizontal on Mobile) */}
       <div className="timeline-slider-container">
         <input 
           type="range" 
@@ -125,12 +124,12 @@ function App() {
           value={timelineProgress}
           onChange={(e) => setTimelineProgress(parseFloat(e.target.value))}
           aria-label="Simulation Timeline"
-          // Removed accentColor to allow CSS styling to take precedence
           style={{ width: '100%', cursor: 'pointer' }}
         />
-        <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', marginTop: '8px' }}>
+        <div className="slider-labels">
           <span>HISTORY</span>
-          <span style={{ opacity: 0.5 }}>SIMULATION PROGRESS</span>
+          {/* Middle label hidden on vertical view via CSS to keep it clean */}
+          <span className="mobile-only-label">PROGRESS</span>
           <span>TODAY</span>
         </div>
       </div>
