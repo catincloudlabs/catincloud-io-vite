@@ -12,14 +12,15 @@ const Header: React.FC<HeaderProps> = ({ dateLabel }) => {
       <div className="header-left">
         <div className="header-chronometer">
           <div className="chrono-label">
-            <Clock size={10} className="text-accent-green" />
-            <span>EVENT HORIZON</span>
+            {/* explicit color to guarantee theme match */}
+            <Clock size={10} color="var(--accent-green)" />
+            <span style={{ marginLeft: '6px' }}>EVENT HORIZON</span>
           </div>
           <div className="chrono-value">{dateLabel}</div>
         </div>
       </div>
       
-      {/* RIGHT SIDE IS NOW EMPTY - CLEANER LOOK */}
+      {/* RIGHT SIDE EMPTY */}
     </header>
   );
 };
