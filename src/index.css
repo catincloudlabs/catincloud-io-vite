@@ -44,8 +44,6 @@ html, body {
   touch-action: none; /* Disables browser handling of gestures (except scrollable areas) */
 }
 
-/* GRAIN EFFECT REMOVED - Clean flat background */
-
 /* ==================================================================== */
 /* 1. HEADER                                                            */
 /* ==================================================================== */
@@ -591,7 +589,17 @@ html, body {
 .chips-row {
   display: flex; gap: 8px; margin-bottom: 12px;
   overflow-x: auto; padding-bottom: 2px;
+  
+  /* HIDE SCROLLBAR FIX */
+  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
 }
+.chips-row::-webkit-scrollbar { 
+  display: none; 
+  width: 0;
+  height: 0;
+}
+
 .suggestion-chip {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid transparent;
@@ -760,12 +768,12 @@ input[type=range]::-moz-range-track {
   border-width: 0;
 }
 
-/* UPDATED FOOTER STYLE (Restoring opacity/borders) */
+/* FOOTER FIX: Explicit dark styling for legibility */
 .disclaimer-footer {
   padding: 6px 0;
   text-align: center;
   font-size: 0.5rem;
-  color: #475569; /* Keeping exact color from original inline style */
+  color: #475569;
   background: rgba(2, 6, 23, 0.8);
   border-top: 1px solid rgba(255, 255, 255, 0.05);
   opacity: 0.5;
