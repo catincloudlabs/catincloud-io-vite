@@ -50,6 +50,7 @@ const Header: React.FC<HeaderProps> = ({
             onChange={(e) => onSelectTicker(e.target.value || null)}
             aria-label="Select Target Asset"
           >
+            {/* Default "Reset" Option */}
             <option value="">TICKER</option>
             {watchlist.map(t => (
               <option key={t} value={t}>{t}</option>

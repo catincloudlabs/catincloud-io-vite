@@ -681,19 +681,18 @@ input[type=range]::-moz-range-track {
 }
 
 /* ==================================================================== */
-/* HEADER SELECTOR (COMPACT UPGRADE)                                    */
+/* HEADER SELECTOR (DARK MODE FIX)                                      */
 /* ==================================================================== */
 .header-selector {
   position: relative;
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.03); /* More subtle background */
+  background: rgba(255, 255, 255, 0.03); 
   border: 1px solid var(--glass-border);
   border-radius: 6px;
   
-  /* COMPACT DIMENSIONS */
   height: 30px; 
-  min-width: 160px; /* Slightly wider to fit "SYSTEM OVERVIEW" */
+  min-width: 140px; /* Adjusted width */
   
   transition: all 0.2s;
 }
@@ -728,19 +727,23 @@ input[type=range]::-moz-range-track {
   width: 100%; 
   height: 100%;
   
-  /* ADJUSTED PADDING: Left for Search Icon, Right for Chevron */
+  /* PADDING */
   padding: 0 24px 0 28px; 
   
   color: var(--text-primary);
   font-family: var(--font-mono);
-  font-size: 0.75rem; /* Matches Chrono Label Size */
+  font-size: 0.75rem; 
   font-weight: 600;
   letter-spacing: 0.05em;
   cursor: pointer;
   outline: none;
   text-transform: uppercase;
+  
+  /* CRITICAL: Forces the native dropdown to be dark */
+  color-scheme: dark; 
 }
 
+/* Fallback for browsers that don't support color-scheme on inputs */
 .ticker-select option {
   background-color: #0f172a;
   color: var(--text-primary);
