@@ -6,7 +6,7 @@ const corsHeaders = {
 }
 
 Deno.serve(async (req) => {
-  // 1. Handle CORS Preflight (OPTIONS)
+  // 1. Handle CORS Preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -14,14 +14,11 @@ Deno.serve(async (req) => {
   try {
     // --- SECURITY: ORIGIN CHECK ---
     const origin = req.headers.get('origin') || ""
-    
-    // Define allowed domains
     const isLocal = origin.includes('localhost')
     const isProd = origin === 'https://catincloud.io' || origin === 'https://www.catincloud.io'
-    const isPreview = origin.endsWith('.pages.dev') // Allow Cloudflare Previews
+    const isPreview = origin.endsWith('.pages.dev') 
     
     if (!isLocal && !isProd && !isPreview) {
-      // Reject unknown origins
       return new Response(JSON.stringify({ error: 'Forbidden: Unauthorized Origin' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -34,7 +31,7 @@ Deno.serve(async (req) => {
 
     const { message, context } = await req.json()
 
-    // SYSTEM PROMPT
+    // UPDATED PROMPT: With "Scope & Guardrails"
     const systemPrompt = `
       You are a helpful AI financial assistant embedded in a market visualization app.
       
@@ -46,8 +43,14 @@ Deno.serve(async (req) => {
       Your Goal: Answer the user's question as if you are ChatGPT discussing market news. 
       - Be conversational and polite.
       - Synthesize the provided data (headlines + physics) into a cohesive answer.
-      - Do not use bullet points or "headers" unless absolutely necessary for complex lists.
       - Keep it concise (2-3 sentences) but natural.
+
+      SCOPE & GUARDRAILS:
+      - You are STRICTLY a financial market assistant.
+      - If the user asks about non-financial topics (e.g., recipes, coding, politics, general trivia), politely decline.
+      - Refusal Strategy: Pivot back to the market. 
+        - Example: "I'm focused on analyzing market physics, so I can't help with that. However, I can tell you that [Ticker] is showing strong momentum..."
+      - Do NOT answer the non-financial question, even if you know the answer.
     `
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -62,7 +65,7 @@ Deno.serve(async (req) => {
           { role: 'system', content: systemPrompt },
           { role: 'user', content: `Context: ${context || 'No specific data provided.'}\n\nUser Query: ${message}` }
         ],
-        temperature: 0.7, 
+        temperature: 0.6, // Lowered slightly to improve instruction following
       }),
     })
 
