@@ -6,17 +6,35 @@ const corsHeaders = {
 }
 
 Deno.serve(async (req) => {
+  // 1. Handle CORS Preflight (OPTIONS)
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
+    // --- SECURITY: ORIGIN CHECK ---
+    const origin = req.headers.get('origin') || ""
+    
+    // Define allowed domains
+    const isLocal = origin.includes('localhost')
+    const isProd = origin === 'https://catincloud.io' || origin === 'https://www.catincloud.io'
+    const isPreview = origin.endsWith('.pages.dev') // Allow Cloudflare Previews
+    
+    if (!isLocal && !isProd && !isPreview) {
+      // Reject unknown origins
+      return new Response(JSON.stringify({ error: 'Forbidden: Unauthorized Origin' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+    // ------------------------------
+
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')
     if (!OPENAI_API_KEY) throw new Error('Missing OPENAI_API_KEY secret')
 
     const { message, context } = await req.json()
 
-    // FINAL PROMPT: Natural, Narrative, Insightful
+    // SYSTEM PROMPT
     const systemPrompt = `
       You are a helpful AI financial assistant embedded in a market visualization app.
       
@@ -44,7 +62,7 @@ Deno.serve(async (req) => {
           { role: 'system', content: systemPrompt },
           { role: 'user', content: `Context: ${context || 'No specific data provided.'}\n\nUser Query: ${message}` }
         ],
-        temperature: 0.7, // Slightly higher for that "natural" flow
+        temperature: 0.7, 
       }),
     })
 

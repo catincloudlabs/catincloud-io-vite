@@ -230,6 +230,19 @@ export function AgentPanel({
               />
             </div>
           </div>
+
+          {/* DISCLAIMER FOOTER */}
+          <div style={{ 
+            padding: '6px 12px', 
+            background: 'rgba(0,0,0,0.3)', 
+            borderTop: '1px solid rgba(255,255,255,0.05)',
+            fontSize: '0.65rem', 
+            color: '#64748b', 
+            textAlign: 'center',
+            letterSpacing: '0.02em'
+          }}>
+            AI responses are for simulation purposes only. Not financial advice.
+          </div>
         </>
       )}
     </div>
