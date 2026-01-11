@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { MarketFrame } from '../App';
 import { GraphConnection } from '../hooks/useKnowledgeGraph';
 import { useAgentOracle } from '../hooks/useAgentOracle';
@@ -15,9 +15,64 @@ interface AgentPanelProps {
 }
 
 /**
- * HELPER: Formats raw data into a structured SITREP for the AI.
- * This provides the "Intelligence" the Oracle needs to be accurate.
+ * UTILITY: Parses bold markdown (e.g. **Text**) into JSX
  */
+const formatMessage = (text: string) => {
+  // Split by double asterisks
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <span key={i} className="term-bold">{part.slice(2, -2)}</span>;
+    }
+    return part;
+  });
+};
+
+/**
+ * COMPONENT: Handles the "Sci-Fi" typing effect
+ */
+const TypewriterMessage = ({ text, type, onTyping }: { text: string, type: string, onTyping: () => void }) => {
+  const [displayedText, setDisplayedText] = useState("");
+  const [isComplete, setIsComplete] = useState(false);
+  
+  // Instant render for user messages, typing for agent
+  const shouldAnimate = type === 'agent' || type === 'system';
+
+  useEffect(() => {
+    if (!shouldAnimate) {
+      setDisplayedText(text);
+      setIsComplete(true);
+      return;
+    }
+
+    let i = 0;
+    // Speed: 15ms per char (Fast but readable)
+    const timer = setInterval(() => {
+      if (i < text.length) {
+        setDisplayedText(prev => text.slice(0, i + 1));
+        i++;
+        onTyping(); // Trigger scroll
+      } else {
+        clearInterval(timer);
+        setIsComplete(true);
+      }
+    }, 15);
+
+    return () => clearInterval(timer);
+  }, [text, shouldAnimate]);
+
+  return (
+    <div className={`msg-row msg-${type} ${!isComplete && shouldAnimate ? 'typing-cursor' : ''}`}>
+      {type === 'user' && <span style={{ marginRight: 8 }}>➜</span>}
+      {/* We only format the text once it's fully typed to prevent 
+         markdown chars (**...**) from flickering during animation 
+      */}
+      {isComplete ? formatMessage(text) : displayedText}
+    </div>
+  );
+};
+
+// --- Context Helper ---
 const getSystemContext = (
   ticker: string, 
   currentFrame: MarketFrame, 
@@ -55,64 +110,56 @@ export function AgentPanel({
   const chatEndRef = useRef<HTMLDivElement>(null);
   const lastTickerRef = useRef<string | null>(null);
   
-  // 1. Hook Integration
   const { messages, isAiLoading, sendMessage, addSystemMessage } = useAgentOracle();
 
-  // 2. Auto-scroll terminal
-  useEffect(() => {
-    if (isExpanded) {
-      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages, isExpanded]);
+  // Scroll Helper
+  const scrollToBottom = () => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
-  // 3. Ticker Selection Effect
-  // This triggers when the user clicks a node on the map.
+  // 1. Auto-scroll when message list length changes
+  useEffect(() => {
+    if (isExpanded) scrollToBottom();
+  }, [messages.length, isExpanded]);
+
+  // 2. Ticker Selection Logic
   useEffect(() => {
     if (!selectedTicker || !currentFrame || isLoading) return;
     if (lastTickerRef.current === selectedTicker) return;
 
-    // Generate context for the SITREP
     const context = getSystemContext(selectedTicker, currentFrame, graphConnections || []);
     
-    // Add local acknowledgment
-    addSystemMessage(`🎯 TARGET ACQUIRED: ${selectedTicker}\nAnalyzing physics and news vectors...`);
+    // Using Markdown for emphasis
+    addSystemMessage(`**TARGET ACQUIRED:** ${selectedTicker}\nAnalyzing physics and news vectors...`);
     
-    // OPTIONAL: Automatically ask the AI for a brief sitrep when clicked
-    // sendMessage("Provide a 1-sentence tactical SITREP based on current physics.", context);
-    
-    // Note: To fix the 'context' unused error, we either use it in sendMessage 
-    // or log it if you only want the local message for now.
+    // Log for debugging
     console.debug("Context prepared for target:", context);
 
     lastTickerRef.current = selectedTicker;
     setIsExpanded(true);
   }, [selectedTicker, currentFrame, graphConnections, isLoading, addSystemMessage]);
 
-  // Reset tracking if user deselects
   useEffect(() => {
     if (!selectedTicker) lastTickerRef.current = null;
   }, [selectedTicker]);
 
-  // 4. Command Router
+  // 3. Command Router
   const handleCommand = async (cmd: string) => {
     const query = cmd.trim();
     if (!query) return;
 
     setInputValue("");
-    
     const upper = query.toUpperCase();
     
-    // Static system documentation
     if (upper === "PHYSICS") {
-      addSystemMessage("PHYSICS ENGINE DOCS:\n• ENERGY (Size): Volume/Liquidity.\n• VELOCITY (Speed): Price Momentum.");
+      addSystemMessage("**PHYSICS ENGINE DOCS:**\n• **ENERGY** (Size): Volume/Liquidity.\n• **VELOCITY** (Speed): Price Momentum.");
       return;
     }
     if (upper === "LEGEND") {
-      addSystemMessage("VISUAL DECODER:\n🟢 GREEN: Positive\n🔴 RED: Negative\n🟡 GOLD: Knowledge Graph Link");
+      addSystemMessage("**VISUAL DECODER:**\n🟢 **GREEN**: Positive\n🔴 **RED**: Negative\n🟡 **GOLD**: Knowledge Graph Link");
       return;
     }
 
-    // AI Oracle Route
     const context = selectedTicker && currentFrame 
       ? getSystemContext(selectedTicker, currentFrame, graphConnections || [])
       : "Viewing general market map simulation.";
@@ -146,14 +193,14 @@ export function AgentPanel({
         </div>
 
          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <button onClick={(e) => { e.stopPropagation(); onOpenArch(); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 2 }}>
+            <button onClick={(e) => { e.stopPropagation(); onOpenArch(); }} className="panel-toggle-btn">
                 <Network size={14} />
             </button>
-            <button onClick={(e) => { e.stopPropagation(); onOpenBio(); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 2, marginRight: '8px' }}>
+            <button onClick={(e) => { e.stopPropagation(); onOpenBio(); }} className="panel-toggle-btn" style={{ marginRight: '8px' }}>
                 <User size={14} />
             </button>
             <div style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)' }}></div>
-            <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex' }}>
+            <button className="panel-toggle-btn">
                 {isExpanded ? <Minus size={14} /> : <Plus size={14} />}
             </button>
         </div>
@@ -162,28 +209,22 @@ export function AgentPanel({
       {/* BODY */}
       {isExpanded && (
         <>
-          <div style={{ 
-            flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', minHeight: '150px'
-          }}>
+          <div className="terminal-body">
             {messages.map((msg, i) => (
-              <div key={i} style={{ 
-                alignSelf: 'flex-start', width: '100%', lineHeight: '1.5', whiteSpace: 'pre-wrap',
-                marginTop: msg.type === 'user' ? '16px' : '0px',
-                color: msg.type === 'user' ? '#22c55e' : '#e2e8f0',
-                backgroundColor: msg.type === 'user' ? 'transparent' : 'rgba(255, 255, 255, 0.05)',
-                padding: msg.type === 'user' ? '0 4px' : '10px 12px',
-                borderRadius: msg.type === 'user' ? '0' : '6px',
-                borderLeft: msg.type === 'user' ? 'none' : '2px solid #3b82f6',
-                fontSize: '0.8rem'
-              }}>
-                {msg.type === 'user' ? `➜ ${msg.text}` : msg.text}
-              </div>
+              <TypewriterMessage 
+                key={i} // Using index is safe here as we only append
+                text={msg.text} 
+                type={msg.type}
+                onTyping={scrollToBottom} 
+              />
             ))}
             
             {isBusy && (
-                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#fbbf24', fontSize: '0.75rem', padding: '10px 12px' }}>
+                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#fbbf24', fontSize: '0.75rem', padding: '10px 12px', opacity: 0.8 }}>
                     <Loader2 size={14} className="animate-spin" />
-                    <span>{isAiLoading ? "Uplink active..." : "Accessing Knowledge Graph..."}</span>
+                    <span className="typing-cursor">
+                      {isAiLoading ? "Uplink established. Awaiting stream..." : "Accessing Knowledge Graph..."}
+                    </span>
                  </div>
             )}
             
@@ -192,10 +233,11 @@ export function AgentPanel({
 
           <div className="terminal-input-area">
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ color: '#22c55e' }}>$</span>
+              <span style={{ color: '#22c55e', fontWeight: 'bold' }}>$</span>
               <input 
-                type="text" className="terminal-input" placeholder="Query system..." 
+                type="text" className="terminal-input" placeholder="Query intelligence..." 
                 value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={handleKeyDown}
+                autoFocus
               />
             </div>
           </div>
