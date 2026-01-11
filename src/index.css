@@ -186,55 +186,90 @@ html, body {
 }
 .mobile-only-label { display: inline; opacity: 0.5; }
 
-/* DESKTOP: Vertical on Left */
+/* DESKTOP: Vertical on Left (The "Cockpit" Layout) */
 @media (min-width: 768px) {
   .timeline-slider-container {
-    left: 24px; top: 90px; /* Anchored under Header */
+    left: 24px; 
+    top: 90px; /* Anchored under Header */
     bottom: auto; right: auto; transform: none;
     
     width: 44px; height: 50vh; /* Narrow Vertical Pill */
-    flex-direction: row; /* Layout direction inside container */
+    flex-direction: row; 
     padding: 0; justify-content: center;
+    
+    /* RED-LINE 1: The Connector Line (Circuit Trace) */
+    /* This draws a line UP from the slider to the header */
+  }
+  
+  .timeline-slider-container::before {
+    content: '';
+    position: absolute;
+    top: -30px; /* Reach up to the header (90px top - 60px header = 30px gap) */
+    left: 50%;
+    width: 1px;
+    height: 30px;
+    background: linear-gradient(to bottom, var(--glass-border), rgba(255,255,255,0.1));
+    transform: translateX(-50%);
+    z-index: -1;
   }
 
-  /* Rotate the range input 90 degrees to make it vertical */
+  /* Rotate the range input 90 degrees */
   .timeline-slider-container input[type=range] {
-     width: 45vh; /* This becomes the 'height' visually */
+     width: 45vh; 
      transform: rotate(90deg);
      transform-origin: center;
-     /* Ensure it hits the hit area correctly */
      margin: 0;
   }
 
-  /* Adjust labels for vertical layout */
   .slider-labels {
      position: absolute;
      left: 0; top: 0; width: 100%; height: 100%;
      flex-direction: column; justify-content: space-between; align-items: center;
-     padding: 16px 0; margin: 0;
+     padding: 24px 0; margin: 0;
   }
   
   .slider-labels span {
     writing-mode: vertical-rl; /* Vertical Text */
-    transform: rotate(180deg); /* Fix text orientation */
-    font-size: 0.65rem;
-    letter-spacing: 0.1em;
+    transform: rotate(180deg); /* Text reads bottom-up (standard for Y-axis) */
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    color: var(--text-muted);
+    opacity: 0.8;
   }
 
-  /* Hide the middle "Progress" text on desktop to keep it clean */
   .mobile-only-label { display: none; }
 }
 
 /* CUSTOM RANGE SLIDER STYLES */
 input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; background: transparent; height: 30px; margin: 0; cursor: pointer; }
 input[type=range]:focus { outline: none; }
-/* Chrome / Safari */
-input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; height: 20px; width: 20px; border-radius: 50%; background: var(--text-primary); margin-top: -8px; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: rgba(255, 255, 255, 0.1); border-radius: 2px; cursor: pointer; }
-/* Firefox */
-input[type=range]::-moz-range-thumb { appearance: none; border: none; height: 20px; width: 20px; border-radius: 50%; background: var(--text-primary); box-shadow: 0 2px 10px rgba(0,0,0,0.5); cursor: pointer; }
-input[type=range]::-moz-range-track { width: 100%; height: 4px; background: rgba(255, 255, 255, 0.1); border-radius: 2px; cursor: pointer; }
 
+/* Chrome / Safari - RED-LINE 2: The "Reactor Core" Thumb */
+input[type=range]::-webkit-slider-thumb { 
+  -webkit-appearance: none; appearance: none; 
+  height: 16px; width: 16px; 
+  border-radius: 2px; /* Square = More Technical/Sci-Fi */
+  background: #fff; 
+  margin-top: -6px; /* Center on track */
+  box-shadow: 
+    0 0 0 2px rgba(15, 23, 42, 1), /* Cutout effect */
+    0 0 10px var(--accent-green); /* Glow */
+  border: 1px solid var(--accent-green);
+  transition: all 0.2s ease;
+}
+
+/* Hover state for the thumb */
+input[type=range]:hover::-webkit-slider-thumb {
+  background: var(--accent-green);
+  box-shadow: 0 0 20px var(--accent-green);
+  transform: scale(1.1);
+}
+
+input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: rgba(255, 255, 255, 0.05); border-radius: 2px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); }
+
+/* Firefox */
+input[type=range]::-moz-range-thumb { appearance: none; border: none; height: 16px; width: 16px; border-radius: 2px; background: #fff; box-shadow: 0 0 10px var(--accent-green); cursor: pointer; border: 1px solid var(--accent-green); }
+input[type=range]::-moz-range-track { width: 100%; height: 4px; background: rgba(255, 255, 255, 0.05); border-radius: 2px; cursor: pointer; }
 
 /* ==================================================================== */
 /* 7. RESPONSIVE SCALING                                                */

@@ -114,7 +114,7 @@ function App() {
         />
       </div>
 
-      {/* Slider (Vertical on Desktop, Horizontal on Mobile) */}
+      {/* Slider */}
       <div className="timeline-slider-container">
         <input 
           type="range" 
@@ -127,10 +127,9 @@ function App() {
           style={{ width: '100%', cursor: 'pointer' }}
         />
         <div className="slider-labels">
-          <span>HISTORY</span>
-          {/* Middle label hidden on vertical view via CSS to keep it clean */}
+          <span>ORIGIN</span> {/* "History" felt too history-book. "Origin" is data-centric. */}
           <span className="mobile-only-label">PROGRESS</span>
-          <span>TODAY</span>
+          <span>LIVE</span>   {/* "Today" is casual. "Live" is monitoring. */}
         </div>
       </div>
 
