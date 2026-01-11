@@ -3,7 +3,7 @@ import { MarketFrame } from '../App';
 import { GraphConnection } from '../hooks/useKnowledgeGraph';
 import { useAgentOracle } from '../hooks/useAgentOracle';
 // @ts-ignore
-import { Network, User, Minus, Plus, Loader2, SendHorizontal, Sparkles } from 'lucide-react';
+import { Network, User, Minus, Plus, Loader2, SendHorizontal, Sparkles, Activity } from 'lucide-react';
 
 interface AgentPanelProps {
   currentFrame: MarketFrame | null;
@@ -16,6 +16,7 @@ interface AgentPanelProps {
 
 /**
  * HELPER: Formats raw data into a structured context for the AI.
+ * INJECTS THE 70/30 PERSONALITY SPLIT HERE.
  */
 const getSystemContext = (
   ticker: string, 
@@ -31,8 +32,14 @@ const getSystemContext = (
 
   const velocity = Math.sqrt(node.vx**2 + node.vy**2).toFixed(2);
 
+  // We inject the "Persona" instructions directly into the context sent to the LLM
   return `
-    SIMULATION DATE: ${currentFrame.date} (Treat this date as "Today")
+    [SYSTEM INSTRUCTION: Adopt a "Smart Analyst" persona. 
+    - Split your response 70/30: 70% hard data/analysis, 30% conversational flow.
+    - Be grounded and helpful. Use phrases like "Gotcha", "Hmmm", "Let's see". 
+    - Avoid over-the-top sci-fi or roleplay. Keep it professional but relaxed.]
+
+    SIMULATION DATE: ${currentFrame.date} (Treat this as Today)
     Focus Asset: ${ticker}
     Metrics: Energy=${node.energy.toFixed(0)}, Velocity=${velocity}
     News Context: ${newsSummary}
@@ -63,6 +70,7 @@ const TypewriterMessage = ({ text, type, onTyping }: { text: string, type: strin
     }
 
     let i = 0;
+    // Faster typing speed (5ms) for a snappier, less "retro" feel
     const timer = setInterval(() => {
       if (i < text.length) {
         setDisplayedText(text.slice(0, i + 1));
@@ -72,14 +80,15 @@ const TypewriterMessage = ({ text, type, onTyping }: { text: string, type: strin
         clearInterval(timer);
         setIsComplete(true);
       }
-    }, 8); 
+    }, 5); 
 
     return () => clearInterval(timer);
   }, [text, shouldAnimate, onTyping]);
 
   return (
-    <div className={`msg-row msg-${type} ${!isComplete && shouldAnimate ? 'typing-cursor' : ''}`}>
+    <div className={`msg-row msg-${type}`}>
       {isComplete ? formatMessage(text) : displayedText}
+      {!isComplete && shouldAnimate && <span className="typing-cursor" aria-hidden="true">|</span>}
     </div>
   );
 };
@@ -114,7 +123,8 @@ export function AgentPanel({
     if (!selectedTicker || !currentFrame || isLoading) return;
     if (lastTickerRef.current === selectedTicker) return;
 
-    addSystemMessage(`**${selectedTicker}** selected. Analyzing real-time metrics for ${currentFrame.date}...`);
+    // Cleaner system message
+    addSystemMessage(`Tracking **${selectedTicker}**. Metrics loaded for ${currentFrame.date}.`);
     
     lastTickerRef.current = selectedTicker;
     setIsExpanded(true);
@@ -130,7 +140,6 @@ export function AgentPanel({
 
     setInputValue("");
     
-    // INJECT: Now passing currentFrame (with date) to the helper
     const context = selectedTicker && currentFrame 
       ? getSystemContext(selectedTicker, currentFrame, graphConnections || [])
       : `General Market View. SIMULATION DATE: ${currentFrame?.date}`;
@@ -142,19 +151,19 @@ export function AgentPanel({
     if (e.key === 'Enter') handleCommand();
   };
 
-  // --- SMART CHIPS LOGIC ---
+  // --- REFINED PROMPTS (Less "Explain Physics", more "What's happening?") ---
   const getSuggestions = () => {
     if (selectedTicker) {
       return [
-        { label: `Analyze $${selectedTicker}`, prompt: `Analyze the price action and sentiment for ${selectedTicker}.` },
-        { label: "News Summary", prompt: `What are the latest headlines for ${selectedTicker}?` },
-        { label: "Risk Factors", prompt: `What are the potential downsides or risks for ${selectedTicker}?` }
+        { label: `Brief ${selectedTicker}`, prompt: `Give me a short brief on ${selectedTicker}'s status.` },
+        { label: "Check News", prompt: `Any relevant news impacting ${selectedTicker}?` },
+        { label: "Analyze Risk", prompt: `What are the immediate risks for ${selectedTicker}?` }
       ];
     }
     return [
-      { label: "Market Overview", prompt: "Give me a high-level summary of the current market state." },
-      { label: "Explain the Physics", prompt: "How does this simulation work? What do Energy and Velocity represent?" },
-      { label: "Who built this?", prompt: "Who created this dashboard and what is their tech stack?" }
+      { label: "Market Status", prompt: "Summarize the current market state." },
+      { label: "How this works", prompt: "Quickly explain how this simulation calculates velocity." },
+      { label: "Tech Stack", prompt: "What technology is powering this dashboard?" }
     ];
   };
   // -------------------------
@@ -167,47 +176,45 @@ export function AgentPanel({
     <div 
       className={`agent-terminal ${isExpanded ? 'expanded' : 'collapsed'}`}
       style={{
-         // THE GLANCE EFFECT: Subtle indication that the Agent is "Looking" at the selected asset
-         borderColor: selectedTicker ? 'var(--accent-green)' : undefined,
-         boxShadow: selectedTicker ? '0 0 20px rgba(34, 197, 94, 0.1)' : undefined
+         // Subtle indicator, removed the heavy glowing shadow
+         borderColor: selectedTicker ? 'var(--accent-green)' : 'var(--glass-border)',
       }}
+      role="region"
+      aria-label="AI Market Agent"
     >
       
       {/* HEADER */}
       <div 
         className="terminal-header" 
         onClick={() => setIsExpanded(!isExpanded)} 
-        role="button" 
-        aria-expanded={isExpanded} 
-        aria-label="Toggle Agent Panel"
+        role="button"
+        aria-expanded={isExpanded}
+        aria-controls="agent-messages"
+        tabIndex={0}
+        onKeyDown={(e) => e.key === 'Enter' && setIsExpanded(!isExpanded)}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
           
-          {/* THE HEARTBEAT INDICATOR */}
-          <div 
-            className={isBusy ? "pulsing-orb" : "static-orb"}
-            style={{ 
-              width: '8px', height: '8px', borderRadius: '50%',
-              background: isBusy ? 'var(--accent-ai)' : 'var(--accent-green)', 
-              boxShadow: isBusy ? '0 0 12px var(--accent-ai-glow)' : 'none',
-              transition: 'all 0.3s ease'
-            }} 
-            aria-hidden="true" 
+          {/* Replaced 'Orb' with a cleaner Activity Icon for a modern SaaS feel */}
+          <Activity 
+            size={16} 
+            className={isBusy ? "icon-spin" : ""}
+            color={isBusy ? "var(--accent-ai)" : "var(--accent-green)"} 
+            aria-hidden="true"
           />
           
           <span style={{ 
               fontFamily: 'var(--font-mono)', 
               fontWeight: 600, 
-              letterSpacing: '0.05em', 
-              fontSize: '0.75rem', 
-              color: isBusy ? 'var(--accent-ai)' : 'var(--text-muted)',
-              transition: 'color 0.3s ease'
+              fontSize: '0.8rem', 
+              color: 'var(--text-primary)',
+              letterSpacing: '0.02em'
           }}>
-            {isAiLoading ? "NEURAL ENGINE ACTIVE..." : `SYSTEM READY • ${currentFrame.date}`}
+            {isAiLoading ? "Processing..." : "Market Agent"}
           </span>
         </div>
 
-         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button 
               onClick={(e) => { e.stopPropagation(); onOpenArch(); }} 
               className="panel-toggle-btn" 
@@ -220,12 +227,17 @@ export function AgentPanel({
               onClick={(e) => { e.stopPropagation(); onOpenBio(); }} 
               className="panel-toggle-btn" 
               title="Bio" 
-              aria-label="Open User Bio"
+              aria-label="Open Developer Bio"
             >
                 <User size={14} aria-hidden="true" />
             </button>
-            <div style={{ width: '1px', height: '12px', background: 'var(--glass-border)' }} aria-hidden="true"></div>
-            <button className="panel-toggle-btn" aria-label={isExpanded ? "Collapse Panel" : "Expand Panel"}>
+            
+            <div className="v-divider" aria-hidden="true"></div>
+            
+            <button 
+              className="panel-toggle-btn" 
+              aria-label={isExpanded ? "Collapse Panel" : "Expand Panel"}
+            >
                 {isExpanded ? <Minus size={14} aria-hidden="true" /> : <Plus size={14} aria-hidden="true" />}
             </button>
         </div>
@@ -234,7 +246,13 @@ export function AgentPanel({
       {/* BODY */}
       {isExpanded && (
         <>
-          <div className="terminal-body" aria-live="polite" aria-atomic="false">
+          {/* aria-live="polite" ensures new messages are read out without interrupting */}
+          <div 
+            id="agent-messages"
+            className="terminal-body"
+            aria-live="polite" 
+            aria-atomic="false"
+          >
             {messages.map((msg, i) => (
               <TypewriterMessage 
                 key={i} 
@@ -245,9 +263,9 @@ export function AgentPanel({
             ))}
             
             {isBusy && (
-                 <div style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontSize: '0.75rem', padding: '0 12px', opacity: 0.8 }}>
+                 <div className="loading-indicator" role="status">
                     <Loader2 size={12} className="animate-spin" aria-hidden="true" />
-                    <span style={{ fontFamily: 'var(--font-mono)' }}>COMPUTING...</span>
+                    <span>Analyzing...</span>
                  </div>
             )}
             
@@ -258,59 +276,41 @@ export function AgentPanel({
           <div className="terminal-input-area">
             
             {/* SUGGESTION CHIPS */}
-            <div className="chips-row" role="group" aria-label="Quick Actions">
-                <Sparkles size={12} color="var(--accent-green)" style={{ flexShrink: 0 }} aria-hidden="true" />
+            <div className="chips-row" role="group" aria-label="Suggested Queries">
+                <Sparkles size={12} color="var(--accent-green)" style={{ flexShrink: 0, opacity: 0.7 }} aria-hidden="true" />
                 {getSuggestions().map((chip, idx) => (
                     <button 
                         key={idx} 
                         className="suggestion-chip"
                         onClick={() => handleCommand(chip.prompt)}
                         disabled={isBusy}
-                        aria-label={chip.label}
+                        aria-label={`Ask AI: ${chip.label}`}
                     >
                         {chip.label}
                     </button>
                 ))}
             </div>
 
-            <div style={{ 
-                display: 'flex', alignItems: 'center', gap: '8px', 
-                background: 'rgba(255,255,255,0.03)', padding: '8px 12px', 
-                borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)' 
-            }}>
+            <div className="input-wrapper">
               <input 
                 type="text" className="terminal-input" 
-                placeholder="Query the market model..." 
+                placeholder="Ask about the market..." 
                 value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={handleKeyDown}
-                autoFocus
                 disabled={isBusy}
-                aria-label="Ask the AI Agent"
-                style={{ fontSize: '0.85rem' }}
+                aria-label="Message the AI Agent"
               />
               <button 
                 onClick={() => handleCommand()}
                 disabled={!inputValue.trim() || isBusy}
+                className="send-btn"
                 aria-label="Send Message"
-                style={{ 
-                    background: 'none', border: 'none', cursor: 'pointer', 
-                    color: inputValue.trim() ? 'var(--accent-green)' : '#475569',
-                    transition: 'color 0.2s'
-                }}
               >
                 <SendHorizontal size={16} aria-hidden="true" />
               </button>
             </div>
           </div>
           
-          <div style={{ 
-            padding: '6px 0', 
-            fontSize: '0.5rem', 
-            color: '#475569', 
-            textAlign: 'center',
-            background: 'rgba(2, 6, 23, 0.8)',
-            borderTop: '1px solid var(--glass-border)',
-            opacity: 0.5
-          }}>
+          <div className="disclaimer-footer" aria-hidden="true">
             Simulation only. Not financial advice.
           </div>
         </>
