@@ -681,61 +681,69 @@ input[type=range]::-moz-range-track {
 }
 
 /* ==================================================================== */
-/* HEADER SELECTOR UPGRADE                                              */
+/* HEADER SELECTOR (COMPACT UPGRADE)                                    */
 /* ==================================================================== */
-
 .header-selector {
   position: relative;
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.03); /* More subtle background */
   border: 1px solid var(--glass-border);
   border-radius: 6px;
-  height: 36px;
-  min-width: 140px;
+  
+  /* COMPACT DIMENSIONS */
+  height: 30px; 
+  min-width: 160px; /* Slightly wider to fit "SYSTEM OVERVIEW" */
+  
   transition: all 0.2s;
 }
 
 .header-selector:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.2);
 }
 
 .selector-icon {
-  position: absolute;
-  left: 10px;
+  position: absolute; 
+  left: 8px;
   pointer-events: none;
-  display: flex;
+  display: flex; 
   align-items: center;
 }
 
 .selector-arrow {
-  position: absolute;
-  right: 10px;
+  position: absolute; 
+  right: 8px;
   pointer-events: none;
   color: var(--text-muted);
-  display: flex;
+  display: flex; 
   align-items: center;
 }
 
 .ticker-select {
-  appearance: none; /* Remove default arrow */
+  appearance: none; 
   -webkit-appearance: none;
   background: transparent;
   border: none;
-  width: 100%;
+  width: 100%; 
   height: 100%;
-  padding: 0 32px; /* Space for icons */
+  
+  /* ADJUSTED PADDING: Left for Search Icon, Right for Chevron */
+  padding: 0 24px 0 28px; 
+  
   color: var(--text-primary);
   font-family: var(--font-mono);
-  font-size: 0.85rem;
+  font-size: 0.75rem; /* Matches Chrono Label Size */
   font-weight: 600;
+  letter-spacing: 0.05em;
   cursor: pointer;
   outline: none;
+  text-transform: uppercase;
 }
 
 .ticker-select option {
-  background-color: #0f172a; /* Dark background for dropdown list */
+  background-color: #0f172a;
   color: var(--text-primary);
-  padding: 10px;
+  padding: 8px;
+  font-size: 0.8rem;
 }

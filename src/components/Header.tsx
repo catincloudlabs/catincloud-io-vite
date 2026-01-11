@@ -36,28 +36,28 @@ const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Vertical Divider */}
-        <div className="v-divider" style={{ height: '32px', margin: '0 8px', opacity: 0.3 }}></div>
+        <div className="v-divider" style={{ height: '24px', margin: '0 12px', opacity: 0.2, width: '1px', background: 'var(--text-muted)' }}></div>
 
         {/* Ticker Selector */}
         <div className="header-selector">
           <div className="selector-icon">
-             <Search size={14} color={selectedTicker ? "var(--accent-green)" : "var(--text-muted)"} />
+             <Search size={12} color={selectedTicker ? "var(--accent-green)" : "var(--text-muted)"} />
           </div>
           
           <select 
             className="ticker-select"
             value={selectedTicker || ""}
             onChange={(e) => onSelectTicker(e.target.value || null)}
-            aria-label="Select Ticker"
+            aria-label="Select Target Asset"
           >
-            <option value="">MARKET VIEW</option>
+            <option value="">TICKER</option>
             {watchlist.map(t => (
               <option key={t} value={t}>{t}</option>
             ))}
           </select>
 
           <div className="selector-arrow">
-            <ChevronDown size={14} />
+            <ChevronDown size={12} />
           </div>
         </div>
 
