@@ -153,7 +153,7 @@ export function AgentPanel({
     }
     return [
       { label: "Market Overview", prompt: "Give me a high-level summary of the current market state." },
-      { label: "Explain Physics", prompt: "How does this simulation work? What do Energy and Velocity represent?" },
+      { label: "Explain the Physics", prompt: "How does this simulation work? What do Energy and Velocity represent?" },
       { label: "Who built this?", prompt: "Who created this dashboard and what is their tech stack?" }
     ];
   };
