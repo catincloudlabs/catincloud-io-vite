@@ -167,29 +167,45 @@ export function AgentPanel({
     <div className={`agent-terminal ${isExpanded ? 'expanded' : 'collapsed'}`}>
       
       {/* HEADER */}
-      <div className="terminal-header" onClick={() => setIsExpanded(!isExpanded)}>
+      <div 
+        className="terminal-header" 
+        onClick={() => setIsExpanded(!isExpanded)} 
+        role="button" 
+        aria-expanded={isExpanded} 
+        aria-label="Toggle Agent Panel"
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
           <div style={{ 
             width: '8px', height: '8px', borderRadius: '2px', // Square dot = more technical
             background: isBusy ? '#fbbf24' : '#10b981', 
             boxShadow: isBusy ? '0 0 8px #fbbf24' : 'none',
             transition: 'all 0.3s ease'
-          }} />
+          }} aria-hidden="true" />
           <span style={{ fontWeight: 600, letterSpacing: '0.05em', fontSize: '0.75rem', color: '#94a3b8' }}>
             {isAiLoading ? "PROCESSING STREAM..." : `INTELLIGENCE • ${currentFrame.date}`}
           </span>
         </div>
 
          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <button onClick={(e) => { e.stopPropagation(); onOpenArch(); }} className="panel-toggle-btn" title="Architecture">
-                <Network size={14} />
+            <button 
+              onClick={(e) => { e.stopPropagation(); onOpenArch(); }} 
+              className="panel-toggle-btn" 
+              title="Architecture" 
+              aria-label="Open Architecture Diagram"
+            >
+                <Network size={14} aria-hidden="true" />
             </button>
-            <button onClick={(e) => { e.stopPropagation(); onOpenBio(); }} className="panel-toggle-btn" title="Bio">
-                <User size={14} />
+            <button 
+              onClick={(e) => { e.stopPropagation(); onOpenBio(); }} 
+              className="panel-toggle-btn" 
+              title="Bio" 
+              aria-label="Open User Bio"
+            >
+                <User size={14} aria-hidden="true" />
             </button>
-            <div style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)' }}></div>
-            <button className="panel-toggle-btn">
-                {isExpanded ? <Minus size={14} /> : <Plus size={14} />}
+            <div style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)' }} aria-hidden="true"></div>
+            <button className="panel-toggle-btn" aria-label={isExpanded ? "Collapse Panel" : "Expand Panel"}>
+                {isExpanded ? <Minus size={14} aria-hidden="true" /> : <Plus size={14} aria-hidden="true" />}
             </button>
         </div>
       </div>
@@ -197,7 +213,7 @@ export function AgentPanel({
       {/* BODY */}
       {isExpanded && (
         <>
-          <div className="terminal-body">
+          <div className="terminal-body" aria-live="polite" aria-atomic="false">
             {messages.map((msg, i) => (
               <TypewriterMessage 
                 key={i} 
@@ -209,7 +225,7 @@ export function AgentPanel({
             
             {isBusy && (
                  <div style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '0.75rem', padding: '0 12px', opacity: 0.8 }}>
-                    <Loader2 size={12} className="animate-spin" />
+                    <Loader2 size={12} className="animate-spin" aria-hidden="true" />
                     <span style={{ fontFamily: 'var(--font-mono)' }}>COMPUTING...</span>
                  </div>
             )}
@@ -221,14 +237,15 @@ export function AgentPanel({
           <div className="terminal-input-area" style={{ background: 'rgba(2, 6, 23, 0.5)' }}>
             
             {/* SUGGESTION CHIPS */}
-            <div className="chips-row">
-                <Sparkles size={12} color="#10b981" style={{ flexShrink: 0 }} />
+            <div className="chips-row" role="group" aria-label="Quick Actions">
+                <Sparkles size={12} color="#10b981" style={{ flexShrink: 0 }} aria-hidden="true" />
                 {getSuggestions().map((chip, idx) => (
                     <button 
                         key={idx} 
                         className="suggestion-chip"
                         onClick={() => handleCommand(chip.prompt)}
                         disabled={isBusy}
+                        aria-label={chip.label}
                     >
                         {chip.label}
                     </button>
@@ -246,18 +263,20 @@ export function AgentPanel({
                 value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={handleKeyDown}
                 autoFocus
                 disabled={isBusy}
+                aria-label="Ask the AI Agent"
                 style={{ fontSize: '0.85rem' }}
               />
               <button 
                 onClick={() => handleCommand()}
                 disabled={!inputValue.trim() || isBusy}
+                aria-label="Send Message"
                 style={{ 
                     background: 'none', border: 'none', cursor: 'pointer', 
                     color: inputValue.trim() ? '#10b981' : '#475569',
                     transition: 'color 0.2s'
                 }}
               >
-                <SendHorizontal size={16} />
+                <SendHorizontal size={16} aria-hidden="true" />
               </button>
             </div>
           </div>

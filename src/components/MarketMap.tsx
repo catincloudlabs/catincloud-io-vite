@@ -164,6 +164,16 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     }));
   }, [sortedNodes]);
 
+  // --- ACCESSIBILITY SUMMARY ---
+  const accessibleSummary = useMemo(() => {
+    if (!data?.nodes) return [];
+    // Get top 5 highest energy nodes
+    return [...data.nodes]
+        .sort((a, b) => b.energy - a.energy)
+        .slice(0, 5)
+        .map(n => `${n.ticker}: Energy ${n.energy.toFixed(0)}, Sentiment ${n.sentiment.toFixed(2)}`);
+  }, [data]);
+
   if (!data) return null;
 
   // --- LAYERS ---
@@ -262,36 +272,47 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
   });
 
   return (
-    <DeckGL
-      views={new OrthographicView({ controller: true })}
-      initialViewState={INITIAL_VIEW_STATE}
-      controller={true}
-      layers={[cellLayer, trailLayer, synapseLayer, dotLayer]} 
-      style={{ backgroundColor: '#020617' }}
-      
-      // <--- NEW: TOP LEVEL CLICK HANDLER
-      onClick={(info: any) => {
-         if (info.object) {
-            // User clicked a NODE (dotLayer)
-            if (onNodeClick) onNodeClick(info.object);
-         } else {
-            // User clicked EMPTY SPACE
-            if (onBackgroundClick) onBackgroundClick();
-         }
-      }}
-      
-      // @ts-ignore
-      getTooltip={({object}) => object && object.ticker && {
-        html: `
-          <div style="padding: 12px; background: rgba(10,10,10,0.95); color: white; border: 1px solid #444; border-radius: 8px; font-family: 'Inter', sans-serif;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-              <strong>$${object.ticker}</strong>
-              <span style="font-size:0.7em; opacity:0.7;">VOL: ${object.energy.toFixed(0)}</span>
+    <>
+        {/* SCREEN READER ONLY SUMMARY */}
+        <div className="sr-only" aria-live="polite">
+            <h3>Market Physics Summary</h3>
+            <p>Current Simulation Date: {data.date}</p>
+            <ul>
+                {accessibleSummary.map((str, i) => <li key={i}>{str}</li>)}
+            </ul>
+        </div>
+
+        <DeckGL
+        views={new OrthographicView({ controller: true })}
+        initialViewState={INITIAL_VIEW_STATE}
+        controller={true}
+        layers={[cellLayer, trailLayer, synapseLayer, dotLayer]} 
+        style={{ backgroundColor: '#020617' }}
+        
+        // <--- NEW: TOP LEVEL CLICK HANDLER
+        onClick={(info: any) => {
+            if (info.object) {
+                // User clicked a NODE (dotLayer)
+                if (onNodeClick) onNodeClick(info.object);
+            } else {
+                // User clicked EMPTY SPACE
+                if (onBackgroundClick) onBackgroundClick();
+            }
+        }}
+        
+        // @ts-ignore
+        getTooltip={({object}) => object && object.ticker && {
+            html: `
+            <div style="padding: 12px; background: rgba(10,10,10,0.95); color: white; border: 1px solid #444; border-radius: 8px; font-family: 'Inter', sans-serif;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <strong>$${object.ticker}</strong>
+                <span style="font-size:0.7em; opacity:0.7;">VOL: ${object.energy.toFixed(0)}</span>
+                </div>
+                <div style="font-size:0.8em; opacity:0.8;">${object.headline || "No headline"}</div>
             </div>
-            <div style="font-size:0.8em; opacity:0.8;">${object.headline || "No headline"}</div>
-          </div>
-        `
-      }}
-    />
+            `
+        }}
+        />
+    </>
   );
 }
