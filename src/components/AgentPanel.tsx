@@ -191,9 +191,10 @@ export function AgentPanel({
               fontWeight: 600, 
               fontSize: '0.8rem', 
               color: 'var(--text-primary)',
-              letterSpacing: '0.02em'
+              letterSpacing: '0.05em',
+              textTransform: 'uppercase'
           }}>
-            {isAiLoading ? "Processing..." : "Market Agent"}
+            {isAiLoading ? "PROCESSING DATA..." : "MARKET INTELLIGENCE"}
           </span>
         </div>
 
@@ -228,7 +229,7 @@ export function AgentPanel({
             {isBusy && (
                  <div className="loading-indicator" role="status">
                     <Loader2 size={12} className="animate-spin" aria-hidden="true" />
-                    <span>Analyzing...</span>
+                    <span>ANALYZING MARKET VECTORS...</span>
                  </div>
             )}
             
@@ -256,7 +257,7 @@ export function AgentPanel({
             <div className="input-wrapper">
               <input 
                 type="text" className="terminal-input" 
-                placeholder="Ask about the market..." 
+                placeholder="Initialize query sequence..." 
                 value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={handleKeyDown}
                 disabled={isBusy}
                 aria-label="Message the AI Agent"
@@ -273,7 +274,7 @@ export function AgentPanel({
           </div>
           
           <div className="disclaimer-footer" aria-hidden="true">
-            Simulation only. Not financial advice.
+            SIMULATION ONLY. NOT FINANCIAL ADVICE. SYSTEM ONLINE V2.4.
           </div>
         </>
       )}

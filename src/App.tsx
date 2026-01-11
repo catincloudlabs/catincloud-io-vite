@@ -89,7 +89,7 @@ function App() {
   return (
     <div style={{ width: '100vw', height: '100dvh', position: 'relative', overflow: 'hidden', background: 'var(--background)' }}>
       
-      {/* Map Layer (Background) */}
+      {/* Map Layer */}
       <MarketMap 
         data={{ date: currentDateLabel, nodes: displayNodes }} 
         history={frames || []}
@@ -99,14 +99,14 @@ function App() {
         graphConnections={connections}       
       />
 
-      {/* Header (Top HUD) - Now controls the modals */}
+      {/* Header - Now controls modals */}
       <Header 
         dateLabel={currentDateLabel} 
         onOpenArch={() => setArchOpen(true)}
         onOpenBio={() => setBioOpen(true)}
       />
 
-      {/* Agent Panel (Bottom Right) */}
+      {/* Agent Panel */}
       <div className="agent-panel-wrapper">
         <AgentPanel 
           currentFrame={currentFrameData} 
@@ -116,11 +116,11 @@ function App() {
         />
       </div>
 
-      {/* Slider (Bottom Center) */}
+      {/* Slider */}
       <div className="timeline-slider-container">
         <div className="slider-label-row">
           <span>HISTORY</span>
-          <span className="slider-center-label">SIMULATION PROGRESS</span>
+          <span>SIMULATION PROGRESS</span>
           <span>TODAY</span>
         </div>
         <input 

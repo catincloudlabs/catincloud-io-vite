@@ -15,8 +15,10 @@ const Header: React.FC<HeaderProps> = ({ dateLabel, onOpenArch, onOpenBio }) => 
       <div className="header-left">
         <div className="header-chronometer">
           <div className="chrono-label">
-            <Clock size={10} color="var(--accent-green)" />
-            <span style={{ marginLeft: '6px' }}>EVENT HORIZON</span>
+            <Clock size={12} color="var(--accent-green)" />
+            <span style={{ marginLeft: '8px', letterSpacing: '0.1em', fontSize: '0.7rem' }}>
+              EVENT HORIZON
+            </span>
           </div>
           <div className="chrono-value">{dateLabel}</div>
         </div>
@@ -27,7 +29,7 @@ const Header: React.FC<HeaderProps> = ({ dateLabel, onOpenArch, onOpenBio }) => 
         <button 
           onClick={onOpenArch} 
           className="header-icon-btn" 
-          title="Architecture" 
+          title="System Architecture" 
           aria-label="Open Architecture Diagram"
         >
           <Network size={16} />
@@ -35,7 +37,7 @@ const Header: React.FC<HeaderProps> = ({ dateLabel, onOpenArch, onOpenBio }) => 
         <button 
           onClick={onOpenBio} 
           className="header-icon-btn" 
-          title="Bio" 
+          title="Developer Bio" 
           aria-label="Open Developer Bio"
         >
           <User size={16} />

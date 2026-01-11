@@ -41,7 +41,7 @@ html, body {
   overflow: hidden; 
   /* Prevent "Pull to Refresh" / Rubber-banding on the whole app */
   overscroll-behavior: none;
-  touch-action: none; /* Disables browser handling of gestures (except scrollable areas) */
+  touch-action: none; 
 }
 
 /* ==================================================================== */
@@ -57,14 +57,18 @@ html, body {
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
+  /* Gradient for legibility over map */
   background: linear-gradient(to bottom, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0));
-  z-index: 2000;
-  box-sizing: border-box;
+  z-index: 50;
+  pointer-events: none; /* Pass clicks through empty space */
 }
 
-.header-left {
+/* Re-enable clicks for the children */
+.header-left, .header-right {
+  pointer-events: auto;
   display: flex;
   align-items: center;
+  gap: 16px;
 }
 
 .header-chronometer {
@@ -79,7 +83,7 @@ html, body {
   gap: 6px;
   font-family: var(--font-sans);
   font-size: 0.7rem;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.1em; /* WIDER TRACKING */
   color: var(--text-muted);
   font-weight: 500;
   text-transform: uppercase;
@@ -92,6 +96,26 @@ html, body {
   font-size: 1.1rem;
   line-height: 1;
   color: var(--text-primary);
+}
+
+.header-icon-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  color: var(--text-muted);
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.header-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--accent-green);
+  border-color: var(--accent-green);
 }
 
 /* ==================================================================== */
@@ -178,7 +202,6 @@ html, body {
   align-items: center;
   justify-content: center;
 }
-
 .panel-toggle-btn:hover { color: var(--text-primary); }
 
 /* ==================================================================== */
@@ -234,17 +257,10 @@ html, body {
   margin-bottom: 12px;
 }
 
-.arch-icon-box {
-  color: var(--text-muted);
-}
-.arch-node.active .arch-icon-box {
-  color: var(--accent-green);
-}
+.arch-icon-box { color: var(--text-muted); }
+.arch-node.active .arch-icon-box { color: var(--accent-green); }
 
-.arch-meta {
-  display: flex;
-  flex-direction: column;
-}
+.arch-meta { display: flex; flex-direction: column; }
 
 .arch-label { 
   font-family: var(--font-mono);
@@ -399,54 +415,42 @@ html, body {
   border-color: var(--accent-green);
 }
 
-/* RESPONSIVE BIO: Stack layout on small phones */
 @media (max-width: 600px) {
   .bio-grid {
     flex-direction: column;
     align-items: center;
     text-align: center;
   }
-
-  .bio-avatar img {
-    width: 100px;
-    height: 100px;
-  }
-  
-  .bio-text div { 
-    justify-content: center;
-  }
+  .bio-avatar img { width: 100px; height: 100px; }
+  .bio-text div { justify-content: center; }
 }
 
 /* ==================================================================== */
 /* 5. AGENT TERMINAL (MODERN BLOOMBERG/LINEAR STYLE)                    */
 /* ==================================================================== */
 
-/* Wrapper for Positioning */
+/* Wrapper for Positioning - ANCHORED BOTTOM RIGHT */
 .agent-panel-wrapper {
   position: absolute;
-  top: 70px;
-  right: 20px;
+  bottom: 24px;
+  right: 24px;
   width: 320px;
   overflow-y: visible;
   display: flex;
-  flex-direction: column;
-  z-index: 1000;
+  flex-direction: column-reverse; /* Grows Upwards */
+  z-index: 40;
   transition: all 0.3s ease;
 }
 
 /* Main Terminal Container */
 .agent-terminal {
   width: 100%;
-  
-  /* Modern Glass Effect */
   background: var(--glass-bg);
   backdrop-filter: blur(24px) saturate(140%);
   -webkit-backdrop-filter: blur(24px) saturate(140%);
-  
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-soft);
   border-radius: 12px;
-  
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -454,12 +458,8 @@ html, body {
 }
 
 /* HEIGHT STATES (Desktop) */
-.agent-terminal.expanded {
-  height: calc(100vh - 100px);
-}
-.agent-terminal.collapsed {
-  height: auto;
-}
+.agent-terminal.expanded { height: calc(100vh - 120px); }
+.agent-terminal.collapsed { height: auto; }
 
 /* Terminal Header */
 .terminal-header {
@@ -486,12 +486,11 @@ html, body {
   -webkit-overflow-scrolling: touch; 
 }
 
-/* Scrollbar Polish */
 .terminal-body::-webkit-scrollbar { width: 4px; }
 .terminal-body::-webkit-scrollbar-track { background: transparent; }
 .terminal-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
 
-/* User Bubble (Right) */
+/* Bubbles */
 .msg-user {
   align-self: flex-end;
   background: rgba(255, 255, 255, 0.1);
@@ -502,7 +501,6 @@ html, body {
   max-width: 85%;
 }
 
-/* Agent Bubble (Left) */
 .msg-agent {
   align-self: flex-start;
   color: #e2e8f0;
@@ -514,7 +512,6 @@ html, body {
   border: 1px solid rgba(255, 255, 255, 0.03);
 }
 
-/* System Bubble (Centered) */
 .msg-system {
   align-self: center;
   font-size: 0.75rem;
@@ -523,7 +520,6 @@ html, body {
   font-style: italic;
 }
 
-/* Common Row Style */
 .msg-row {
   white-space: pre-wrap;
   animation: fadeIn 0.3s ease;
@@ -531,11 +527,7 @@ html, body {
   word-wrap: break-word;
 }
 
-/* Data Highlights */
-.term-bold {
-  font-weight: 600;
-  color: var(--accent-green);
-}
+.term-bold { font-weight: 600; color: var(--accent-green); }
 
 .loading-indicator {
   display: flex; align-items: center; gap: 8px;
@@ -544,7 +536,7 @@ html, body {
   padding-left: 4px;
 }
 
-/* Input Area Container */
+/* Input Area */
 .terminal-input-area {
   padding: 16px;
   background: rgba(0, 0, 0, 0.2); 
@@ -560,9 +552,7 @@ html, body {
   border: 1px solid rgba(255, 255, 255, 0.05);
   transition: border 0.2s;
 }
-.input-wrapper:focus-within {
-  border-color: rgba(255, 255, 255, 0.2);
-}
+.input-wrapper:focus-within { border-color: rgba(255, 255, 255, 0.2); }
 
 .terminal-input {
   flex: 1;
@@ -585,20 +575,13 @@ html, body {
 .send-btn:hover { opacity: 1; }
 .send-btn:disabled { opacity: 0.3; }
 
-/* Chips (Smart Prompts) */
+/* Chips */
 .chips-row {
   display: flex; gap: 8px; margin-bottom: 12px;
   overflow-x: auto; padding-bottom: 2px;
-  
-  /* HIDE SCROLLBAR FIX */
-  scrollbar-width: none;  /* Firefox */
-  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none; 
 }
-.chips-row::-webkit-scrollbar { 
-  display: none; 
-  width: 0;
-  height: 0;
-}
+.chips-row::-webkit-scrollbar { display: none; }
 
 .suggestion-chip {
   background: rgba(255, 255, 255, 0.05);
@@ -617,12 +600,6 @@ html, body {
   border-color: var(--accent-green);
 }
 
-.v-divider {
-  width: 1px; height: 14px; background: var(--glass-border);
-  margin: 0 4px;
-}
-
-/* Typing Cursor Animation */
 .typing-cursor {
   display: inline-block;
   color: var(--accent-green);
@@ -636,114 +613,79 @@ html, body {
 /* ==================================================================== */
 .timeline-slider-container {
   position: absolute;
-  bottom: 40px; left: 50%; transform: translateX(-50%);
-  width: 90%; max-width: 500px;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%; max-width: 600px;
   background: rgba(15, 23, 42, 0.85);
   backdrop-filter: blur(12px);
   padding: 12px 24px;
   border-radius: 99px;
   border: 1px solid var(--glass-border);
   box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-  z-index: 1000;
-  display: flex; flex-direction: column; align-items: center;
+  z-index: 30;
+  display: flex; flex-direction: column;
 }
 
-/* CUSTOM RANGE SLIDER (Strict Compatibility) */
-input[type=range] {
-  -webkit-appearance: none; 
-  appearance: none;
-  width: 100%;
-  background: transparent;
-  height: 30px; 
-  margin: 0;
-  cursor: pointer;
-}
-
-input[type=range]:focus { outline: none; }
-
-/* Chrome / Safari / Edge / Opera */
-input[type=range]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none; 
-  height: 20px; 
-  width: 20px; 
-  border-radius: 50%;
-  background: var(--text-primary);
-  margin-top: -8px; /* Centers thumb on the track */
-  box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-}
-
-input[type=range]::-webkit-slider-runnable-track {
-  width: 100%;
-  height: 4px;
-  cursor: pointer;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 2px;
-}
-
-/* Firefox */
-input[type=range]::-moz-range-thumb {
-  appearance: none;
-  border: none;
-  height: 20px; 
-  width: 20px; 
-  border-radius: 50%;
-  background: var(--text-primary);
-  box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-  cursor: pointer;
-}
-
-input[type=range]::-moz-range-track {
-  width: 100%;
-  height: 4px;
-  cursor: pointer;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 2px;
-}
-
-.timeline-slider-container div {
+.slider-label-row {
+  display: flex; 
+  justify-content: space-between; 
+  color: var(--text-muted); 
   font-size: 0.7rem;
-  margin-top: 0; 
-  opacity: 0.7;
+  font-family: var(--font-mono);
   font-weight: 500;
   letter-spacing: 0.05em;
+  margin-bottom: 6px;
   pointer-events: none; 
 }
 
+input[type=range] {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; background: transparent; height: 30px; margin: 0; cursor: pointer;
+}
+input[type=range]:focus { outline: none; }
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; 
+  height: 20px; width: 20px; 
+  border-radius: 50%; background: var(--text-primary);
+  margin-top: -8px; box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+input[type=range]::-webkit-slider-runnable-track {
+  width: 100%; height: 4px; cursor: pointer;
+  background: rgba(255, 255, 255, 0.1); border-radius: 2px;
+}
+input[type=range]::-moz-range-thumb {
+  appearance: none; border: none;
+  height: 20px; width: 20px; 
+  border-radius: 50%; background: var(--text-primary);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.5); cursor: pointer;
+}
+input[type=range]::-moz-range-track {
+  width: 100%; height: 4px; cursor: pointer;
+  background: rgba(255, 255, 255, 0.1); border-radius: 2px;
+}
+
 /* ==================================================================== */
-/* 7. RESPONSIVE SCALING (MOBILE POLISH)                                */
+/* 7. RESPONSIVE                                                        */
 /* ==================================================================== */
 @media (max-width: 768px) {
   .app-header { padding: 0 12px; }
   .chrono-value { font-size: 1.1rem; }
-  .desktop-only { display: none; }
   
-  .agent-terminal {
+  .agent-panel-wrapper {
     right: 12px; left: 12px; width: auto;
-    top: auto; bottom: 130px; /* Above slider */
+    bottom: 130px; /* Above slider */
   }
   
-  .agent-terminal.expanded {
-    height: 50vh; 
-  }
-  
-  /* Prevent iOS Zoom on focus */
-  .terminal-input {
-    font-size: 16px !important; 
-  }
-  
-  .timeline-slider-container {
-    bottom: 30px;
-  }
-  
-  .modal-box {
-    width: 95%;
-    max-height: 80vh;
-  }
+  .agent-terminal.expanded { height: 40vh; }
+  .terminal-input { font-size: 16px !important; }
+  .timeline-slider-container { bottom: 30px; }
+  .modal-box { width: 95%; max-height: 80vh; }
 }
 
 /* ==================================================================== */
-/* 8. ANIMATIONS                                                        */
+/* 8. ANIMATIONS & UTILS                                                */
 /* ==================================================================== */
 @keyframes fadeIn { to { opacity: 1; } }
 @keyframes scaleIn { to { transform: scale(1); } }
@@ -752,23 +694,11 @@ input[type=range]::-moz-range-track {
 .animate-spin { animation: spin 1s linear infinite; }
 .icon-spin { animation: spin 2s linear infinite; }
 
-/* ==================================================================== */
-/* 9. ACCESSIBILITY UTILITIES                                           */
-/* ==================================================================== */
-
 .sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;
 }
 
-/* FOOTER FIX: Explicit dark styling for legibility */
 .disclaimer-footer {
   padding: 6px 0;
   text-align: center;
@@ -780,7 +710,6 @@ input[type=range]::-moz-range-track {
   margin-top: auto;
 }
 
-/* Reduce motion for users who request it */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -788,80 +717,4 @@ input[type=range]::-moz-range-track {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-}
-
-/* --- LAYOUT ANCHORS (Add or Replace in index.css) --- */
-
-.app-header {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between; /* Pushes content to edges */
-  padding: 0 24px;
-  z-index: 50;
-  pointer-events: none; /* Let clicks pass through empty spaces */
-}
-
-/* Re-enable clicks for the children */
-.header-left, .header-right {
-  pointer-events: auto;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.header-icon-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--glass-border);
-  color: var(--text-muted);
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.header-icon-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--accent-green);
-  border-color: var(--accent-green);
-}
-
-.agent-panel-wrapper {
-  position: absolute;
-  bottom: 24px;
-  right: 24px;
-  z-index: 40;
-  /* Ensures the panel grows UP from the bottom */
-  display: flex;
-  flex-direction: column-reverse; 
-}
-
-.timeline-slider-container {
-  position: absolute;
-  bottom: 30px;
-  left: 50%;
-  transform: translateX(-50%); /* Perfectly centered */
-  width: 100%;
-  max-width: 600px;
-  padding: 0 20px;
-  z-index: 30;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.slider-label-row {
-  display: flex; 
-  justify-content: space-between; 
-  color: var(--text-muted); 
-  font-size: 0.75rem;
-  font-family: var(--font-mono);
 }
