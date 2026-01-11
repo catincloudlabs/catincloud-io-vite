@@ -38,7 +38,9 @@ const getSystemContext = (
   `;
 };
 
-// UTILITY: Parses bold markdown (e.g. **Text**) into JSX
+/**
+ * UTILITY: Parses bold markdown (e.g. **Text**) into JSX
+ */
 const formatMessage = (text: string) => {
   const parts = text.split(/(\*\*.*?\*\*)/g);
   return parts.map((part, i) => {
@@ -49,7 +51,9 @@ const formatMessage = (text: string) => {
   });
 };
 
-// COMPONENT: Typing effect (Keep this, it's good UX)
+/**
+ * COMPONENT: Typing effect for smooth, natural text delivery
+ */
 const TypewriterMessage = ({ text, type, onTyping }: { text: string, type: string, onTyping: () => void }) => {
   const [displayedText, setDisplayedText] = useState("");
   const [isComplete, setIsComplete] = useState(false);
@@ -73,7 +77,7 @@ const TypewriterMessage = ({ text, type, onTyping }: { text: string, type: strin
         clearInterval(timer);
         setIsComplete(true);
       }
-    }, 10); // Slightly faster typing for "pro" feel
+    }, 10); // Fast, natural reading speed
 
     return () => clearInterval(timer);
   }, [text, shouldAnimate, onTyping]);
@@ -112,19 +116,14 @@ export function AgentPanel({
     if (isExpanded) scrollToBottom();
   }, [messages.length, isExpanded]);
 
-  // Ticker Selection: Professional Analysis Notification
+  // Ticker Selection: Friendly Assistant Notification
   useEffect(() => {
     if (!selectedTicker || !currentFrame || isLoading) return;
     if (lastTickerRef.current === selectedTicker) return;
 
-    const context = getSystemContext(selectedTicker, currentFrame, graphConnections || []);
+    // UPDATED: Friendly, helpful prompt
+    addSystemMessage(`**Ticker Selected:** ${selectedTicker}\nHow can I help?`);
     
-    // UPDATED: Professional acknowledgment
-    addSystemMessage(`**Asset Selected:** ${selectedTicker}\nLoading physics metrics and news data...`);
-    
-    // Debug log
-    console.debug("Context prepared:", context);
-
     lastTickerRef.current = selectedTicker;
     setIsExpanded(true);
   }, [selectedTicker, currentFrame, graphConnections, isLoading, addSystemMessage]);
@@ -140,13 +139,13 @@ export function AgentPanel({
     setInputValue("");
     const upper = query.toUpperCase();
     
-    // UPDATED: Documentation titles
+    // UPDATED: Clean documentation titles
     if (upper === "PHYSICS") {
-      addSystemMessage("**Model Documentation:**\n• **Energy** (Size): Volume/Liquidity.\n• **Velocity** (Speed): Price Momentum.");
+      addSystemMessage("**Market Physics Model:**\n• **Energy** (Size): Volume/Liquidity.\n• **Velocity** (Speed): Price Momentum.");
       return;
     }
     if (upper === "LEGEND") {
-      addSystemMessage("**Map Legend:**\n🟢 **Green**: Positive Trend\n🔴 **Red**: Negative Trend\n🟡 **Gold**: Active News Correlation");
+      addSystemMessage("**Map Legend:**\n🟢 **Green**: Positive Trend\n🔴 **Red**: Negative Trend\n🟡 **Gold**: News Correlation");
       return;
     }
 
@@ -177,9 +176,8 @@ export function AgentPanel({
             boxShadow: isBusy ? '0 0 8px #fbbf24' : '0 0 8px #22c55e',
             transition: 'all 0.3s ease'
           }} />
-          {/* UPDATED: Status Labels */}
           <span style={{ fontWeight: 600, letterSpacing: '0.05em', fontSize: '0.75rem', color: '#94a3b8' }}>
-            {isAiLoading ? "ANALYZING..." : isLoading ? "LOADING DATA..." : "MARKET INSIGHTS"}
+            {isAiLoading ? "ANALYZING..." : isLoading ? "LOADING..." : "MARKET INSIGHTS"}
           </span>
         </div>
 
@@ -214,7 +212,7 @@ export function AgentPanel({
                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#fbbf24', fontSize: '0.75rem', padding: '10px 12px', opacity: 0.8 }}>
                     <Loader2 size={14} className="animate-spin" />
                     <span className="typing-cursor">
-                      {isAiLoading ? "Processing query..." : "Fetching market data..."}
+                      {isAiLoading ? "Analyzing..." : "Updating data..."}
                     </span>
                  </div>
             )}
@@ -225,9 +223,8 @@ export function AgentPanel({
           <div className="terminal-input-area">
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ color: '#22c55e', fontWeight: 'bold' }}>›</span>
-              {/* UPDATED: Placeholder */}
               <input 
-                type="text" className="terminal-input" placeholder="Ask a question about this asset..." 
+                type="text" className="terminal-input" placeholder="Type your question here..." 
                 value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={handleKeyDown}
                 autoFocus
               />
