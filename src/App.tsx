@@ -116,7 +116,7 @@ function App() {
         />
       </div>
 
-      {/* Slider */}
+      {/* Slider - CSS CLASS NOW CONTROLS POSITION (BOTTOM LEFT) */}
       <div className="timeline-slider-container">
         <div className="slider-label-row">
           <span>HISTORY</span>
