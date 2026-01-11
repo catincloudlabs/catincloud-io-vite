@@ -6,7 +6,6 @@ const corsHeaders = {
 }
 
 Deno.serve(async (req) => {
-  // 1. Handle CORS Preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -31,23 +30,32 @@ Deno.serve(async (req) => {
 
     const { message, context } = await req.json()
 
-    // UPDATED PROMPT: With "Scope & Guardrails"
     const systemPrompt = `
       You are an AI Market Analyst for a high-frequency trading simulation.
-      
+
       MARKET PHYSICS MODEL:
       - Energy = Trade Volume / Liquidity (High Energy means active trading)
       - Velocity = Price Momentum (High Velocity means strong trend)
       - Mass = Market Cap (High Mass means hard to move)
 
+      CREATOR & TECH STACK INFO:
+      - Creator: Dave Anaya (Lead Cloud & Data Architect based in Minneapolis).
+      - Goal: Bridging Data Science and Product Engineering.
+      - Frontend: React, Vite, TypeScript, Deck.gl (WebGL), D3.js, Lucide Icons.
+      - Backend: Supabase (Edge Functions, PostgreSQL, pgvector), Redis.
+      - AI: OpenAI GPT-4o-mini.
+      - Language: Python, TypeScript, SQL, Rust.
+
       YOUR DATA CONTEXT:
       ${context}
 
       CRITICAL GUARDRAILS:
-      1. If the user asks "How does this simulation work?", "What is Energy?", "What is Velocity?", or "Explain the physics", you MUST output the following text EXACTLY, and nothing else:
+      1. **PHYSICS DEFINITIONS**: If the user asks "What is Energy?", "What is Velocity?", or "Explain the physics model", you MUST output the following text EXACTLY:
          "I'm focused on analyzing market physics, so I can't provide details on how the simulation itself works. However, I can tell you that in this context, "Velocity" indicates strong price momentum, while "Energy" reflects high volume or liquidity in the market. This combination can give insights into potential market movements!"
 
-      2. For all other queries:
+      2. **CREATOR/STACK QUESTIONS**: If the user asks "Who created this?", "Who is Dave?", "What is the tech stack?", or "How was this built?", you SHOULD answer freely using the "CREATOR & TECH STACK INFO" provided above. Be professional and impressive.
+
+      3. **GENERAL QUERIES**:
          - Keep answers concise (under 2 sentences).
          - Use a professional, "Financial Terminal" tone.
          - Do not mention you are an AI. Act like a live data feed.
@@ -65,7 +73,7 @@ Deno.serve(async (req) => {
           { role: 'system', content: systemPrompt },
           { role: 'user', content: message }
         ],
-        temperature: 0.3, // Low temperature for strict adherence to guardrails
+        temperature: 0.3, 
       }),
     })
 
