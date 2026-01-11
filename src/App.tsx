@@ -127,9 +127,10 @@ function App() {
           style={{ width: '100%', cursor: 'pointer' }}
         />
         <div className="slider-labels">
-          <span>ORIGIN</span> {/* "History" felt too history-book. "Origin" is data-centric. */}
+          {/* UPDATED ORDER: Top is LIVE, Bottom is ORIGIN */}
+          <span>LIVE</span>
           <span className="mobile-only-label">PROGRESS</span>
-          <span>LIVE</span>   {/* "Today" is casual. "Live" is monitoring. */}
+          <span>ORIGIN</span>
         </div>
       </div>
 

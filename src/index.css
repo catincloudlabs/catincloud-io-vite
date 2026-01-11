@@ -186,7 +186,7 @@ html, body {
 }
 .mobile-only-label { display: inline; opacity: 0.5; }
 
-/* DESKTOP: Vertical on Left (The "Cockpit" Layout) */
+/* DESKTOP: Vertical on Left (The "Deep Dive" Layout) */
 @media (min-width: 768px) {
   .timeline-slider-container {
     left: 24px; 
@@ -204,7 +204,7 @@ html, body {
   .timeline-slider-container::before {
     content: '';
     position: absolute;
-    top: -30px; /* Reach up to the header (90px top - 60px header = 30px gap) */
+    top: -30px; /* Reach up to the header */
     left: 50%;
     width: 1px;
     height: 30px;
@@ -213,10 +213,10 @@ html, body {
     z-index: -1;
   }
 
-  /* Rotate the range input 90 degrees */
+  /* ROTATION FLIP: -90deg puts MAX (Today) at Top, MIN (Origin) at Bottom */
   .timeline-slider-container input[type=range] {
      width: 45vh; 
-     transform: rotate(90deg);
+     transform: rotate(-90deg);
      transform-origin: center;
      margin: 0;
   }
@@ -230,7 +230,7 @@ html, body {
   
   .slider-labels span {
     writing-mode: vertical-rl; /* Vertical Text */
-    transform: rotate(180deg); /* Text reads bottom-up (standard for Y-axis) */
+    transform: rotate(180deg); /* Fix orientation */
     font-size: 0.6rem;
     letter-spacing: 0.15em;
     color: var(--text-muted);
