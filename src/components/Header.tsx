@@ -12,14 +12,19 @@ const Header: React.FC<HeaderProps> = ({ dateLabel }) => {
       <div className="header-left">
         <div className="header-chronometer">
           <div className="chrono-label">
-            <Clock size={10} className="text-accent-green" />
-            <span>EVENT HORIZON</span>
+            {/* Directly referencing the CSS variable ensures this icon 
+              always matches the global theme changes.
+            */}
+            <Clock size={12} color="var(--accent-green)" style={{ opacity: 0.9 }} />
+            <span style={{ fontFamily: 'var(--font-mono)' }}>EVENT HORIZON</span>
           </div>
-          <div className="chrono-value">{dateLabel}</div>
+          <div className="chrono-value">
+            {dateLabel}
+          </div>
         </div>
       </div>
       
-      {/* RIGHT SIDE IS NOW EMPTY - CLEANER LOOK */}
+      {/* RIGHT SIDE IS EMPTY - CLEANER LOOK */}
     </header>
   );
 };
