@@ -40,6 +40,7 @@ function App() {
         setFrames(hydratedFrames);
         
         // 2. Set Default Time to "NOW" (The end of the dataset)
+        // This ensures the recruiter sees the latest state immediately.
         if (hydratedFrames.length > 0) {
             setTimelineProgress(hydratedFrames.length - 1);
         }
@@ -70,7 +71,7 @@ function App() {
     return { displayNodes: nodes, currentDateLabel: currentFrame.date, currentFrameData: currentFrame };
   }, [frames, timelineProgress]);
 
-  // ERROR STATE
+  // ERROR STATE - Using CSS variables for colors
   if (error) return (
     <div style={{ background: 'var(--background)', height: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)' }}>
       <h1 style={{ color: '#ef4444' }}>System Error</h1>
@@ -99,12 +100,8 @@ function App() {
         graphConnections={connections}       
       />
 
-      {/* Header - Now handles Ticker Selection */}
-      <Header 
-        dateLabel={currentDateLabel} 
-        onSelectTicker={setSelectedTicker} 
-        selectedTicker={selectedTicker}
-      />
+      {/* Header */}
+      <Header dateLabel={currentDateLabel} />
 
       {/* Agent Panel */}
       <div className="agent-panel-wrapper">
@@ -120,25 +117,21 @@ function App() {
 
       {/* Slider */}
       <div className="timeline-slider-container">
-        <label htmlFor="time-slider" className="sr-only">Simulation Timeline</label>
         <input 
-          id="time-slider"
           type="range" 
           min="0" 
           max={Math.max(0, frames.length - 1)} 
           step="0.01" 
           value={timelineProgress}
           onChange={(e) => setTimelineProgress(parseFloat(e.target.value))}
-          aria-orientation="vertical"
-          aria-valuemin={0}
-          aria-valuemax={Math.max(0, frames.length - 1)}
-          aria-valuenow={timelineProgress}
+          aria-label="Simulation Timeline"
+          // Removed accentColor to allow CSS styling to take precedence
           style={{ width: '100%', cursor: 'pointer' }}
         />
-        <div className="slider-labels" aria-hidden="true">
-          <span>LIVE</span>
-          <span className="mobile-only-label">PROGRESS</span>
-          <span>ORIGIN</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', marginTop: '8px' }}>
+          <span>HISTORY</span>
+          <span style={{ opacity: 0.5 }}>SIMULATION PROGRESS</span>
+          <span>TODAY</span>
         </div>
       </div>
 
