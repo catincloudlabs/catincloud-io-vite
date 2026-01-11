@@ -1,13 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { MarketFrame } from '../App';
 import { GraphConnection } from '../hooks/useKnowledgeGraph';
-import { SECTOR_MAP, SECTOR_NAMES } from '../utils/sectorMap';
+import { useAgentOracle } from '../hooks/useAgentOracle';
 // @ts-ignore
 import { Network, User, Minus, Plus, Loader2 } from 'lucide-react';
 
 interface AgentPanelProps {
   currentFrame: MarketFrame | null;
-  history?: MarketFrame[];
   selectedTicker: string | null;
   graphConnections?: GraphConnection[];
   isLoading?: boolean;
@@ -15,190 +14,146 @@ interface AgentPanelProps {
   onOpenBio: () => void;
 }
 
-export function AgentPanel({ currentFrame, history, selectedTicker, graphConnections, isLoading, onOpenArch, onOpenBio }: AgentPanelProps) {
+/**
+ * HELPER: Formats raw data into a structured SITREP for the AI.
+ * This provides the "Intelligence" the Oracle needs to be accurate.
+ */
+const getSystemContext = (
+  ticker: string, 
+  currentFrame: MarketFrame, 
+  graph: GraphConnection[]
+) => {
+  const node = currentFrame.nodes.find(n => n.ticker === ticker);
+  if (!node) return "General Market View.";
+
+  const newsSummary = graph.length > 0 
+    ? graph.flatMap(c => c.articles).slice(0, 5).join(' | ') 
+    : "No recent news signals.";
+
+  const velocity = Math.sqrt(node.vx**2 + node.vy**2).toFixed(2);
+
+  return `
+    CURRENT TARGET: ${ticker}
+    PHYSICS: Energy=${node.energy.toFixed(0)}, Velocity=${velocity}
+    KNOWLEDGE GRAPH INTEL: ${newsSummary}
+  `;
+};
+
+export function AgentPanel({ 
+  currentFrame, 
+  selectedTicker, 
+  graphConnections, 
+  isLoading, 
+  onOpenArch, 
+  onOpenBio 
+}: AgentPanelProps) {
   const [isExpanded, setIsExpanded] = useState(() => {
     return typeof window !== 'undefined' && window.innerWidth > 768;
   });
   
-  const [messages, setMessages] = useState<Array<{type: 'agent' | 'user', text: string}>>([
-    { 
-      type: 'agent', 
-      text: `SYSTEM ONLINE v2.5.0
------------------------
-> "Physics": Explains motion model.
-> "Legend": Decodes signals.
-> "Strategy": Tactical guide.` 
-    }
-  ]);
-  
   const [inputValue, setInputValue] = useState("");
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const lastTickerRef = useRef<string | null>(null); 
+  const lastTickerRef = useRef<string | null>(null);
+  
+  // 1. Hook Integration
+  const { messages, isAiLoading, sendMessage, addSystemMessage } = useAgentOracle();
 
-  const suggestions = ["PHYSICS", "LEGEND", "STRATEGY"];
-
+  // 2. Auto-scroll terminal
   useEffect(() => {
     if (isExpanded) {
       chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, isExpanded]);
 
-  // --- Report Generator ---
-  const generateResponse = (ticker: string) => {
-    if (!currentFrame) return "System initializing...";
-
-    const node = currentFrame.nodes.find(n => n.ticker === ticker);
-    if (!node) return `ERR: No physics data for ${ticker}.`;
-
-    // 1. Physics Data
-    let trend = "STABLE";
-    if (history && history.length > 5) {
-      const pastFrame = history[Math.max(0, history.indexOf(currentFrame) - 5)];
-      const pastNode = pastFrame?.nodes.find(n => n.ticker === ticker);
-      if (pastNode) {
-          const energyDelta = node.energy - pastNode.energy;
-          if (energyDelta > 5) trend = "ACCELERATING";
-          else if (energyDelta < -5) trend = "DECELERATING";
-      }
-    }
-
-    const velocity = Math.sqrt(node.vx**2 + node.vy**2).toFixed(1);
-    
-    // 2. Relative Physics (Sector Alpha) with fallback
-    let sectorContext = "";
-    const sectorTicker = SECTOR_MAP[ticker];
-    
-    // Fallback: If no specific sector mapping exists, default to SPY
-    const benchmarkTicker = sectorTicker || 'SPY';
-    
-    // Find the benchmark node. 
-    // Priority 1: The specific sector (e.g. SMH)
-    // Priority 2: SPY (if SMH is missing from this frame)
-    const sectorNode = currentFrame.nodes.find(n => n.ticker === benchmarkTicker) 
-                    || currentFrame.nodes.find(n => n.ticker === 'SPY');
-
-    if (sectorNode && sectorNode.ticker !== ticker) {
-         const stockVel = Math.sqrt(node.vx**2 + node.vy**2);
-         const sectorVel = Math.sqrt(sectorNode.vx**2 + sectorNode.vy**2);
-         const alpha = stockVel - sectorVel;
-         
-         const benchmarkName = SECTOR_NAMES[sectorNode.ticker] || sectorNode.ticker;
-         
-         if (alpha > 2.0) sectorContext = `\n• Alpha:  High Rel. Vel vs ${benchmarkName} (+${alpha.toFixed(1)})`;
-         else if (alpha < -2.0) sectorContext = `\n• Alpha:  Lagging ${benchmarkName} (${alpha.toFixed(1)})`;
-         else sectorContext = `\n• Alpha:  Correlated with ${benchmarkName}`;
-    }
-
-    // 3. Intelligence Data
-    let intelligenceReport = "";
-    if (graphConnections && graphConnections.length > 0) {
-      const peers = graphConnections.slice(0, 3).map(c => c.target).join(', ');
-      const topArticle = graphConnections[0]?.articles[0];
-      // Truncate headline if too long
-      const shortHeadline = topArticle && topArticle.length > 50 ? topArticle.substring(0, 47) + "..." : topArticle;
-      const narrative = shortHeadline ? `"${shortHeadline}"` : "Sector Correlation";
-
-      intelligenceReport = `
-🧠 NETWORK INTEL:
-• Cluster: [${peers}]
-• Driver: ${narrative}`;
-    } else {
-      intelligenceReport = `
-🧠 NETWORK INTEL:
-• No major signal detected.
-• Idiosyncratic movement.`;
-    }
-
-    // TACTICAL FORMAT
-    return `🎯 TARGET: ${ticker}
-📊 PHYSICS:
-• Trend:  ${trend}
-• Energy: ${node.energy.toFixed(0)} | Vel: ${velocity}${sectorContext}${intelligenceReport}`;
-  };
-
-  // --- SMART EFFECT ---
+  // 3. Ticker Selection Effect
+  // This triggers when the user clicks a node on the map.
   useEffect(() => {
-    if (!selectedTicker) return;
+    if (!selectedTicker || !currentFrame || isLoading) return;
+    if (lastTickerRef.current === selectedTicker) return;
 
-    // 1. If we are still loading, do nothing (wait for data)
-    if (isLoading) return;
-
-    // 2. If we already spoke about this ticker *with this data*, stop.
-    if (lastTickerRef.current === selectedTicker) {
-        return; 
-    }
-
-    // 3. Generate and Send
-    const response = generateResponse(selectedTicker);
-    setMessages(prev => [...prev, { type: 'agent', text: response }]);
-    setIsExpanded(true);
+    // Generate context for the SITREP
+    const context = getSystemContext(selectedTicker, currentFrame, graphConnections || []);
     
-    // 4. Mark as spoken
+    // Add local acknowledgment
+    addSystemMessage(`🎯 TARGET ACQUIRED: ${selectedTicker}\nAnalyzing physics and news vectors...`);
+    
+    // OPTIONAL: Automatically ask the AI for a brief sitrep when clicked
+    // sendMessage("Provide a 1-sentence tactical SITREP based on current physics.", context);
+    
+    // Note: To fix the 'context' unused error, we either use it in sendMessage 
+    // or log it if you only want the local message for now.
+    console.debug("Context prepared for target:", context);
+
     lastTickerRef.current = selectedTicker;
+    setIsExpanded(true);
+  }, [selectedTicker, currentFrame, graphConnections, isLoading, addSystemMessage]);
 
-  }, [selectedTicker, graphConnections, isLoading]); 
-
-  // Reset ref if user specifically deselects
+  // Reset tracking if user deselects
   useEffect(() => {
-     if (!selectedTicker) {
-         lastTickerRef.current = null;
-     }
+    if (!selectedTicker) lastTickerRef.current = null;
   }, [selectedTicker]);
 
-  const handleCommand = (cmd: string) => {
-      setMessages(prev => [...prev, { type: 'user', text: cmd }]);
-      
-      setTimeout(() => {
-         let response = "";
-         const q = cmd.toUpperCase();
-         if (q.includes("PHYSICS")) response = "PHYSICS ENGINE DOCS:\n• ENERGY (Size): Volume/Liquidity.\n• VELOCITY (Speed): Price Momentum.";
-         else if (q.includes("LEGEND")) response = "VISUAL DECODER:\n🟢 GREEN: Positive\n🔴 RED: Negative\n🟡 GOLD: Knowledge Graph Link";
-         else if (q.includes("STRATEGY")) response = "TACTICAL GUIDE:\n1. MOMENTUM: Watch high velocity.\n2. CATALYSTS: High Energy pulls mass.";
-         else response = "Unknown command.";
-         
-         setMessages(prev => [...prev, { type: 'agent', text: response }]);
-      }, 300);
+  // 4. Command Router
+  const handleCommand = async (cmd: string) => {
+    const query = cmd.trim();
+    if (!query) return;
+
+    setInputValue("");
+    
+    const upper = query.toUpperCase();
+    
+    // Static system documentation
+    if (upper === "PHYSICS") {
+      addSystemMessage("PHYSICS ENGINE DOCS:\n• ENERGY (Size): Volume/Liquidity.\n• VELOCITY (Speed): Price Momentum.");
+      return;
+    }
+    if (upper === "LEGEND") {
+      addSystemMessage("VISUAL DECODER:\n🟢 GREEN: Positive\n🔴 RED: Negative\n🟡 GOLD: Knowledge Graph Link");
+      return;
+    }
+
+    // AI Oracle Route
+    const context = selectedTicker && currentFrame 
+      ? getSystemContext(selectedTicker, currentFrame, graphConnections || [])
+      : "Viewing general market map simulation.";
+
+    await sendMessage(query, context);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && inputValue.trim()) {
-       handleCommand(inputValue);
-       setInputValue("");
-    }
+    if (e.key === 'Enter') handleCommand(inputValue);
   };
 
   if (!currentFrame) return null;
+
+  const isBusy = isLoading || isAiLoading;
 
   return (
     <div className={`agent-terminal ${isExpanded ? 'expanded' : 'collapsed'}`}>
       
       {/* HEADER */}
-      <div className="terminal-header">
-        <div 
-          onClick={() => setIsExpanded(!isExpanded)}
-          style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, cursor: 'pointer' }}
-        >
-          {/* Status Light */}
+      <div className="terminal-header" onClick={() => setIsExpanded(!isExpanded)}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
           <div style={{ 
             width: '6px', height: '6px', borderRadius: '50%', 
-            background: isLoading ? '#fbbf24' : '#22c55e', 
-            boxShadow: isLoading ? '0 0 8px #fbbf24' : '0 0 8px #22c55e',
+            background: isBusy ? '#fbbf24' : '#22c55e', 
+            boxShadow: isBusy ? '0 0 8px #fbbf24' : '0 0 8px #22c55e',
             transition: 'all 0.3s ease'
           }} />
           <span style={{ fontWeight: 600, letterSpacing: '0.1em', fontSize: '0.75rem', color: '#94a3b8' }}>
-            {isLoading ? "DECRYPTING..." : "INTELLIGENCE"}
+            {isAiLoading ? "CONSULTING ORACLE..." : isLoading ? "DECRYPTING..." : "INTELLIGENCE"}
           </span>
         </div>
 
          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <button onClick={onOpenArch} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 2 }}>
+            <button onClick={(e) => { e.stopPropagation(); onOpenArch(); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 2 }}>
                 <Network size={14} />
             </button>
-            <button onClick={onOpenBio} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 2, marginRight: '8px' }}>
+            <button onClick={(e) => { e.stopPropagation(); onOpenBio(); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 2, marginRight: '8px' }}>
                 <User size={14} />
             </button>
             <div style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)' }}></div>
-            <button onClick={() => setIsExpanded(!isExpanded)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex' }}>
+            <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex' }}>
                 {isExpanded ? <Minus size={14} /> : <Plus size={14} />}
             </button>
         </div>
@@ -210,43 +165,29 @@ export function AgentPanel({ currentFrame, history, selectedTicker, graphConnect
           <div style={{ 
             flex: 1, padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', minHeight: '150px'
           }}>
-            {messages.map((msg, i) => {
-              const isUser = msg.type === 'user';
-              return (
-                <div key={i} style={{ 
-                  alignSelf: 'flex-start', width: '100%', lineHeight: '1.5', whiteSpace: 'pre-wrap',
-                  marginTop: isUser ? '16px' : '0px',
-                  color: isUser ? '#22c55e' : '#e2e8f0',
-                  backgroundColor: isUser ? 'transparent' : 'rgba(255, 255, 255, 0.05)',
-                  padding: isUser ? '0 4px' : '10px 12px',
-                  borderRadius: isUser ? '0' : '6px',
-                  borderLeft: isUser ? 'none' : '2px solid #3b82f6',
-                  fontSize: '0.8rem'
-                }}>
-                  {isUser ? `➜ ${msg.text}` : msg.text}
-                </div>
-              );
-            })}
+            {messages.map((msg, i) => (
+              <div key={i} style={{ 
+                alignSelf: 'flex-start', width: '100%', lineHeight: '1.5', whiteSpace: 'pre-wrap',
+                marginTop: msg.type === 'user' ? '16px' : '0px',
+                color: msg.type === 'user' ? '#22c55e' : '#e2e8f0',
+                backgroundColor: msg.type === 'user' ? 'transparent' : 'rgba(255, 255, 255, 0.05)',
+                padding: msg.type === 'user' ? '0 4px' : '10px 12px',
+                borderRadius: msg.type === 'user' ? '0' : '6px',
+                borderLeft: msg.type === 'user' ? 'none' : '2px solid #3b82f6',
+                fontSize: '0.8rem'
+              }}>
+                {msg.type === 'user' ? `➜ ${msg.text}` : msg.text}
+              </div>
+            ))}
             
-            {isLoading && (
+            {isBusy && (
                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#fbbf24', fontSize: '0.75rem', padding: '10px 12px' }}>
                     <Loader2 size={14} className="animate-spin" />
-                    <span>Accessing Knowledge Graph...</span>
+                    <span>{isAiLoading ? "Uplink active..." : "Accessing Knowledge Graph..."}</span>
                  </div>
             )}
             
             <div ref={chatEndRef} />
-          </div>
-
-          <div style={{ padding: '8px 12px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', gap: '8px', flexWrap: 'wrap', flexShrink: 0 }}>
-            {suggestions.map(s => (
-                <button key={s} onClick={() => handleCommand(s)} style={{
-                      background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px',
-                      color: '#94a3b8', fontSize: '0.65rem', padding: '4px 8px', cursor: 'pointer', fontFamily: 'var(--font-mono)'
-                  }}>
-                    {s}
-                </button>
-            ))}
           </div>
 
           <div className="terminal-input-area">
