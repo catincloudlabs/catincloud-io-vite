@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MarketFrame } from '../App';
 import { GraphConnection } from '../hooks/useKnowledgeGraph';
 import { useAgentOracle } from '../hooks/useAgentOracle';
@@ -49,7 +49,7 @@ const TypewriterMessage = ({ text, type, onTyping }: { text: string, type: strin
     // Speed: 15ms per char (Fast but readable)
     const timer = setInterval(() => {
       if (i < text.length) {
-        setDisplayedText(prev => text.slice(0, i + 1));
+        setDisplayedText(text.slice(0, i + 1));
         i++;
         onTyping(); // Trigger scroll
       } else {
@@ -59,7 +59,7 @@ const TypewriterMessage = ({ text, type, onTyping }: { text: string, type: strin
     }, 15);
 
     return () => clearInterval(timer);
-  }, [text, shouldAnimate]);
+  }, [text, shouldAnimate, onTyping]);
 
   return (
     <div className={`msg-row msg-${type} ${!isComplete && shouldAnimate ? 'typing-cursor' : ''}`}>
@@ -212,7 +212,7 @@ export function AgentPanel({
           <div className="terminal-body">
             {messages.map((msg, i) => (
               <TypewriterMessage 
-                key={i} // Using index is safe here as we only append
+                key={i} 
                 text={msg.text} 
                 type={msg.type}
                 onTyping={scrollToBottom} 
