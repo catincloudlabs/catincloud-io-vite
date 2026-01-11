@@ -18,13 +18,16 @@
   --font-mono: 'JetBrains Mono', monospace;
 }
 
-body {
+html, body {
   margin: 0;
   padding: 0;
   background-color: var(--background);
   color: var(--text-primary);
   font-family: var(--font-sans);
   overflow: hidden; 
+  /* Prevent "Pull to Refresh" / Rubber-banding on the whole app */
+  overscroll-behavior: none;
+  touch-action: none; /* Disables browser handling of gestures (except scrollable areas) */
 }
 
 /* ==================================================================== */
@@ -383,6 +386,24 @@ body {
   border-color: var(--accent-green);
 }
 
+/* RESPONSIVE BIO: Stack layout on small phones */
+@media (max-width: 600px) {
+  .bio-grid {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .bio-avatar img {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .bio-text div { 
+    justify-content: center;
+  }
+}
+
 /* ==================================================================== */
 /* 5. AGENT TERMINAL (MODERN BLOOMBERG/LINEAR STYLE)                    */
 /* ==================================================================== */
@@ -453,6 +474,7 @@ body {
   gap: 16px;
   font-family: var(--font-sans); /* The Agent speaks in natural language */
   font-size: 0.9rem; /* Slightly larger for readability */
+  -webkit-overflow-scrolling: touch; /* Native-speed scroll on iOS */
 }
 
 /* Scrollbar Polish */
@@ -680,10 +702,11 @@ input[type=range]::-moz-range-thumb {
   /* MOBILE FIX: Anchor Agent Panel higher to clear slider */
   .agent-panel-wrapper {
     top: auto; 
-    bottom: 130px; /* Increased separation */
     left: 12px;
     right: 12px;
     width: auto;
+    /* Push panel up so it doesn't hit the slider + Safe Area */
+    bottom: calc(110px + env(safe-area-inset-bottom)); 
   }
   
   /* MOBILE HEIGHTS: Capped at 55vh to avoid top cut-off */
@@ -691,14 +714,19 @@ input[type=range]::-moz-range-thumb {
     height: 55vh; 
   }
   
-  /* Slider: Bottom Center */
+  /* Prevent iOS Zoom on focus */
+  .terminal-input {
+    font-size: 16px !important; 
+  }
+  
+  /* Slider: Bottom Center with Safe Area */
   .timeline-slider-container {
-    bottom: 40px; /* Increased from 24px to clear Home Bar */
     left: 12px;
     right: 12px;
     width: auto;
     transform: none; 
     padding: 12px 16px;
+    bottom: calc(20px + env(safe-area-inset-bottom)); 
   }
   
   .modal-box {
