@@ -270,7 +270,7 @@ export function AgentPanel({
             background: 'rgba(2, 6, 23, 0.8)',
             borderTop: '1px solid rgba(255,255,255,0.05)'
           }}>
-            CAUTION: AI output may be hallucinated.
+            Simulation only. Not financial advice.
           </div>
         </>
       )}
