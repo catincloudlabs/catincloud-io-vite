@@ -5,6 +5,8 @@ import DeckGL from '@deck.gl/react';
 // @ts-ignore
 import { ScatterplotLayer, PolygonLayer, PathLayer, LineLayer } from '@deck.gl/layers';
 // @ts-ignore
+import { PathStyleExtension } from '@deck.gl/extensions'; 
+// @ts-ignore
 import { OrthographicView } from '@deck.gl/core';
 import { Delaunay } from 'd3-delaunay';
 import { GraphConnection } from '../hooks/useKnowledgeGraph'; 
@@ -73,7 +75,6 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     
     return { 
         maxEnergy: max, 
-        // 15% Threshold for "Active" status
         highEnergyThreshold: max * 0.15
     };
   }, [data]);
@@ -107,7 +108,6 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     const currentIndex = history.findIndex(f => f.date === data.date);
     if (currentIndex <= 0) return [];
 
-    // CHANGED: Reduced from 12 to 6. "Comet Tails" instead of "Wires".
     const LOOKBACK_FRAMES = 6;
     const lookback = Math.max(0, currentIndex - LOOKBACK_FRAMES);
     const recentHistory = history.slice(lookback, currentIndex + 1);
@@ -140,10 +140,11 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     if (!data?.nodes) return [];
 
     return data.nodes
+      // Filter for noise to keep the map clean
       .filter(n => n.energy > highEnergyThreshold || n.ticker === selectedTicker)
       .map(n => ({
-        from: [n.x, n.y],
-        to: [n.x + n.vx, n.y + n.vy], 
+        // Path format required for PathLayer
+        path: [[n.x, n.y], [n.x + n.vx, n.y + n.vy]], 
         energy: n.energy,
         sentiment: n.sentiment
       }));
@@ -210,16 +211,19 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     pickable: false 
   });
 
-  // 2. VECTOR LAYER (Prediction)
-  const vectorLayer = new LineLayer({
+  // 2. VECTOR LAYER (Prediction - Now Dashed)
+  const vectorLayer = new PathLayer({
     id: 'momentum-vectors',
     data: vectorData,
-    getSourcePosition: (d: any) => d.from,
-    getTargetPosition: (d: any) => d.to,
-    getColor: (d: any) => d.sentiment >= 0 ? [...THEME.mint, 150] : [...THEME.red, 150],
-    getWidth: 1,
+    getPath: (d: any) => d.path,
+    getColor: (d: any) => d.sentiment >= 0 ? [...THEME.mint, 180] : [...THEME.red, 180],
+    getWidth: 1.5,
     widthUnits: 'pixels',
-    opacity: 0.6
+    capRounded: true,
+    // DASH CONFIGURATION
+    getDashArray: [6, 4], // 6px dash, 4px gap
+    dash: true,           // Enable dashing
+    extensions: [new PathStyleExtension({ dash: true })] 
   });
 
   // 3. GHOST TRAILS (History)
@@ -228,7 +232,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     data: trailData,
     getPath: (d: any) => d.path,
     getColor: (d: any) => {
-        if (d.sentiment > 0.1) return [...THEME.mint, 60]; // Lower opacity (80->60)
+        if (d.sentiment > 0.1) return [...THEME.mint, 60]; 
         if (d.sentiment < -0.1) return [...THEME.red, 60];
         return [...THEME.slate, 30];
     },
@@ -338,6 +342,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
             views={new OrthographicView({ controller: true })}
             initialViewState={INITIAL_VIEW_STATE}
             controller={true}
+            // Draw order: Cells -> Vectors -> Trails -> Glow -> Synapses -> Dots
             layers={[cellLayer, vectorLayer, trailLayer, glowLayer, synapseLayer, dotLayer]} 
             style={{ backgroundColor: 'transparent' }} 
             onClick={(info: any) => {
