@@ -191,7 +191,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
 
   // --- LAYERS ----------------------------------------------------------------
 
-  // 1. BACKGROUND CELLS (Grid)
+  // 1. BACKGROUND CELLS (Grid - Now Dotted)
   const cellLayer = new PolygonLayer({
     id: 'voronoi-cells',
     data: voronoiData,
@@ -203,10 +203,15 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
       return [0, 0, 0, 0]; 
     },
     stroked: true,
-    getLineColor: [...THEME.slate, 20], 
-    getLineWidth: 1,
+    getLineColor: [...THEME.slate, 15], // Subtle Slate
+    getLineWidth: 1,                    // Keep 1px so dots are visible
     lineWidthUnits: 'pixels',
-    pickable: false 
+    pickable: false,
+    
+    // TEXTURE: Dotted Line (2px dot, 5px gap)
+    getDashArray: [2, 5], 
+    dash: true,
+    extensions: [new PathStyleExtension({ dash: true })]
   });
 
   // 2. VECTOR LAYER (Prediction - Dashed)
@@ -218,19 +223,20 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     getWidth: 1.5,
     widthUnits: 'pixels',
     capRounded: true,
+    
+    // TEXTURE: Dashed Line (6px dash, 4px gap)
     getDashArray: [6, 4], 
     dash: true,           
     extensions: [new PathStyleExtension({ dash: true })] 
   });
 
-  // 3. GHOST TRAILS (History - Highlighted on Selection)
+  // 3. GHOST TRAILS (History - Solid)
   const trailLayer = new PathLayer({
     id: 'market-trails',
     data: trailData,
     getPath: (d: any) => d.path,
     getColor: (d: any) => {
         const isSelected = d.ticker === selectedTicker;
-        // High visibility (180) if selected, low visibility (60) if not
         const alpha = isSelected ? 180 : 60;
         const slateAlpha = isSelected ? 120 : 30;
 
@@ -238,7 +244,6 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
         if (d.sentiment < -0.1) return [...THEME.red, alpha];
         return [...THEME.slate, slateAlpha];
     },
-    // Thicker line (2.0) if selected to stand out from the noise
     getWidth: (d: any) => d.ticker === selectedTicker ? 2.0 : 0.8,
     widthUnits: 'pixels',
     jointRounded: true,
