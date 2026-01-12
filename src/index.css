@@ -711,103 +711,14 @@ input[type=range]::-moz-range-track {
 }
 
 /* ==================================================================== */
-/* 7. RESPONSIVE REFINEMENTS                                            */
-/* ==================================================================== */
-
-@media (max-width: 768px) {
-  /* --- HEADER OPTIMIZATION --- */
-  .app-header { 
-    padding: 0 16px; 
-    height: 64px; /* Taller for touch targets */
-  }
-
-  /* Hide the "EVENT HORIZON" text, keep the icon */
-  .header-label-text { display: none; }
-  
-  /* Make the date larger */
-  .chrono-value { font-size: 1rem; }
-
-  /* Increase Touch Targets for Icons */
-  .header-icon-btn {
-    width: 44px;
-    height: 44px;
-  }
-
-  /* Expand the Selector for thumb access */
-  .header-selector {
-    height: 40px;
-    min-width: 110px;
-  }
-  
-  /* --- TIMELINE SLIDER --- */
-  /* Center it and respect the bottom safe area (iPhone Home Bar) */
-  .timeline-slider-container {
-    bottom: calc(20px + env(safe-area-inset-bottom));
-    left: 50%;
-    transform: translateX(-50%);
-    width: 92%;
-    max-width: none;
-    /* Glass morphism stronger on mobile */
-    background: rgba(15, 23, 42, 0.95);
-  }
-
-  /* --- AGENT PANEL --- */
-  .agent-panel-wrapper {
-    left: 12px; 
-    right: 12px; 
-    width: auto;
-    /* Position it above the slider + some breathing room */
-    bottom: calc(120px + env(safe-area-inset-bottom)); 
-  }
-  
-  /* Give the terminal more height when open on mobile */
-  .agent-terminal.expanded { 
-    height: 55vh; 
-    max-height: 500px;
-  }
-
-  /* Prevent iOS zoom on inputs */
-  .terminal-input { 
-    font-size: 16px !important; 
-  }
-
-  /* Larger send button */
-  .input-wrapper {
-    padding: 12px;
-  }
-  .send-btn {
-    padding: 8px;
-  }
-
-  /* --- MODALS --- */
-  .modal-box {
-    width: 100%;
-    height: 100%; /* Full screen modal on mobile */
-    max-height: none;
-    border-radius: 0;
-    border: none;
-  }
-  
-  .bio-grid { 
-    flex-direction: column; 
-    align-items: center; 
-    text-align: center; 
-  }
-  
-  /* Hide desktop arrows in Architecture diagram */
-  .desktop-arrow { display: none; }
-  .mobile-arrow { display: block; margin: 10px 0; }
-}
-
-/* ==================================================================== */
-/* 9. MAP LEGEND                                                        */
+/* 9. MAP LEGEND (REPOSITIONED: BOTTOM LEFT)                            */
 /* ==================================================================== */
 .legend-wrapper {
   position: absolute;
   /* ALIGNMENT: 32px Left (Matches Slider), 125px Bottom (Clears Slider) */
   bottom: 125px; 
   left: 32px;    
-  top: auto;     /* Reset top override */
+  top: auto;     
   z-index: 45;   
   pointer-events: none; 
 }
@@ -925,12 +836,233 @@ input[type=range]::-moz-range-track {
   opacity: 0.5;
 }
 
-/* RESPONSIVE ADJUSTMENT */
+/* ==================================================================== */
+/* 10. REFACTORED UTILITIES (Moved from inline styles)                  */
+/* ==================================================================== */
+
+/* App.tsx */
+.app-root {
+  width: 100vw;
+  height: 100dvh;
+  position: relative;
+  overflow: hidden;
+  background: var(--background);
+}
+
+.app-loading-container,
+.app-error-container {
+  background: var(--background);
+  height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+}
+
+.app-error-container {
+  flex-direction: column;
+}
+
+.app-error-title {
+  color: #ef4444;
+}
+
+.app-error-msg {
+  color: var(--text-muted);
+}
+
+.app-retry-btn {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.app-loading-text {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  letter-spacing: 0.1em;
+}
+
+.slider-input {
+  width: 100%;
+  cursor: pointer;
+  display: block;
+}
+
+/* MarketMap.tsx Tooltip */
+.map-tooltip {
+  padding: 12px;
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  font-family: var(--font-sans);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-soft);
+  min-width: 160px;
+}
+
+.map-tooltip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.map-tooltip-ticker {
+  font-family: var(--font-mono);
+  letter-spacing: 0.05em;
+}
+
+.map-tooltip-metric {
+  font-size: 0.7rem;
+  color: var(--accent-green);
+  font-family: var(--font-mono);
+  margin-left: 12px;
+}
+
+.map-tooltip-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* AgentPanel.tsx */
+.agent-terminal-active {
+  border-color: var(--accent-green) !important;
+}
+
+.terminal-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.terminal-title-text {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--text-primary);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.terminal-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.suggestion-icon {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+/* Header.tsx */
+.v-divider {
+  height: 24px;
+  margin: 0 12px;
+  opacity: 0.2;
+  width: 1px;
+  background: var(--text-muted);
+}
+
+.header-label-text {
+  margin-left: 8px;
+  letter-spacing: 0.1em;
+  font-size: 0.7rem;
+}
+
+/* ==================================================================== */
+/* 7. RESPONSIVE REFINEMENTS                                            */
+/* ==================================================================== */
+
 @media (max-width: 768px) {
+  /* --- HEADER OPTIMIZATION --- */
+  .app-header { 
+    padding: 0 16px; 
+    height: 64px; 
+  }
+
+  /* Hide the "EVENT HORIZON" text */
+  .header-label-text { display: none; }
+  
+  /* Make the date larger */
+  .chrono-value { font-size: 1rem; }
+
+  /* Increase Touch Targets */
+  .header-icon-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .header-selector {
+    height: 40px;
+    min-width: 110px;
+  }
+  
+  /* --- TIMELINE SLIDER --- */
+  .timeline-slider-container {
+    bottom: calc(20px + env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%);
+    width: 92%;
+    max-width: none;
+    background: rgba(15, 23, 42, 0.95);
+  }
+
+  /* --- AGENT PANEL --- */
+  .agent-panel-wrapper {
+    left: 12px; 
+    right: 12px; 
+    width: auto;
+    bottom: calc(130px + env(safe-area-inset-bottom)); 
+  }
+  
+  .agent-terminal.expanded { 
+    height: 55vh; 
+    max-height: 500px;
+  }
+
+  .terminal-input { 
+    font-size: 16px !important; 
+  }
+
+  .input-wrapper {
+    padding: 12px;
+  }
+  .send-btn {
+    padding: 8px;
+  }
+
+  /* --- MODALS --- */
+  .modal-box {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    border-radius: 0;
+    border: none;
+  }
+  
+  .bio-grid { 
+    flex-direction: column; 
+    align-items: center; 
+    text-align: center; 
+  }
+  
+  /* Arrows */
+  .desktop-arrow { display: none; }
+  .mobile-arrow { display: block; margin: 10px 0; }
+
+  /* --- LEGEND --- */
   .legend-wrapper {
-    /* Mobile: Sit above the centered slider (approx 100px tall with padding) */
-    bottom: calc(130px + env(safe-area-inset-bottom));
-    left: 16px; /* Align with header padding */
+    left: 16px; 
+    bottom: calc(130px + env(safe-area-inset-bottom)); 
     top: auto;
   }
 }

@@ -81,22 +81,22 @@ function App() {
 
   // ERROR STATE
   if (error) return (
-    <div style={{ background: 'var(--background)', height: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)' }}>
-      <h1 style={{ color: '#ef4444' }}>System Error</h1>
-      <p style={{ color: 'var(--text-muted)' }}>{error}</p>
-      <button onClick={() => window.location.reload()} style={{ marginTop: 20, padding: '10px 20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', borderRadius: 4, cursor: 'pointer' }}>Retry</button>
+    <div className="app-error-container">
+      <h1 className="app-error-title">System Error</h1>
+      <p className="app-error-msg">{error}</p>
+      <button onClick={() => window.location.reload()} className="app-retry-btn">Retry</button>
     </div>
   );
 
   // LOADING STATE
   if (!frames) return (
-    <div style={{ background: 'var(--background)', height: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)' }}>
-      <h1 style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9rem', letterSpacing: '0.1em' }}>INITIALIZING ENGINE...</h1>
+    <div className="app-loading-container">
+      <h1 className="app-loading-text">INITIALIZING ENGINE...</h1>
     </div>
   );
 
   return (
-    <div style={{ width: '100vw', height: '100dvh', position: 'relative', overflow: 'hidden', background: 'var(--background)' }}>
+    <div className="app-root">
       
       {/* Map Layer */}
       <MarketMap 
@@ -108,7 +108,7 @@ function App() {
         graphConnections={connections}       
       />
 
-      {/* Header - Now includes Watchlist control */}
+      {/* Header */}
       <Header 
         dateLabel={currentDateLabel} 
         onOpenArch={() => setArchOpen(true)}
@@ -118,10 +118,10 @@ function App() {
         watchlist={WATCHLIST}
       />
 
-      {/* NEW: Visual Legend (Bottom Left) */}
+      {/* Legend (Bottom Left) */}
       <Legend />
 
-      {/* Agent Panel */}
+      {/* Agent Panel (Bottom Right) */}
       <div className="agent-panel-wrapper">
         <AgentPanel 
           currentFrame={currentFrameData} 
@@ -146,7 +146,7 @@ function App() {
           value={timelineProgress}
           onChange={(e) => setTimelineProgress(parseFloat(e.target.value))}
           aria-label="Simulation Timeline"
-          style={{ width: '100%', cursor: 'pointer', display: 'block' }}
+          className="slider-input"
         />
       </div>
 

@@ -191,7 +191,6 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
 
   // --- LAYERS ----------------------------------------------------------------
 
-  // 1. BACKGROUND CELLS (Grid - Dotted & Subtle)
   const cellLayer = new PolygonLayer({
     id: 'voronoi-cells',
     data: voronoiData,
@@ -207,14 +206,11 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     getLineWidth: 1,
     lineWidthUnits: 'pixels',
     pickable: false,
-    
-    // TEXTURE: Dotted Line (2px dot, 5px gap)
     getDashArray: [2, 5], 
     dash: true,
     extensions: [new PathStyleExtension({ dash: true })]
   });
 
-  // 2. VECTOR LAYER (Prediction - Dashed)
   const vectorLayer = new PathLayer({
     id: 'momentum-vectors',
     data: vectorData,
@@ -228,18 +224,12 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     extensions: [new PathStyleExtension({ dash: true })] 
   });
 
-  // 3. GHOST TRAILS (History - Highlighted on Selection)
   const trailLayer = new PathLayer({
     id: 'market-trails',
     data: trailData,
     getPath: (d: any) => d.path,
     getColor: (d: any) => {
         const isSelected = d.ticker === selectedTicker;
-        
-        // --- UPDATED OPACITY ---
-        // Active: 180 (Bright)
-        // Passive Color: 40 (Was 60)
-        // Passive Slate: 15 (Was 30)
         const alpha = isSelected ? 180 : 40;
         const slateAlpha = isSelected ? 120 : 15;
 
@@ -258,7 +248,6 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     }
   });
 
-  // 4. SYNAPSES (Connections)
   const synapseLayer = new LineLayer({
     id: 'graph-synapses',
     data: synapseData,
@@ -273,7 +262,6 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     }
   });
 
-  // 5. GLOW LAYER (Bloom)
   const glowLayer = new ScatterplotLayer({
     id: 'market-glow',
     data: sortedNodes,
@@ -302,7 +290,6 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     }
   });
 
-  // 6. DOT LAYER (Core)
   const dotLayer = new ScatterplotLayer({
     id: 'market-particles',
     data: sortedNodes,
@@ -369,24 +356,14 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
             // @ts-ignore
             getTooltip={({object}) => object && object.ticker && {
                 html: `
-                <div style="
-                    padding: 12px; 
-                    background: var(--glass-bg); 
-                    color: var(--text-primary); 
-                    border: 1px solid var(--glass-border); 
-                    border-radius: 8px; 
-                    font-family: var(--font-sans);
-                    backdrop-filter: blur(12px);
-                    box-shadow: var(--shadow-soft);
-                    min-width: 160px;
-                ">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                        <strong style="font-family: var(--font-mono); letter-spacing: 0.05em;">$${object.ticker}</strong>
-                        <span style="font-size:0.7rem; color: var(--accent-green); font-family: var(--font-mono);">
+                <div class="map-tooltip">
+                    <div class="map-tooltip-header">
+                        <strong class="map-tooltip-ticker">$${object.ticker}</strong>
+                        <span class="map-tooltip-metric">
                             E: ${object.energy.toFixed(0)}
                         </span>
                     </div>
-                    <div style="font-size:0.75rem; color: var(--text-muted); line-height: 1.4;">
+                    <div class="map-tooltip-desc">
                         ${object.headline || "Awaiting signal..."}
                     </div>
                 </div>
