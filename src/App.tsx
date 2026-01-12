@@ -5,6 +5,9 @@ import { AgentPanel } from './components/AgentPanel';
 import Header from './components/Header';
 import { useKnowledgeGraph } from './hooks/useKnowledgeGraph';
 
+// NEW: Legend Component
+import Legend from './components/Legend';
+
 import ArchitectureModal from './components/ArchitectureModal';
 import BioModal from './components/BioModal';
 
@@ -114,6 +117,9 @@ function App() {
         onSelectTicker={setSelectedTicker}
         watchlist={WATCHLIST}
       />
+
+      {/* NEW: Visual Legend (Bottom Left) */}
+      <Legend />
 
       {/* Agent Panel */}
       <div className="agent-panel-wrapper">

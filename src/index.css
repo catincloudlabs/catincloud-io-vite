@@ -798,3 +798,139 @@ input[type=range]::-moz-range-track {
   .desktop-arrow { display: none; }
   .mobile-arrow { display: block; margin: 10px 0; }
 }
+
+/* ==================================================================== */
+/* 9. MAP LEGEND                                                        */
+/* ==================================================================== */
+.legend-wrapper {
+  position: absolute;
+  /* ALIGNMENT: 32px Left (Matches Slider), 125px Bottom (Clears Slider) */
+  bottom: 125px; 
+  left: 32px;    
+  top: auto;     /* Reset top override */
+  z-index: 45;   
+  pointer-events: none; 
+}
+
+.legend-toggle-btn {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: var(--accent-green);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.legend-toggle-btn:hover {
+  background: rgba(15, 23, 42, 0.9);
+  border-color: var(--accent-green);
+}
+
+.legend-panel {
+  pointer-events: auto;
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 16px;
+  width: 200px;
+  box-shadow: var(--shadow-soft);
+  animation: fadeIn 0.2s ease-out;
+  /* Panel grows UPWARDS from the bottom anchor */
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  margin-bottom: 40px; /* Space between toggle button and panel */
+}
+
+.legend-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+}
+
+.legend-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px;
+}
+.legend-close:hover { color: #fff; }
+
+.legend-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.7rem;
+  color: #e2e8f0;
+  font-family: var(--font-sans);
+}
+
+/* --- VISUAL GLYPHS --- */
+.symbol-line {
+  width: 24px;
+  height: 0;
+}
+
+.symbol-line.dashed {
+  border-top: 2px dashed var(--accent-green);
+}
+
+.symbol-line.solid {
+  border-top: 2px solid var(--text-muted);
+  opacity: 0.6;
+}
+
+.symbol-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  margin-left: 8px;
+  margin-right: 8px;
+}
+
+.symbol-dot.glow {
+  background: var(--accent-green);
+  box-shadow: 0 0 8px var(--accent-green);
+}
+
+.symbol-grid {
+  width: 24px;
+  height: 12px;
+  background-image: radial-gradient(var(--text-muted) 1px, transparent 1px);
+  background-size: 4px 4px;
+  opacity: 0.5;
+}
+
+/* RESPONSIVE ADJUSTMENT */
+@media (max-width: 768px) {
+  .legend-wrapper {
+    /* Mobile: Sit above the centered slider (approx 100px tall with padding) */
+    bottom: calc(130px + env(safe-area-inset-bottom));
+    left: 16px; /* Align with header padding */
+    top: auto;
+  }
+}

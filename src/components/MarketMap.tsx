@@ -5,6 +5,8 @@ import DeckGL from '@deck.gl/react';
 // @ts-ignore
 import { ScatterplotLayer, PolygonLayer, PathLayer, LineLayer } from '@deck.gl/layers';
 // @ts-ignore
+import { PathStyleExtension } from '@deck.gl/extensions'; 
+// @ts-ignore
 import { OrthographicView } from '@deck.gl/core';
 import { Delaunay } from 'd3-delaunay';
 import { GraphConnection } from '../hooks/useKnowledgeGraph'; 
@@ -34,23 +36,22 @@ interface MarketMapProps {
   graphConnections?: GraphConnection[];   
 }
 
+// Mobile Detection
 const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
 const INITIAL_VIEW_STATE = {
-  // Mobile: Center at 0,0 but slightly zoomed out compared to desktop
   target: [0, 0, 0], 
-  zoom: isMobile ? 0.5 : 1.0, 
-  // Stricter zoom limits on mobile to prevent "lost in void"
-  minZoom: isMobile ? 0.3 : 0.5,
-  maxZoom: isMobile ? 5 : 10
+  zoom: isMobile ? 0.9 : 1.8, 
+  minZoom: isMobile ? 0.5 : 0.8,
+  maxZoom: isMobile ? 8 : 15
 };
 
-// --- THEME CONSTANTS (Synced with index.css) ---
+// --- VISUAL IDENTITY SYSTEM ---
 const THEME = {
-  mint: [52, 211, 153],       // #34d399
-  red: [239, 68, 68],         // #ef4444
-  slate: [148, 163, 184],     // #94a3b8
-  gold: [251, 191, 36],       // #fbbf24
+  mint: [52, 211, 153],       
+  red: [239, 68, 68],         
+  slate: [148, 163, 184],     
+  gold: [251, 191, 36],       
   glass: [255, 255, 255]
 };
 
@@ -62,29 +63,26 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
   useEffect(() => {
     const interval = setInterval(() => {
       setPulse(p => !p);
-    }, 2000); 
+    }, 3000); 
     return () => clearInterval(interval);
   }, []);
 
   // --- 2. METRICS ---
-  const { maxEnergy, highEnergyThreshold, superEnergyThreshold } = useMemo(() => {
-    if (!data?.nodes || data.nodes.length === 0) return { maxEnergy: 0, highEnergyThreshold: 0, superEnergyThreshold: 0 };
-    
+  const { maxEnergy, highEnergyThreshold } = useMemo(() => {
+    if (!data?.nodes || data.nodes.length === 0) return { maxEnergy: 0, highEnergyThreshold: 0 };
     const energies = data.nodes.map(n => n.energy);
     const max = Math.max(...energies);
     
     return { 
         maxEnergy: max, 
-        highEnergyThreshold: max * 0.5, 
-        superEnergyThreshold: max * 0.8 
+        highEnergyThreshold: max * 0.15
     };
   }, [data]);
 
   // --- 3. SORTING & FILTERING ---
   const sortedNodes = useMemo(() => {
     if (!data?.nodes) return [];
-
-    // FILTER OUT NOISE
+    
     const cleanNodes = data.nodes.filter(n => {
         if (n.ticker.includes('.WS')) return false;
         if (n.ticker.includes('p')) return false;
@@ -96,24 +94,21 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     return [...cleanNodes].sort((a, b) => {
       if (a.ticker === selectedTicker) return 1;
       if (b.ticker === selectedTicker) return -1;
-      
       const aConn = graphConnections?.some(c => c.target === a.ticker);
       const bConn = graphConnections?.some(c => c.target === b.ticker);
       if (aConn && !bConn) return 1;
       if (!aConn && bConn) return -1;
-
       return a.energy - b.energy;
     });
   }, [data, selectedTicker, graphConnections]);
 
-  // --- 4. TRAIL LOGIC ---
+  // --- 4. TRAIL LOGIC (HISTORY) ---
   const trailData = useMemo(() => {
     if (!history || !data) return [];
-    
     const currentIndex = history.findIndex(f => f.date === data.date);
     if (currentIndex <= 0) return [];
 
-    const LOOKBACK_FRAMES = 10; 
+    const LOOKBACK_FRAMES = 6;
     const lookback = Math.max(0, currentIndex - LOOKBACK_FRAMES);
     const recentHistory = history.slice(lookback, currentIndex + 1);
 
@@ -124,7 +119,6 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     );
 
     const pathsByTicker: Record<string, number[][]> = {};
-    
     recentHistory.forEach(frame => {
       frame.nodes.forEach(node => {
         if (activeTickers.has(node.ticker)) {
@@ -139,13 +133,24 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
       path: pathsByTicker[ticker],
       sentiment: data.nodes.find(n => n.ticker === ticker)?.sentiment || 0
     }));
-
   }, [data, history, selectedTicker, highEnergyThreshold]); 
 
-  // --- 5. SYNAPSE LOGIC ---
+  // --- 5. VECTOR LOGIC (PREDICTION) ---
+  const vectorData = useMemo(() => {
+    if (!data?.nodes) return [];
+
+    return data.nodes
+      .filter(n => n.energy > highEnergyThreshold || n.ticker === selectedTicker)
+      .map(n => ({
+        path: [[n.x, n.y], [n.x + n.vx, n.y + n.vy]], 
+        energy: n.energy,
+        sentiment: n.sentiment
+      }));
+  }, [data, highEnergyThreshold, selectedTicker]);
+
+  // --- 6. SYNAPSE LOGIC (RELATIONSHIPS) ---
   const synapseData = useMemo(() => {
     if (!selectedTicker || !graphConnections || !data) return [];
-
     const sourceNode = data.nodes.find(n => n.ticker === selectedTicker);
     if (!sourceNode) return [];
 
@@ -158,10 +163,9 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
         strength: conn.strength
       };
     }).filter(Boolean);
-
   }, [selectedTicker, graphConnections, data]);
 
-  // --- 6. VORONOI LOGIC ---
+  // --- 7. VORONOI LOGIC (TERRITORY) ---
   const voronoiData = useMemo(() => {
     if (!sortedNodes || sortedNodes.length < 3) return [];
     const points = sortedNodes.map(d => [d.x, d.y] as [number, number]);
@@ -175,59 +179,93 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     }));
   }, [sortedNodes]);
 
-  // --- ACCESSIBILITY SUMMARY ---
   const accessibleSummary = useMemo(() => {
     if (!data?.nodes) return [];
     return [...data.nodes]
         .sort((a, b) => b.energy - a.energy)
         .slice(0, 5)
-        .map(n => `${n.ticker}: Energy ${n.energy.toFixed(0)}, Sentiment ${n.sentiment.toFixed(2)}`);
+        .map(n => `${n.ticker}: Energy ${n.energy.toFixed(0)}`);
   }, [data]);
 
   if (!data) return null;
 
-  // --- LAYERS ---
+  // --- LAYERS ----------------------------------------------------------------
+
+  // 1. BACKGROUND CELLS (Grid - Dotted & Subtle)
   const cellLayer = new PolygonLayer({
     id: 'voronoi-cells',
     data: voronoiData,
     getPolygon: (d: any) => d.polygon,
     getFillColor: (d: any) => {
       const s = d.node.sentiment;
-      // Updated to Mint/Red with very low opacity
-      if (s > 0.1) return [...THEME.mint, 5];   
-      if (s < -0.1) return [...THEME.red, 5];  
+      if (s > 0.1) return [...THEME.mint, 10]; 
+      if (s < -0.1) return [...THEME.red, 10];  
       return [0, 0, 0, 0]; 
     },
     stroked: true,
-    getLineColor: [255, 255, 255, 5],
-    getLineWidth: 0.5,
+    getLineColor: [...THEME.slate, 15], 
+    getLineWidth: 1,
     lineWidthUnits: 'pixels',
-    pickable: false 
+    pickable: false,
+    
+    // TEXTURE: Dotted Line (2px dot, 5px gap)
+    getDashArray: [2, 5], 
+    dash: true,
+    extensions: [new PathStyleExtension({ dash: true })]
   });
 
+  // 2. VECTOR LAYER (Prediction - Dashed)
+  const vectorLayer = new PathLayer({
+    id: 'momentum-vectors',
+    data: vectorData,
+    getPath: (d: any) => d.path,
+    getColor: (d: any) => d.sentiment >= 0 ? [...THEME.mint, 180] : [...THEME.red, 180],
+    getWidth: 1.5,
+    widthUnits: 'pixels',
+    capRounded: true,
+    getDashArray: [6, 4], 
+    dash: true,           
+    extensions: [new PathStyleExtension({ dash: true })] 
+  });
+
+  // 3. GHOST TRAILS (History - Highlighted on Selection)
   const trailLayer = new PathLayer({
     id: 'market-trails',
     data: trailData,
     getPath: (d: any) => d.path,
     getColor: (d: any) => {
-        if (d.sentiment > 0.1) return [...THEME.mint, 100]; 
-        if (d.sentiment < -0.1) return [...THEME.red, 100];
-        return [...THEME.slate, 50];
+        const isSelected = d.ticker === selectedTicker;
+        
+        // --- UPDATED OPACITY ---
+        // Active: 180 (Bright)
+        // Passive Color: 40 (Was 60)
+        // Passive Slate: 15 (Was 30)
+        const alpha = isSelected ? 180 : 40;
+        const slateAlpha = isSelected ? 120 : 15;
+
+        if (d.sentiment > 0.1) return [...THEME.mint, alpha]; 
+        if (d.sentiment < -0.1) return [...THEME.red, alpha];
+        return [...THEME.slate, slateAlpha];
     },
-    getWidth: 1.5,
+    getWidth: (d: any) => d.ticker === selectedTicker ? 2.0 : 0.8,
     widthUnits: 'pixels',
     jointRounded: true,
     capRounded: true,
-    opacity: 0.6
+    opacity: 1,
+    updateTriggers: {
+        getColor: [selectedTicker],
+        getWidth: [selectedTicker]
+    }
   });
 
+  // 4. SYNAPSES (Connections)
   const synapseLayer = new LineLayer({
     id: 'graph-synapses',
     data: synapseData,
     getSourcePosition: (d: any) => d.from,
     getTargetPosition: (d: any) => d.to,
-    getColor: [...THEME.gold, 200], 
-    getWidth: (d: any) => Math.max(2, d.strength * 0.8), 
+    getColor: [...THEME.gold, 120], 
+    getWidth: (d: any) => Math.max(0.5, d.strength * 0.5), 
     widthUnits: 'pixels',
     updateTriggers: {
         getWidth: [graphConnections],
@@ -235,34 +273,60 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     }
   });
 
+  // 5. GLOW LAYER (Bloom)
+  const glowLayer = new ScatterplotLayer({
+    id: 'market-glow',
+    data: sortedNodes,
+    getPosition: (d: HydratedNode) => [d.x, d.y],
+    radiusUnits: 'common',
+    getRadius: (d: HydratedNode) => {
+        if (d.ticker === selectedTicker) return 18; 
+        if (graphConnections?.some(c => c.target === d.ticker)) return 10; 
+        if (d.energy > highEnergyThreshold) return 6;
+        return 0; 
+    },
+    getFillColor: (d: HydratedNode) => {
+        if (d.ticker === selectedTicker) return [...THEME.mint, 40]; 
+        if (graphConnections?.some(c => c.target === d.ticker)) return [...THEME.gold, 40]; 
+        if (d.energy > highEnergyThreshold) return [...THEME.slate, 20]; 
+        return [0,0,0,0];
+    },
+    stroked: false,
+    updateTriggers: {
+        getRadius: [selectedTicker, graphConnections, highEnergyThreshold],
+        getFillColor: [selectedTicker, graphConnections, highEnergyThreshold]
+    },
+    transitions: {
+        getRadius: 3000, 
+        getFillColor: 1000
+    }
+  });
+
+  // 6. DOT LAYER (Core)
   const dotLayer = new ScatterplotLayer({
     id: 'market-particles',
     data: sortedNodes,
     getPosition: (d: HydratedNode) => [d.x, d.y],
     radiusUnits: 'common', 
     getRadius: (d: HydratedNode) => {
-        if (d.ticker === selectedTicker) return 5;
-        if (graphConnections?.some(c => c.target === d.ticker)) return 3.5;
-        return 2.5;
+        if (d.ticker === selectedTicker) return 6.0; 
+        if (graphConnections?.some(c => c.target === d.ticker)) return 3.0; 
+        return 1.5; 
     },
     getFillColor: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return [...THEME.glass, 255]; 
         if (graphConnections?.some(c => c.target === d.ticker)) return [...THEME.gold, 255]; 
-        if (d.sentiment > 0.1) return [...THEME.mint, 255];   
-        if (d.sentiment < -0.1) return [...THEME.red, 255];  
-        return [...THEME.slate, 150]; // Muted slate for neutral nodes
+        if (d.sentiment > 0.1) return [...THEME.mint, 200];   
+        if (d.sentiment < -0.1) return [...THEME.red, 200];  
+        return [...THEME.slate, 180]; 
     },
     stroked: true,
     getLineWidth: (d: HydratedNode) => {
-        if (d.ticker === selectedTicker) return pulse ? 3 : 1; 
-        if (d.energy > superEnergyThreshold) return pulse ? 2 : 0.8; 
-        if (d.energy > highEnergyThreshold) return pulse ? 1 : 0.5;
+        if (d.ticker === selectedTicker) return pulse ? 2 : 0.5; 
         return 0; 
     },
     getLineColor: (d: HydratedNode) => {
-        if (d.ticker === selectedTicker) return pulse ? [...THEME.mint, 150] : [...THEME.glass, 255];
-        if (d.energy > superEnergyThreshold) return pulse ? [...THEME.glass, 100] : [...THEME.glass, 200]; 
-        if (d.energy > highEnergyThreshold) return pulse ? [...THEME.glass, 50] : [...THEME.glass, 100];  
+        if (d.ticker === selectedTicker) return [...THEME.mint, 180];
         return [0, 0, 0, 0];
     },
     lineWidthUnits: 'common',
@@ -270,8 +334,9 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     autoHighlight: true,
     highlightColor: [...THEME.mint, 100],
     transitions: {
-        getLineWidth: 2000,
+        getLineWidth: 3000, 
         getLineColor: 2000,
+        getRadius: 1000
     },
     updateTriggers: {
         getRadius: [selectedTicker, graphConnections],
@@ -285,21 +350,15 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     <>
         <div className="sr-only" aria-live="polite">
             <h3>Market Physics Summary</h3>
-            <p>Current Simulation Date: {data.date}</p>
-            <ul>
-                {accessibleSummary.map((str, i) => <li key={i}>{str}</li>)}
-            </ul>
+            <ul>{accessibleSummary.map((str, i) => <li key={i}>{str}</li>)}</ul>
         </div>
 
         <DeckGL
             views={new OrthographicView({ controller: true })}
             initialViewState={INITIAL_VIEW_STATE}
             controller={true}
-            layers={[cellLayer, trailLayer, synapseLayer, dotLayer]} 
-            
-            // KEY FIX: Transparent background allows the CSS Slate theme to show through
+            layers={[cellLayer, vectorLayer, trailLayer, glowLayer, synapseLayer, dotLayer]} 
             style={{ backgroundColor: 'transparent' }} 
-            
             onClick={(info: any) => {
                 if (info.object) {
                     if (onNodeClick) onNodeClick(info.object);
@@ -310,12 +369,26 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
             // @ts-ignore
             getTooltip={({object}) => object && object.ticker && {
                 html: `
-                <div style="padding: 12px; background: rgba(15, 23, 42, 0.95); color: #f8fafc; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; font-family: 'Inter', sans-serif;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                    <strong>$${object.ticker}</strong>
-                    <span style="font-size:0.7em; color: #94a3b8; margin-left: 12px;">VOL: ${object.energy.toFixed(0)}</span>
+                <div style="
+                    padding: 12px; 
+                    background: var(--glass-bg); 
+                    color: var(--text-primary); 
+                    border: 1px solid var(--glass-border); 
+                    border-radius: 8px; 
+                    font-family: var(--font-sans);
+                    backdrop-filter: blur(12px);
+                    box-shadow: var(--shadow-soft);
+                    min-width: 160px;
+                ">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <strong style="font-family: var(--font-mono); letter-spacing: 0.05em;">$${object.ticker}</strong>
+                        <span style="font-size:0.7rem; color: var(--accent-green); font-family: var(--font-mono);">
+                            E: ${object.energy.toFixed(0)}
+                        </span>
                     </div>
-                    <div style="font-size:0.8em; color: #cbd5e1;">${object.headline || "No headline"}</div>
+                    <div style="font-size:0.75rem; color: var(--text-muted); line-height: 1.4;">
+                        ${object.headline || "Awaiting signal..."}
+                    </div>
                 </div>
                 `
             }}
