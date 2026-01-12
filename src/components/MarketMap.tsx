@@ -34,6 +34,7 @@ interface MarketMapProps {
   graphConnections?: GraphConnection[];   
 }
 
+// Mobile Detection (Static for initial load)
 const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
 const INITIAL_VIEW_STATE = {
@@ -47,10 +48,10 @@ const INITIAL_VIEW_STATE = {
 
 // --- THEME CONSTANTS (Synced with index.css) ---
 const THEME = {
-  mint: [52, 211, 153],       // #34d399
+  mint: [52, 211, 153],       // #34d399 (Matches --accent-green)
   red: [239, 68, 68],         // #ef4444
-  slate: [148, 163, 184],     // #94a3b8
-  gold: [251, 191, 36],       // #fbbf24
+  slate: [148, 163, 184],     // #94a3b8 (Matches --text-muted)
+  gold: [251, 191, 36],       // #fbbf24 (Matches --accent-ai)
   glass: [255, 255, 255]
 };
 
@@ -227,7 +228,10 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     getSourcePosition: (d: any) => d.from,
     getTargetPosition: (d: any) => d.to,
     getColor: [...THEME.gold, 200], 
-    getWidth: (d: any) => Math.max(2, d.strength * 0.8), 
+    
+    // UPDATED WIDTH: Thinner, more elegant lines (0.5px to ~1.5px)
+    getWidth: (d: any) => Math.max(0.5, d.strength * 0.5), 
+    
     widthUnits: 'pixels',
     updateTriggers: {
         getWidth: [graphConnections],
