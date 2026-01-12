@@ -65,7 +65,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     return () => clearInterval(interval);
   }, []);
 
-  // --- 2. METRICS (TUNED) ---
+  // --- 2. METRICS ---
   const { maxEnergy, highEnergyThreshold } = useMemo(() => {
     if (!data?.nodes || data.nodes.length === 0) return { maxEnergy: 0, highEnergyThreshold: 0 };
     const energies = data.nodes.map(n => n.energy);
@@ -73,8 +73,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     
     return { 
         maxEnergy: max, 
-        // DIRECTOR'S CHOICE: 15% (0.15)
-        // Ensures the map remains "active" even when huge outliers skew the scale.
+        // 15% Threshold for "Active" status
         highEnergyThreshold: max * 0.15
     };
   }, [data]);
@@ -83,7 +82,6 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
   const sortedNodes = useMemo(() => {
     if (!data?.nodes) return [];
     
-    // FILTER OUT NOISE
     const cleanNodes = data.nodes.filter(n => {
         if (n.ticker.includes('.WS')) return false;
         if (n.ticker.includes('p')) return false;
@@ -103,7 +101,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     });
   }, [data, selectedTicker, graphConnections]);
 
-  // --- 4. TRAIL LOGIC ---
+  // --- 4. TRAIL LOGIC (HISTORY) ---
   const trailData = useMemo(() => {
     if (!history || !data) return [];
     const currentIndex = history.findIndex(f => f.date === data.date);
@@ -136,7 +134,23 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     }));
   }, [data, history, selectedTicker, highEnergyThreshold]); 
 
-  // --- 5. SYNAPSE LOGIC ---
+  // --- 5. VECTOR LOGIC (PREDICTION) ---
+  // NEW: Calculate the "Next Step" vector for active nodes
+  const vectorData = useMemo(() => {
+    if (!data?.nodes) return [];
+
+    return data.nodes
+      // Only draw vectors for nodes with significant movement/energy to reduce noise
+      .filter(n => n.energy > highEnergyThreshold || n.ticker === selectedTicker)
+      .map(n => ({
+        from: [n.x, n.y],
+        to: [n.x + n.vx, n.y + n.vy], // The position in the next frame
+        energy: n.energy,
+        sentiment: n.sentiment
+      }));
+  }, [data, highEnergyThreshold, selectedTicker]);
+
+  // --- 6. SYNAPSE LOGIC (RELATIONSHIPS) ---
   const synapseData = useMemo(() => {
     if (!selectedTicker || !graphConnections || !data) return [];
     const sourceNode = data.nodes.find(n => n.ticker === selectedTicker);
@@ -153,7 +167,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     }).filter(Boolean);
   }, [selectedTicker, graphConnections, data]);
 
-  // --- 6. VORONOI LOGIC ---
+  // --- 7. VORONOI LOGIC (TERRITORY) ---
   const voronoiData = useMemo(() => {
     if (!sortedNodes || sortedNodes.length < 3) return [];
     const points = sortedNodes.map(d => [d.x, d.y] as [number, number]);
@@ -179,6 +193,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
 
   // --- LAYERS ----------------------------------------------------------------
 
+  // 1. BACKGROUND CELLS (Grid)
   const cellLayer = new PolygonLayer({
     id: 'voronoi-cells',
     data: voronoiData,
@@ -190,12 +205,27 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
       return [0, 0, 0, 0]; 
     },
     stroked: true,
-    getLineColor: [255, 255, 255, 3],
-    getLineWidth: 0.5,
+    // CHANGED: Boosted visibility (Alpha 20) and used Slate instead of White for subtle blend
+    getLineColor: [...THEME.slate, 20], 
+    getLineWidth: 1,
     lineWidthUnits: 'pixels',
     pickable: false 
   });
 
+  // 2. VECTOR LAYER (New Math Highlight)
+  const vectorLayer = new LineLayer({
+    id: 'momentum-vectors',
+    data: vectorData,
+    getSourcePosition: (d: any) => d.from,
+    getTargetPosition: (d: any) => d.to,
+    // Color based on sentiment (bullish/bearish momentum)
+    getColor: (d: any) => d.sentiment >= 0 ? [...THEME.mint, 150] : [...THEME.red, 150],
+    getWidth: 1,
+    widthUnits: 'pixels',
+    opacity: 0.6
+  });
+
+  // 3. GHOST TRAILS (History)
   const trailLayer = new PathLayer({
     id: 'market-trails',
     data: trailData,
@@ -212,6 +242,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     opacity: 1 
   });
 
+  // 4. SYNAPSES (Connections)
   const synapseLayer = new LineLayer({
     id: 'graph-synapses',
     data: synapseData,
@@ -226,6 +257,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     }
   });
 
+  // 5. GLOW LAYER (Bloom)
   const glowLayer = new ScatterplotLayer({
     id: 'market-glow',
     data: sortedNodes,
@@ -254,6 +286,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     }
   });
 
+  // 6. DOT LAYER (Core)
   const dotLayer = new ScatterplotLayer({
     id: 'market-particles',
     data: sortedNodes,
@@ -308,7 +341,8 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
             views={new OrthographicView({ controller: true })}
             initialViewState={INITIAL_VIEW_STATE}
             controller={true}
-            layers={[cellLayer, glowLayer, trailLayer, synapseLayer, dotLayer]} 
+            // Draw order: Cells -> Vectors -> Trails -> Glow -> Synapses -> Dots
+            layers={[cellLayer, vectorLayer, trailLayer, glowLayer, synapseLayer, dotLayer]} 
             style={{ backgroundColor: 'transparent' }} 
             onClick={(info: any) => {
                 if (info.object) {
