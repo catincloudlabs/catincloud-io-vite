@@ -55,11 +55,10 @@ const THEME = {
 
 export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selectedTicker, graphConnections }: MarketMapProps) {
   
-  // --- 1. HEARTBEAT SYSTEM (The "Breathing" Effect) ---
+  // --- 1. HEARTBEAT SYSTEM ---
   const [pulse, setPulse] = useState(false);
 
   useEffect(() => {
-    // Slower, deeper breath (3 seconds) for a more premium feel
     const interval = setInterval(() => {
       setPulse(p => !p);
     }, 3000); 
@@ -67,7 +66,6 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
   }, []);
 
   // --- 2. METRICS ---
-  // REMOVED: superEnergyThreshold (unused)
   const { maxEnergy, highEnergyThreshold } = useMemo(() => {
     if (!data?.nodes || data.nodes.length === 0) return { maxEnergy: 0, highEnergyThreshold: 0 };
     const energies = data.nodes.map(n => n.energy);
@@ -90,7 +88,6 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     });
 
     return [...cleanNodes].sort((a, b) => {
-      // Draw selected/connected nodes last (on top)
       if (a.ticker === selectedTicker) return 1;
       if (b.ticker === selectedTicker) return -1;
       const aConn = graphConnections?.some(c => c.target === a.ticker);
@@ -107,7 +104,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     const currentIndex = history.findIndex(f => f.date === data.date);
     if (currentIndex <= 0) return [];
 
-    const LOOKBACK_FRAMES = 12; // Slightly longer tail for elegance
+    const LOOKBACK_FRAMES = 12;
     const lookback = Math.max(0, currentIndex - LOOKBACK_FRAMES);
     const recentHistory = history.slice(lookback, currentIndex + 1);
 
@@ -177,14 +174,13 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
 
   // --- LAYERS ----------------------------------------------------------------
 
-  // 1. BACKGROUND CELLS (Subtle context)
   const cellLayer = new PolygonLayer({
     id: 'voronoi-cells',
     data: voronoiData,
     getPolygon: (d: any) => d.polygon,
     getFillColor: (d: any) => {
       const s = d.node.sentiment;
-      if (s > 0.1) return [...THEME.mint, 3];   // Ultra-subtle
+      if (s > 0.1) return [...THEME.mint, 3]; 
       if (s < -0.1) return [...THEME.red, 3];  
       return [0, 0, 0, 0]; 
     },
@@ -195,7 +191,6 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     pickable: false 
   });
 
-  // 2. GHOST TRAILS (Echoes of the past)
   const trailLayer = new PathLayer({
     id: 'market-trails',
     data: trailData,
@@ -205,20 +200,19 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
         if (d.sentiment < -0.1) return [...THEME.red, 80];
         return [...THEME.slate, 40];
     },
-    getWidth: 0.8, // Thinned out for elegance
+    getWidth: 0.8,
     widthUnits: 'pixels',
     jointRounded: true,
     capRounded: true,
-    opacity: 1 // Layer opacity controlled by RGBA alpha above
+    opacity: 1 
   });
 
-  // 3. SYNAPSES (The Neural Web)
   const synapseLayer = new LineLayer({
     id: 'graph-synapses',
     data: synapseData,
     getSourcePosition: (d: any) => d.from,
     getTargetPosition: (d: any) => d.to,
-    getColor: [...THEME.gold, 120], // Additive blending range
+    getColor: [...THEME.gold, 120], 
     getWidth: (d: any) => Math.max(0.5, d.strength * 0.5), 
     widthUnits: 'pixels',
     updateTriggers: {
@@ -227,22 +221,21 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     }
   });
 
-  // 4. THE GLOW (Simulated Bloom) - NEW LAYER
-  // Renders a larger, faint circle behind the main dot to simulate light bleed.
+  // GLOW LAYER (Simulated Bloom)
   const glowLayer = new ScatterplotLayer({
     id: 'market-glow',
     data: sortedNodes,
     getPosition: (d: HydratedNode) => [d.x, d.y],
     radiusUnits: 'common',
     getRadius: (d: HydratedNode) => {
-        // Glow is 3x the size of the core
-        if (d.ticker === selectedTicker) return 12; 
-        if (graphConnections?.some(c => c.target === d.ticker)) return 6;
-        return 0; // No glow for standard dust
+        // INCREASED VISIBILITY:
+        if (d.ticker === selectedTicker) return 18; // Hero Bloom
+        if (graphConnections?.some(c => c.target === d.ticker)) return 10; // Connected Bloom
+        return 0; 
     },
     getFillColor: (d: HydratedNode) => {
-        if (d.ticker === selectedTicker) return [...THEME.mint, 40]; // Faint Mint Glow
-        if (graphConnections?.some(c => c.target === d.ticker)) return [...THEME.gold, 40]; // Faint Gold Glow
+        if (d.ticker === selectedTicker) return [...THEME.mint, 40]; 
+        if (graphConnections?.some(c => c.target === d.ticker)) return [...THEME.gold, 40]; 
         return [0,0,0,0];
     },
     stroked: false,
@@ -251,32 +244,34 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
         getFillColor: [selectedTicker, graphConnections]
     },
     transitions: {
-        getRadius: 3000, // Slow breathing glow
+        getRadius: 3000, 
         getFillColor: 1000
     }
   });
 
-  // 5. THE CORE (Hard Data Points)
+  // CORE LAYER (The Data)
   const dotLayer = new ScatterplotLayer({
     id: 'market-particles',
     data: sortedNodes,
     getPosition: (d: HydratedNode) => [d.x, d.y],
     radiusUnits: 'common', 
     getRadius: (d: HydratedNode) => {
-        if (d.ticker === selectedTicker) return 3.0; 
-        if (graphConnections?.some(c => c.target === d.ticker)) return 1.5;
-        return 0.75; 
+        // INCREASED SIZES:
+        if (d.ticker === selectedTicker) return 6.0; // Hero
+        if (graphConnections?.some(c => c.target === d.ticker)) return 3.0; // Linked
+        return 1.5; // Default "Dust" (Visible size)
     },
     getFillColor: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return [...THEME.glass, 255]; 
         if (graphConnections?.some(c => c.target === d.ticker)) return [...THEME.gold, 255]; 
         if (d.sentiment > 0.1) return [...THEME.mint, 200];   
         if (d.sentiment < -0.1) return [...THEME.red, 200];  
-        return [...THEME.slate, 120]; 
+        // INCREASED OPACITY (120 -> 180):
+        return [...THEME.slate, 180]; 
     },
     stroked: true,
     getLineWidth: (d: HydratedNode) => {
-        if (d.ticker === selectedTicker) return pulse ? 2 : 0.5; // Breathing ring
+        if (d.ticker === selectedTicker) return pulse ? 2 : 0.5; 
         return 0; 
     },
     getLineColor: (d: HydratedNode) => {
@@ -288,7 +283,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     autoHighlight: true,
     highlightColor: [...THEME.mint, 100],
     transitions: {
-        getLineWidth: 3000, // Synced with pulse
+        getLineWidth: 3000, 
         getLineColor: 2000,
         getRadius: 1000
     },
@@ -311,7 +306,6 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
             views={new OrthographicView({ controller: true })}
             initialViewState={INITIAL_VIEW_STATE}
             controller={true}
-            // Draw order: Glow -> Cells -> Trails -> Synapses -> Dots
             layers={[cellLayer, glowLayer, trailLayer, synapseLayer, dotLayer]} 
             style={{ backgroundColor: 'transparent' }} 
             onClick={(info: any) => {
