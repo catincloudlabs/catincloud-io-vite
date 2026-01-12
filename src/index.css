@@ -800,14 +800,14 @@ input[type=range]::-moz-range-track {
 }
 
 /* ==================================================================== */
-/* 9. MAP LEGEND                                                        */
+/* 9. MAP LEGEND (REPOSITIONED: TOP LEFT)                               */
 /* ==================================================================== */
 .legend-wrapper {
   position: absolute;
-  bottom: 100px; /* Aligned with Agent Panel height */
-  left: 32px;    /* Aligned with Slider start */
-  z-index: 45;   /* Above map, below header */
-  pointer-events: none; /* Let clicks pass through wrapper */
+  top: 90px;     /* Positioned below the 60px Header */
+  left: 32px;    /* Aligned with Header padding */
+  z-index: 45;   /* Above map, below modals */
+  pointer-events: none; /* Let clicks pass through wrapper area */
 }
 
 .legend-toggle-btn {
@@ -844,6 +844,9 @@ input[type=range]::-moz-range-track {
   width: 200px;
   box-shadow: var(--shadow-soft);
   animation: fadeIn 0.2s ease-out;
+  /* Ensure expanding panel doesn't get cut off if screen is short */
+  max-height: calc(100vh - 120px); 
+  overflow-y: auto;
 }
 
 .legend-header {
@@ -918,10 +921,11 @@ input[type=range]::-moz-range-track {
   opacity: 0.5;
 }
 
-/* MOBILE ADJUSTMENT */
+/* RESPONSIVE ADJUSTMENT */
 @media (max-width: 768px) {
   .legend-wrapper {
-    left: 12px;
-    bottom: 130px; /* Clear the taller mobile slider */
+    top: 130px; /* Push down further on mobile to clear the Ticker Selector if needed */
+    left: 16px;
+    bottom: auto; 
   }
 }
