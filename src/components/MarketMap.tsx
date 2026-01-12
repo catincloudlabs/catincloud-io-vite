@@ -142,6 +142,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     return data.nodes
       .filter(n => n.energy > highEnergyThreshold || n.ticker === selectedTicker)
       .map(n => ({
+        ticker: n.ticker,
         path: [[n.x, n.y], [n.x + n.vx, n.y + n.vy]], 
         energy: n.energy,
         sentiment: n.sentiment
@@ -191,7 +192,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
 
   // --- LAYERS ----------------------------------------------------------------
 
-  // 1. BACKGROUND CELLS (Grid - Dotted & Subtle)
+  // 1. BACKGROUND CELLS (Grid)
   const cellLayer = new PolygonLayer({
     id: 'voronoi-cells',
     data: voronoiData,
@@ -207,28 +208,45 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     getLineWidth: 1,
     lineWidthUnits: 'pixels',
     pickable: false,
-    
-    // TEXTURE: Dotted Line (2px dot, 5px gap)
     getDashArray: [2, 5], 
     dash: true,
     extensions: [new PathStyleExtension({ dash: true })]
   });
 
-  // 2. VECTOR LAYER (Prediction - Dashed)
+  // 2. VECTOR LAYER (Prediction - 3-Tier Opacity)
   const vectorLayer = new PathLayer({
     id: 'momentum-vectors',
     data: vectorData,
     getPath: (d: any) => d.path,
-    getColor: (d: any) => d.sentiment >= 0 ? [...THEME.mint, 180] : [...THEME.red, 180],
+    getColor: (d: any) => {
+        const isSelected = d.ticker === selectedTicker;
+        const isNeutral = Math.abs(d.sentiment) <= 0.1;
+
+        // TIER 1: SELECTED (Hero) - Full visibility
+        if (isSelected) {
+            return d.sentiment >= 0 ? [...THEME.mint, 255] : [...THEME.red, 255];
+        }
+
+        // TIER 2: ACTIVE SENTIMENT - Medium visibility (Context)
+        if (!isNeutral) {
+            return d.sentiment > 0 ? [...THEME.mint, 100] : [...THEME.red, 100];
+        }
+
+        // TIER 3: NOISE (Neutral) - Very Low visibility (Texture only)
+        return [...THEME.slate, 30]; 
+    },
     getWidth: 1.5,
     widthUnits: 'pixels',
     capRounded: true,
     getDashArray: [6, 4], 
     dash: true,           
-    extensions: [new PathStyleExtension({ dash: true })] 
+    extensions: [new PathStyleExtension({ dash: true })],
+    updateTriggers: {
+        getColor: [selectedTicker]
+    }
   });
 
-  // 3. GHOST TRAILS (History - Highlighted on Selection)
+  // 3. GHOST TRAILS (History)
   const trailLayer = new PathLayer({
     id: 'market-trails',
     data: trailData,
@@ -236,10 +254,9 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     getColor: (d: any) => {
         const isSelected = d.ticker === selectedTicker;
         
-        // --- UPDATED OPACITY ---
-        // Active: 180 (Bright)
-        // Passive Color: 40 (Was 60)
-        // Passive Slate: 15 (Was 30)
+        // Active: 180
+        // Passive Color: 40
+        // Passive Slate: 15 (Matches Grid)
         const alpha = isSelected ? 180 : 40;
         const slateAlpha = isSelected ? 120 : 15;
 
@@ -369,24 +386,14 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
             // @ts-ignore
             getTooltip={({object}) => object && object.ticker && {
                 html: `
-                <div style="
-                    padding: 12px; 
-                    background: var(--glass-bg); 
-                    color: var(--text-primary); 
-                    border: 1px solid var(--glass-border); 
-                    border-radius: 8px; 
-                    font-family: var(--font-sans);
-                    backdrop-filter: blur(12px);
-                    box-shadow: var(--shadow-soft);
-                    min-width: 160px;
-                ">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                        <strong style="font-family: var(--font-mono); letter-spacing: 0.05em;">$${object.ticker}</strong>
-                        <span style="font-size:0.7rem; color: var(--accent-green); font-family: var(--font-mono);">
+                <div class="map-tooltip">
+                    <div class="map-tooltip-header">
+                        <strong class="map-tooltip-ticker">$${object.ticker}</strong>
+                        <span class="map-tooltip-metric">
                             E: ${object.energy.toFixed(0)}
                         </span>
                     </div>
-                    <div style="font-size:0.75rem; color: var(--text-muted); line-height: 1.4;">
+                    <div class="map-tooltip-desc">
                         ${object.headline || "Awaiting signal..."}
                     </div>
                 </div>

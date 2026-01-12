@@ -129,7 +129,6 @@ export function AgentPanel({
     const query = textOverride || inputValue.trim();
     if (!query) return;
 
-    // Mobile UX: Dismiss keyboard to show results
     if (window.innerWidth < 768) {
       (document.activeElement as HTMLElement)?.blur();
     }
@@ -168,10 +167,7 @@ export function AgentPanel({
 
   return (
     <div 
-      className={`agent-terminal ${isExpanded ? 'expanded' : 'collapsed'}`}
-      style={{
-         borderColor: selectedTicker ? 'var(--accent-green)' : 'var(--glass-border)',
-      }}
+      className={`agent-terminal ${isExpanded ? 'expanded' : 'collapsed'} ${selectedTicker ? 'agent-terminal-active' : ''}`}
       role="region"
       aria-label="AI Market Agent"
     >
@@ -186,26 +182,19 @@ export function AgentPanel({
         tabIndex={0}
         onKeyDown={(e) => e.key === 'Enter' && setIsExpanded(!isExpanded)}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+        <div className="terminal-title-wrapper">
           <Activity 
             size={16} 
             className={isBusy ? "icon-spin" : ""}
             color={isBusy ? "var(--accent-ai)" : "var(--accent-green)"} 
             aria-hidden="true"
           />
-          <span style={{ 
-              fontFamily: 'var(--font-mono)', 
-              fontWeight: 600, 
-              fontSize: '0.8rem', 
-              color: 'var(--text-primary)',
-              letterSpacing: '0.05em',
-              textTransform: 'uppercase'
-          }}>
+          <span className="terminal-title-text">
             {isAiLoading ? "PROCESSING DATA..." : "MARKET INTELLIGENCE"}
           </span>
         </div>
 
-         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+         <div className="terminal-controls">
             <button 
               className="panel-toggle-btn" 
               aria-label={isExpanded ? "Collapse Panel" : "Expand Panel"}
@@ -247,7 +236,7 @@ export function AgentPanel({
           <div className="terminal-input-area">
             
             <div className="chips-row" role="group" aria-label="Suggested Queries">
-                <Sparkles size={12} color="var(--accent-green)" style={{ flexShrink: 0, opacity: 0.7 }} aria-hidden="true" />
+                <Sparkles size={12} color="var(--accent-green)" className="suggestion-icon" aria-hidden="true" />
                 {getSuggestions().map((chip, idx) => (
                     <button 
                         key={idx} 
@@ -281,7 +270,7 @@ export function AgentPanel({
           </div>
           
           <div className="disclaimer-footer" aria-hidden="true">
-            SIMULATION ONLY. NOT FINANCIAL ADVICE.
+            SIMULATION ONLY. NOT FINANCIAL ADVICE. SYSTEM ONLINE V2.4.
           </div>
         </>
       )}

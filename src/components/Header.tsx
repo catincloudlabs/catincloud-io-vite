@@ -29,7 +29,7 @@ const Header: React.FC<HeaderProps> = ({
           <div className="chrono-label">
             <Clock size={12} color="var(--accent-green)" />
             {/* Added class for mobile hiding */}
-            <span className="header-label-text" style={{ marginLeft: '8px', letterSpacing: '0.1em', fontSize: '0.7rem' }}>
+            <span className="header-label-text">
               EVENT HORIZON
             </span>
           </div>
@@ -37,7 +37,7 @@ const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Vertical Divider */}
-        <div className="v-divider" style={{ height: '24px', margin: '0 12px', opacity: 0.2, width: '1px', background: 'var(--text-muted)' }}></div>
+        <div className="v-divider"></div>
 
         {/* Ticker Selector */}
         <div className="header-selector">
