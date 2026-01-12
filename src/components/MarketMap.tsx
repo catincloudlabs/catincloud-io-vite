@@ -41,7 +41,7 @@ const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 const INITIAL_VIEW_STATE = {
   target: [0, 0, 0], 
   // ZOOOMED IN: Start closer to the action
-  zoom: isMobile ? 0.9 : 1.8, 
+  zoom: isMobile ? 0.7 : 1.5, 
   // Prevent zooming out too far (keep the "void" at bay)
   minZoom: isMobile ? 0.5 : 0.8,
   maxZoom: isMobile ? 8 : 15
