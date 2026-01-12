@@ -800,13 +800,14 @@ input[type=range]::-moz-range-track {
 }
 
 /* ==================================================================== */
-/* 9. MAP LEGEND (REPOSITIONED)                                         */
+/* 9. MAP LEGEND                                                        */
 /* ==================================================================== */
 .legend-wrapper {
   position: absolute;
-  /* CHANGED: Nudged up to sit just below the 60px Header */
-  top: 75px;     
+  /* ALIGNMENT: 32px Left (Matches Slider), 125px Bottom (Clears Slider) */
+  bottom: 125px; 
   left: 32px;    
+  top: auto;     /* Reset top override */
   z-index: 45;   
   pointer-events: none; 
 }
@@ -845,8 +846,11 @@ input[type=range]::-moz-range-track {
   width: 200px;
   box-shadow: var(--shadow-soft);
   animation: fadeIn 0.2s ease-out;
-  max-height: calc(100vh - 120px); 
-  overflow-y: auto;
+  /* Panel grows UPWARDS from the bottom anchor */
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  margin-bottom: 40px; /* Space between toggle button and panel */
 }
 
 .legend-header {
@@ -924,9 +928,9 @@ input[type=range]::-moz-range-track {
 /* RESPONSIVE ADJUSTMENT */
 @media (max-width: 768px) {
   .legend-wrapper {
-    /* CHANGED: Tighter gap on mobile too (Header is 64px) */
-    top: 100px; 
-    left: 16px;
-    bottom: auto; 
+    /* Mobile: Sit above the centered slider (approx 100px tall with padding) */
+    bottom: calc(130px + env(safe-area-inset-bottom));
+    left: 16px; /* Align with header padding */
+    top: auto;
   }
 }
