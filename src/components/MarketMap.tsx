@@ -140,10 +140,8 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     if (!data?.nodes) return [];
 
     return data.nodes
-      // Filter for noise to keep the map clean
       .filter(n => n.energy > highEnergyThreshold || n.ticker === selectedTicker)
       .map(n => ({
-        // Path format required for PathLayer
         path: [[n.x, n.y], [n.x + n.vx, n.y + n.vy]], 
         energy: n.energy,
         sentiment: n.sentiment
@@ -211,7 +209,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     pickable: false 
   });
 
-  // 2. VECTOR LAYER (Prediction - Now Dashed)
+  // 2. VECTOR LAYER (Prediction - Dashed)
   const vectorLayer = new PathLayer({
     id: 'momentum-vectors',
     data: vectorData,
@@ -220,27 +218,36 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     getWidth: 1.5,
     widthUnits: 'pixels',
     capRounded: true,
-    // DASH CONFIGURATION
-    getDashArray: [6, 4], // 6px dash, 4px gap
-    dash: true,           // Enable dashing
+    getDashArray: [6, 4], 
+    dash: true,           
     extensions: [new PathStyleExtension({ dash: true })] 
   });
 
-  // 3. GHOST TRAILS (History)
+  // 3. GHOST TRAILS (History - Highlighted on Selection)
   const trailLayer = new PathLayer({
     id: 'market-trails',
     data: trailData,
     getPath: (d: any) => d.path,
     getColor: (d: any) => {
-        if (d.sentiment > 0.1) return [...THEME.mint, 60]; 
-        if (d.sentiment < -0.1) return [...THEME.red, 60];
-        return [...THEME.slate, 30];
+        const isSelected = d.ticker === selectedTicker;
+        // High visibility (180) if selected, low visibility (60) if not
+        const alpha = isSelected ? 180 : 60;
+        const slateAlpha = isSelected ? 120 : 30;
+
+        if (d.sentiment > 0.1) return [...THEME.mint, alpha]; 
+        if (d.sentiment < -0.1) return [...THEME.red, alpha];
+        return [...THEME.slate, slateAlpha];
     },
-    getWidth: 0.8,
+    // Thicker line (2.0) if selected to stand out from the noise
+    getWidth: (d: any) => d.ticker === selectedTicker ? 2.0 : 0.8,
     widthUnits: 'pixels',
     jointRounded: true,
     capRounded: true,
-    opacity: 1 
+    opacity: 1,
+    updateTriggers: {
+        getColor: [selectedTicker],
+        getWidth: [selectedTicker]
+    }
   });
 
   // 4. SYNAPSES (Connections)
@@ -342,7 +349,6 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
             views={new OrthographicView({ controller: true })}
             initialViewState={INITIAL_VIEW_STATE}
             controller={true}
-            // Draw order: Cells -> Vectors -> Trails -> Glow -> Synapses -> Dots
             layers={[cellLayer, vectorLayer, trailLayer, glowLayer, synapseLayer, dotLayer]} 
             style={{ backgroundColor: 'transparent' }} 
             onClick={(info: any) => {
