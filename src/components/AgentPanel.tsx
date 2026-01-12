@@ -12,6 +12,7 @@ interface AgentPanelProps {
   isLoading?: boolean;
 }
 
+// --- UPDATED CONTEXT GENERATOR ---
 const getSystemContext = (
   ticker: string, 
   currentFrame: MarketFrame, 
@@ -26,16 +27,18 @@ const getSystemContext = (
 
   const velocity = Math.sqrt(node.vx**2 + node.vy**2).toFixed(2);
 
+  // Send raw data so the Oracle Backend acts as the single source of truth for the persona.
   return `
-    [SYSTEM INSTRUCTION: Adopt a "Smart Analyst" persona. 
-    - Split your response 70/30: 70% hard data/analysis, 30% conversational flow.
-    - Be grounded and helpful. Use phrases like "Gotcha", "Hmmm", "Let's see". 
-    - Avoid over-the-top sci-fi or roleplay. Keep it professional but relaxed.]
-
-    SIMULATION DATE: ${currentFrame.date} (Treat this as Today)
-    Focus Asset: ${ticker}
-    Metrics: Energy=${node.energy.toFixed(0)}, Velocity=${velocity}
-    News Context: ${newsSummary}
+    REPORT FOR: ${ticker}
+    DATE: ${currentFrame.date}
+    
+    TELEMETRY:
+    - Energy (Vol): ${node.energy.toFixed(0)}
+    - Velocity (Mom): ${velocity}
+    - Sentiment: ${node.sentiment.toFixed(2)}
+    
+    INTELLIGENCE:
+    ${newsSummary}
   `;
 };
 
