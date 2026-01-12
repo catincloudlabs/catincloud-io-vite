@@ -27,7 +27,6 @@ const getSystemContext = (
 
   const velocity = Math.sqrt(node.vx**2 + node.vy**2).toFixed(2);
 
-  // Send raw data so the Oracle Backend acts as the single source of truth for the persona.
   return `
     REPORT FOR: ${ticker}
     DATE: ${currentFrame.date}
