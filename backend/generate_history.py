@@ -2,21 +2,19 @@ import os
 import json
 import pandas as pd
 import numpy as np
-from sklearn.manifold import TSNE
+import umap
+from sklearn.preprocessing import RobustScaler
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from supabase import create_client, Client, ClientOptions
 from tenacity import retry, stop_after_attempt, wait_exponential
 import httpx
 from textblob import TextBlob
-import inspect
 
 # 1. SETUP
 load_dotenv()
 
-timeout_config = httpx.Timeout(120.0, connect=10.0, read=120.0)
 opts = ClientOptions(postgrest_client_timeout=120)
-
 supabase: Client = create_client(
     os.getenv("SUPABASE_URL"), 
     os.getenv("SUPABASE_SERVICE_KEY"),
@@ -25,206 +23,223 @@ supabase: Client = create_client(
 
 # CONFIG
 HISTORY_DAYS = 73
-PERPLEXITY = 30  
-TARGET_CANVAS_SIZE = 150 # Will result in coordinates from -150 to +150
+TARGET_CANVAS_SIZE = 150  # Radius from -150 to +150
 
-# --- MATH UTILS ---
+# --- DATA FETCHING ---
 
-def normalize_to_bounds(matrix, target_radius=150):
+@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
+def fetch_daily_data(date_str):
     """
-    FIX: Forces the cluster to fill the screen (-150 to 150).
-    This prevents the 'Cluster Collapse' issue where Day 2 shrinks to nothing.
+    Fetches both Vectors (News) and Volume (Mass) for a given date.
+    Returns a merged DataFrame.
     """
-    # 1. Center the data at 0,0
-    centroid = np.mean(matrix, axis=0)
-    centered = matrix - centroid
+    # A. Fetch Vectors via RPC
+    vectors_rpc = supabase.rpc("get_daily_market_vectors", {
+        "target_date": date_str,
+        "page_size": 1000, # Fetch all in one go if possible, or paginated below
+        "page_num": 0
+    }).execute()
     
-    # 2. Find the current max distance from center (the "radius" of the cluster)
-    # We use the 95th percentile to ignore extreme outliers that squash the rest
-    distances = np.linalg.norm(centered, axis=1)
-    current_radius = np.percentile(distances, 95)
+    if not vectors_rpc.data: return None
+
+    df_vectors = pd.DataFrame(vectors_rpc.data)
     
-    if current_radius == 0: return matrix # Safety check
+    # Clean Vectors
+    # Handle cases where vector is stringified JSON
+    df_vectors['vector'] = df_vectors['vector'].apply(
+        lambda x: np.array(json.loads(x) if isinstance(x, str) else x, dtype=np.float32)
+    )
 
-    # 3. Scale it up/down to match target_radius
-    scale_factor = target_radius / current_radius
-    return centered * scale_factor
+    # B. Fetch Volume (Mass) via Table Select
+    # We need volume to calculate "Physics Mass"
+    vol_resp = supabase.table("stocks_ohlc")\
+        .select("ticker, volume")\
+        .eq("date", date_str)\
+        .execute()
+        
+    vol_map = {}
+    if vol_resp.data:
+        for row in vol_resp.data:
+            vol_map[row['ticker']] = row['volume']
 
-def align_to_reference(source_matrix, target_matrix, source_tickers, target_tickers):
+    # C. Merge & Sentiment
+    results = []
+    for _, row in df_vectors.iterrows():
+        ticker = row['ticker']
+        headline = row.get('headline', '')
+        
+        # Calculate Sentiment
+        sentiment = 0
+        if headline:
+            try: sentiment = TextBlob(headline).sentiment.polarity
+            except: sentiment = 0
+            
+        # Get Mass (Volume)
+        # Default to median volume (1M) if missing, to prevent crash
+        volume = vol_map.get(ticker, 1_000_000) 
+        if volume is None: volume = 1_000_000
+        
+        results.append({
+            "ticker": ticker,
+            "vector": row['vector'],
+            "volume": volume,
+            "headline": headline,
+            "sentiment": sentiment,
+            "date": date_str
+        })
+        
+    return pd.DataFrame(results)
+
+# --- MATH ENGINE ---
+
+def prepare_spacetime_cube(daily_frames):
     """
-    Rotates target_matrix (Today) to best fit source_matrix (Yesterday).
+    Preprocesses the data for Aligned UMAP.
+    1. Scales vectors robustly (removing outlier skew).
+    2. Applies Mass Weighting (log(volume)).
+    3. Builds the 'relations' dict that links Day N to Day N+1.
     """
-    common_tickers = list(set(source_tickers) & set(target_tickers))
+    print("   ⚙️ Preprocessing Spacetime Cube...")
     
-    if len(common_tickers) < 3:
-        return target_matrix
-
-    src_indices = [source_tickers.index(t) for t in common_tickers]
-    tgt_indices = [target_tickers.index(t) for t in common_tickers]
+    dict_list = []      # The list of relations for UMAP
+    matrix_list = []    # The list of vector matrices
+    meta_list = []      # Metadata to reconstruct the output
     
-    A = source_matrix[src_indices]
-    B = target_matrix[tgt_indices]
+    # Global Scaler: Fits on ALL data to ensure consistent space
+    # (Optional: You could fit per day, but global is safer for drift)
+    all_vectors = np.concatenate([np.stack(df['vector'].values) for df in daily_frames])
+    scaler = RobustScaler().fit(all_vectors)
 
-    centroid_A = np.mean(A, axis=0)
-    centroid_B = np.mean(B, axis=0)
-    AA = A - centroid_A
-    BB = B - centroid_B
+    for i in range(len(daily_frames)):
+        df = daily_frames[i]
+        
+        # 1. Get Base Vectors
+        raw_matrix = np.stack(df['vector'].values)
+        
+        # 2. Apply Robust Scaling (Centers and normalizes IQR)
+        scaled_matrix = scaler.transform(raw_matrix)
+        
+        # 3. Apply Mass Weighting
+        # "Heavier" stocks (High Volume) get pushed to outer shells
+        # We use log(volume) to dampen the exponential differences
+        volumes = df['volume'].values.astype(np.float32)
+        # Normalize volume factor roughly around 1.0 to 2.0
+        mass_factor = np.log1p(volumes) 
+        mass_factor = mass_factor / np.median(mass_factor) # Normalize around median
+        
+        # Broadcast multiply: Vector * Mass
+        weighted_matrix = scaled_matrix * mass_factor[:, np.newaxis]
+        
+        matrix_list.append(weighted_matrix)
+        meta_list.append(df)
+        
+        # 4. Build Relations (The "Time Glue")
+        # Maps index in Frame[i] -> index in Frame[i+1]
+        if i < len(daily_frames) - 1:
+            next_df = daily_frames[i+1]
+            current_tickers = df['ticker'].tolist()
+            next_tickers = next_df['ticker'].tolist()
+            
+            # Map ticker -> index for the next day
+            next_map = {t: idx for idx, t in enumerate(next_tickers)}
+            
+            relation = {}
+            for curr_idx, t in enumerate(current_tickers):
+                if t in next_map:
+                    relation[curr_idx] = next_map[t]
+            
+            dict_list.append(relation)
 
-    H = np.dot(BB.T, AA)
-    U, S, Vt = np.linalg.svd(H)
-    R = np.dot(Vt.T, U.T)
+    return matrix_list, dict_list, meta_list
 
-    if np.linalg.det(R) < 0:
-        Vt[1, :] *= -1
-        R = np.dot(Vt.T, U.T)
+def normalize_globally(coords_list, target_radius=150):
+    """
+    Normalizes the entire 3D spacetime block to fit the screen.
+    Uses a single scale factor for ALL days to preserve relative volatility.
+    """
+    # 1. Center everything
+    all_coords = np.vstack(coords_list)
+    centroid = np.mean(all_coords, axis=0)
+    
+    centered_list = [c - centroid for c in coords_list]
+    all_centered = np.vstack(centered_list)
+    
+    # 2. Find Global Radius (95th percentile)
+    distances = np.linalg.norm(all_centered, axis=1)
+    global_radius = np.percentile(distances, 95)
+    
+    if global_radius == 0: global_radius = 1
+    
+    scale_factor = target_radius / global_radius
+    
+    print(f"   📏 Global Scale Factor: {scale_factor:.4f} (Radius: {global_radius:.2f})")
+    
+    return [c * scale_factor for c in centered_list]
 
-    # Return rotated matrix (Scaling is handled by normalize_to_bounds now)
-    return np.dot(target_matrix - centroid_B, R) + centroid_A
+# --- MAIN ---
 
-def create_tsne_instance(n_components, perplexity, init, random_state):
-    preferred_params = {
-        "n_components": n_components,
-        "perplexity": perplexity,
-        "init": init,
-        "random_state": random_state,
-        "learning_rate": "auto",
-        "n_iter": 1000,
-        "method": "barnes_hut"
-    }
-    sig = inspect.signature(TSNE.__init__)
-    valid_args = set(sig.parameters.keys())
-    final_params = {k: v for k, v in preferred_params.items() if k in valid_args}
-    return TSNE(**final_params)
-
-@retry(stop=stop_after_attempt(5), wait=wait_exponential(multiplier=1, min=2, max=10))
-def fetch_daily_vectors_rpc(target_date):
-    all_records = []
-    page = 0
-    page_size = 100
-    while True:
-        try:
-            resp = supabase.rpc("get_daily_market_vectors", {
-                "target_date": target_date,
-                "page_size": page_size,
-                "page_num": page
-            }).execute()
-            if not resp.data: break
-            for item in resp.data:
-                vec = item['vector']
-                if isinstance(vec, str): vec = json.loads(vec)
-                vec_np = np.array(vec, dtype=np.float32)
-                headline = item.get('headline', '')
-                sentiment = 0
-                if headline:
-                    try: sentiment = TextBlob(headline).sentiment.polarity
-                    except: sentiment = 0
-                all_records.append({
-                    "ticker": item['ticker'],
-                    "vector": vec_np,
-                    "headline": headline,    
-                    "sentiment": sentiment   
-                })
-            if len(resp.data) < page_size: break
-            page += 1
-        except Exception as e:
-            print(f"    ⚠️ Error on page {page}: {e}")
-            raise e
-    return pd.DataFrame(all_records)
-
-# --- MAIN EXECUTION ---
 if __name__ == "__main__":
-    print(f"🚀 Starting Stabilized Walk-Forward Generation (Last {HISTORY_DAYS} Days)...")
+    print(f"🚀 Starting Global Spacetime Alignment (Last {HISTORY_DAYS} Days)...")
     
     end_date = datetime.now()
     dates = [(end_date - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(HISTORY_DAYS)]
-    dates.reverse() 
+    dates.reverse() # Chronological Order: Oldest -> Newest
     
-    full_history = []
-    prev_matrix = None
-    prev_tickers = None
-    
-    for date_str in dates:
-        print(f"📅 Processing {date_str}...", end=" ", flush=True)
-        
+    # 1. Fetch Phase
+    daily_frames = []
+    print(f"📥 Fetching History...", end=" ", flush=True)
+    for d in dates:
         try:
-            df = fetch_daily_vectors_rpc(date_str)
+            df = fetch_daily_data(d)
+            if df is not None and not df.empty and len(df) > 5:
+                daily_frames.append(df)
         except Exception as e:
-            print(f"\n   ❌ Failed to fetch {date_str}: {e}")
-            continue
-        
-        if df is None or df.empty:
-            print("Skipped (No data)")
-            continue
-            
-        current_matrix = np.stack(df['vector'].values)
-        current_tickers = df['ticker'].tolist()
-        
-        if len(df) < 5: 
-            print("Skipped (Not enough data)")
-            continue
+            print(f"x", end="", flush=True)
+    print(f"\n   ✅ Loaded {len(daily_frames)} valid days.")
 
-        # 1. Initialization
-        n_samples = current_matrix.shape[0]
-        init_matrix = None
-        
-        if prev_matrix is not None:
-            prev_map = {t: pos for t, pos in zip(prev_tickers, prev_matrix)}
-            init_build = []
-            for t in current_tickers:
-                if t in prev_map:
-                    init_build.append(prev_map[t])
-                else:
-                    init_build.append(np.random.rand(2)) 
-            init_matrix = np.array(init_build)
-            
-        # 2. Run TSNE
-        tsne = create_tsne_instance(
-            n_components=2,
-            perplexity=min(PERPLEXITY, n_samples - 1),
-            init=init_matrix if init_matrix is not None else 'pca',
-            random_state=42
-        )
-        
-        embeddings_raw = tsne.fit_transform(current_matrix)
-        
-        # --- FIX: NORMALIZE SCALE BEFORE ALIGNMENT ---
-        # This ensures Day 2 is the same size as Day 1
-        embeddings_scaled = normalize_to_bounds(embeddings_raw, TARGET_CANVAS_SIZE)
-        # ---------------------------------------------
+    if not daily_frames:
+        print("❌ No data found. Exiting.")
+        exit()
 
-        # 3. Apply Procrustes Alignment
-        if prev_matrix is not None:
-            embeddings_stabilized = align_to_reference(
-                source_matrix=prev_matrix, 
-                target_matrix=embeddings_scaled,
-                source_tickers=prev_tickers, 
-                target_tickers=current_tickers
-            )
-        else:
-            embeddings_stabilized = embeddings_scaled
-            
-        # 4. Save
-        for i, row in df.iterrows():
-            ticker = row['ticker']
-            x, y = embeddings_stabilized[i]
-            
+    # 2. Math Phase
+    matrices, relations, metadata = prepare_spacetime_cube(daily_frames)
+    
+    print("   🧠 Running Aligned UMAP (This may take a moment)...")
+    reducer = umap.AlignedUMAP(
+        n_neighbors=15,     # Increased for global stability
+        min_dist=0.1,
+        n_components=2,
+        metric='euclidean',
+        random_state=42,
+        n_epochs=200        # Enough for convergence
+    )
+    
+    # The Magic Line: Solves the entire history at once
+    embeddings_list = reducer.fit_transform(matrices, relations=relations)
+    
+    # 3. Normalization Phase
+    embeddings_list = normalize_globally(embeddings_list, TARGET_CANVAS_SIZE)
+
+    # 4. Export Phase
+    full_history = []
+    
+    for i, coords in enumerate(embeddings_list):
+        meta_df = metadata[i]
+        date_str = meta_df.iloc[0]['date']
+        
+        for idx, row in meta_df.iterrows():
+            x, y = coords[idx]
             full_history.append({
                 "date": date_str,
-                "ticker": ticker,
+                "ticker": row['ticker'],
                 "x": round(float(x), 2),
                 "y": round(float(y), 2),
                 "headline": row['headline'],
                 "sentiment": round(row['sentiment'], 2)
             })
-            
-        prev_matrix = embeddings_stabilized
-        prev_tickers = current_tickers
-        
-        print(f"✅ Aligned & Saved ({len(df)} tickers)")
 
-    # 5. Export
     output_path = "../public/data/market_physics_history.json"
     with open(output_path, "w") as f:
         json.dump({"data": full_history}, f)
         
-    print(f"\n✨ DONE. Stabilized History saved to {output_path}")
+    print(f"✨ DONE. Spacetime Block saved to {output_path}")

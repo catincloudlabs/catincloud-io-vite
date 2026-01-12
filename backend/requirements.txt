@@ -2,7 +2,8 @@
 numpy>=1.26.0
 pandas>=2.1.0
 scipy>=1.11.0
-scikit-learn>=1.4.0   # Ensures 'n_iter' and 'learning_rate' params work
+scikit-learn>=1.4.0
+umap-learn>=0.5.5
 
 # API & Networking
 httpx>=0.25.0
