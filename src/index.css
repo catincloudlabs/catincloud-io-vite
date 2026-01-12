@@ -1081,7 +1081,7 @@ input[type=range]::-moz-range-track {
     top: 0;
     bottom: auto;
     margin-bottom: 0;
-    margin-top: 40px; /* Push panel below the toggle button */
+    margin-top: 40px;
     max-height: 50vh; 
   }
 }
