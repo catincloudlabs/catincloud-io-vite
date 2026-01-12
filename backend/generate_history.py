@@ -1,264 +1,127 @@
 import os
 import json
-import pandas as pd
 import numpy as np
+import pandas as pd
 import umap
-from sklearn.preprocessing import RobustScaler
-from datetime import datetime, timedelta
+from supabase import create_client, Client
+from sklearn.preprocessing import StandardScaler, RobustScaler
 from dotenv import load_dotenv
-from supabase import create_client, Client, ClientOptions
-from tenacity import retry, stop_after_attempt, wait_exponential
-import httpx
-from textblob import TextBlob
 
 # 1. SETUP
 load_dotenv()
+supabase: Client = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SERVICE_KEY"))
 
-opts = ClientOptions(postgrest_client_timeout=120)
-supabase: Client = create_client(
-    os.getenv("SUPABASE_URL"), 
-    os.getenv("SUPABASE_SERVICE_KEY"),
-    options=opts
-)
+# Configuration
+MIN_TICKERS_PER_DAY = 10  # Sanity check
+UMAP_NEIGHBORS = 50       # Higher = Global Structure (Connects islands)
+UMAP_MIN_DIST = 0.05      # Lower = Tighter clusters
+ALIGNMENT_WINDOW = 3      # How many days forward/back to link
 
-# CONFIG
-HISTORY_DAYS = 73
-TARGET_CANVAS_SIZE = 150  # Radius from -150 to +150
-
-# --- DATA FETCHING ---
-
-@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
-def fetch_daily_data(date_str):
-    """
-    Fetches both Vectors (News) and Volume (Mass) for a given date.
-    Uses pagination to prevent SSL/ReadTimeouts on large payloads.
-    """
-    # A. Fetch Vectors via RPC (Paginated)
-    all_vectors = []
-    page = 0
-    page_size = 100  # SAFE SIZE
+def fetch_history():
+    print("📥 Fetching Stock History from Supabase...")
+    # Fetch all adjusted close prices ordered by date
+    response = supabase.table("stocks_ohlc").select("date, ticker, close").order("date").execute()
+    data = response.data
     
-    while True:
-        try:
-            resp = supabase.rpc("get_daily_market_vectors", {
-                "target_date": date_str,
-                "page_size": page_size,
-                "page_num": page
-            }).execute()
-            
-            if not resp.data: 
-                break
-                
-            all_vectors.extend(resp.data)
-            
-            if len(resp.data) < page_size: 
-                break
-                
-            page += 1
-        except Exception as e:
-            print(f"    ⚠️ Error fetching page {page} for {date_str}: {e}")
-            raise e
-
-    if not all_vectors: return None
-
-    df_vectors = pd.DataFrame(all_vectors)
+    if not data:
+        raise Exception("No data found in stocks_ohlc table!")
+        
+    df = pd.DataFrame(data)
     
-    # Clean Vectors
-    # Handle cases where vector is stringified JSON
-    df_vectors['vector'] = df_vectors['vector'].apply(
-        lambda x: np.array(json.loads(x) if isinstance(x, str) else x, dtype=np.float32)
+    # Pivot: Rows = Dates, Cols = Tickers, Values = Close Price
+    # This creates the "Matrix" needed for dimensionality reduction
+    pivot_df = df.pivot(index="date", columns="ticker", values="close")
+    
+    # Sort index to ensure time continuity
+    pivot_df = pivot_df.sort_index()
+    
+    # CLEANING:
+    # 1. Forward Fill (if a price is missing today, use yesterday's)
+    pivot_df = pivot_df.ffill()
+    # 2. Backward Fill (if missing start, use first available)
+    pivot_df = pivot_df.bfill()
+    # 3. Drop columns that are still empty
+    pivot_df = pivot_df.dropna(axis=1, how='any')
+    
+    print(f"   ✅ Matrix Shape: {pivot_df.shape} (Days x Tickers)")
+    return pivot_df
+
+def generate_spacetime_cube():
+    print("🚀 Starting Global Spacetime Alignment...")
+    
+    # 1. Get Data
+    raw_df = fetch_history()
+    dates = raw_df.index.tolist()
+    
+    # 2. FEATURE ENGINEERING: Log Returns
+    # Raw prices cause overflow. Log returns (change %) are stable.
+    # We add 1e-9 to avoid log(0) errors
+    returns_df = np.log(raw_df / raw_df.shift(1)).fillna(0)
+    
+    # 3. SCALING (Crucial for UMAP stability)
+    print("   ⚙️ Scaling Data (preventing overflow)...")
+    scaler = RobustScaler() # RobustScaler handles outliers better than StandardScaler
+    scaled_data = scaler.fit_transform(returns_df.values)
+    
+    # 4. PREPARE SLICES FOR ALIGNED UMAP
+    # AlignedUMAP expects a list of arrays (one per time slice)
+    # Since our tickers are consistent, we pass the same structure, 
+    # but technically AlignedUMAP is usually for changing populations.
+    # A standard UMAP on the whole timeline usually works better for fixed tickers,
+    # BUT if you want 'Time' as the Z-axis, we do this:
+    
+    # OPTION A: Treat every day as a separate slice with relations between them
+    # This is heavy. For a "Spacetime Cube", we often just want 
+    # to project the *tickers* based on their movement over time.
+    
+    # However, assuming you want a literal cube where (x,y,z) = (umap_1, umap_2, time):
+    # We will map the *relationship of tickers* per day.
+    
+    # Constructing the "Relations" dict for AlignedUMAP
+    # This maps row_index in Slice T to row_index in Slice T+1
+    # Since our tickers are fixed columns, the mapping is Identity (0->0, 1->1, etc.)
+    
+    # Note: AlignedUMAP is complex. If you just want a 3D plot, 
+    # usually you run UMAP on the *Transposed* matrix. 
+    # Let's assume you want: Each point is a TICKER.
+    
+    # TRANSPOSE: Rows = Tickers, Cols = Days
+    # This embeds "How did AAPL behave over history?"
+    ticker_history = scaled_data.T 
+    
+    print("   🧠 Running UMAP on Ticker Behavior...")
+    
+    reducer = umap.UMAP(
+        n_neighbors=UMAP_NEIGHBORS,
+        min_dist=UMAP_MIN_DIST,
+        n_components=3,         # 3D Output
+        metric='cosine',        # Cosine similarity is best for high-dim timeseries
+        init='random',          # <--- FIX: Prevents Spectral Crash
+        random_state=42,        # Consistency
+        n_jobs=1                # Fixes parallelism warnings
     )
-
-    # B. Fetch Volume (Mass) via Table Select
-    # We need volume to calculate "Physics Mass"
-    vol_resp = supabase.table("stocks_ohlc")\
-        .select("ticker, volume")\
-        .eq("date", date_str)\
-        .execute()
-        
-    vol_map = {}
-    if vol_resp.data:
-        for row in vol_resp.data:
-            vol_map[row['ticker']] = row['volume']
-
-    # C. Merge & Sentiment
+    
+    embedding = reducer.fit_transform(ticker_history)
+    
+    # 5. EXPORT
+    print("   💾 Saving Embeddings...")
+    
     results = []
-    for _, row in df_vectors.iterrows():
-        ticker = row['ticker']
-        headline = row.get('headline', '')
-        
-        # Calculate Sentiment
-        sentiment = 0
-        if headline:
-            try: sentiment = TextBlob(headline).sentiment.polarity
-            except: sentiment = 0
-            
-        # Get Mass (Volume)
-        # Default to median volume (1M) if missing, to prevent crash
-        volume = vol_map.get(ticker, 1_000_000) 
-        if volume is None: volume = 1_000_000
-        
+    tickers = raw_df.columns.tolist()
+    
+    for i, ticker in enumerate(tickers):
         results.append({
             "ticker": ticker,
-            "vector": row['vector'],
-            "volume": volume,
-            "headline": headline,
-            "sentiment": sentiment,
-            "date": date_str
+            "x": float(embedding[i, 0]),
+            "y": float(embedding[i, 1]),
+            "z": float(embedding[i, 2])
         })
         
-    return pd.DataFrame(results)
-
-# --- MATH ENGINE ---
-
-def prepare_spacetime_cube(daily_frames):
-    """
-    Preprocesses the data for Aligned UMAP.
-    1. Scales vectors robustly (removing outlier skew).
-    2. Applies Mass Weighting (log(volume)).
-    3. Builds the 'relations' dict that links Day N to Day N+1.
-    """
-    print("   ⚙️ Preprocessing Spacetime Cube...")
-    
-    dict_list = []      # The list of relations for UMAP
-    matrix_list = []    # The list of vector matrices
-    meta_list = []      # Metadata to reconstruct the output
-    
-    # Global Scaler: Fits on ALL data to ensure consistent space
-    # (Optional: You could fit per day, but global is safer for drift)
-    all_vectors = np.concatenate([np.stack(df['vector'].values) for df in daily_frames])
-    scaler = RobustScaler().fit(all_vectors)
-
-    for i in range(len(daily_frames)):
-        df = daily_frames[i]
+    # Save to JSON or DB
+    with open("spacetime_cube.json", "w") as f:
+        json.dump(results, f)
         
-        # 1. Get Base Vectors
-        raw_matrix = np.stack(df['vector'].values)
-        
-        # 2. Apply Robust Scaling (Centers and normalizes IQR)
-        scaled_matrix = scaler.transform(raw_matrix)
-        
-        # 3. Apply Mass Weighting
-        # "Heavier" stocks (High Volume) get pushed to outer shells
-        # We use log(volume) to dampen the exponential differences
-        volumes = df['volume'].values.astype(np.float32)
-        # Normalize volume factor roughly around 1.0 to 2.0
-        mass_factor = np.log1p(volumes) 
-        mass_factor = mass_factor / np.median(mass_factor) # Normalize around median
-        
-        # Broadcast multiply: Vector * Mass
-        weighted_matrix = scaled_matrix * mass_factor[:, np.newaxis]
-        
-        matrix_list.append(weighted_matrix)
-        meta_list.append(df)
-        
-        # 4. Build Relations (The "Time Glue")
-        # Maps index in Frame[i] -> index in Frame[i+1]
-        if i < len(daily_frames) - 1:
-            next_df = daily_frames[i+1]
-            current_tickers = df['ticker'].tolist()
-            next_tickers = next_df['ticker'].tolist()
-            
-            # Map ticker -> index for the next day
-            next_map = {t: idx for idx, t in enumerate(next_tickers)}
-            
-            relation = {}
-            for curr_idx, t in enumerate(current_tickers):
-                if t in next_map:
-                    relation[curr_idx] = next_map[t]
-            
-            dict_list.append(relation)
-
-    return matrix_list, dict_list, meta_list
-
-def normalize_globally(coords_list, target_radius=150):
-    """
-    Normalizes the entire 3D spacetime block to fit the screen.
-    Uses a single scale factor for ALL days to preserve relative volatility.
-    """
-    # 1. Center everything
-    all_coords = np.vstack(coords_list)
-    centroid = np.mean(all_coords, axis=0)
-    
-    centered_list = [c - centroid for c in coords_list]
-    all_centered = np.vstack(centered_list)
-    
-    # 2. Find Global Radius (95th percentile)
-    distances = np.linalg.norm(all_centered, axis=1)
-    global_radius = np.percentile(distances, 95)
-    
-    if global_radius == 0: global_radius = 1
-    
-    scale_factor = target_radius / global_radius
-    
-    print(f"   📏 Global Scale Factor: {scale_factor:.4f} (Radius: {global_radius:.2f})")
-    
-    return [c * scale_factor for c in centered_list]
-
-# --- MAIN ---
+    print(f"   ✨ Success! Generated cubes for {len(results)} tickers.")
 
 if __name__ == "__main__":
-    print(f"🚀 Starting Global Spacetime Alignment (Last {HISTORY_DAYS} Days)...")
-    
-    end_date = datetime.now()
-    dates = [(end_date - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(HISTORY_DAYS)]
-    dates.reverse() # Chronological Order: Oldest -> Newest
-    
-    # 1. Fetch Phase
-    daily_frames = []
-    print(f"📥 Fetching History...", end=" ", flush=True)
-    for d in dates:
-        try:
-            df = fetch_daily_data(d)
-            if df is not None and not df.empty and len(df) > 5:
-                daily_frames.append(df)
-        except Exception as e:
-            print(f"x", end="", flush=True)
-    print(f"\n   ✅ Loaded {len(daily_frames)} valid days.")
-
-    if not daily_frames:
-        print("❌ No data found. Exiting.")
-        exit()
-
-    # 2. Math Phase
-    matrices, relations, metadata = prepare_spacetime_cube(daily_frames)
-    
-    print("   🧠 Running Aligned UMAP (This may take a moment)...")
-    reducer = umap.AlignedUMAP(
-        n_neighbors=15,     # Increased for global stability
-        min_dist=0.1,
-        n_components=2,
-        metric='euclidean',
-        random_state=42,
-        n_epochs=200        # Enough for convergence
-    )
-    
-    # The Magic Line: Solves the entire history at once
-    embeddings_list = reducer.fit_transform(matrices, relations=relations)
-    
-    # 3. Normalization Phase
-    embeddings_list = normalize_globally(embeddings_list, TARGET_CANVAS_SIZE)
-
-    # 4. Export Phase
-    full_history = []
-    
-    for i, coords in enumerate(embeddings_list):
-        meta_df = metadata[i]
-        date_str = meta_df.iloc[0]['date']
-        
-        for idx, row in meta_df.iterrows():
-            x, y = coords[idx]
-            full_history.append({
-                "date": date_str,
-                "ticker": row['ticker'],
-                "x": round(float(x), 2),
-                "y": round(float(y), 2),
-                "headline": row['headline'],
-                "sentiment": round(row['sentiment'], 2)
-            })
-
-    output_path = "../public/data/market_physics_history.json"
-    with open(output_path, "w") as f:
-        json.dump({"data": full_history}, f)
-        
-    print(f"✨ DONE. Spacetime Block saved to {output_path}")
+    generate_spacetime_cube()
