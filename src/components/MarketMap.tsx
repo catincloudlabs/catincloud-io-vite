@@ -191,21 +191,21 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
 
   // --- LAYERS ----------------------------------------------------------------
 
-  // 1. BACKGROUND CELLS (Grid - Dotted & Visible)
+  // 1. BACKGROUND CELLS (Grid - Dotted & Subtle)
   const cellLayer = new PolygonLayer({
     id: 'voronoi-cells',
     data: voronoiData,
     getPolygon: (d: any) => d.polygon,
     getFillColor: (d: any) => {
       const s = d.node.sentiment;
-      // INCREASED VISIBILITY (3 -> 25)
-      if (s > 0.1) return [...THEME.mint, 25]; 
-      if (s < -0.1) return [...THEME.red, 25];  
+      // DIALED BACK: 25 -> 10 (Subtle tint)
+      if (s > 0.1) return [...THEME.mint, 10]; 
+      if (s < -0.1) return [...THEME.red, 10];  
       return [0, 0, 0, 0]; 
     },
     stroked: true,
-    // INCREASED VISIBILITY (15 -> 30)
-    getLineColor: [...THEME.slate, 30], 
+    // DIALED BACK: 30 -> 15 (Barely there structure)
+    getLineColor: [...THEME.slate, 15], 
     getLineWidth: 1,
     lineWidthUnits: 'pixels',
     pickable: false,
@@ -225,7 +225,6 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     getWidth: 1.5,
     widthUnits: 'pixels',
     capRounded: true,
-    // TEXTURE: Dashed Line (6px dash, 4px gap)
     getDashArray: [6, 4], 
     dash: true,           
     extensions: [new PathStyleExtension({ dash: true })] 
