@@ -805,7 +805,7 @@ input[type=range]::-moz-range-track {
 .legend-wrapper {
   position: absolute;
   /* CHANGED: Nudged up to sit just below the 60px Header */
-  top: 70px;     
+  top: 75px;     
   left: 32px;    
   z-index: 45;   
   pointer-events: none; 
@@ -925,7 +925,7 @@ input[type=range]::-moz-range-track {
 @media (max-width: 768px) {
   .legend-wrapper {
     /* CHANGED: Tighter gap on mobile too (Header is 64px) */
-    top: 80px; 
+    top: 100px; 
     left: 16px;
     bottom: auto; 
   }
