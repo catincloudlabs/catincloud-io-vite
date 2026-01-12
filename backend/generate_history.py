@@ -31,18 +31,37 @@ TARGET_CANVAS_SIZE = 150  # Radius from -150 to +150
 def fetch_daily_data(date_str):
     """
     Fetches both Vectors (News) and Volume (Mass) for a given date.
-    Returns a merged DataFrame.
+    Uses pagination to prevent SSL/ReadTimeouts on large payloads.
     """
-    # A. Fetch Vectors via RPC
-    vectors_rpc = supabase.rpc("get_daily_market_vectors", {
-        "target_date": date_str,
-        "page_size": 1000, # Fetch all in one go if possible, or paginated below
-        "page_num": 0
-    }).execute()
+    # A. Fetch Vectors via RPC (Paginated)
+    all_vectors = []
+    page = 0
+    page_size = 100  # SAFE SIZE
     
-    if not vectors_rpc.data: return None
+    while True:
+        try:
+            resp = supabase.rpc("get_daily_market_vectors", {
+                "target_date": date_str,
+                "page_size": page_size,
+                "page_num": page
+            }).execute()
+            
+            if not resp.data: 
+                break
+                
+            all_vectors.extend(resp.data)
+            
+            if len(resp.data) < page_size: 
+                break
+                
+            page += 1
+        except Exception as e:
+            print(f"    ⚠️ Error fetching page {page} for {date_str}: {e}")
+            raise e
 
-    df_vectors = pd.DataFrame(vectors_rpc.data)
+    if not all_vectors: return None
+
+    df_vectors = pd.DataFrame(all_vectors)
     
     # Clean Vectors
     # Handle cases where vector is stringified JSON
