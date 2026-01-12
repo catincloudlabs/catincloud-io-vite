@@ -1071,7 +1071,7 @@ input[type=range]::-moz-range-track {
     /* MOVED: Top Left on Mobile. 
        Header is ~64px. 
        top: 100px ensures it clears the Date/Ticker selector completely. */
-    top: 80px; 
+    top: 75px; 
     left: 16px; 
     bottom: auto; /* Unset the desktop bottom anchor */
   }
