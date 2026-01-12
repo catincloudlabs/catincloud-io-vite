@@ -198,13 +198,11 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     getPolygon: (d: any) => d.polygon,
     getFillColor: (d: any) => {
       const s = d.node.sentiment;
-      // DIALED BACK: 25 -> 10 (Subtle tint)
       if (s > 0.1) return [...THEME.mint, 10]; 
       if (s < -0.1) return [...THEME.red, 10];  
       return [0, 0, 0, 0]; 
     },
     stroked: true,
-    // DIALED BACK: 30 -> 15 (Barely there structure)
     getLineColor: [...THEME.slate, 15], 
     getLineWidth: 1,
     lineWidthUnits: 'pixels',
@@ -237,8 +235,13 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     getPath: (d: any) => d.path,
     getColor: (d: any) => {
         const isSelected = d.ticker === selectedTicker;
-        const alpha = isSelected ? 180 : 60;
-        const slateAlpha = isSelected ? 120 : 30;
+        
+        // --- UPDATED OPACITY ---
+        // Active: 180 (Bright)
+        // Passive Color: 40 (Was 60)
+        // Passive Slate: 15 (Was 30)
+        const alpha = isSelected ? 180 : 40;
+        const slateAlpha = isSelected ? 120 : 15;
 
         if (d.sentiment > 0.1) return [...THEME.mint, alpha]; 
         if (d.sentiment < -0.1) return [...THEME.red, alpha];
