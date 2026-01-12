@@ -142,6 +142,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     return data.nodes
       .filter(n => n.energy > highEnergyThreshold || n.ticker === selectedTicker)
       .map(n => ({
+        ticker: n.ticker,
         path: [[n.x, n.y], [n.x + n.vx, n.y + n.vy]], 
         energy: n.energy,
         sentiment: n.sentiment
@@ -191,6 +192,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
 
   // --- LAYERS ----------------------------------------------------------------
 
+  // 1. BACKGROUND CELLS (Grid)
   const cellLayer = new PolygonLayer({
     id: 'voronoi-cells',
     data: voronoiData,
@@ -211,25 +213,50 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     extensions: [new PathStyleExtension({ dash: true })]
   });
 
+  // 2. VECTOR LAYER (Prediction - 3-Tier Opacity)
   const vectorLayer = new PathLayer({
     id: 'momentum-vectors',
     data: vectorData,
     getPath: (d: any) => d.path,
-    getColor: (d: any) => d.sentiment >= 0 ? [...THEME.mint, 180] : [...THEME.red, 180],
+    getColor: (d: any) => {
+        const isSelected = d.ticker === selectedTicker;
+        const isNeutral = Math.abs(d.sentiment) <= 0.1;
+
+        // TIER 1: SELECTED (Hero) - Full visibility
+        if (isSelected) {
+            return d.sentiment >= 0 ? [...THEME.mint, 255] : [...THEME.red, 255];
+        }
+
+        // TIER 2: ACTIVE SENTIMENT - Medium visibility (Context)
+        if (!isNeutral) {
+            return d.sentiment > 0 ? [...THEME.mint, 100] : [...THEME.red, 100];
+        }
+
+        // TIER 3: NOISE (Neutral) - Very Low visibility (Texture only)
+        return [...THEME.slate, 30]; 
+    },
     getWidth: 1.5,
     widthUnits: 'pixels',
     capRounded: true,
     getDashArray: [6, 4], 
     dash: true,           
-    extensions: [new PathStyleExtension({ dash: true })] 
+    extensions: [new PathStyleExtension({ dash: true })],
+    updateTriggers: {
+        getColor: [selectedTicker]
+    }
   });
 
+  // 3. GHOST TRAILS (History)
   const trailLayer = new PathLayer({
     id: 'market-trails',
     data: trailData,
     getPath: (d: any) => d.path,
     getColor: (d: any) => {
         const isSelected = d.ticker === selectedTicker;
+        
+        // Active: 180
+        // Passive Color: 40
+        // Passive Slate: 15 (Matches Grid)
         const alpha = isSelected ? 180 : 40;
         const slateAlpha = isSelected ? 120 : 15;
 
@@ -248,6 +275,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     }
   });
 
+  // 4. SYNAPSES (Connections)
   const synapseLayer = new LineLayer({
     id: 'graph-synapses',
     data: synapseData,
@@ -262,6 +290,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     }
   });
 
+  // 5. GLOW LAYER (Bloom)
   const glowLayer = new ScatterplotLayer({
     id: 'market-glow',
     data: sortedNodes,
@@ -290,6 +319,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     }
   });
 
+  // 6. DOT LAYER (Core)
   const dotLayer = new ScatterplotLayer({
     id: 'market-particles',
     data: sortedNodes,
