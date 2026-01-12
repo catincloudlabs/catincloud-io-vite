@@ -107,7 +107,8 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     const currentIndex = history.findIndex(f => f.date === data.date);
     if (currentIndex <= 0) return [];
 
-    const LOOKBACK_FRAMES = 12;
+    // CHANGED: Reduced from 12 to 6. "Comet Tails" instead of "Wires".
+    const LOOKBACK_FRAMES = 6;
     const lookback = Math.max(0, currentIndex - LOOKBACK_FRAMES);
     const recentHistory = history.slice(lookback, currentIndex + 1);
 
@@ -135,16 +136,14 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
   }, [data, history, selectedTicker, highEnergyThreshold]); 
 
   // --- 5. VECTOR LOGIC (PREDICTION) ---
-  // NEW: Calculate the "Next Step" vector for active nodes
   const vectorData = useMemo(() => {
     if (!data?.nodes) return [];
 
     return data.nodes
-      // Only draw vectors for nodes with significant movement/energy to reduce noise
       .filter(n => n.energy > highEnergyThreshold || n.ticker === selectedTicker)
       .map(n => ({
         from: [n.x, n.y],
-        to: [n.x + n.vx, n.y + n.vy], // The position in the next frame
+        to: [n.x + n.vx, n.y + n.vy], 
         energy: n.energy,
         sentiment: n.sentiment
       }));
@@ -205,20 +204,18 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
       return [0, 0, 0, 0]; 
     },
     stroked: true,
-    // CHANGED: Boosted visibility (Alpha 20) and used Slate instead of White for subtle blend
     getLineColor: [...THEME.slate, 20], 
     getLineWidth: 1,
     lineWidthUnits: 'pixels',
     pickable: false 
   });
 
-  // 2. VECTOR LAYER (New Math Highlight)
+  // 2. VECTOR LAYER (Prediction)
   const vectorLayer = new LineLayer({
     id: 'momentum-vectors',
     data: vectorData,
     getSourcePosition: (d: any) => d.from,
     getTargetPosition: (d: any) => d.to,
-    // Color based on sentiment (bullish/bearish momentum)
     getColor: (d: any) => d.sentiment >= 0 ? [...THEME.mint, 150] : [...THEME.red, 150],
     getWidth: 1,
     widthUnits: 'pixels',
@@ -231,9 +228,9 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     data: trailData,
     getPath: (d: any) => d.path,
     getColor: (d: any) => {
-        if (d.sentiment > 0.1) return [...THEME.mint, 80]; 
-        if (d.sentiment < -0.1) return [...THEME.red, 80];
-        return [...THEME.slate, 40];
+        if (d.sentiment > 0.1) return [...THEME.mint, 60]; // Lower opacity (80->60)
+        if (d.sentiment < -0.1) return [...THEME.red, 60];
+        return [...THEME.slate, 30];
     },
     getWidth: 0.8,
     widthUnits: 'pixels',
@@ -341,7 +338,6 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
             views={new OrthographicView({ controller: true })}
             initialViewState={INITIAL_VIEW_STATE}
             controller={true}
-            // Draw order: Cells -> Vectors -> Trails -> Glow -> Synapses -> Dots
             layers={[cellLayer, vectorLayer, trailLayer, glowLayer, synapseLayer, dotLayer]} 
             style={{ backgroundColor: 'transparent' }} 
             onClick={(info: any) => {
