@@ -65,21 +65,17 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     return () => clearInterval(interval);
   }, []);
 
-  // --- 2. METRICS (ADJUSTED) ---
+  // --- 2. METRICS (TUNED) ---
   const { maxEnergy, highEnergyThreshold } = useMemo(() => {
     if (!data?.nodes || data.nodes.length === 0) return { maxEnergy: 0, highEnergyThreshold: 0 };
-    
     const energies = data.nodes.map(n => n.energy);
-    // Use the 98th percentile instead of absolute Max to avoid one crazy outlier
-    // skewing the entire map? For now, we'll just lower the threshold multiplier.
     const max = Math.max(...energies);
     
     return { 
         maxEnergy: max, 
-        // CHANGED: 0.5 -> 0.2 
-        // Loosened "Noise" filter. Now top 20% of energy gets trails/glow.
-        // This ensures MSFT/NVDA stay "Active" even on days with huge outliers.
-        highEnergyThreshold: max * 0.2
+        // DIRECTOR'S CHOICE: 15% (0.15)
+        // Ensures the map remains "active" even when huge outliers skew the scale.
+        highEnergyThreshold: max * 0.15
     };
   }, [data]);
 
@@ -87,10 +83,10 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
   const sortedNodes = useMemo(() => {
     if (!data?.nodes) return [];
     
-    // FILTER OUT NOISE (Hardcoded Junk)
+    // FILTER OUT NOISE
     const cleanNodes = data.nodes.filter(n => {
         if (n.ticker.includes('.WS')) return false;
-        if (n.ticker.includes('p')) return false; // Careful: Ensure raw data is Uppercase
+        if (n.ticker.includes('p')) return false;
         if (n.ticker === 'XYZ') return false;
         if (n.ticker.length === 5 && n.ticker.endsWith('Y') && !['SONY', 'BAYRY'].includes(n.ticker)) return false; 
         return true;
@@ -238,14 +234,13 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     getRadius: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return 18; 
         if (graphConnections?.some(c => c.target === d.ticker)) return 10; 
-        // ADDED: Small glow for "Active" tickers that have trails
         if (d.energy > highEnergyThreshold) return 6;
         return 0; 
     },
     getFillColor: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return [...THEME.mint, 40]; 
         if (graphConnections?.some(c => c.target === d.ticker)) return [...THEME.gold, 40]; 
-        if (d.energy > highEnergyThreshold) return [...THEME.slate, 20]; // Subtle ambient glow for majors
+        if (d.energy > highEnergyThreshold) return [...THEME.slate, 20]; 
         return [0,0,0,0];
     },
     stroked: false,
