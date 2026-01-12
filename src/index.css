@@ -713,6 +713,7 @@ input[type=range]::-moz-range-track {
 /* ==================================================================== */
 /* 7. RESPONSIVE REFINEMENTS                                            */
 /* ==================================================================== */
+
 @media (max-width: 768px) {
   /* --- HEADER OPTIMIZATION --- */
   .app-header { 
