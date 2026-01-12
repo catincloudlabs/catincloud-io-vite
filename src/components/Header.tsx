@@ -28,7 +28,8 @@ const Header: React.FC<HeaderProps> = ({
         <div className="header-chronometer">
           <div className="chrono-label">
             <Clock size={12} color="var(--accent-green)" />
-            <span style={{ marginLeft: '8px', letterSpacing: '0.1em', fontSize: '0.7rem' }}>
+            {/* Added class for mobile hiding */}
+            <span className="header-label-text" style={{ marginLeft: '8px', letterSpacing: '0.1em', fontSize: '0.7rem' }}>
               EVENT HORIZON
             </span>
           </div>

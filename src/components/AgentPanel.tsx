@@ -127,6 +127,11 @@ export function AgentPanel({
     const query = textOverride || inputValue.trim();
     if (!query) return;
 
+    // Mobile UX: Dismiss keyboard to show results
+    if (window.innerWidth < 768) {
+      (document.activeElement as HTMLElement)?.blur();
+    }
+
     setInputValue("");
     
     const context = selectedTicker && currentFrame 
@@ -274,7 +279,7 @@ export function AgentPanel({
           </div>
           
           <div className="disclaimer-footer" aria-hidden="true">
-            SIMULATION ONLY. NOT FINANCIAL ADVICE. SYSTEM ONLINE V2.4.
+            SIMULATION ONLY. NOT FINANCIAL ADVICE.
           </div>
         </>
       )}

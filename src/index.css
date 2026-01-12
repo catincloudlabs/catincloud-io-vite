@@ -614,35 +614,65 @@ input[type=range]::-moz-range-track {
 }
 
 /* ==================================================================== */
-/* 7. RESPONSIVE                                                        */
+/* HEADER SELECTOR (DARK MODE FIX)                                      */
 /* ==================================================================== */
-@media (max-width: 768px) {
-  .app-header { padding: 0 16px; }
-  .chrono-value { font-size: 1.1rem; }
-  
-  /* Stack Bio/Architecture content */
-  .bio-grid { flex-direction: column; align-items: center; text-align: center; }
-  .bio-text div { justify-content: center; }
-  .bio-avatar img { width: 100px; height: 100px; }
-  
-  /* Mobile Slider Centered */
-  .timeline-slider-container {
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 90%;
-    max-width: none;
-  }
-  
-  /* Agent Above Slider */
-  .agent-panel-wrapper {
-    right: 12px; left: 12px; width: auto;
-    bottom: 120px; 
-  }
-  
-  .agent-terminal.expanded { height: 40vh; }
-  .terminal-input { font-size: 16px !important; }
-  .modal-box { width: 95%; max-height: 80vh; }
+.header-selector {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.03); 
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+  height: 30px; 
+  min-width: 100px;
+  transition: all 0.2s;
+}
+
+.header-selector:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.selector-icon {
+  position: absolute; 
+  left: 8px;
+  pointer-events: none;
+  display: flex; 
+  align-items: center;
+}
+
+.selector-arrow {
+  position: absolute; 
+  right: 8px;
+  pointer-events: none;
+  color: var(--text-muted);
+  display: flex; 
+  align-items: center;
+}
+
+.ticker-select {
+  appearance: none; 
+  -webkit-appearance: none;
+  background: transparent;
+  border: none;
+  width: 100%; 
+  height: 100%;
+  padding: 0 24px 0 28px; 
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.75rem; 
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  outline: none;
+  text-transform: uppercase;
+  color-scheme: dark; 
+}
+.ticker-select option {
+  background-color: #0f172a;
+  color: var(--text-primary);
+  padding: 8px;
+  font-size: 0.8rem;
 }
 
 /* ==================================================================== */
@@ -681,72 +711,89 @@ input[type=range]::-moz-range-track {
 }
 
 /* ==================================================================== */
-/* HEADER SELECTOR (DARK MODE FIX)                                      */
+/* 7. RESPONSIVE REFINEMENTS                                            */
 /* ==================================================================== */
-.header-selector {
-  position: relative;
-  display: flex;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.03); 
-  border: 1px solid var(--glass-border);
-  border-radius: 6px;
-  
-  height: 30px; 
-  min-width: 110px; /* Adjusted width */
-  
-  transition: all 0.2s;
-}
+@media (max-width: 768px) {
+  /* --- HEADER OPTIMIZATION --- */
+  .app-header { 
+    padding: 0 16px; 
+    height: 64px; /* Taller for touch targets */
+  }
 
-.header-selector:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
-}
-
-.selector-icon {
-  position: absolute; 
-  left: 8px;
-  pointer-events: none;
-  display: flex; 
-  align-items: center;
-}
-
-.selector-arrow {
-  position: absolute; 
-  right: 8px;
-  pointer-events: none;
-  color: var(--text-muted);
-  display: flex; 
-  align-items: center;
-}
-
-.ticker-select {
-  appearance: none; 
-  -webkit-appearance: none;
-  background: transparent;
-  border: none;
-  width: 100%; 
-  height: 100%;
+  /* Hide the "EVENT HORIZON" text, keep the icon */
+  .header-label-text { display: none; }
   
-  /* PADDING */
-  padding: 0 24px 0 28px; 
-  
-  color: var(--text-primary);
-  font-family: var(--font-mono);
-  font-size: 0.75rem; 
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  outline: none;
-  text-transform: uppercase;
-  
-  /* CRITICAL: Forces the native dropdown to be dark */
-  color-scheme: dark; 
-}
+  /* Make the date larger */
+  .chrono-value { font-size: 1rem; }
 
-/* Fallback for browsers that don't support color-scheme on inputs */
-.ticker-select option {
-  background-color: #0f172a;
-  color: var(--text-primary);
-  padding: 8px;
-  font-size: 0.8rem;
+  /* Increase Touch Targets for Icons */
+  .header-icon-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  /* Expand the Selector for thumb access */
+  .header-selector {
+    height: 40px;
+    min-width: 110px;
+  }
+  
+  /* --- TIMELINE SLIDER --- */
+  /* Center it and respect the bottom safe area (iPhone Home Bar) */
+  .timeline-slider-container {
+    bottom: calc(20px + env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%);
+    width: 92%;
+    max-width: none;
+    /* Glass morphism stronger on mobile */
+    background: rgba(15, 23, 42, 0.95);
+  }
+
+  /* --- AGENT PANEL --- */
+  .agent-panel-wrapper {
+    left: 12px; 
+    right: 12px; 
+    width: auto;
+    /* Position it above the slider + some breathing room */
+    bottom: calc(100px + env(safe-area-inset-bottom)); 
+  }
+  
+  /* Give the terminal more height when open on mobile */
+  .agent-terminal.expanded { 
+    height: 55vh; 
+    max-height: 500px;
+  }
+
+  /* Prevent iOS zoom on inputs */
+  .terminal-input { 
+    font-size: 16px !important; 
+  }
+
+  /* Larger send button */
+  .input-wrapper {
+    padding: 12px;
+  }
+  .send-btn {
+    padding: 8px;
+  }
+
+  /* --- MODALS --- */
+  .modal-box {
+    width: 100%;
+    height: 100%; /* Full screen modal on mobile */
+    max-height: none;
+    border-radius: 0;
+    border: none;
+  }
+  
+  .bio-grid { 
+    flex-direction: column; 
+    align-items: center; 
+    text-align: center; 
+  }
+  
+  /* Hide desktop arrows in Architecture diagram */
+  .desktop-arrow { display: none; }
+  .mobile-arrow { display: block; margin: 10px 0; }
 }

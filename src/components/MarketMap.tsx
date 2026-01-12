@@ -37,10 +37,12 @@ interface MarketMapProps {
 const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
 const INITIAL_VIEW_STATE = {
-  target: isMobile ? [0, 0, 0] : [0, 0, 0], 
-  zoom: isMobile ? 0.6 : 1.0, 
-  minZoom: 0.1,
-  maxZoom: 10
+  // Mobile: Center at 0,0 but slightly zoomed out compared to desktop
+  target: [0, 0, 0], 
+  zoom: isMobile ? 0.5 : 1.0, 
+  // Stricter zoom limits on mobile to prevent "lost in void"
+  minZoom: isMobile ? 0.3 : 0.5,
+  maxZoom: isMobile ? 5 : 10
 };
 
 // --- THEME CONSTANTS (Synced with index.css) ---
