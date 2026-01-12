@@ -191,20 +191,22 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
 
   // --- LAYERS ----------------------------------------------------------------
 
-  // 1. BACKGROUND CELLS (Grid - Now Dotted)
+  // 1. BACKGROUND CELLS (Grid - Dotted & Visible)
   const cellLayer = new PolygonLayer({
     id: 'voronoi-cells',
     data: voronoiData,
     getPolygon: (d: any) => d.polygon,
     getFillColor: (d: any) => {
       const s = d.node.sentiment;
-      if (s > 0.1) return [...THEME.mint, 3]; 
-      if (s < -0.1) return [...THEME.red, 3];  
+      // INCREASED VISIBILITY (3 -> 25)
+      if (s > 0.1) return [...THEME.mint, 25]; 
+      if (s < -0.1) return [...THEME.red, 25];  
       return [0, 0, 0, 0]; 
     },
     stroked: true,
-    getLineColor: [...THEME.slate, 15], // Subtle Slate
-    getLineWidth: 1,                    // Keep 1px so dots are visible
+    // INCREASED VISIBILITY (15 -> 30)
+    getLineColor: [...THEME.slate, 30], 
+    getLineWidth: 1,
     lineWidthUnits: 'pixels',
     pickable: false,
     
@@ -223,14 +225,13 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     getWidth: 1.5,
     widthUnits: 'pixels',
     capRounded: true,
-    
     // TEXTURE: Dashed Line (6px dash, 4px gap)
     getDashArray: [6, 4], 
     dash: true,           
     extensions: [new PathStyleExtension({ dash: true })] 
   });
 
-  // 3. GHOST TRAILS (History - Solid)
+  // 3. GHOST TRAILS (History - Highlighted on Selection)
   const trailLayer = new PathLayer({
     id: 'market-trails',
     data: trailData,
