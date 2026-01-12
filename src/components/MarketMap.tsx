@@ -37,11 +37,14 @@ interface MarketMapProps {
 // Mobile Detection
 const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
+// --- ZOOM CONFIGURATION UPDATED ---
 const INITIAL_VIEW_STATE = {
   target: [0, 0, 0], 
-  zoom: isMobile ? 0.5 : 1.0, 
-  minZoom: isMobile ? 0.3 : 0.5,
-  maxZoom: isMobile ? 5 : 10
+  // ZOOOMED IN: Start closer to the action
+  zoom: isMobile ? 0.9 : 1.8, 
+  // Prevent zooming out too far (keep the "void" at bay)
+  minZoom: isMobile ? 0.5 : 0.8,
+  maxZoom: isMobile ? 8 : 15
 };
 
 // --- VISUAL IDENTITY SYSTEM ---
@@ -221,16 +224,14 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     }
   });
 
-  // GLOW LAYER (Simulated Bloom)
   const glowLayer = new ScatterplotLayer({
     id: 'market-glow',
     data: sortedNodes,
     getPosition: (d: HydratedNode) => [d.x, d.y],
     radiusUnits: 'common',
     getRadius: (d: HydratedNode) => {
-        // INCREASED VISIBILITY:
-        if (d.ticker === selectedTicker) return 18; // Hero Bloom
-        if (graphConnections?.some(c => c.target === d.ticker)) return 10; // Connected Bloom
+        if (d.ticker === selectedTicker) return 18; 
+        if (graphConnections?.some(c => c.target === d.ticker)) return 10; 
         return 0; 
     },
     getFillColor: (d: HydratedNode) => {
@@ -249,24 +250,21 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     }
   });
 
-  // CORE LAYER (The Data)
   const dotLayer = new ScatterplotLayer({
     id: 'market-particles',
     data: sortedNodes,
     getPosition: (d: HydratedNode) => [d.x, d.y],
     radiusUnits: 'common', 
     getRadius: (d: HydratedNode) => {
-        // INCREASED SIZES:
-        if (d.ticker === selectedTicker) return 6.0; // Hero
-        if (graphConnections?.some(c => c.target === d.ticker)) return 3.0; // Linked
-        return 1.5; // Default "Dust" (Visible size)
+        if (d.ticker === selectedTicker) return 6.0; 
+        if (graphConnections?.some(c => c.target === d.ticker)) return 3.0; 
+        return 1.5; 
     },
     getFillColor: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return [...THEME.glass, 255]; 
         if (graphConnections?.some(c => c.target === d.ticker)) return [...THEME.gold, 255]; 
         if (d.sentiment > 0.1) return [...THEME.mint, 200];   
         if (d.sentiment < -0.1) return [...THEME.red, 200];  
-        // INCREASED OPACITY (120 -> 180):
         return [...THEME.slate, 180]; 
     },
     stroked: true,
