@@ -2,6 +2,8 @@ import os
 import requests
 import time
 import concurrent.futures
+import numpy as np  # PATCH 1: Added for math validation
+from collections import Counter # PATCH 2: Added for day counting
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from supabase import create_client, Client
@@ -17,7 +19,6 @@ openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 supabase: Client = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SERVICE_KEY"))
 
 # --- CONFIGURATION: TARGETED REGIME ---
-# "The AI Catalyst Window"
 START_DATE = "2025-11-01"
 END_DATE = datetime.now().strftime('%Y-%m-%d')
 MAX_WORKERS = 20 
@@ -56,15 +57,30 @@ TICKER_UNIVERSE = [
 @retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
 def get_embedding(text):
     text = text.replace("\n", " ")
-    return openai_client.embeddings.create(input=[text], model="text-embedding-3-small").data[0].embedding
+    try:
+        vector = openai_client.embeddings.create(input=[text], model="text-embedding-3-small").data[0].embedding
+        
+        # PATCH 1: The "Zero Vector" Firewall
+        # Prevents UMAP Overflow by rejecting corrupt math
+        if np.isnan(vector).any():
+            print(f"⚠️ OpenAI returned NaNs. Skipping...")
+            return None
+        if np.allclose(vector, 0):
+            print(f"⚠️ OpenAI returned Zero-Vector. Skipping...")
+            return None
+            
+        return vector
+    except Exception as e:
+        print(f"Embedding Error: {e}")
+        return None
 
 def upload_stock_batch(records):
     if not records: return
     try:
         supabase.table("stocks_ohlc").upsert(
             records, 
-            on_conflict="ticker,date", 
-            ignore_duplicates=True
+            on_conflict="ticker,date"
+            # PATCH 3: Removed ignore_duplicates=True so we overwrite bad data
         ).execute()
         print(f" 💾 Saved {len(records)} rows to DB.")
     except Exception as e:
@@ -110,7 +126,6 @@ def upload_news_batch(vectors, edges):
 
 @retry(stop=stop_after_attempt(5), wait=wait_random_exponential(min=1, max=10))
 def fetch_ticker_history(ticker):
-    # UPDATED: Use hardcoded dates instead of relative math
     url = f"{POLYGON_BASE_URL}/v2/aggs/ticker/{ticker}/range/1/day/{START_DATE}/{END_DATE}?adjusted=true&sort=asc&apiKey={MASSIVE_KEY}"
     
     resp = requests.get(url, timeout=15)
@@ -150,9 +165,12 @@ def process_single_article(article):
     if len(text_content) < 20 or not url: 
         return None, []
 
+    # Get safe embedding (handles None returns)
+    vector = get_embedding(text_content)
+    if vector is None:
+        return None, []
+
     try:
-        vector = get_embedding(text_content)
-        
         vector_record = {
             "ticker": "MARKET",
             "headline": headline,
@@ -176,7 +194,6 @@ def process_single_article(article):
 def backfill_news():
     print(f"\n📰 Starting Parallel News Backfill ({START_DATE} to {END_DATE})...")
     
-    # UPDATED: Use both .gte (start) and .lte (end) to bound the regime
     url = f"{POLYGON_BASE_URL}/v2/reference/news?published_utc.gte={START_DATE}&published_utc.lte={END_DATE}&limit=1000&sort=published_utc&order=desc&apiKey={MASSIVE_KEY}"
     
     total_processed = 0
@@ -246,9 +263,26 @@ if __name__ == "__main__":
             completed += 1
             if completed % 50 == 0: print(f"  ... {completed}/{len(TICKER_UNIVERSE)}")
 
-    print(f"📦 Uploading {len(all_stock_records)} historical stock rows...")
-    for i in range(0, len(all_stock_records), DB_BATCH_SIZE):
-        batch = all_stock_records[i:i + DB_BATCH_SIZE]
+    # PATCH 2: The "Global Day" Validator (Prunes Sparse Days)
+    # Prevents Disconnected Graph Errors by enforcing minimal density
+    print(f"🧹 Validating Data Density...")
+    day_counts = Counter(r['date'] for r in all_stock_records)
+    min_tickers = len(TICKER_UNIVERSE) * 0.5 # Require 50% universe participation
+    
+    valid_records = []
+    dropped_days = 0
+    for r in all_stock_records:
+        if day_counts[r['date']] >= min_tickers:
+            valid_records.append(r)
+        else:
+            dropped_days += 1
+            
+    if dropped_days > 0:
+        print(f"   📉 Dropped {dropped_days} rows (Sparse/Holiday/Weekend data).")
+    
+    print(f"📦 Uploading {len(valid_records)} CLEAN stock rows...")
+    for i in range(0, len(valid_records), DB_BATCH_SIZE):
+        batch = valid_records[i:i + DB_BATCH_SIZE]
         upload_stock_batch(batch)
     
     # 2. NEWS
