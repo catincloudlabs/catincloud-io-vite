@@ -2,8 +2,8 @@ import os
 import requests
 import time
 import concurrent.futures
-import numpy as np  # PATCH 1: Added for math validation
-from collections import Counter # PATCH 2: Added for day counting
+import numpy as np
+from collections import Counter
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from supabase import create_client, Client
@@ -18,8 +18,8 @@ POLYGON_BASE_URL = "https://api.polygon.io"
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 supabase: Client = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SERVICE_KEY"))
 
-# --- CONFIGURATION: TARGETED REGIME ---
-START_DATE = "2025-11-01"
+# --- CONFIGURATION ---
+START_DATE = "2025-10-01"
 END_DATE = datetime.now().strftime('%Y-%m-%d')
 MAX_WORKERS = 20 
 DB_BATCH_SIZE = 200
@@ -59,47 +59,39 @@ def get_embedding(text):
     text = text.replace("\n", " ")
     try:
         vector = openai_client.embeddings.create(input=[text], model="text-embedding-3-small").data[0].embedding
-        
-        # PATCH 1: The "Zero Vector" Firewall
-        # Prevents UMAP Overflow by rejecting corrupt math
-        if np.isnan(vector).any():
-            print(f"⚠️ OpenAI returned NaNs. Skipping...")
+        # SANITY CHECK: ZERO VECTOR PROTECTION
+        if np.allclose(vector, 0) or np.isnan(vector).any():
+            print(f"⚠️ Corrupt vector detected. Skipping.")
             return None
-        if np.allclose(vector, 0):
-            print(f"⚠️ OpenAI returned Zero-Vector. Skipping...")
-            return None
-            
         return vector
     except Exception as e:
-        print(f"Embedding Error: {e}")
+        print(f"Embedding API Error: {e}")
         return None
 
 def upload_stock_batch(records):
     if not records: return
     try:
+        # Removed ignore_duplicates=True so we overwrite bad data
         supabase.table("stocks_ohlc").upsert(
             records, 
             on_conflict="ticker,date"
-            # PATCH 3: Removed ignore_duplicates=True so we overwrite bad data
         ).execute()
         print(f" 💾 Saved {len(records)} rows to DB.")
     except Exception as e:
         print(f" ❌ DB Error (Batch Skipped): {str(e)[:100]}...")
 
 def upload_news_batch(vectors, edges):
-    """ Helper to atomically upload a batch of news """
     if not vectors: return
     try:
-        # 1. Upload Vectors (Must happen first to get IDs)
+        # 1. Upload Vectors
         res = supabase.table("news_vectors").upsert(
             vectors, 
             on_conflict="url"
         ).execute()
         
-        # 2. Map new IDs to edges
+        # 2. Map IDs
         if res.data:
             url_to_id = {item['url']: item['id'] for item in res.data}
-            
             final_edges = []
             for edge_stub in edges:
                 article_id = url_to_id.get(edge_stub['source_url'])
@@ -110,7 +102,6 @@ def upload_news_batch(vectors, edges):
                         "edge_type": "MENTIONS",
                         "weight": edge_stub['weight']
                     })
-            
             if final_edges:
                 supabase.table("knowledge_graph").upsert(
                     final_edges, 
@@ -118,7 +109,6 @@ def upload_news_batch(vectors, edges):
                     ignore_duplicates=True
                 ).execute()
                 print(f"   ↳ Linked {len(final_edges)} graph edges.")
-                
     except Exception as e:
         print(f" ❌ News Upload Error: {str(e)[:100]}")
 
@@ -127,18 +117,12 @@ def upload_news_batch(vectors, edges):
 @retry(stop=stop_after_attempt(5), wait=wait_random_exponential(min=1, max=10))
 def fetch_ticker_history(ticker):
     url = f"{POLYGON_BASE_URL}/v2/aggs/ticker/{ticker}/range/1/day/{START_DATE}/{END_DATE}?adjusted=true&sort=asc&apiKey={MASSIVE_KEY}"
-    
     resp = requests.get(url, timeout=15)
-    
-    if resp.status_code == 429:
-        raise Exception("Rate Limited")
-        
-    if resp.status_code != 200:
-        return []
-        
+    if resp.status_code == 429: raise Exception("Rate Limited")
+    if resp.status_code != 200: return []
     data = resp.json()
     if "results" not in data: return []
-        
+    
     records = []
     for bar in data["results"]:
         date_str = datetime.fromtimestamp(bar["t"] / 1000).strftime('%Y-%m-%d')
@@ -153,22 +137,19 @@ def fetch_ticker_history(ticker):
         })
     return records
 
-# --- PART 2: PARALLELIZED NEWS ARCHIVE ---
+# --- PART 2: NEWS ARCHIVE ---
 
 def process_single_article(article):
-    """ Worker function to process one article independently """
     headline = article.get("title", "")
     description = article.get("description", "") or ""
     text_content = f"{headline}: {description}"
     url = article.get("article_url")
     
-    if len(text_content) < 20 or not url: 
-        return None, []
+    if len(text_content) < 20 or not url: return None, []
 
-    # Get safe embedding (handles None returns)
+    # Safe embedding call
     vector = get_embedding(text_content)
-    if vector is None:
-        return None, []
+    if vector is None: return None, []
 
     try:
         vector_record = {
@@ -178,7 +159,6 @@ def process_single_article(article):
             "url": url,
             "embedding": vector
         }
-        
         edge_stubs = []
         for t in article.get("tickers", []):
             edge_stubs.append({
@@ -186,39 +166,30 @@ def process_single_article(article):
                 "target_node": t,
                 "weight": 1.0
             })
-            
         return vector_record, edge_stubs
-    except Exception as e:
+    except Exception:
         return None, []
 
 def backfill_news():
     print(f"\n📰 Starting Parallel News Backfill ({START_DATE} to {END_DATE})...")
-    
     url = f"{POLYGON_BASE_URL}/v2/reference/news?published_utc.gte={START_DATE}&published_utc.lte={END_DATE}&limit=1000&sort=published_utc&order=desc&apiKey={MASSIVE_KEY}"
     
-    total_processed = 0
     next_url = url
+    total_processed = 0
     
     while next_url:
         try:
             resp = requests.get(next_url, timeout=20)
-            if resp.status_code != 200:
-                print(f"❌ News Error {resp.status_code}")
-                break
-                
+            if resp.status_code != 200: break
             data = resp.json()
             articles = data.get("results", [])
-            
             if not articles: break
             
-            print(f" 📥 Fetched {len(articles)} articles. Crunching embeddings in parallel...")
-            
-            page_vectors = []
-            page_edges = []
+            print(f" 📥 Fetched {len(articles)} articles. Processing...")
+            page_vectors, page_edges = [], []
             
             with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
                 results = list(executor.map(process_single_article, articles))
-                
                 for vec, edges in results:
                     if vec:
                         page_vectors.append(vec)
@@ -226,20 +197,16 @@ def backfill_news():
             
             chunk_size = 50
             for i in range(0, len(page_vectors), chunk_size):
-                upload_news_batch(
-                    page_vectors[i:i+chunk_size], 
-                    page_edges 
-                )
+                upload_news_batch(page_vectors[i:i+chunk_size], page_edges)
                 
             total_processed += len(page_vectors)
-            print(f" ✅ Page complete. Total embedded: {total_processed}")
+            print(f" ✅ Processed {total_processed} articles so far.")
             
             next_url = data.get("next_url")
             if next_url: next_url += f"&apiKey={MASSIVE_KEY}"
             else: break
-            
         except Exception as e:
-            print(f" ❌ Critical Error in News Loop: {e}")
+            print(f" ❌ Loop Error: {e}")
             break
 
 # --- EXECUTION ---
@@ -253,39 +220,23 @@ if __name__ == "__main__":
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         future_to_ticker = {executor.submit(fetch_ticker_history, t): t for t in TICKER_UNIVERSE}
-        completed = 0
         for future in concurrent.futures.as_completed(future_to_ticker):
             try:
                 data = future.result()
                 if data: all_stock_records.extend(data)
-            except Exception as e:
-                print(f"Worker Error: {e}")
-            completed += 1
-            if completed % 50 == 0: print(f"  ... {completed}/{len(TICKER_UNIVERSE)}")
+            except Exception: pass
 
-    # PATCH 2: The "Global Day" Validator (Prunes Sparse Days)
-    # Prevents Disconnected Graph Errors by enforcing minimal density
-    print(f"🧹 Validating Data Density...")
+    # HYGIENE: Prune Sparse Days
+    print("🧹 Validating Data Density...")
     day_counts = Counter(r['date'] for r in all_stock_records)
-    min_tickers = len(TICKER_UNIVERSE) * 0.5 # Require 50% universe participation
-    
-    valid_records = []
-    dropped_days = 0
-    for r in all_stock_records:
-        if day_counts[r['date']] >= min_tickers:
-            valid_records.append(r)
-        else:
-            dropped_days += 1
-            
-    if dropped_days > 0:
-        print(f"   📉 Dropped {dropped_days} rows (Sparse/Holiday/Weekend data).")
-    
+    threshold = len(TICKER_UNIVERSE) * 0.5
+    valid_records = [r for r in all_stock_records if day_counts[r['date']] >= threshold]
+    print(f"   📉 Pruned {len(all_stock_records) - len(valid_records)} rows (Sparse Days).")
+
     print(f"📦 Uploading {len(valid_records)} CLEAN stock rows...")
     for i in range(0, len(valid_records), DB_BATCH_SIZE):
-        batch = valid_records[i:i + DB_BATCH_SIZE]
-        upload_stock_batch(batch)
+        upload_stock_batch(valid_records[i:i + DB_BATCH_SIZE])
     
     # 2. NEWS
     backfill_news()
-    
     print(f"\n✨ BACKFILL COMPLETE in {time.time() - start_time:.2f}s")
