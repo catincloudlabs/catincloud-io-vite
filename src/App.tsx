@@ -4,16 +4,15 @@ import { MarketMap, HydratedNode, MarketFrame } from './components/MarketMap';
 import { AgentPanel } from './components/AgentPanel';
 import Header from './components/Header';
 import { useKnowledgeGraph } from './hooks/useKnowledgeGraph';
-
-// NEW: Legend Component
 import Legend from './components/Legend';
-
 import ArchitectureModal from './components/ArchitectureModal';
 import BioModal from './components/BioModal';
 
+// NEW: Import the spline math
+import { catmullRom, catmullRomDerivative } from './utils/splineInterpolation';
+
 export type { MarketFrame, HydratedNode };
 
-// MAG 7 + KEY INDICES
 const WATCHLIST = [
   "NVDA", "TSLA", "AAPL", "MSFT", "GOOGL", "AMZN", "META", 
   "SPY", "QQQ", "IWM"
@@ -28,7 +27,6 @@ function App() {
   const [isArchOpen, setArchOpen] = useState(false);
   const [isBioOpen, setBioOpen] = useState(false);
 
-  // The brain hook
   const { connections, loading } = useKnowledgeGraph(selectedTicker);
 
   useEffect(() => {
@@ -44,11 +42,7 @@ function App() {
         if (!jsonPayload?.data) throw new Error("JSON missing 'data' field");
         // @ts-ignore
         const hydratedFrames = hydrateMarketData(jsonPayload.data);
-        
-        // 1. Set Data
         setFrames(hydratedFrames);
-        
-        // 2. Set Default Time to "NOW" (The end of the dataset)
         if (hydratedFrames.length > 0) {
             setTimelineProgress(hydratedFrames.length - 1);
         }
@@ -59,27 +53,69 @@ function App() {
       });
   }, []);
 
+  // --- UPDATED INTERPOLATION ENGINE ---
   const { displayNodes, currentDateLabel, currentFrameData } = useMemo(() => {
     if (!frames || frames.length === 0) {
         return { displayNodes: [], currentDateLabel: "INITIALIZING...", currentFrameData: null };
     }
-    const safeProgress = Math.min(timelineProgress, frames.length - 1.0001);
-    const frameIndex = Math.floor(safeProgress);
-    const dayProgress = safeProgress % 1; 
-    const currentFrame = frames[frameIndex] || frames[frames.length - 1];
 
-    if (!currentFrame) return { displayNodes: [], currentDateLabel: "ERROR", currentFrameData: null };
+    // 1. Calculate Indices
+    const maxIndex = frames.length - 1;
+    const safeProgress = Math.max(0, Math.min(timelineProgress, maxIndex - 0.0001));
+    const currentIndex = Math.floor(safeProgress);
+    const t = safeProgress % 1; // Time t (0 to 1) between frames
 
-    const nodes = currentFrame.nodes.map(node => ({
-      ...node,
-      x: node.x + (node.vx * dayProgress),
-      y: node.y + (node.vy * dayProgress),
-    }));
+    // 2. Grab the 4 frames needed for Cubic Spline (P0, P1, P2, P3)
+    // We clamp boundaries: if P0 doesn't exist, reuse P1.
+    const f0 = frames[Math.max(0, currentIndex - 1)];       // Previous
+    const f1 = frames[currentIndex];                        // Current (Start of segment)
+    const f2 = frames[Math.min(maxIndex, currentIndex + 1)];// Next (End of segment)
+    const f3 = frames[Math.min(maxIndex, currentIndex + 2)];// Lookahead
 
-    return { displayNodes: nodes, currentDateLabel: currentFrame.date, currentFrameData: currentFrame };
+    if (!f1) return { displayNodes: [], currentDateLabel: "ERROR", currentFrameData: null };
+
+    // 3. Create Lookups for O(1) access to neighbors
+    // Performance Note: creating Maps every frame is okay for <1000 nodes.
+    const map0 = new Map(f0.nodes.map(n => [n.ticker, n]));
+    const map2 = new Map(f2.nodes.map(n => [n.ticker, n]));
+    const map3 = new Map(f3.nodes.map(n => [n.ticker, n]));
+
+    // 4. Interpolate every node
+    const nodes = f1.nodes.map(node => {
+      const ticker = node.ticker;
+
+      // Get neighbors. Fallback to current node if neighbor is missing (e.g. IPOs or delistings)
+      const p0 = map0.get(ticker) || node;
+      const p1 = node;
+      const p2 = map2.get(ticker) || node;
+      const p3 = map3.get(ticker) || p2; // Fallback to p2 if p3 missing
+
+      // Apply Catmull-Rom Spline
+      const smoothX = catmullRom(p0.x, p1.x, p2.x, p3.x, t);
+      const smoothY = catmullRom(p0.y, p1.y, p2.y, p3.y, t);
+
+      // Apply Spline Derivative for smooth Velocity vectors
+      const smoothVx = catmullRomDerivative(p0.x, p1.x, p2.x, p3.x, t);
+      const smoothVy = catmullRomDerivative(p0.y, p1.y, p2.y, p3.y, t);
+
+      return {
+        ...node,
+        x: smoothX,
+        y: smoothY,
+        // Overwrite linear velocity with instantaneous curve velocity
+        // This makes the arrows in MarketMap point exactly along the curve path
+        vx: smoothVx, 
+        vy: smoothVy 
+      };
+    });
+
+    return { 
+      displayNodes: nodes, 
+      currentDateLabel: f1.date, 
+      currentFrameData: f1 
+    };
   }, [frames, timelineProgress]);
 
-  // ERROR STATE
   if (error) return (
     <div className="app-error-container">
       <h1 className="app-error-title">System Error</h1>
@@ -88,7 +124,6 @@ function App() {
     </div>
   );
 
-  // LOADING STATE
   if (!frames) return (
     <div className="app-loading-container">
       <h1 className="app-loading-text">INITIALIZING ENGINE...</h1>
@@ -97,8 +132,6 @@ function App() {
 
   return (
     <div className="app-root">
-      
-      {/* Map Layer */}
       <MarketMap 
         data={{ date: currentDateLabel, nodes: displayNodes }} 
         history={frames || []}
@@ -108,7 +141,6 @@ function App() {
         graphConnections={connections}       
       />
 
-      {/* Header */}
       <Header 
         dateLabel={currentDateLabel} 
         onOpenArch={() => setArchOpen(true)}
@@ -118,10 +150,8 @@ function App() {
         watchlist={WATCHLIST}
       />
 
-      {/* Legend (Bottom Left) */}
       <Legend />
 
-      {/* Agent Panel (Bottom Right) */}
       <div className="agent-panel-wrapper">
         <AgentPanel 
           currentFrame={currentFrameData} 
@@ -131,7 +161,6 @@ function App() {
         />
       </div>
 
-      {/* Slider */}
       <div className="timeline-slider-container">
         <div className="slider-label-row">
           <span>HISTORY</span>
@@ -142,7 +171,7 @@ function App() {
           type="range" 
           min="0" 
           max={Math.max(0, frames.length - 1)} 
-          step="0.01" 
+          step="0.01" // High resolution for smooth sliding
           value={timelineProgress}
           onChange={(e) => setTimelineProgress(parseFloat(e.target.value))}
           aria-label="Simulation Timeline"
