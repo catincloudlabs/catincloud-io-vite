@@ -120,7 +120,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     const currentIndex = history.findIndex(f => f.date === data.date);
     if (currentIndex <= 0) return [];
 
-    const LOOKBACK_FRAMES = 8; 
+    const LOOKBACK_FRAMES = 14; 
     const lookback = Math.max(0, currentIndex - LOOKBACK_FRAMES);
     const recentHistory = history.slice(lookback, currentIndex + 1);
 
