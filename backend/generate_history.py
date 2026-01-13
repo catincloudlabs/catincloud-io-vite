@@ -1,182 +1,237 @@
 import os
 import json
-import numpy as np
 import pandas as pd
+import numpy as np
 import umap
-from supabase import create_client, Client
-from sklearn.preprocessing import RobustScaler
-from textblob import TextBlob
-from dotenv import load_dotenv
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
+from supabase import create_client, Client, ClientOptions
+from tenacity import retry, stop_after_attempt, wait_exponential
+import httpx
+from textblob import TextBlob
+from sklearn.preprocessing import RobustScaler  # <--- FIX C
 
 # 1. SETUP
 load_dotenv()
-supabase: Client = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SERVICE_KEY"))
 
-# --- CONFIGURATION ---
+timeout_config = httpx.Timeout(120.0, connect=10.0, read=120.0)
+opts = ClientOptions(postgrest_client_timeout=120)
+
+supabase: Client = create_client(
+    os.getenv("SUPABASE_URL"), 
+    os.getenv("SUPABASE_SERVICE_KEY"),
+    options=opts
+)
+
+# CONFIG
+HISTORY_DAYS = 73
 UMAP_NEIGHBORS = 30       
 UMAP_MIN_DIST = 0.05      
-UMAP_COMPONENTS = 2       # 2D Optimized
-LOOKBACK_DAYS = 200       # Buffer for volatility calc
+TARGET_CANVAS_SIZE = 150 
 
-# --- HELPERS ---
-def sanitize(val):
-    """Prevents JSON errors by converting NaN/Inf to 0."""
-    if val is None or pd.isna(val) or np.isinf(val):
-        return 0.0
-    return float(val)
+# --- MATH UTILS ---
 
-def get_sentiment(text):
-    """Returns polarity: -1.0 (Negative) to 1.0 (Positive)."""
-    if not text: return 0.0
-    return TextBlob(text).sentiment.polarity
+def normalize_to_bounds(matrix, target_radius=150):
+    """ Forces the cluster to fill the screen (-150 to 150). """
+    centroid = np.mean(matrix, axis=0)
+    centered = matrix - centroid
+    distances = np.linalg.norm(centered, axis=1)
+    current_radius = np.percentile(distances, 95)
+    if current_radius == 0: return matrix 
+    scale_factor = target_radius / current_radius
+    return centered * scale_factor
 
-# --- CORE FUNCTIONS ---
+def align_to_reference(source_matrix, target_matrix, source_tickers, target_tickers):
+    """ Rotates target_matrix (Today) to best fit source_matrix (Yesterday). """
+    common_tickers = list(set(source_tickers) & set(target_tickers))
+    if len(common_tickers) < 3: return target_matrix
 
-def fetch_market_data():
-    print("📥 Fetching Stock History...")
+    src_indices = [source_tickers.index(t) for t in common_tickers]
+    tgt_indices = [target_tickers.index(t) for t in common_tickers]
     
-    start_date = (datetime.now() - timedelta(days=LOOKBACK_DAYS)).strftime('%Y-%m-%d')
-    
-    response = supabase.table("stocks_ohlc")\
-        .select("date, ticker, close")\
-        .gte("date", start_date)\
-        .order("date")\
-        .execute()
-        
-    if not response.data: 
-        raise Exception("No stock data found! Run backfill_engine.py first.")
-    
-    df = pd.DataFrame(response.data)
-    
-    # Pivot: Rows = Dates, Cols = Tickers
-    price_pivot = df.pivot(index="date", columns="ticker", values="close").sort_index()
-    
-    # CLEANING: Forward fill gaps, then backfill start
-    price_pivot = price_pivot.ffill().bfill().dropna(axis=1, how='any')
-    
-    # PHYSICS ENGINE
-    log_returns = np.log(price_pivot / price_pivot.shift(1)).fillna(0)
-    
-    # Energy (Volatility): 14-day rolling std dev * 1000 (Radius)
-    volatility = log_returns.rolling(window=14).std().iloc[-1] * 1000
-    
-    # Velocity (Momentum): 5-day simple return
-    momentum = price_pivot.pct_change(5).iloc[-1]
-    
-    print(f"   ✅ Processed {len(price_pivot.columns)} tickers over {len(price_pivot)} days.")
-    return price_pivot, log_returns, volatility, momentum
+    A = source_matrix[src_indices]
+    B = target_matrix[tgt_indices]
 
-def fetch_narrative_data():
-    print("📰 Fetching Knowledge Graph & Headlines...")
-    
-    # 1. Get Latest Articles (News First Strategy)
-    news_resp = supabase.table("news_vectors")\
-        .select("id, headline, published_at")\
-        .order("published_at", desc=True)\
-        .limit(1000)\
-        .execute()
-        
-    if not news_resp.data:
-        print("   ⚠️ No news found.")
-        return {}
+    centroid_A = np.mean(A, axis=0)
+    centroid_B = np.mean(B, axis=0)
+    AA = A - centroid_A
+    BB = B - centroid_B
 
-    article_map = {n['id']: n for n in news_resp.data}
-    article_ids = list(article_map.keys())
-    
-    # 2. Get Edges (Article -> Ticker)
-    edges_resp = supabase.table("knowledge_graph")\
-        .select("source_node, target_node")\
-        .in_("source_node", article_ids)\
-        .eq("edge_type", "MENTIONS")\
-        .execute()
-        
-    ticker_news = {}
-    
-    # 3. Map Ticker -> Latest Headline
-    for edge in edges_resp.data:
-        ticker = edge['target_node']
-        article_id = edge['source_node']
-        article = article_map.get(article_id)
-        
-        if article:
-            current = ticker_news.get(ticker)
-            # Use newer article if exists
-            if not current or article['published_at'] > current['published_at']:
-                ticker_news[ticker] = article
+    H = np.dot(BB.T, AA)
+    U, S, Vt = np.linalg.svd(H)
+    R = np.dot(Vt.T, U.T)
+
+    if np.linalg.det(R) < 0:
+        Vt[1, :] *= -1
+        R = np.dot(Vt.T, U.T)
+
+    return np.dot(target_matrix - centroid_B, R) + centroid_A
+
+@retry(stop=stop_after_attempt(5), wait=wait_exponential(multiplier=1, min=2, max=10))
+def fetch_daily_vectors_rpc(target_date):
+    all_records = []
+    page = 0
+    page_size = 100
+    while True:
+        try:
+            resp = supabase.rpc("get_daily_market_vectors", {
+                "target_date": target_date,
+                "page_size": page_size,
+                "page_num": page
+            }).execute()
+            
+            if not resp.data: break
+            
+            for item in resp.data:
+                vec = item['vector']
+                if isinstance(vec, str): vec = json.loads(vec)
                 
-    return ticker_news
+                vec_np = np.array(vec, dtype=np.float32)
+                if np.allclose(vec_np, 0): continue 
 
-def generate_spacetime_cube():
-    print("🚀 Starting Market Map Generation (2D)...")
-    
-    # 1. Physics Layer
-    price_df, returns_df, volatility, momentum = fetch_market_data()
-    valid_tickers = price_df.columns.tolist()
-    
-    # 2. Narrative Layer
-    news_map = fetch_narrative_data()
-    
-    # 3. Geometry Layer (UMAP)
-    print("   🧠 Calculating 2D Manifold...")
-    scaler = RobustScaler()
-    scaled_data = scaler.fit_transform(returns_df.values)
-    
-    # Transpose: Map TICKERS (cols)
-    ticker_matrix = scaled_data.T 
-    
-    reducer = umap.UMAP(
-        n_neighbors=UMAP_NEIGHBORS,
-        min_dist=UMAP_MIN_DIST,
-        n_components=UMAP_COMPONENTS, # 2D
-        metric='cosine',
-        init='random',
-        random_state=42,
-        n_jobs=1
-    )
-    
-    embedding = reducer.fit_transform(ticker_matrix)
-    
-    # 4. Synthesis
-    print("   💧 Hydrating Nodes...")
-    results = []
-    
-    for i, ticker in enumerate(valid_tickers):
-        # Geometry (Scale x10)
-        x = float(embedding[i, 0]) * 10 
-        y = float(embedding[i, 1]) * 10
-        
-        # Physics (Sanitized)
-        energy = sanitize(volatility.get(ticker, 0))
-        mom_val = sanitize(momentum.get(ticker, 0))
-        
-        # Narrative
-        article = news_map.get(ticker, {})
-        headline = article.get('headline', "")
-        sentiment = get_sentiment(headline)
-        
-        results.append({
-            "ticker": ticker,
-            "x": x,
-            "y": y,
-            "z": 0, # Flat plane for compatibility
-            "vx": mom_val * 50, # Visual Vector Projection
-            "vy": mom_val * 50, 
-            "energy": energy,
-            "headline": headline,
-            "sentiment": sentiment
-        })
-        
-    # 5. Export
-    output = {
-        "date": price_df.index[-1],
-        "nodes": results
-    }
-    
-    with open("spacetime_cube.json", "w") as f:
-        json.dump(output, f, indent=2)
-        
-    print(f"   ✨ Success! Generated {len(results)} nodes for MarketMap.")
+                headline = item.get('headline', '')
+                sentiment = 0.0
+                if headline:
+                    try: sentiment = TextBlob(headline).sentiment.polarity
+                    except: sentiment = 0.0
+                
+                all_records.append({
+                    "ticker": item['ticker'],
+                    "vector": vec_np,
+                    "headline": headline,     
+                    "sentiment": sentiment    
+                })
+                
+            if len(resp.data) < page_size: break
+            page += 1
+        except Exception as e:
+            print(f"    ⚠️ Error on page {page}: {e}")
+            raise e
+    return pd.DataFrame(all_records)
 
+# --- MAIN EXECUTION ---
 if __name__ == "__main__":
-    generate_spacetime_cube()
+    print(f"🚀 Starting UMAP Walk-Forward Generation (Last {HISTORY_DAYS} Days)...")
+    
+    end_date = datetime.now()
+    dates = [(end_date - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(HISTORY_DAYS)]
+    dates.reverse() 
+    
+    full_history = []
+    prev_matrix = None
+    prev_tickers = []
+    prev_positions_map = {} 
+    
+    for date_str in dates:
+        print(f"📅 Processing {date_str}...", end=" ", flush=True)
+        
+        try:
+            df = fetch_daily_vectors_rpc(date_str)
+        except Exception as e:
+            print(f"\n    ❌ Failed to fetch {date_str}: {e}")
+            continue
+        
+        if df is None or df.empty or len(df) < 5:
+            print("Skipped (Insufficient data)")
+            continue
+            
+        current_matrix = np.stack(df['vector'].values)
+        current_tickers = df['ticker'].tolist()
+        
+        # --- FIX C: ROBUST SCALER ---
+        # We scale the High-Dimensional vectors BEFORE reducing them.
+        # This prevents a single outlier day from squashing the entire map.
+        scaler = RobustScaler()
+        current_matrix_scaled = scaler.fit_transform(current_matrix)
+        # ----------------------------
+        
+        # 1. INITIALIZATION (Fix A - Partial)
+        # We seed UMAP with yesterday's layout to enforce temporal continuity.
+        init_matrix = None
+        if prev_matrix is not None:
+            init_build = []
+            for t in current_tickers:
+                if t in prev_positions_map:
+                    init_build.append(prev_positions_map[t])
+                else:
+                    init_build.append(np.random.normal(0, 10, 2)) 
+            init_matrix = np.array(init_build)
+            
+        # 2. RUN UMAP (Fix A - Engine Upgrade)
+        reducer = umap.UMAP(
+            n_neighbors=min(UMAP_NEIGHBORS, len(df)-1),
+            min_dist=UMAP_MIN_DIST,
+            n_components=2,
+            metric='cosine', 
+            init=init_matrix if init_matrix is not None else 'spectral', 
+            random_state=42,
+            n_jobs=1
+        )
+        
+        # Pass the SCALED matrix
+        embeddings_raw = reducer.fit_transform(current_matrix_scaled)
+        
+        # 3. NORMALIZE & ALIGN
+        embeddings_scaled = normalize_to_bounds(embeddings_raw, TARGET_CANVAS_SIZE)
+        
+        if prev_matrix is not None:
+            embeddings_stabilized = align_to_reference(
+                source_matrix=prev_matrix, 
+                target_matrix=embeddings_scaled,
+                source_tickers=prev_tickers, 
+                target_tickers=current_tickers
+            )
+        else:
+            embeddings_stabilized = embeddings_scaled
+            
+        # 4. CALCULATE PHYSICS & SAVE
+        frame_nodes = []
+        current_positions_map = {}
+        
+        for i, row in df.iterrows():
+            ticker = row['ticker']
+            x, y = embeddings_stabilized[i]
+            
+            vx, vy, energy = 0.0, 0.0, 0.0
+            
+            if ticker in prev_positions_map:
+                prev_x, prev_y = prev_positions_map[ticker]
+                vx = x - prev_x
+                vy = y - prev_y
+                energy = np.sqrt(vx**2 + vy**2) + 5.0 
+            else:
+                energy = 10.0 
+            
+            if np.isnan(x): x = 0
+            if np.isnan(y): y = 0
+            
+            frame_nodes.append({
+                "ticker": ticker,
+                "x": round(float(x), 2),
+                "y": round(float(y), 2),
+                "vx": round(float(vx), 3),
+                "vy": round(float(vy), 3),
+                "energy": round(float(energy), 1),
+                "headline": row['headline'],
+                "sentiment": round(row['sentiment'], 2)
+            })
+            
+            current_positions_map[ticker] = [x, y]
+            
+        full_history.append({
+            "date": date_str,
+            "nodes": frame_nodes
+        })
+            
+        prev_matrix = embeddings_stabilized
+        prev_tickers = current_tickers
+        prev_positions_map = current_positions_map
+        
+        print(f"✅ Aligned & Saved ({len(df)} tickers)")
+
+    # 5. EXPORT
+    output_path = "../public/data/market_physics_history.json"
+    with open(output_path, "w") as f:
+        json.dump({"data": full_history}, f)
+        
+    print(f"\n✨ DONE. Stabilized History saved to {output_path}")
