@@ -5,7 +5,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 // @ts-ignore
 import DeckGL from '@deck.gl/react';
 // @ts-ignore
-import { ScatterplotLayer, PolygonLayer, PathLayer, LineLayer, TextLayer } from '@deck.gl/layers'; // Added TextLayer
+import { ScatterplotLayer, PolygonLayer, PathLayer, LineLayer, TextLayer } from '@deck.gl/layers'; 
 // @ts-ignore
 import { PathStyleExtension } from '@deck.gl/extensions'; 
 // @ts-ignore
@@ -33,13 +33,13 @@ export type HydratedNode = {
   energy: number;
   headline: string;
   sentiment: number;
-  sector?: string; // Helpful to have here if needed later
+  sector?: string; 
 };
 
 export type MarketFrame = {
   date: string;
   nodes: HydratedNode[];
-  sectors: SectorNode[]; // <--- NEW FIELD
+  sectors: SectorNode[]; 
   nodeMap: Map<string, HydratedNode>;
 };
 
@@ -62,7 +62,7 @@ const THEME = {
   slate: [148, 163, 184],     
   gold: [251, 191, 36],       
   glass: [255, 255, 255],
-  darkText: [255, 255, 255, 180] // New color for sector labels
+  darkText: [255, 255, 255, 180] 
 };
 
 export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selectedTicker, graphConnections }: MarketMapProps) {
@@ -92,7 +92,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
       minZoom: isMobile ? 0.5 : 0.8,
       maxZoom: isMobile ? 8 : 15
     };
-  }, [data]); // Re-calculates only when data loads
+  }, [data]); 
 
   // --- 3. METRICS ---
   const { maxEnergy, highEnergyThreshold } = useMemo(() => {
@@ -205,7 +205,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     }));
   }, [sortedNodes]);
 
-  // --- NEW: SECTOR DATA MEMO ---
+  // Sector Data Memo
   const sectorLayerData = useMemo(() => {
     if (!data?.sectors) return [];
     // Filter out "Other" or tiny sectors if you want less clutter
@@ -224,21 +224,20 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
 
   // --- LAYERS ----------------------------------------------------------------
 
-  // 0. (NEW) SECTOR BACKGROUND
-  // Draws a faint circle at the center of the sector
+  // 0. SECTOR BACKGROUND (Wireframe Circles)
   const sectorBgLayer = new ScatterplotLayer({
     id: 'sector-centers',
     data: sectorLayerData,
     getPosition: (d: SectorNode) => [d.x, d.y],
     getRadius: (d: SectorNode) => Math.sqrt(d.energy) * 10 + 20, 
-    getFillColor: [0, 0, 0, 0], // Transparent fill (Fixes the washout)
+    getFillColor: [0, 0, 0, 0], // Transparent fill to prevent washout
     stroked: true,
-    getLineColor: [...THEME.slate, 40], // Slightly more visible stroke
+    getLineColor: [...THEME.slate, 40], 
     getLineWidth: 1,
     lineWidthUnits: 'pixels',
   });
 
-  // 0.5 (NEW) SECTOR LABELS
+  // 0.5 SECTOR LABELS
   const sectorTextLayer = new TextLayer({
     id: 'sector-labels',
     data: sectorLayerData,
@@ -249,7 +248,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     getAngle: 0,
     getTextAnchor: 'middle',
     getAlignmentBaseline: 'center',
-    fontFamily: '"Geist Mono", monospace', // Match your app font
+    fontFamily: '"Geist Mono", monospace',
     fontWeight: 600
   });
 
@@ -333,7 +332,8 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     updateTriggers: { getWidth: [graphConnections], getColor: [graphConnections] }
   });
 
-  // 5. GLOW LAYER
+  // 5. GLOW LAYER (Cleaned: Selection/Graph Only)
+  // High energy bloom is removed in favor of the hard ring in dotLayer
   const glowLayer = new ScatterplotLayer({
     id: 'market-glow',
     data: sortedNodes,
@@ -342,24 +342,22 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     getRadius: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return 18; 
         if (graphConnections?.some(c => c.target === d.ticker)) return 10; 
-        if (d.energy > highEnergyThreshold) return 6;
         return 0; 
     },
     getFillColor: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return [...THEME.mint, 40]; 
         if (graphConnections?.some(c => c.target === d.ticker)) return [...THEME.gold, 40]; 
-        if (d.energy > highEnergyThreshold) return [...THEME.slate, 20]; 
         return [0,0,0,0];
     },
     stroked: false,
     updateTriggers: {
-        getRadius: [selectedTicker, graphConnections, highEnergyThreshold],
-        getFillColor: [selectedTicker, graphConnections, highEnergyThreshold]
+        getRadius: [selectedTicker, graphConnections],
+        getFillColor: [selectedTicker, graphConnections]
     },
-    transitions: { getRadius: 3000, getFillColor: 1000 }
+    transitions: { getRadius: 500, getFillColor: 500 }
   });
 
-  // 6. DOT LAYER (The Stocks)
+  // 6. DOT LAYER (The Stocks - with Tech Rings)
   const dotLayer = new ScatterplotLayer({
     id: 'market-particles',
     data: sortedNodes,
@@ -368,6 +366,8 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     getRadius: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return 6.0; 
         if (graphConnections?.some(c => c.target === d.ticker)) return 3.0; 
+        // NEW: Subtle size boost for high energy (Technical look)
+        if (d.energy > highEnergyThreshold) return 2.5; 
         return 1.2; 
     },
     getFillColor: (d: HydratedNode) => {
@@ -380,10 +380,14 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     stroked: true,
     getLineWidth: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return pulse ? 2 : 0.5; 
+        // NEW: Crisp border for high energy nodes
+        if (d.energy > highEnergyThreshold) return 1.5; 
         return 0; 
     },
     getLineColor: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return [...THEME.mint, 180];
+        // NEW: Bright "Glass" ring for high energy (High Contrast)
+        if (d.energy > highEnergyThreshold) return [...THEME.glass, 200];
         return [0, 0, 0, 0];
     },
     lineWidthUnits: 'common',
@@ -391,15 +395,15 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     autoHighlight: true,
     highlightColor: [...THEME.mint, 100],
     transitions: {
-        getLineWidth: 3000, 
-        getLineColor: 2000,
+        getLineWidth: 1000, 
+        getLineColor: 1000,
         getRadius: 1000
     },
     updateTriggers: {
-        getRadius: [selectedTicker, graphConnections],
+        getRadius: [selectedTicker, graphConnections, highEnergyThreshold],
         getFillColor: [selectedTicker, graphConnections],
-        getLineWidth: [maxEnergy, pulse, selectedTicker], 
-        getLineColor: [maxEnergy, pulse, selectedTicker] 
+        getLineWidth: [maxEnergy, pulse, selectedTicker, highEnergyThreshold], 
+        getLineColor: [maxEnergy, pulse, selectedTicker, highEnergyThreshold] 
     },
   });
 
@@ -421,9 +425,9 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
                 sectorTextLayer,// 3. Sector Labels
                 vectorLayer,    // 4. Momentum Arrows
                 trailLayer,     // 5. History Trails
-                glowLayer,      // 6. Highlight Glows
+                glowLayer,      // 6. Highlight Glows (Selection Only)
                 synapseLayer,   // 7. Connections
-                dotLayer        // 8. Stocks (Top)
+                dotLayer        // 8. Stocks (Top - with Rings)
             ]} 
             style={{ backgroundColor: 'transparent' }} 
             onClick={(info: any) => {
