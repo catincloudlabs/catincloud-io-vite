@@ -67,7 +67,7 @@ export function hydrateMarketData(rawData: RawDataPoint[]): DailyFrame[] {
   const rawCenterX = (minX + maxX) / 2;
   const rawCenterY = (minY + maxY) / 2;
 
-  // Debug log to see what happened (Check your browser console!)
+  // Debug log
   console.log(`[Data Processing] Auto-Scaled Data: 
     Raw Range: ${safeRange.toFixed(4)} 
     Calculated Scalar: ${scaleFactor.toFixed(2)}`);
