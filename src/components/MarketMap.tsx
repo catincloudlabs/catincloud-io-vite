@@ -230,13 +230,12 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     id: 'sector-centers',
     data: sectorLayerData,
     getPosition: (d: SectorNode) => [d.x, d.y],
-    getRadius: (d: SectorNode) => Math.sqrt(d.energy) * 10 + 20, // Dynamic size based on sector energy
-    getFillColor: [...THEME.slate, 10], // Very faint
+    getRadius: (d: SectorNode) => Math.sqrt(d.energy) * 10 + 20, 
+    getFillColor: [0, 0, 0, 0], // Transparent fill (Fixes the washout)
     stroked: true,
-    getLineColor: [...THEME.slate, 30],
+    getLineColor: [...THEME.slate, 40], // Slightly more visible stroke
     getLineWidth: 1,
-    radiusUnits: 'common',
-    lineWidthUnits: 'pixels'
+    lineWidthUnits: 'pixels',
   });
 
   // 0.5 (NEW) SECTOR LABELS
