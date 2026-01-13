@@ -1,3 +1,5 @@
+// src/utils/processData.ts
+
 // 1. Define the Types based on YOUR JSON
 type RawDataPoint = {
   date: string;
@@ -9,7 +11,7 @@ type RawDataPoint = {
 };
 
 // The output format optimized for the Visualizer
-type HydratedNode = {
+export type HydratedNode = {
   ticker: string;
   x: number;
   y: number;
@@ -20,9 +22,11 @@ type HydratedNode = {
   sentiment: number;
 };
 
-type DailyFrame = {
+export type DailyFrame = {
   date: string;
   nodes: HydratedNode[];
+  // NEW: Pre-computed map for O(1) lookups during interpolation
+  nodeMap: Map<string, HydratedNode>;
 };
 
 // 2. The Processing Logic
@@ -76,9 +80,14 @@ export function hydrateMarketData(rawData: RawDataPoint[]): DailyFrame[] {
       };
     });
 
+    // NEW: Create the nodeMap for this frame immediately
+    const nodeMap = new Map<string, HydratedNode>();
+    nodes.forEach(node => nodeMap.set(node.ticker, node));
+
     return {
       date,
-      nodes
+      nodes,
+      nodeMap 
     };
   });
 
