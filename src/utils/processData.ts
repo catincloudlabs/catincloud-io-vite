@@ -1,7 +1,9 @@
 // src/utils/processData.ts
 
 // --- CONFIGURATION ---
-const COORDINATE_SCALAR = 500; // Multiplies positions to fill the screen
+// We target a "world size" of 800 units (-400 to +400).
+// This fits perfectly with your DeckGL camera zoom levels.
+const TARGET_WORLD_SIZE = 800; 
 // ---------------------
 
 // 1. Define the Types based on YOUR JSON
@@ -36,69 +38,75 @@ export type DailyFrame = {
 // 2. The Processing Logic
 export function hydrateMarketData(rawData: RawDataPoint[]): DailyFrame[] {
   
-  // --- PRE-PROCESSING: SCALING & CENTERING ---
-  // A. Determine the global bounds to center the data
+  // --- STEP 1: SCAN FOR BOUNDS ---
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
   
-  // First pass: Find bounds
+  // First pass: Find raw min/max
   rawData.forEach(p => {
-    // Safety check for bad data (NaN/Null)
+    // Safety check for bad data
     if (typeof p.x !== 'number' || typeof p.y !== 'number') return;
     
-    // Scale immediately during the bounds check
-    const sx = p.x * COORDINATE_SCALAR;
-    const sy = p.y * COORDINATE_SCALAR;
-    
-    if (sx < minX) minX = sx;
-    if (sx > maxX) maxX = sx;
-    if (sy < minY) minY = sy;
-    if (sy > maxY) maxY = sy;
+    if (p.x < minX) minX = p.x;
+    if (p.x > maxX) maxX = p.x;
+    if (p.y < minY) minY = p.y;
+    if (p.y > maxY) maxY = p.y;
   });
 
-  // Calculate the offset needed to move the center to (0,0)
-  const centerX = (minX + maxX) / 2;
-  const centerY = (minY + maxY) / 2;
-  // -------------------------------------------
+  // --- STEP 2: CALCULATE AUTO-SCALAR ---
+  const rangeX = maxX - minX;
+  const rangeY = maxY - minY;
+  const maxRange = Math.max(rangeX, rangeY);
 
-  // B. Group data by Date
+  // Prevent divide by zero if data is empty or single point
+  const safeRange = maxRange === 0 ? 1 : maxRange;
+
+  // This magic number scales YOUR specific data to exactly 800 units wide
+  const scaleFactor = TARGET_WORLD_SIZE / safeRange;
+
+  // Calculate center to shift (0,0) to the middle
+  const rawCenterX = (minX + maxX) / 2;
+  const rawCenterY = (minY + maxY) / 2;
+
+  // Debug log to see what happened (Check your browser console!)
+  console.log(`[Data Processing] Auto-Scaled Data: 
+    Raw Range: ${safeRange.toFixed(4)} 
+    Calculated Scalar: ${scaleFactor.toFixed(2)}`);
+
+  // --- STEP 3: GROUP DATA ---
   const grouped: Record<string, RawDataPoint[]> = {};
   
   rawData.forEach(item => {
-    // Safety check again
     if (typeof item.x !== 'number' || typeof item.y !== 'number') return;
 
     if (!grouped[item.date]) grouped[item.date] = [];
     
-    // push a "clean" copy with scaled & centered coordinates
+    // NORMALIZE: (Value - Center) * Scalar
+    // This moves the cloud to 0,0 and stretches it to fill the screen
     grouped[item.date].push({
         ...item,
-        x: (item.x * COORDINATE_SCALAR) - centerX,
-        y: (item.y * COORDINATE_SCALAR) - centerY
+        x: (item.x - rawCenterX) * scaleFactor,
+        y: (item.y - rawCenterY) * scaleFactor
     });
   });
 
-  // C. Sort dates chronologically
+  // --- STEP 4: BUILD FRAMES ---
   const sortedDates = Object.keys(grouped).sort();
 
-  // D. Build the Frames
   const frames: DailyFrame[] = sortedDates.map((date, index) => {
     const currentDayData = grouped[date];
     const nextDate = sortedDates[index + 1];
     const nextDayData = nextDate ? grouped[nextDate] : [];
 
-    // Create a lookup map for the NEXT day
     const nextDayLookup = new Map<string, RawDataPoint>();
     nextDayData.forEach(p => nextDayLookup.set(p.ticker, p));
 
     const nodes: HydratedNode[] = currentDayData.map(stock => {
       const nextState = nextDayLookup.get(stock.ticker);
 
-      // Calculate Derivatives (Velocity)
-      // Since coordinates are already scaled, velocity inherits that scale naturally
+      // Velocity inherits the perfect scaling automatically
       const vx = nextState ? nextState.x - stock.x : 0;
       const vy = nextState ? nextState.y - stock.y : 0;
 
-      // --- THE PHYSICS ENERGY FORMULA ---
       const movementMagnitude = Math.abs(vx) + Math.abs(vy);
       const newsIntensity = 1 + Math.abs(stock.sentiment); 
       
@@ -116,7 +124,6 @@ export function hydrateMarketData(rawData: RawDataPoint[]): DailyFrame[] {
       };
     });
 
-    // Create the nodeMap for this frame immediately
     const nodeMap = new Map<string, HydratedNode>();
     nodes.forEach(node => nodeMap.set(node.ticker, node));
 
