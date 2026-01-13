@@ -39,13 +39,6 @@ interface MarketMapProps {
 // Mobile Detection
 const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
-const INITIAL_VIEW_STATE = {
-  target: [0, 0, 0], 
-  zoom: isMobile ? 0.9 : 1.8, 
-  minZoom: isMobile ? 0.5 : 0.8,
-  maxZoom: isMobile ? 8 : 15
-};
-
 // --- VISUAL IDENTITY SYSTEM ---
 const THEME = {
   mint: [52, 211, 153],       
@@ -67,7 +60,26 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     return () => clearInterval(interval);
   }, []);
 
-  // --- 2. METRICS ---
+  // --- 2. CALCULATE CENTER OF MASS (Fixes 11 o'clock drift) ---
+  const initialViewState = useMemo(() => {
+    if (!data?.nodes?.length) {
+        return { target: [0, 0, 0], zoom: 1 };
+    }
+    
+    // Calculate the average X and Y to find the cluster's center
+    const count = data.nodes.length;
+    const avgX = data.nodes.reduce((sum, n) => sum + n.x, 0) / count;
+    const avgY = data.nodes.reduce((sum, n) => sum + n.y, 0) / count;
+
+    return {
+      target: [avgX, avgY, 0], 
+      zoom: isMobile ? 1.0 : 2.2, 
+      minZoom: isMobile ? 0.5 : 0.8,
+      maxZoom: isMobile ? 8 : 15
+    };
+  }, [data]); // Re-calculates only when data loads
+
+  // --- 3. METRICS ---
   const { maxEnergy, highEnergyThreshold } = useMemo(() => {
     if (!data?.nodes || data.nodes.length === 0) return { maxEnergy: 0, highEnergyThreshold: 0 };
     const energies = data.nodes.map(n => n.energy);
@@ -79,7 +91,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     };
   }, [data]);
 
-  // --- 3. SORTING & FILTERING ---
+  // --- 4. SORTING & FILTERING ---
   const sortedNodes = useMemo(() => {
     if (!data?.nodes) return [];
     
@@ -102,13 +114,13 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     });
   }, [data, selectedTicker, graphConnections]);
 
-  // --- 4. TRAIL LOGIC (HISTORY) ---
+  // --- 5. TRAIL LOGIC (HISTORY) ---
   const trailData = useMemo(() => {
     if (!history || !data) return [];
     const currentIndex = history.findIndex(f => f.date === data.date);
     if (currentIndex <= 0) return [];
 
-    const LOOKBACK_FRAMES = 6;
+    const LOOKBACK_FRAMES = 14; 
     const lookback = Math.max(0, currentIndex - LOOKBACK_FRAMES);
     const recentHistory = history.slice(lookback, currentIndex + 1);
 
@@ -135,7 +147,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     }));
   }, [data, history, selectedTicker, highEnergyThreshold]); 
 
-  // --- 5. VECTOR LOGIC (PREDICTION) ---
+  // --- 6. VECTOR LOGIC (PREDICTION) ---
   const vectorData = useMemo(() => {
     if (!data?.nodes) return [];
 
@@ -149,7 +161,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
       }));
   }, [data, highEnergyThreshold, selectedTicker]);
 
-  // --- 6. SYNAPSE LOGIC (RELATIONSHIPS) ---
+  // --- 7. SYNAPSE LOGIC (RELATIONSHIPS) ---
   const synapseData = useMemo(() => {
     if (!selectedTicker || !graphConnections || !data) return [];
     const sourceNode = data.nodes.find(n => n.ticker === selectedTicker);
@@ -166,11 +178,14 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     }).filter(Boolean);
   }, [selectedTicker, graphConnections, data]);
 
-  // --- 7. VORONOI LOGIC (TERRITORY) ---
+  // --- 8. VORONOI LOGIC (TERRITORY) ---
   const voronoiData = useMemo(() => {
     if (!sortedNodes || sortedNodes.length < 3) return [];
     const points = sortedNodes.map(d => [d.x, d.y] as [number, number]);
     const delaunay = Delaunay.from(points);
+    // Dynamic bounds based on current view center helps, but fixed is usually fine 
+    // if we center the camera. We kept -250/250 but shifted to match the centroid could be better.
+    // For now, large static bounds work fine with the new camera target.
     const voronoi = delaunay.voronoi([-400, -400, 400, 400]);
     // @ts-ignore
     const polygons = Array.from(voronoi.cellPolygons());
@@ -213,7 +228,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     extensions: [new PathStyleExtension({ dash: true })]
   });
 
-  // 2. VECTOR LAYER (Prediction - 3-Tier Opacity)
+  // 2. VECTOR LAYER
   const vectorLayer = new PathLayer({
     id: 'momentum-vectors',
     data: vectorData,
@@ -222,17 +237,12 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
         const isSelected = d.ticker === selectedTicker;
         const isNeutral = Math.abs(d.sentiment) <= 0.1;
 
-        // TIER 1: SELECTED (Hero) - Full visibility
         if (isSelected) {
             return d.sentiment >= 0 ? [...THEME.mint, 255] : [...THEME.red, 255];
         }
-
-        // TIER 2: ACTIVE SENTIMENT - Medium visibility (Context)
         if (!isNeutral) {
             return d.sentiment > 0 ? [...THEME.mint, 100] : [...THEME.red, 100];
         }
-
-        // TIER 3: NOISE (Neutral) - Very Low visibility (Texture only)
         return [...THEME.slate, 30]; 
     },
     getWidth: 1.5,
@@ -241,25 +251,18 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     getDashArray: [6, 4], 
     dash: true,           
     extensions: [new PathStyleExtension({ dash: true })],
-    updateTriggers: {
-        getColor: [selectedTicker]
-    }
+    updateTriggers: { getColor: [selectedTicker] }
   });
 
-  // 3. GHOST TRAILS (History)
+  // 3. GHOST TRAILS
   const trailLayer = new PathLayer({
     id: 'market-trails',
     data: trailData,
     getPath: (d: any) => d.path,
     getColor: (d: any) => {
         const isSelected = d.ticker === selectedTicker;
-        
-        // Active: 180
-        // Passive Color: 40
-        // Passive Slate: 15 (Matches Grid)
         const alpha = isSelected ? 180 : 40;
         const slateAlpha = isSelected ? 120 : 15;
-
         if (d.sentiment > 0.1) return [...THEME.mint, alpha]; 
         if (d.sentiment < -0.1) return [...THEME.red, alpha];
         return [...THEME.slate, slateAlpha];
@@ -269,13 +272,10 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     jointRounded: true,
     capRounded: true,
     opacity: 1,
-    updateTriggers: {
-        getColor: [selectedTicker],
-        getWidth: [selectedTicker]
-    }
+    updateTriggers: { getColor: [selectedTicker], getWidth: [selectedTicker] }
   });
 
-  // 4. SYNAPSES (Connections)
+  // 4. SYNAPSES
   const synapseLayer = new LineLayer({
     id: 'graph-synapses',
     data: synapseData,
@@ -284,13 +284,10 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     getColor: [...THEME.gold, 120], 
     getWidth: (d: any) => Math.max(0.5, d.strength * 0.5), 
     widthUnits: 'pixels',
-    updateTriggers: {
-        getWidth: [graphConnections],
-        getColor: [graphConnections]
-    }
+    updateTriggers: { getWidth: [graphConnections], getColor: [graphConnections] }
   });
 
-  // 5. GLOW LAYER (Bloom)
+  // 5. GLOW LAYER
   const glowLayer = new ScatterplotLayer({
     id: 'market-glow',
     data: sortedNodes,
@@ -313,13 +310,10 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
         getRadius: [selectedTicker, graphConnections, highEnergyThreshold],
         getFillColor: [selectedTicker, graphConnections, highEnergyThreshold]
     },
-    transitions: {
-        getRadius: 3000, 
-        getFillColor: 1000
-    }
+    transitions: { getRadius: 3000, getFillColor: 1000 }
   });
 
-  // 6. DOT LAYER (Core)
+  // 6. DOT LAYER
   const dotLayer = new ScatterplotLayer({
     id: 'market-particles',
     data: sortedNodes,
@@ -328,7 +322,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     getRadius: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return 6.0; 
         if (graphConnections?.some(c => c.target === d.ticker)) return 3.0; 
-        return 1.5; 
+        return 1.2; 
     },
     getFillColor: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return [...THEME.glass, 255]; 
@@ -372,7 +366,8 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
 
         <DeckGL
             views={new OrthographicView({ controller: true })}
-            initialViewState={INITIAL_VIEW_STATE}
+            // CHANGED: Uses calculated center of mass instead of static constant
+            initialViewState={initialViewState}
             controller={true}
             layers={[cellLayer, vectorLayer, trailLayer, glowLayer, synapseLayer, dotLayer]} 
             style={{ backgroundColor: 'transparent' }} 
