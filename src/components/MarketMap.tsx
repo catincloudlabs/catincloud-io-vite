@@ -10,7 +10,6 @@ import { GraphConnection } from '../hooks/useKnowledgeGraph';
 // Import sector labels for the tooltip
 import { getSectorLabel } from '../utils/sectorMap';
 
-// --- UPDATED TYPE DEFINITIONS ---
 export type SectorNode = {
   id: string;
   x: number;
