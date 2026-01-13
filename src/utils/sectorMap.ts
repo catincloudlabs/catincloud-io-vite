@@ -1,80 +1,128 @@
 // src/utils/sectorMap.ts
 
+// The keys are the internal IDs, the values are the labels.
+// Since we are switching to human-readable IDs, this acts mostly as a reference list now.
 export const SECTOR_NAMES: Record<string, string> = {
-  XLK: "Tech",
-  SMH: "Semis",
-  XLF: "Financials",
-  XLY: "Discretionary",
-  XLP: "Staples",
-  XLV: "Healthcare",
-  XLC: "Comms",
-  XLE: "Energy",
-  XLI: "Industrials",
-  XLB: "Materials",
-  XLRE: "Real Estate",
-  SPY: "Broad Market",
-  QQQ: "Nasdaq-100",
-  IWM: "Small Caps"
+  Technology: "Technology",
+  Semiconductors: "Semiconductors",
+  Financials: "Financials",
+  Discretionary: "Discretionary",
+  Staples: "Staples",
+  Healthcare: "Healthcare",
+  Communications: "Communications",
+  Energy: "Energy",
+  Industrials: "Industrials",
+  Materials: "Materials",
+  RealEstate: "Real Estate",
+  Indices: "Market Indices",
+  Other: "Other" 
 };
 
 export const SECTOR_MAP: Record<string, string> = {
   // --- MAG 7 & MEGA TECH ---
-  AAPL: 'XLK', NVDA: 'SMH', MSFT: 'XLK', GOOGL: 'XLC', AMZN: 'XLY', 
-  META: 'XLC', TSLA: 'XLY', AVGO: 'SMH',
+  AAPL: 'Technology', 
+  NVDA: 'Semiconductors', 
+  MSFT: 'Technology', 
+  GOOGL: 'Communications', 
+  AMZN: 'Discretionary', 
+  META: 'Communications', 
+  TSLA: 'Discretionary', 
+  AVGO: 'Semiconductors',
   
-  // --- SEMICONDUCTORS (SMH) ---
-  AMD: 'SMH', QCOM: 'SMH', TXN: 'SMH', INTC: 'SMH', AMAT: 'SMH', 
-  MU: 'SMH', LRCX: 'SMH', ADI: 'SMH', KLAC: 'SMH', MRVL: 'SMH',
-  TSM: 'SMH', ASML: 'SMH', ON: 'SMH', MCHP: 'SMH', STM: 'SMH',
-  ARM: 'SMH', MP: 'SMH',
+  // --- SEMICONDUCTORS ---
+  AMD: 'Semiconductors', QCOM: 'Semiconductors', TXN: 'Semiconductors', 
+  INTC: 'Semiconductors', AMAT: 'Semiconductors', MU: 'Semiconductors', 
+  LRCX: 'Semiconductors', ADI: 'Semiconductors', KLAC: 'Semiconductors', 
+  MRVL: 'Semiconductors', TSM: 'Semiconductors', ASML: 'Semiconductors', 
+  ON: 'Semiconductors', MCHP: 'Semiconductors', STM: 'Semiconductors',
+  ARM: 'Semiconductors', MP: 'Semiconductors',
   
-  // --- SOFTWARE & CLOUD (XLK/IGV) ---
-  ORCL: 'XLK', ADBE: 'XLK', CRM: 'XLK', INTU: 'XLK', IBM: 'XLK',
-  NOW: 'XLK', UBER: 'XLY', SAP: 'XLK', FI: 'XLF', ADP: 'XLI',
-  ACN: 'XLK', CSCO: 'XLK', SQ: 'XLF', SHOP: 'XLY', WDAY: 'XLK',
-  SNOW: 'XLK', TEAM: 'XLK', ADSK: 'XLK', DDOG: 'XLK', ZM: 'XLK',
-  NET: 'XLK', TTD: 'XLC', MDB: 'XLK', ZS: 'XLK', GIB: 'XLK',
-  FICO: 'XLF', ANET: 'XLK', ESTC: 'XLK', PANW: 'XLK', CRWD: 'XLK',
-  PLTR: 'XLK', SMCI: 'XLK', SNPS: 'XLK', CDNS: 'XLK',
+  // --- SOFTWARE & CLOUD ---
+  ORCL: 'Technology', ADBE: 'Technology', CRM: 'Technology', 
+  INTU: 'Technology', IBM: 'Technology', NOW: 'Technology', 
+  UBER: 'Discretionary', SAP: 'Technology', FI: 'Financials', 
+  ADP: 'Industrials', ACN: 'Technology', CSCO: 'Technology', 
+  SQ: 'Financials', SHOP: 'Discretionary', WDAY: 'Technology',
+  SNOW: 'Technology', TEAM: 'Technology', ADSK: 'Technology', 
+  DDOG: 'Technology', ZM: 'Technology', NET: 'Technology', 
+  TTD: 'Communications', MDB: 'Technology', ZS: 'Technology', 
+  GIB: 'Technology', FICO: 'Financials', ANET: 'Technology', 
+  ESTC: 'Technology', PANW: 'Technology', CRWD: 'Technology',
+  PLTR: 'Technology', SMCI: 'Technology', SNPS: 'Technology', 
+  CDNS: 'Technology',
   
-  // --- FINANCIALS (XLF) ---
-  JPM: 'XLF', V: 'XLF', MA: 'XLF', BAC: 'XLF', WFC: 'XLF',
-  MS: 'XLF', GS: 'XLF', C: 'XLF', BLK: 'XLF', SPGI: 'XLF',
-  AXP: 'XLF', MCO: 'XLF', PGR: 'XLF', CB: 'XLF', MMC: 'XLF',
-  AON: 'XLF', USB: 'XLF', PNC: 'XLF', TFC: 'XLF', COF: 'XLF',
-  DFS: 'XLF', PYPL: 'XLF', AFRM: 'XLF', HOOD: 'XLF', COIN: 'XLF',
-  KKR: 'XLF', BX: 'XLF', APO: 'XLF', TRV: 'XLF', ALL: 'XLF',
-  HIG: 'XLF', MET: 'XLF', 'BRK.B': 'XLF', BRK: 'XLF',
+  // --- FINANCIALS ---
+  JPM: 'Financials', V: 'Financials', MA: 'Financials', 
+  BAC: 'Financials', WFC: 'Financials', MS: 'Financials', 
+  GS: 'Financials', C: 'Financials', BLK: 'Financials', 
+  SPGI: 'Financials', AXP: 'Financials', MCO: 'Financials', 
+  PGR: 'Financials', CB: 'Financials', MMC: 'Financials',
+  AON: 'Financials', USB: 'Financials', PNC: 'Financials', 
+  TFC: 'Financials', COF: 'Financials', DFS: 'Financials', 
+  PYPL: 'Financials', AFRM: 'Financials', HOOD: 'Financials', 
+  COIN: 'Financials', KKR: 'Financials', BX: 'Financials', 
+  APO: 'Financials', TRV: 'Financials', ALL: 'Financials',
+  HIG: 'Financials', MET: 'Financials', 'BRK.B': 'Financials', 
+  BRK: 'Financials',
   
-  // --- HEALTHCARE (XLV) ---
-  LLY: 'XLV', UNH: 'XLV', JNJ: 'XLV', ABBV: 'XLV', MRK: 'XLV',
-  TMO: 'XLV', ABT: 'XLV', DHR: 'XLV', PFE: 'XLV', AMGN: 'XLV',
-  ISRG: 'XLV', ELV: 'XLV', VRTX: 'XLV', REGN: 'XLV', ZTS: 'XLV',
-  BSX: 'XLV', BDX: 'XLV', GILD: 'XLV', HCA: 'XLV', MCK: 'XLV',
-  CI: 'XLV', HUM: 'XLV', CVS: 'XLV', BMY: 'XLV', SYK: 'XLV',
-  EW: 'XLV', MDT: 'XLV', DXCM: 'XLV', ILMN: 'XLV', ALGN: 'XLV',
-  BIIB: 'XLV', MRNA: 'XLV', BNTX: 'XLV',
+  // --- HEALTHCARE ---
+  LLY: 'Healthcare', UNH: 'Healthcare', JNJ: 'Healthcare', 
+  ABBV: 'Healthcare', MRK: 'Healthcare', TMO: 'Healthcare', 
+  ABT: 'Healthcare', DHR: 'Healthcare', PFE: 'Healthcare', 
+  AMGN: 'Healthcare', ISRG: 'Healthcare', ELV: 'Healthcare', 
+  VRTX: 'Healthcare', REGN: 'Healthcare', ZTS: 'Healthcare',
+  BSX: 'Healthcare', BDX: 'Healthcare', GILD: 'Healthcare', 
+  HCA: 'Healthcare', MCK: 'Healthcare', CI: 'Healthcare', 
+  HUM: 'Healthcare', CVS: 'Healthcare', BMY: 'Healthcare', 
+  SYK: 'Healthcare', EW: 'Healthcare', MDT: 'Healthcare', 
+  DXCM: 'Healthcare', ILMN: 'Healthcare', ALGN: 'Healthcare',
+  BIIB: 'Healthcare', MRNA: 'Healthcare', BNTX: 'Healthcare',
   
-  // --- CONSUMER & RETAIL (XLY / XLP) ---
-  WMT: 'XLP', PG: 'XLP', COST: 'XLP', HD: 'XLY', KO: 'XLP',
-  PEP: 'XLP', MCD: 'XLY', DIS: 'XLC', NKE: 'XLY', SBUX: 'XLY',
-  LOW: 'XLY', PM: 'XLP', TGT: 'XLP', TJX: 'XLY', EL: 'XLP',
-  CL: 'XLP', MO: 'XLP', LULU: 'XLY', CMG: 'XLY', MAR: 'XLY',
-  BKNG: 'XLY', ABNB: 'XLY', HLT: 'XLY', YUM: 'XLY', DE: 'XLI',
+  // --- CONSUMER & RETAIL ---
+  WMT: 'Staples', PG: 'Staples', COST: 'Staples', 
+  HD: 'Discretionary', KO: 'Staples', PEP: 'Staples', 
+  MCD: 'Discretionary', DIS: 'Communications', NKE: 'Discretionary', 
+  SBUX: 'Discretionary', LOW: 'Discretionary', PM: 'Staples', 
+  TGT: 'Staples', TJX: 'Discretionary', EL: 'Staples',
+  CL: 'Staples', MO: 'Staples', LULU: 'Discretionary', 
+  CMG: 'Discretionary', MAR: 'Discretionary', BKNG: 'Discretionary', 
+  ABNB: 'Discretionary', HLT: 'Discretionary', YUM: 'Discretionary', 
+  DE: 'Industrials',
   
-  // --- INDUSTRIALS (XLI) ---
-  CAT: 'XLI', HON: 'XLI', GE: 'XLI', MMM: 'XLI', ETN: 'XLI',
-  ITW: 'XLI', EMR: 'XLI', PH: 'XLI', CMI: 'XLI', PCAR: 'XLI',
-  TT: 'XLI', LMT: 'XLI', RTX: 'XLI', BA: 'XLI', GD: 'XLI',
-  NOC: 'XLI', LHX: 'XLI', TDG: 'XLI', WM: 'XLI', RSG: 'XLI',
-  UNP: 'XLI', CSX: 'XLI', NSC: 'XLI', DAL: 'XLI', UAL: 'XLI',
-  AAL: 'XLI', LUV: 'XLI', FDX: 'XLI', UPS: 'XLI',
+  // --- INDUSTRIALS ---
+  CAT: 'Industrials', HON: 'Industrials', GE: 'Industrials', 
+  MMM: 'Industrials', ETN: 'Industrials', ITW: 'Industrials', 
+  EMR: 'Industrials', PH: 'Industrials', CMI: 'Industrials', 
+  PCAR: 'Industrials', TT: 'Industrials', LMT: 'Industrials', 
+  RTX: 'Industrials', BA: 'Industrials', GD: 'Industrials',
+  NOC: 'Industrials', LHX: 'Industrials', TDG: 'Industrials', 
+  WM: 'Industrials', RSG: 'Industrials', UNP: 'Industrials', 
+  CSX: 'Industrials', NSC: 'Industrials', DAL: 'Industrials', 
+  UAL: 'Industrials', AAL: 'Industrials', LUV: 'Industrials', 
+  FDX: 'Industrials', UPS: 'Industrials',
   
-  // --- ENERGY (XLE) ---
-  XOM: 'XLE', CVX: 'XLE', COP: 'XLE', SLB: 'XLE', EOG: 'XLE',
-  MPC: 'XLE', PSX: 'XLE', VLO: 'XLE', OXY: 'XLE', HES: 'XLE',
-  KMI: 'XLE', WMB: 'XLE', SHEL: 'XLE', EQNR: 'XLE',
+  // --- ENERGY ---
+  XOM: 'Energy', CVX: 'Energy', COP: 'Energy', SLB: 'Energy', 
+  EOG: 'Energy', MPC: 'Energy', PSX: 'Energy', VLO: 'Energy', 
+  OXY: 'Energy', HES: 'Energy', KMI: 'Energy', WMB: 'Energy', 
+  SHEL: 'Energy', EQNR: 'Energy',
   
-  // --- INDICES & ETFs (Self Reference) ---
-  SPY: 'SPY', QQQ: 'QQQ', IWM: 'IWM'
+  // --- INDICES & ETFs ---
+  SPY: 'Indices', QQQ: 'Indices', IWM: 'Indices'
 };
+
+/**
+ * Helper to safely resolve a sector ID (e.g., "Technology") from a ticker.
+ * If the ticker is unknown, returns "Other".
+ */
+export function getSectorForTicker(ticker: string): string {
+    return SECTOR_MAP[ticker] || "Other";
+}
+
+/**
+ * Helper to get the Human Readable name.
+ * Now largely a pass-through since IDs are readable, but maintained for compatibility.
+ */
+export function getSectorLabel(sectorId: string): string {
+    return SECTOR_NAMES[sectorId] || sectorId;
+}

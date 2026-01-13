@@ -149,7 +149,9 @@ function App() {
         data={{ 
             date: currentDateLabel, 
             nodes: displayNodes, 
-            nodeMap: displayNodeMap 
+            nodeMap: displayNodeMap,
+            // --- Pass sectors from the current frame ---
+            sectors: currentFrameData?.sectors || [] 
         }} 
         // @ts-ignore - MarketFrame vs DailyFrame type compatibility
         history={frames || []}
