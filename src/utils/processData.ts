@@ -1,5 +1,9 @@
 // src/utils/processData.ts
 
+// --- CONFIGURATION ---
+const COORDINATE_SCALAR = 500; // Multiplies positions to fill the screen
+// ---------------------
+
 // 1. Define the Types based on YOUR JSON
 type RawDataPoint = {
   date: string;
@@ -25,30 +29,64 @@ export type HydratedNode = {
 export type DailyFrame = {
   date: string;
   nodes: HydratedNode[];
-  // NEW: Pre-computed map for O(1) lookups during interpolation
+  // Pre-computed map for O(1) lookups during interpolation
   nodeMap: Map<string, HydratedNode>;
 };
 
 // 2. The Processing Logic
 export function hydrateMarketData(rawData: RawDataPoint[]): DailyFrame[] {
-  // A. Group data by Date
+  
+  // --- PRE-PROCESSING: SCALING & CENTERING ---
+  // A. Determine the global bounds to center the data
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  
+  // First pass: Find bounds
+  rawData.forEach(p => {
+    // Safety check for bad data (NaN/Null)
+    if (typeof p.x !== 'number' || typeof p.y !== 'number') return;
+    
+    // Scale immediately during the bounds check
+    const sx = p.x * COORDINATE_SCALAR;
+    const sy = p.y * COORDINATE_SCALAR;
+    
+    if (sx < minX) minX = sx;
+    if (sx > maxX) maxX = sx;
+    if (sy < minY) minY = sy;
+    if (sy > maxY) maxY = sy;
+  });
+
+  // Calculate the offset needed to move the center to (0,0)
+  const centerX = (minX + maxX) / 2;
+  const centerY = (minY + maxY) / 2;
+  // -------------------------------------------
+
+  // B. Group data by Date
   const grouped: Record<string, RawDataPoint[]> = {};
   
   rawData.forEach(item => {
+    // Safety check again
+    if (typeof item.x !== 'number' || typeof item.y !== 'number') return;
+
     if (!grouped[item.date]) grouped[item.date] = [];
-    grouped[item.date].push(item);
+    
+    // push a "clean" copy with scaled & centered coordinates
+    grouped[item.date].push({
+        ...item,
+        x: (item.x * COORDINATE_SCALAR) - centerX,
+        y: (item.y * COORDINATE_SCALAR) - centerY
+    });
   });
 
-  // B. Sort dates chronologically to ensure flow direction is correct
+  // C. Sort dates chronologically
   const sortedDates = Object.keys(grouped).sort();
 
-  // C. Build the Frames
+  // D. Build the Frames
   const frames: DailyFrame[] = sortedDates.map((date, index) => {
     const currentDayData = grouped[date];
     const nextDate = sortedDates[index + 1];
     const nextDayData = nextDate ? grouped[nextDate] : [];
 
-    // Create a lookup map for the NEXT day for O(1) velocity calculation
+    // Create a lookup map for the NEXT day
     const nextDayLookup = new Map<string, RawDataPoint>();
     nextDayData.forEach(p => nextDayLookup.set(p.ticker, p));
 
@@ -56,15 +94,13 @@ export function hydrateMarketData(rawData: RawDataPoint[]): DailyFrame[] {
       const nextState = nextDayLookup.get(stock.ticker);
 
       // Calculate Derivatives (Velocity)
-      // If there is no data for tomorrow (delisted or end of dataset), velocity is 0
+      // Since coordinates are already scaled, velocity inherits that scale naturally
       const vx = nextState ? nextState.x - stock.x : 0;
       const vy = nextState ? nextState.y - stock.y : 0;
 
       // --- THE PHYSICS ENERGY FORMULA ---
-      // Concept: Distance Moved * (News Intensity)
-      // High movement + High News Volume = High Energy (Anomaly)
       const movementMagnitude = Math.abs(vx) + Math.abs(vy);
-      const newsIntensity = 1 + Math.abs(stock.sentiment); // Scale 1.0 to 2.0
+      const newsIntensity = 1 + Math.abs(stock.sentiment); 
       
       const energy = movementMagnitude * newsIntensity;
 
@@ -74,13 +110,13 @@ export function hydrateMarketData(rawData: RawDataPoint[]): DailyFrame[] {
         y: stock.y,
         vx: vx,
         vy: vy,
-        energy: parseFloat(energy.toFixed(4)), // Keep file size manageable
+        energy: parseFloat(energy.toFixed(4)), 
         headline: stock.headline,
         sentiment: stock.sentiment
       };
     });
 
-    // NEW: Create the nodeMap for this frame immediately
+    // Create the nodeMap for this frame immediately
     const nodeMap = new Map<string, HydratedNode>();
     nodes.forEach(node => nodeMap.set(node.ticker, node));
 
