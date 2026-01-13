@@ -18,7 +18,7 @@ supabase: Client = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_
 
 # --- CONFIGURATION: TARGETED REGIME ---
 # "The AI Catalyst Window"
-START_DATE = "2025-11-01"
+START_DATE = "2025-07-01"
 END_DATE = datetime.now().strftime('%Y-%m-%d')
 MAX_WORKERS = 20 
 DB_BATCH_SIZE = 200
