@@ -2,14 +2,14 @@ import os
 import json
 import pandas as pd
 import numpy as np
-import umap
+from sklearn.manifold import TSNE
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from supabase import create_client, Client, ClientOptions
 from tenacity import retry, stop_after_attempt, wait_exponential
 import httpx
 from textblob import TextBlob
-from sklearn.preprocessing import RobustScaler  # <--- FIX C
+import inspect
 
 # 1. SETUP
 load_dotenv()
@@ -24,27 +24,40 @@ supabase: Client = create_client(
 )
 
 # CONFIG
-HISTORY_DAYS = 73
-UMAP_NEIGHBORS = 30       
-UMAP_MIN_DIST = 0.05      
-TARGET_CANVAS_SIZE = 150 
+HISTORY_DAYS = 90
+PERPLEXITY = 30  
+TARGET_CANVAS_SIZE = 150 # Will result in coordinates from -150 to +150
 
 # --- MATH UTILS ---
 
 def normalize_to_bounds(matrix, target_radius=150):
-    """ Forces the cluster to fill the screen (-150 to 150). """
+    """
+    FIX: Forces the cluster to fill the screen (-150 to 150).
+    This prevents the 'Cluster Collapse' issue where Day 2 shrinks to nothing.
+    """
+    # 1. Center the data at 0,0
     centroid = np.mean(matrix, axis=0)
     centered = matrix - centroid
+    
+    # 2. Find the current max distance from center (the "radius" of the cluster)
+    # We use the 95th percentile to ignore extreme outliers that squash the rest
     distances = np.linalg.norm(centered, axis=1)
     current_radius = np.percentile(distances, 95)
-    if current_radius == 0: return matrix 
+    
+    if current_radius == 0: return matrix # Safety check
+
+    # 3. Scale it up/down to match target_radius
     scale_factor = target_radius / current_radius
     return centered * scale_factor
 
 def align_to_reference(source_matrix, target_matrix, source_tickers, target_tickers):
-    """ Rotates target_matrix (Today) to best fit source_matrix (Yesterday). """
+    """
+    Rotates target_matrix (Today) to best fit source_matrix (Yesterday).
+    """
     common_tickers = list(set(source_tickers) & set(target_tickers))
-    if len(common_tickers) < 3: return target_matrix
+    
+    if len(common_tickers) < 3:
+        return target_matrix
 
     src_indices = [source_tickers.index(t) for t in common_tickers]
     tgt_indices = [target_tickers.index(t) for t in common_tickers]
@@ -65,7 +78,23 @@ def align_to_reference(source_matrix, target_matrix, source_tickers, target_tick
         Vt[1, :] *= -1
         R = np.dot(Vt.T, U.T)
 
+    # Return rotated matrix (Scaling is handled by normalize_to_bounds now)
     return np.dot(target_matrix - centroid_B, R) + centroid_A
+
+def create_tsne_instance(n_components, perplexity, init, random_state):
+    preferred_params = {
+        "n_components": n_components,
+        "perplexity": perplexity,
+        "init": init,
+        "random_state": random_state,
+        "learning_rate": "auto",
+        "n_iter": 1000,
+        "method": "barnes_hut"
+    }
+    sig = inspect.signature(TSNE.__init__)
+    valid_args = set(sig.parameters.keys())
+    final_params = {k: v for k, v in preferred_params.items() if k in valid_args}
+    return TSNE(**final_params)
 
 @retry(stop=stop_after_attempt(5), wait=wait_exponential(multiplier=1, min=2, max=10))
 def fetch_daily_vectors_rpc(target_date):
@@ -79,29 +108,22 @@ def fetch_daily_vectors_rpc(target_date):
                 "page_size": page_size,
                 "page_num": page
             }).execute()
-            
             if not resp.data: break
-            
             for item in resp.data:
                 vec = item['vector']
                 if isinstance(vec, str): vec = json.loads(vec)
-                
                 vec_np = np.array(vec, dtype=np.float32)
-                if np.allclose(vec_np, 0): continue 
-
                 headline = item.get('headline', '')
-                sentiment = 0.0
+                sentiment = 0
                 if headline:
                     try: sentiment = TextBlob(headline).sentiment.polarity
-                    except: sentiment = 0.0
-                
+                    except: sentiment = 0
                 all_records.append({
                     "ticker": item['ticker'],
                     "vector": vec_np,
-                    "headline": headline,     
-                    "sentiment": sentiment    
+                    "headline": headline,    
+                    "sentiment": sentiment   
                 })
-                
             if len(resp.data) < page_size: break
             page += 1
         except Exception as e:
@@ -111,7 +133,7 @@ def fetch_daily_vectors_rpc(target_date):
 
 # --- MAIN EXECUTION ---
 if __name__ == "__main__":
-    print(f"🚀 Starting UMAP Walk-Forward Generation (Last {HISTORY_DAYS} Days)...")
+    print(f"🚀 Starting Stabilized Walk-Forward Generation (Last {HISTORY_DAYS} Days)...")
     
     end_date = datetime.now()
     dates = [(end_date - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(HISTORY_DAYS)]
@@ -119,8 +141,7 @@ if __name__ == "__main__":
     
     full_history = []
     prev_matrix = None
-    prev_tickers = []
-    prev_positions_map = {} 
+    prev_tickers = None
     
     for date_str in dates:
         print(f"📅 Processing {date_str}...", end=" ", flush=True)
@@ -128,52 +149,50 @@ if __name__ == "__main__":
         try:
             df = fetch_daily_vectors_rpc(date_str)
         except Exception as e:
-            print(f"\n    ❌ Failed to fetch {date_str}: {e}")
+            print(f"\n   ❌ Failed to fetch {date_str}: {e}")
             continue
         
-        if df is None or df.empty or len(df) < 5:
-            print("Skipped (Insufficient data)")
+        if df is None or df.empty:
+            print("Skipped (No data)")
             continue
             
         current_matrix = np.stack(df['vector'].values)
         current_tickers = df['ticker'].tolist()
         
-        # --- FIX C: ROBUST SCALER ---
-        # We scale the High-Dimensional vectors BEFORE reducing them.
-        # This prevents a single outlier day from squashing the entire map.
-        scaler = RobustScaler()
-        current_matrix_scaled = scaler.fit_transform(current_matrix)
-        # ----------------------------
-        
-        # 1. INITIALIZATION (Fix A - Partial)
-        # We seed UMAP with yesterday's layout to enforce temporal continuity.
+        if len(df) < 5: 
+            print("Skipped (Not enough data)")
+            continue
+
+        # 1. Initialization
+        n_samples = current_matrix.shape[0]
         init_matrix = None
+        
         if prev_matrix is not None:
+            prev_map = {t: pos for t, pos in zip(prev_tickers, prev_matrix)}
             init_build = []
             for t in current_tickers:
-                if t in prev_positions_map:
-                    init_build.append(prev_positions_map[t])
+                if t in prev_map:
+                    init_build.append(prev_map[t])
                 else:
-                    init_build.append(np.random.normal(0, 10, 2)) 
+                    init_build.append(np.random.rand(2)) 
             init_matrix = np.array(init_build)
             
-        # 2. RUN UMAP (Fix A - Engine Upgrade)
-        reducer = umap.UMAP(
-            n_neighbors=min(UMAP_NEIGHBORS, len(df)-1),
-            min_dist=UMAP_MIN_DIST,
+        # 2. Run TSNE
+        tsne = create_tsne_instance(
             n_components=2,
-            metric='cosine', 
-            init=init_matrix if init_matrix is not None else 'spectral', 
-            random_state=42,
-            n_jobs=1
+            perplexity=min(PERPLEXITY, n_samples - 1),
+            init=init_matrix if init_matrix is not None else 'pca',
+            random_state=42
         )
         
-        # Pass the SCALED matrix
-        embeddings_raw = reducer.fit_transform(current_matrix_scaled)
+        embeddings_raw = tsne.fit_transform(current_matrix)
         
-        # 3. NORMALIZE & ALIGN
+        # --- FIX: NORMALIZE SCALE BEFORE ALIGNMENT ---
+        # This ensures Day 2 is the same size as Day 1
         embeddings_scaled = normalize_to_bounds(embeddings_raw, TARGET_CANVAS_SIZE)
-        
+        # ---------------------------------------------
+
+        # 3. Apply Procrustes Alignment
         if prev_matrix is not None:
             embeddings_stabilized = align_to_reference(
                 source_matrix=prev_matrix, 
@@ -184,52 +203,26 @@ if __name__ == "__main__":
         else:
             embeddings_stabilized = embeddings_scaled
             
-        # 4. CALCULATE PHYSICS & SAVE
-        frame_nodes = []
-        current_positions_map = {}
-        
+        # 4. Save
         for i, row in df.iterrows():
             ticker = row['ticker']
             x, y = embeddings_stabilized[i]
             
-            vx, vy, energy = 0.0, 0.0, 0.0
-            
-            if ticker in prev_positions_map:
-                prev_x, prev_y = prev_positions_map[ticker]
-                vx = x - prev_x
-                vy = y - prev_y
-                energy = np.sqrt(vx**2 + vy**2) + 5.0 
-            else:
-                energy = 10.0 
-            
-            if np.isnan(x): x = 0
-            if np.isnan(y): y = 0
-            
-            frame_nodes.append({
+            full_history.append({
+                "date": date_str,
                 "ticker": ticker,
                 "x": round(float(x), 2),
                 "y": round(float(y), 2),
-                "vx": round(float(vx), 3),
-                "vy": round(float(vy), 3),
-                "energy": round(float(energy), 1),
                 "headline": row['headline'],
                 "sentiment": round(row['sentiment'], 2)
             })
             
-            current_positions_map[ticker] = [x, y]
-            
-        full_history.append({
-            "date": date_str,
-            "nodes": frame_nodes
-        })
-            
         prev_matrix = embeddings_stabilized
         prev_tickers = current_tickers
-        prev_positions_map = current_positions_map
         
         print(f"✅ Aligned & Saved ({len(df)} tickers)")
 
-    # 5. EXPORT
+    # 5. Export
     output_path = "../public/data/market_physics_history.json"
     with open(output_path, "w") as f:
         json.dump({"data": full_history}, f)
