@@ -1,14 +1,9 @@
 // src/components/MarketMap.tsx
 
-// @ts-ignore
 import React, { useMemo, useState, useEffect } from 'react';
-// @ts-ignore
 import DeckGL from '@deck.gl/react';
-// @ts-ignore
 import { ScatterplotLayer, PolygonLayer, PathLayer, LineLayer, TextLayer } from '@deck.gl/layers'; 
-// @ts-ignore
 import { PathStyleExtension } from '@deck.gl/extensions'; 
-// @ts-ignore
 import { OrthographicView } from '@deck.gl/core';
 import { Delaunay } from 'd3-delaunay';
 import { GraphConnection } from '../hooks/useKnowledgeGraph'; 
@@ -79,7 +74,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     return () => clearInterval(interval);
   }, []);
 
-  // --- 2. INTERACTION STATE (NEW) ---
+  // --- 2. INTERACTION STATE ---
   const [hoverInfo, setHoverInfo] = useState<{
     object?: HydratedNode;
     x: number;
@@ -240,7 +235,8 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     const points = sortedNodes.map(d => [d.x, d.y] as [number, number]);
     const delaunay = Delaunay.from(points);
     const voronoi = delaunay.voronoi([-400, -400, 400, 400]);
-    // @ts-ignore
+    
+    // Convert to array to satisfy types if needed, though most environments support iterable directly
     const polygons = Array.from(voronoi.cellPolygons());
     return polygons.map((polygon: any, i: number) => ({
       polygon,
@@ -502,7 +498,6 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
                 vectorLayer, trailLayer, glowLayer, synapseLayer, dotLayer
             ]} 
             style={{ backgroundColor: 'transparent' }} 
-            // UPDATED: Use React State for Tooltip
             onHover={setHoverInfo}
             // Disable default tooltip
             getTooltip={null} 
