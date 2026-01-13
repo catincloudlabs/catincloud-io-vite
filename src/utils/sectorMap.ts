@@ -14,7 +14,8 @@ export const SECTOR_NAMES: Record<string, string> = {
   XLRE: "Real Estate",
   SPY: "Broad Market",
   QQQ: "Nasdaq-100",
-  IWM: "Small Caps"
+  IWM: "Small Caps",
+  Other: "Other" 
 };
 
 export const SECTOR_MAP: Record<string, string> = {
@@ -78,3 +79,18 @@ export const SECTOR_MAP: Record<string, string> = {
   // --- INDICES & ETFs (Self Reference) ---
   SPY: 'SPY', QQQ: 'QQQ', IWM: 'IWM'
 };
+
+/**
+ * Helper to safely resolve a sector ID (e.g., "XLK") from a ticker.
+ * If the ticker is unknown, returns "Other".
+ */
+export function getSectorForTicker(ticker: string): string {
+    return SECTOR_MAP[ticker] || "Other";
+}
+
+/**
+ * Helper to get the Human Readable name (e.g., "Tech") from a Sector ID.
+ */
+export function getSectorLabel(sectorId: string): string {
+    return SECTOR_NAMES[sectorId] || sectorId;
+}
