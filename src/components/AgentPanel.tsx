@@ -152,15 +152,14 @@ export function AgentPanel({
       return [
         { label: `Brief ${selectedTicker}`, prompt: `Give me a short brief on ${selectedTicker}'s status.` },
         { label: "Check News", prompt: `Any relevant news impacting ${selectedTicker}?` },
-        { label: "Explain Physics", prompt: `Explain the visual physics of ${selectedTicker}.`, mode: 'physicist' }
+        { label: "Market Physics", prompt: `Explain the visual physics of ${selectedTicker}.`, mode: 'physicist' }
       ];
     }
     
     // 2. STATE: General View (Exploratory)
     return [
       { label: "Market Status", prompt: "Summarize the current market state." },
-      // UPDATE: Changed "Velocity?" to "Explain Physics" with physicist mode
-      { label: "Explain Physics", prompt: "Explain the physics model of this simulation.", mode: 'physicist' },
+      { label: "Market Physics", prompt: "Explain the physics model of this simulation.", mode: 'physicist' },
       { label: "Tech Stack", prompt: "What technology is powering this dashboard?" }
     ];
   };
