@@ -1,15 +1,28 @@
+// src/components/MarketMap.tsx
+
 // @ts-ignore
 import React, { useMemo, useState, useEffect } from 'react';
 // @ts-ignore
 import DeckGL from '@deck.gl/react';
 // @ts-ignore
-import { ScatterplotLayer, PolygonLayer, PathLayer, LineLayer } from '@deck.gl/layers';
+import { ScatterplotLayer, PolygonLayer, PathLayer, LineLayer, TextLayer } from '@deck.gl/layers'; // Added TextLayer
 // @ts-ignore
 import { PathStyleExtension } from '@deck.gl/extensions'; 
 // @ts-ignore
 import { OrthographicView } from '@deck.gl/core';
 import { Delaunay } from 'd3-delaunay';
 import { GraphConnection } from '../hooks/useKnowledgeGraph'; 
+
+// --- UPDATED TYPE DEFINITIONS ---
+export type SectorNode = {
+  id: string;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  energy: number;
+  count: number;
+};
 
 export type HydratedNode = {
   ticker: string;
@@ -20,11 +33,13 @@ export type HydratedNode = {
   energy: number;
   headline: string;
   sentiment: number;
+  sector?: string; // Helpful to have here if needed later
 };
 
 export type MarketFrame = {
   date: string;
   nodes: HydratedNode[];
+  sectors: SectorNode[]; // <--- NEW FIELD
   nodeMap: Map<string, HydratedNode>;
 };
 
@@ -46,7 +61,8 @@ const THEME = {
   red: [239, 68, 68],         
   slate: [148, 163, 184],     
   gold: [251, 191, 36],       
-  glass: [255, 255, 255]
+  glass: [255, 255, 255],
+  darkText: [255, 255, 255, 180] // New color for sector labels
 };
 
 export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selectedTicker, graphConnections }: MarketMapProps) {
@@ -61,13 +77,11 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     return () => clearInterval(interval);
   }, []);
 
-  // --- 2. CALCULATE CENTER OF MASS (Fixes 11 o'clock drift) ---
+  // --- 2. CALCULATE CENTER OF MASS ---
   const initialViewState = useMemo(() => {
     if (!data?.nodes?.length) {
         return { target: [0, 0, 0], zoom: 1 };
     }
-    
-    // Calculate the average X and Y to find the cluster's center
     const count = data.nodes.length;
     const avgX = data.nodes.reduce((sum, n) => sum + n.x, 0) / count;
     const avgY = data.nodes.reduce((sum, n) => sum + n.y, 0) / count;
@@ -92,21 +106,20 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     };
   }, [data]);
 
-  // --- 4. SORTING & FILTERING ---
+  // --- 4. DATA MEMOS ---
   const sortedNodes = useMemo(() => {
     if (!data?.nodes) return [];
     
+    // Quick filter for clutter
     const cleanNodes = data.nodes.filter(n => {
         if (n.ticker.includes('.WS')) return false;
         if (n.ticker.includes('p')) return false;
-        if (n.ticker === 'XYZ') return false;
-        if (n.ticker.length === 5 && n.ticker.endsWith('Y') && !['SONY', 'BAYRY'].includes(n.ticker)) return false; 
         return true;
     });
 
     return [...cleanNodes].sort((a, b) => {
       if (a.ticker === selectedTicker) return 1;
-      if (b.ticker === selectedTicker) return -1;
+      // prioritize graph connections
       const aConn = graphConnections?.some(c => c.target === a.ticker);
       const bConn = graphConnections?.some(c => c.target === b.ticker);
       if (aConn && !bConn) return 1;
@@ -115,7 +128,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     });
   }, [data, selectedTicker, graphConnections]);
 
-  // --- 5. TRAIL LOGIC (HISTORY) ---
+  // Trail Logic
   const trailData = useMemo(() => {
     if (!history || !data) return [];
     const currentIndex = history.findIndex(f => f.date === data.date);
@@ -148,10 +161,9 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     }));
   }, [data, history, selectedTicker, highEnergyThreshold]); 
 
-  // --- 6. VECTOR LOGIC (PREDICTION) ---
+  // Vector Logic
   const vectorData = useMemo(() => {
     if (!data?.nodes) return [];
-
     return data.nodes
       .filter(n => n.energy > highEnergyThreshold || n.ticker === selectedTicker)
       .map(n => ({
@@ -162,7 +174,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
       }));
   }, [data, highEnergyThreshold, selectedTicker]);
 
-  // --- 7. SYNAPSE LOGIC (RELATIONSHIPS) ---
+  // Synapse Logic
   const synapseData = useMemo(() => {
     if (!selectedTicker || !graphConnections || !data) return [];
     const sourceNode = data.nodes.find(n => n.ticker === selectedTicker);
@@ -179,14 +191,11 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     }).filter(Boolean);
   }, [selectedTicker, graphConnections, data]);
 
-  // --- 8. VORONOI LOGIC (TERRITORY) ---
+  // Voronoi Logic
   const voronoiData = useMemo(() => {
     if (!sortedNodes || sortedNodes.length < 3) return [];
     const points = sortedNodes.map(d => [d.x, d.y] as [number, number]);
     const delaunay = Delaunay.from(points);
-    // Dynamic bounds based on current view center helps, but fixed is usually fine 
-    // if we center the camera. We kept -250/250 but shifted to match the centroid could be better.
-    // For now, large static bounds work fine with the new camera target.
     const voronoi = delaunay.voronoi([-400, -400, 400, 400]);
     // @ts-ignore
     const polygons = Array.from(voronoi.cellPolygons());
@@ -195,6 +204,13 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
       node: sortedNodes[i]
     }));
   }, [sortedNodes]);
+
+  // --- NEW: SECTOR DATA MEMO ---
+  const sectorLayerData = useMemo(() => {
+    if (!data?.sectors) return [];
+    // Filter out "Other" or tiny sectors if you want less clutter
+    return data.sectors.filter(s => s.count > 2); 
+  }, [data]);
 
   const accessibleSummary = useMemo(() => {
     if (!data?.nodes) return [];
@@ -207,6 +223,36 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
   if (!data) return null;
 
   // --- LAYERS ----------------------------------------------------------------
+
+  // 0. (NEW) SECTOR BACKGROUND
+  // Draws a faint circle at the center of the sector
+  const sectorBgLayer = new ScatterplotLayer({
+    id: 'sector-centers',
+    data: sectorLayerData,
+    getPosition: (d: SectorNode) => [d.x, d.y],
+    getRadius: (d: SectorNode) => Math.sqrt(d.energy) * 10 + 20, // Dynamic size based on sector energy
+    getFillColor: [...THEME.slate, 10], // Very faint
+    stroked: true,
+    getLineColor: [...THEME.slate, 30],
+    getLineWidth: 1,
+    radiusUnits: 'common',
+    lineWidthUnits: 'pixels'
+  });
+
+  // 0.5 (NEW) SECTOR LABELS
+  const sectorTextLayer = new TextLayer({
+    id: 'sector-labels',
+    data: sectorLayerData,
+    getPosition: (d: SectorNode) => [d.x, d.y],
+    getText: (d: SectorNode) => d.id,
+    getSize: 14,
+    getColor: [...THEME.slate, 120],
+    getAngle: 0,
+    getTextAnchor: 'middle',
+    getAlignmentBaseline: 'center',
+    fontFamily: '"Geist Mono", monospace', // Match your app font
+    fontWeight: 600
+  });
 
   // 1. BACKGROUND CELLS (Grid)
   const cellLayer = new PolygonLayer({
@@ -314,7 +360,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     transitions: { getRadius: 3000, getFillColor: 1000 }
   });
 
-  // 6. DOT LAYER
+  // 6. DOT LAYER (The Stocks)
   const dotLayer = new ScatterplotLayer({
     id: 'market-particles',
     data: sortedNodes,
@@ -367,33 +413,51 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
 
         <DeckGL
             views={new OrthographicView({ controller: true })}
-            // CHANGED: Uses calculated center of mass instead of static constant
             initialViewState={initialViewState}
             controller={true}
-            layers={[cellLayer, vectorLayer, trailLayer, glowLayer, synapseLayer, dotLayer]} 
+            // ORDER MATTERS: Bottom Layers -> Top Layers
+            layers={[
+                cellLayer,      // 1. Voronoi Grid (Faintest)
+                sectorBgLayer,  // 2. Sector Circles
+                sectorTextLayer,// 3. Sector Labels
+                vectorLayer,    // 4. Momentum Arrows
+                trailLayer,     // 5. History Trails
+                glowLayer,      // 6. Highlight Glows
+                synapseLayer,   // 7. Connections
+                dotLayer        // 8. Stocks (Top)
+            ]} 
             style={{ backgroundColor: 'transparent' }} 
             onClick={(info: any) => {
                 if (info.object) {
-                    if (onNodeClick) onNodeClick(info.object);
+                    // Only trigger click for Stocks, not Sector Labels
+                    if (info.object.ticker && onNodeClick) {
+                         onNodeClick(info.object);
+                    }
                 } else {
                     if (onBackgroundClick) onBackgroundClick();
                 }
             }}
             // @ts-ignore
-            getTooltip={({object}) => object && object.ticker && {
-                html: `
-                <div class="map-tooltip">
-                    <div class="map-tooltip-header">
-                        <strong class="map-tooltip-ticker">$${object.ticker}</strong>
-                        <span class="map-tooltip-metric">
-                            E: ${object.energy.toFixed(0)}
-                        </span>
-                    </div>
-                    <div class="map-tooltip-desc">
-                        ${object.headline || "Awaiting signal..."}
-                    </div>
-                </div>
-                `
+            getTooltip={({object}) => {
+                // Handle Stock Tooltips
+                if (object && object.ticker) {
+                    return {
+                        html: `
+                        <div class="map-tooltip">
+                            <div class="map-tooltip-header">
+                                <strong class="map-tooltip-ticker">$${object.ticker}</strong>
+                                <span class="map-tooltip-metric">
+                                    E: ${object.energy.toFixed(0)}
+                                </span>
+                            </div>
+                            <div class="map-tooltip-desc">
+                                ${object.headline || "Awaiting signal..."}
+                            </div>
+                        </div>
+                        `
+                    };
+                }
+                return null;
             }}
         />
     </>
