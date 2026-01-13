@@ -41,7 +41,8 @@ const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
 const INITIAL_VIEW_STATE = {
   target: [0, 0, 0], 
-  zoom: isMobile ? 0.9 : 1.8, 
+  // UMAP is tighter (-150 to 150), so we zoom in slightly more by default
+  zoom: isMobile ? 1.0 : 2.2, 
   minZoom: isMobile ? 0.5 : 0.8,
   maxZoom: isMobile ? 8 : 15
 };
@@ -108,7 +109,9 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     const currentIndex = history.findIndex(f => f.date === data.date);
     if (currentIndex <= 0) return [];
 
-    const LOOKBACK_FRAMES = 6;
+    // UMAP moves less chaotically, so we can afford a slightly longer trail
+    // without it looking like spaghetti.
+    const LOOKBACK_FRAMES = 8; 
     const lookback = Math.max(0, currentIndex - LOOKBACK_FRAMES);
     const recentHistory = history.slice(lookback, currentIndex + 1);
 
@@ -171,7 +174,8 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     if (!sortedNodes || sortedNodes.length < 3) return [];
     const points = sortedNodes.map(d => [d.x, d.y] as [number, number]);
     const delaunay = Delaunay.from(points);
-    const voronoi = delaunay.voronoi([-400, -400, 400, 400]);
+    // Adjusted bounds to match UMAP canvas size + padding
+    const voronoi = delaunay.voronoi([-250, -250, 250, 250]);
     // @ts-ignore
     const polygons = Array.from(voronoi.cellPolygons());
     return polygons.map((polygon: any, i: number) => ({
@@ -328,7 +332,8 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     getRadius: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return 6.0; 
         if (graphConnections?.some(c => c.target === d.ticker)) return 3.0; 
-        return 1.5; 
+        // Tuned down from 1.5 because UMAP clusters are denser
+        return 1.2; 
     },
     getFillColor: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return [...THEME.glass, 255]; 
