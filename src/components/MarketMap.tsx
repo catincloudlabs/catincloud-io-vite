@@ -25,6 +25,7 @@ export type HydratedNode = {
 export type MarketFrame = {
   date: string;
   nodes: HydratedNode[];
+  nodeMap: Map<string, HydratedNode>;
 };
 
 interface MarketMapProps {

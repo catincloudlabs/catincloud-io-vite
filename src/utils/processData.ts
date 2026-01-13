@@ -1,3 +1,11 @@
+// src/utils/processData.ts
+
+// --- CONFIGURATION ---
+// We target a "world size" of 800 units (-400 to +400).
+// This fits perfectly with your DeckGL camera zoom levels.
+const TARGET_WORLD_SIZE = 800; 
+// ---------------------
+
 // 1. Define the Types based on YOUR JSON
 type RawDataPoint = {
   date: string;
@@ -9,7 +17,7 @@ type RawDataPoint = {
 };
 
 // The output format optimized for the Visualizer
-type HydratedNode = {
+export type HydratedNode = {
   ticker: string;
   x: number;
   y: number;
@@ -20,47 +28,87 @@ type HydratedNode = {
   sentiment: number;
 };
 
-type DailyFrame = {
+export type DailyFrame = {
   date: string;
   nodes: HydratedNode[];
+  // Pre-computed map for O(1) lookups during interpolation
+  nodeMap: Map<string, HydratedNode>;
 };
 
 // 2. The Processing Logic
 export function hydrateMarketData(rawData: RawDataPoint[]): DailyFrame[] {
-  // A. Group data by Date
+  
+  // --- STEP 1: SCAN FOR BOUNDS ---
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  
+  // First pass: Find raw min/max
+  rawData.forEach(p => {
+    // Safety check for bad data
+    if (typeof p.x !== 'number' || typeof p.y !== 'number') return;
+    
+    if (p.x < minX) minX = p.x;
+    if (p.x > maxX) maxX = p.x;
+    if (p.y < minY) minY = p.y;
+    if (p.y > maxY) maxY = p.y;
+  });
+
+  // --- STEP 2: CALCULATE AUTO-SCALAR ---
+  const rangeX = maxX - minX;
+  const rangeY = maxY - minY;
+  const maxRange = Math.max(rangeX, rangeY);
+
+  // Prevent divide by zero if data is empty or single point
+  const safeRange = maxRange === 0 ? 1 : maxRange;
+
+  // This magic number scales YOUR specific data to exactly 800 units wide
+  const scaleFactor = TARGET_WORLD_SIZE / safeRange;
+
+  // Calculate center to shift (0,0) to the middle
+  const rawCenterX = (minX + maxX) / 2;
+  const rawCenterY = (minY + maxY) / 2;
+
+  // Debug log
+  console.log(`[Data Processing] Auto-Scaled Data: 
+    Raw Range: ${safeRange.toFixed(4)} 
+    Calculated Scalar: ${scaleFactor.toFixed(2)}`);
+
+  // --- STEP 3: GROUP DATA ---
   const grouped: Record<string, RawDataPoint[]> = {};
   
   rawData.forEach(item => {
+    if (typeof item.x !== 'number' || typeof item.y !== 'number') return;
+
     if (!grouped[item.date]) grouped[item.date] = [];
-    grouped[item.date].push(item);
+    
+    // NORMALIZE: (Value - Center) * Scalar
+    // This moves the cloud to 0,0 and stretches it to fill the screen
+    grouped[item.date].push({
+        ...item,
+        x: (item.x - rawCenterX) * scaleFactor,
+        y: (item.y - rawCenterY) * scaleFactor
+    });
   });
 
-  // B. Sort dates chronologically to ensure flow direction is correct
+  // --- STEP 4: BUILD FRAMES ---
   const sortedDates = Object.keys(grouped).sort();
 
-  // C. Build the Frames
   const frames: DailyFrame[] = sortedDates.map((date, index) => {
     const currentDayData = grouped[date];
     const nextDate = sortedDates[index + 1];
     const nextDayData = nextDate ? grouped[nextDate] : [];
 
-    // Create a lookup map for the NEXT day for O(1) velocity calculation
     const nextDayLookup = new Map<string, RawDataPoint>();
     nextDayData.forEach(p => nextDayLookup.set(p.ticker, p));
 
     const nodes: HydratedNode[] = currentDayData.map(stock => {
       const nextState = nextDayLookup.get(stock.ticker);
 
-      // Calculate Derivatives (Velocity)
-      // If there is no data for tomorrow (delisted or end of dataset), velocity is 0
+      // Velocity inherits the perfect scaling automatically
       const vx = nextState ? nextState.x - stock.x : 0;
       const vy = nextState ? nextState.y - stock.y : 0;
 
-      // --- THE PHYSICS ENERGY FORMULA ---
-      // Concept: Distance Moved * (News Intensity)
-      // High movement + High News Volume = High Energy (Anomaly)
       const movementMagnitude = Math.abs(vx) + Math.abs(vy);
-      const newsIntensity = 1 + Math.abs(stock.sentiment); // Scale 1.0 to 2.0
+      const newsIntensity = 1 + Math.abs(stock.sentiment); 
       
       const energy = movementMagnitude * newsIntensity;
 
@@ -70,15 +118,19 @@ export function hydrateMarketData(rawData: RawDataPoint[]): DailyFrame[] {
         y: stock.y,
         vx: vx,
         vy: vy,
-        energy: parseFloat(energy.toFixed(4)), // Keep file size manageable
+        energy: parseFloat(energy.toFixed(4)), 
         headline: stock.headline,
         sentiment: stock.sentiment
       };
     });
 
+    const nodeMap = new Map<string, HydratedNode>();
+    nodes.forEach(node => nodeMap.set(node.ticker, node));
+
     return {
       date,
-      nodes
+      nodes,
+      nodeMap 
     };
   });
 
