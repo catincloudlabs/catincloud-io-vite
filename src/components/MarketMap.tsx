@@ -128,13 +128,14 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     });
   }, [data, selectedTicker, graphConnections]);
 
-  // Trail Logic
+  // Trail Logic (Vapor Trail Version - Tuned)
   const trailData = useMemo(() => {
     if (!history || !data) return [];
     const currentIndex = history.findIndex(f => f.date === data.date);
     if (currentIndex <= 0) return [];
 
-    const LOOKBACK_FRAMES = 14; 
+    // TUNED: Reduced from 14 to 5 for cleaner "immediate history" only
+    const LOOKBACK_FRAMES = 5; 
     const lookback = Math.max(0, currentIndex - LOOKBACK_FRAMES);
     const recentHistory = history.slice(lookback, currentIndex + 1);
 
@@ -145,21 +146,39 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     );
 
     const pathsByTicker: Record<string, number[][]> = {};
+    
+    // Helper to calculate distance
+    const dist = (p1: number[], p2: number[]) => 
+       Math.sqrt(Math.pow(p2[0] - p1[0], 2) + Math.pow(p2[1] - p1[1], 2));
+
     recentHistory.forEach(frame => {
       frame.nodes.forEach(node => {
         if (activeTickers.has(node.ticker)) {
-          if (!pathsByTicker[node.ticker]) pathsByTicker[node.ticker] = [];
-          pathsByTicker[node.ticker].push([node.x, node.y]);
+          if (!pathsByTicker[node.ticker]) {
+             pathsByTicker[node.ticker] = [[node.x, node.y]];
+          } else {
+             const path = pathsByTicker[node.ticker];
+             const lastPoint = path[path.length - 1];
+             const currentPoint = [node.x, node.y];
+             
+             // TUNED: Only add point if moved > 2 pixels (Prevents "scribbles" in place)
+             if (dist(lastPoint, currentPoint) > 2) {
+                 path.push(currentPoint);
+             }
+          }
         }
       });
     });
 
-    return Object.keys(pathsByTicker).map(ticker => ({
-      ticker,
-      path: pathsByTicker[ticker],
-      sentiment: data.nodes.find(n => n.ticker === ticker)?.sentiment || 0
-    }));
-  }, [data, history, selectedTicker, highEnergyThreshold]); 
+    // Filter out paths that are too short (single points)
+    return Object.keys(pathsByTicker)
+        .filter(t => pathsByTicker[t].length > 1)
+        .map(ticker => ({
+            ticker,
+            path: pathsByTicker[ticker],
+            sentiment: data.nodes.find(n => n.ticker === ticker)?.sentiment || 0
+        }));
+  }, [data, history, selectedTicker, highEnergyThreshold]);
 
   // Vector Logic
   const vectorData = useMemo(() => {
@@ -299,24 +318,27 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     updateTriggers: { getColor: [selectedTicker] }
   });
 
-  // 3. GHOST TRAILS
+  // 3. GHOST TRAILS (Vapor Style - Tuned)
   const trailLayer = new PathLayer({
     id: 'market-trails',
     data: trailData,
     getPath: (d: any) => d.path,
     getColor: (d: any) => {
         const isSelected = d.ticker === selectedTicker;
-        const alpha = isSelected ? 180 : 40;
-        const slateAlpha = isSelected ? 120 : 15;
+        // TUNED: Drastically reduced opacity (was 40 -> 25)
+        const alpha = isSelected ? 180 : 25;
+        const slateAlpha = isSelected ? 120 : 10;
         if (d.sentiment > 0.1) return [...THEME.mint, alpha]; 
         if (d.sentiment < -0.1) return [...THEME.red, alpha];
         return [...THEME.slate, slateAlpha];
     },
-    getWidth: (d: any) => d.ticker === selectedTicker ? 2.0 : 0.8,
+    // TUNED: Thinner lines (was 0.8 -> 0.5)
+    getWidth: (d: any) => d.ticker === selectedTicker ? 2.0 : 0.5,
     widthUnits: 'pixels',
     jointRounded: true,
     capRounded: true,
     opacity: 1,
+    transitions: { getColor: 1000, getWidth: 1000 },
     updateTriggers: { getColor: [selectedTicker], getWidth: [selectedTicker] }
   });
 
@@ -332,8 +354,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     updateTriggers: { getWidth: [graphConnections], getColor: [graphConnections] }
   });
 
-  // 5. GLOW LAYER (Cleaned: Selection/Graph Only)
-  // High energy bloom is removed in favor of the hard ring in dotLayer
+  // 5. GLOW LAYER (Cleaned: Selection Only)
   const glowLayer = new ScatterplotLayer({
     id: 'market-glow',
     data: sortedNodes,
@@ -357,7 +378,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     transitions: { getRadius: 500, getFillColor: 500 }
   });
 
-  // 6. DOT LAYER (The Stocks - with Tech Rings)
+  // 6. DOT LAYER (The Stocks - Tuned Size)
   const dotLayer = new ScatterplotLayer({
     id: 'market-particles',
     data: sortedNodes,
@@ -366,8 +387,10 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     getRadius: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return 6.0; 
         if (graphConnections?.some(c => c.target === d.ticker)) return 3.0; 
-        // NEW: Subtle size boost for high energy (Technical look)
+        
+        // TUNED: Reduced from 2.5 to 1.8 (Subtle prominence)
         if (d.energy > highEnergyThreshold) return 1.8; 
+        
         return 1.2; 
     },
     getFillColor: (d: HydratedNode) => {
@@ -380,14 +403,18 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     stroked: true,
     getLineWidth: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return pulse ? 2 : 0.5; 
-        // Crisp border for high energy nodes
-        if (d.energy > highEnergyThreshold) return 0.8; 
+        
+        // TUNED: Reduced from 1.5 to 1.0 (Crisper hairline ring)
+        if (d.energy > highEnergyThreshold) return 1.0; 
+        
         return 0; 
     },
     getLineColor: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return [...THEME.mint, 180];
-        // NEW: Bright "Glass" ring for high energy (High Contrast)
+        
+        // High Energy Ring - Bright White/Glass
         if (d.energy > highEnergyThreshold) return [...THEME.glass, 200];
+        
         return [0, 0, 0, 0];
     },
     lineWidthUnits: 'common',
@@ -424,7 +451,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
                 sectorBgLayer,  // 2. Sector Circles
                 sectorTextLayer,// 3. Sector Labels
                 vectorLayer,    // 4. Momentum Arrows
-                trailLayer,     // 5. History Trails
+                trailLayer,     // 5. History Trails (Vapor)
                 glowLayer,      // 6. Highlight Glows (Selection Only)
                 synapseLayer,   // 7. Connections
                 dotLayer        // 8. Stocks (Top - with Rings)
