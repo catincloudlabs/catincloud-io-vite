@@ -56,12 +56,11 @@ function App() {
       });
   }, []);
 
-  // 2. INTERPOLATION ENGINE
-  const { displayNodes, displaySectors, displayNodeMap, currentDateLabel, currentFrameData } = useMemo(() => {
+  // 2. INTERPOLATION ENGINE (Optimized)
+  const { displayNodes, displayNodeMap, currentDateLabel, currentFrameData } = useMemo(() => {
     if (!frames || frames.length === 0) {
         return { 
           displayNodes: [], 
-          displaySectors: [],
           displayNodeMap: new Map(), 
           currentDateLabel: "INITIALIZING...", 
           currentFrameData: null 
@@ -88,7 +87,6 @@ function App() {
 
     if (!f1) return { 
       displayNodes: [], 
-      displaySectors: [],
       displayNodeMap: new Map(), 
       currentDateLabel: "ERROR", 
       currentFrameData: null 
@@ -121,25 +119,8 @@ function App() {
       };
     });
 
-    // D. Interpolate Sectors
-    const sectors = f1.sectors.map(sector => {
-      const id = sector.id;
-      // Linear lookups are fine here as sector counts are low (10-15)
-      const s0 = f0.sectors.find(s => s.id === id) || sector;
-      const s1 = sector;
-      const s2 = f2.sectors.find(s => s.id === id) || sector;
-      const s3 = f3.sectors.find(s => s.id === id) || s2;
-
-      return {
-          ...sector,
-          x: catmullRom(s0.x, s1.x, s2.x, s3.x, t),
-          y: catmullRom(s0.y, s1.y, s2.y, s3.y, t)
-      };
-    });
-
     return { 
       displayNodes: nodes,
-      displaySectors: sectors, // Export Interpolated Sectors
       displayNodeMap: f1.nodeMap, // Pass the original map to satisfy Type requirements
       currentDateLabel: f1.date, 
       currentFrameData: f1 
@@ -168,7 +149,6 @@ function App() {
         data={{ 
             date: currentDateLabel, 
             nodes: displayNodes, 
-            sectors: displaySectors, // Pass interpolated sectors
             nodeMap: displayNodeMap 
         }} 
         // @ts-ignore - MarketFrame vs DailyFrame type compatibility
