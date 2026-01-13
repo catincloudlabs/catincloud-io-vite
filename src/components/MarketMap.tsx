@@ -367,7 +367,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
         if (d.ticker === selectedTicker) return 6.0; 
         if (graphConnections?.some(c => c.target === d.ticker)) return 3.0; 
         // NEW: Subtle size boost for high energy (Technical look)
-        if (d.energy > highEnergyThreshold) return 2.5; 
+        if (d.energy > highEnergyThreshold) return 1.8; 
         return 1.2; 
     },
     getFillColor: (d: HydratedNode) => {
@@ -381,7 +381,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     getLineWidth: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return pulse ? 2 : 0.5; 
         // NEW: Crisp border for high energy nodes
-        if (d.energy > highEnergyThreshold) return 1.5; 
+        if (d.energy > highEnergyThreshold) return 1.0; 
         return 0; 
     },
     getLineColor: (d: HydratedNode) => {
