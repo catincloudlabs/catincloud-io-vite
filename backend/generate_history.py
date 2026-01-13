@@ -2,14 +2,13 @@ import os
 import json
 import pandas as pd
 import numpy as np
-from sklearn.manifold import TSNE
+import umap  # CHANGED: Import UMAP
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from supabase import create_client, Client, ClientOptions
 from tenacity import retry, stop_after_attempt, wait_exponential
 import httpx
 from textblob import TextBlob
-import inspect
 
 # 1. SETUP
 load_dotenv()
@@ -25,22 +24,23 @@ supabase: Client = create_client(
 
 # CONFIG
 HISTORY_DAYS = 90
-PERPLEXITY = 30  
-TARGET_CANVAS_SIZE = 150 # Will result in coordinates from -150 to +150
+# UMAP Params
+N_NEIGHBORS = 30     # Controls how much local vs global structure is preserved
+MIN_DIST = 0.1       # Controls how tightly points are packed together
+METRIC = 'cosine'    # Cosine distance is usually better for embeddings
+TARGET_CANVAS_SIZE = 150 
 
 # --- MATH UTILS ---
 
 def normalize_to_bounds(matrix, target_radius=150):
     """
-    FIX: Forces the cluster to fill the screen (-150 to 150).
-    This prevents the 'Cluster Collapse' issue where Day 2 shrinks to nothing.
+    Forces the cluster to fill the screen (-150 to 150).
     """
     # 1. Center the data at 0,0
     centroid = np.mean(matrix, axis=0)
     centered = matrix - centroid
     
-    # 2. Find the current max distance from center (the "radius" of the cluster)
-    # We use the 95th percentile to ignore extreme outliers that squash the rest
+    # 2. Find the current max distance from center (95th percentile to ignore outliers)
     distances = np.linalg.norm(centered, axis=1)
     current_radius = np.percentile(distances, 95)
     
@@ -53,6 +53,7 @@ def normalize_to_bounds(matrix, target_radius=150):
 def align_to_reference(source_matrix, target_matrix, source_tickers, target_tickers):
     """
     Rotates target_matrix (Today) to best fit source_matrix (Yesterday).
+    Even with UMAP init, this rigid alignment helps prevent slow rotational drift.
     """
     common_tickers = list(set(source_tickers) & set(target_tickers))
     
@@ -78,23 +79,7 @@ def align_to_reference(source_matrix, target_matrix, source_tickers, target_tick
         Vt[1, :] *= -1
         R = np.dot(Vt.T, U.T)
 
-    # Return rotated matrix (Scaling is handled by normalize_to_bounds now)
     return np.dot(target_matrix - centroid_B, R) + centroid_A
-
-def create_tsne_instance(n_components, perplexity, init, random_state):
-    preferred_params = {
-        "n_components": n_components,
-        "perplexity": perplexity,
-        "init": init,
-        "random_state": random_state,
-        "learning_rate": "auto",
-        "n_iter": 1000,
-        "method": "barnes_hut"
-    }
-    sig = inspect.signature(TSNE.__init__)
-    valid_args = set(sig.parameters.keys())
-    final_params = {k: v for k, v in preferred_params.items() if k in valid_args}
-    return TSNE(**final_params)
 
 @retry(stop=stop_after_attempt(5), wait=wait_exponential(multiplier=1, min=2, max=10))
 def fetch_daily_vectors_rpc(target_date):
@@ -133,7 +118,7 @@ def fetch_daily_vectors_rpc(target_date):
 
 # --- MAIN EXECUTION ---
 if __name__ == "__main__":
-    print(f"🚀 Starting Stabilized Walk-Forward Generation (Last {HISTORY_DAYS} Days)...")
+    print(f"🚀 Starting Stabilized Walk-Forward Generation (UMAP)...")
     
     end_date = datetime.now()
     dates = [(end_date - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(HISTORY_DAYS)]
@@ -163,36 +148,48 @@ if __name__ == "__main__":
             print("Skipped (Not enough data)")
             continue
 
-        # 1. Initialization
-        n_samples = current_matrix.shape[0]
+        # 1. Initialization (Temporal Anchoring)
+        # If we have yesterday's map, we use those coordinates as the starting point 
+        # for today's reduction. This is the key to smoothness.
         init_matrix = None
         
         if prev_matrix is not None:
             prev_map = {t: pos for t, pos in zip(prev_tickers, prev_matrix)}
             init_build = []
+            
+            # Calculate the mean position to use as a fallback for new tickers
+            # (Instead of random, which can pull the map apart)
+            default_pos = np.mean(prev_matrix, axis=0) 
+            
             for t in current_tickers:
                 if t in prev_map:
                     init_build.append(prev_map[t])
                 else:
-                    init_build.append(np.random.rand(2)) 
-            init_matrix = np.array(init_build)
+                    # Add a tiny bit of noise to the center so they don't stack perfectly
+                    jitter = np.random.normal(0, 1, 2)
+                    init_build.append(default_pos + jitter)
+                    
+            init_matrix = np.array(init_build, dtype=np.float32)
             
-        # 2. Run TSNE
-        tsne = create_tsne_instance(
+        # 2. Run UMAP
+        # init='spectral' is default, but we pass our custom matrix if available
+        reducer = umap.UMAP(
+            n_neighbors=N_NEIGHBORS,
+            min_dist=MIN_DIST,
             n_components=2,
-            perplexity=min(PERPLEXITY, n_samples - 1),
-            init=init_matrix if init_matrix is not None else 'pca',
-            random_state=42
+            metric=METRIC,
+            init=init_matrix if init_matrix is not None else 'spectral',
+            random_state=42,
+            n_jobs=1 
         )
         
-        embeddings_raw = tsne.fit_transform(current_matrix)
+        embeddings_raw = reducer.fit_transform(current_matrix)
         
-        # --- FIX: NORMALIZE SCALE BEFORE ALIGNMENT ---
-        # This ensures Day 2 is the same size as Day 1
+        # 3. Normalize Scale
         embeddings_scaled = normalize_to_bounds(embeddings_raw, TARGET_CANVAS_SIZE)
-        # ---------------------------------------------
 
-        # 3. Apply Procrustes Alignment
+        # 4. Procrustes Alignment (Fine-tuning)
+        # Even with UMAP init, the whole map might rotate slightly. This locks it down.
         if prev_matrix is not None:
             embeddings_stabilized = align_to_reference(
                 source_matrix=prev_matrix, 
@@ -203,7 +200,7 @@ if __name__ == "__main__":
         else:
             embeddings_stabilized = embeddings_scaled
             
-        # 4. Save
+        # 5. Save
         for i, row in df.iterrows():
             ticker = row['ticker']
             x, y = embeddings_stabilized[i]
@@ -222,7 +219,7 @@ if __name__ == "__main__":
         
         print(f"✅ Aligned & Saved ({len(df)} tickers)")
 
-    # 5. Export
+    # 6. Export
     output_path = "../public/data/market_physics_history.json"
     with open(output_path, "w") as f:
         json.dump({"data": full_history}, f)
