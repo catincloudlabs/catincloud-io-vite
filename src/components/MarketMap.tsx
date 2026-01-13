@@ -1,16 +1,20 @@
+// src/components/MarketMap.tsx
+
 // @ts-ignore
 import React, { useMemo, useState, useEffect } from 'react';
 // @ts-ignore
 import DeckGL from '@deck.gl/react';
 // @ts-ignore
-import { ScatterplotLayer, PolygonLayer, PathLayer, LineLayer } from '@deck.gl/layers';
+import { ScatterplotLayer, PolygonLayer, PathLayer, LineLayer, TextLayer } from '@deck.gl/layers';
 // @ts-ignore
 import { PathStyleExtension } from '@deck.gl/extensions'; 
 // @ts-ignore
 import { OrthographicView } from '@deck.gl/core';
 import { Delaunay } from 'd3-delaunay';
 import { GraphConnection } from '../hooks/useKnowledgeGraph'; 
+import { getSectorLabel } from '../utils/sectorMap';
 
+// --- TYPES ---
 export type HydratedNode = {
   ticker: string;
   x: number;
@@ -20,11 +24,22 @@ export type HydratedNode = {
   energy: number;
   headline: string;
   sentiment: number;
+  sector?: string;
+};
+
+// NEW: Type for Sector Ghosts
+export type SectorNode = {
+  id: string;
+  x: number;
+  y: number;
+  energy: number;
+  count: number;
 };
 
 export type MarketFrame = {
   date: string;
   nodes: HydratedNode[];
+  sectors: SectorNode[]; 
   nodeMap: Map<string, HydratedNode>;
 };
 
@@ -61,13 +76,11 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     return () => clearInterval(interval);
   }, []);
 
-  // --- 2. CALCULATE CENTER OF MASS (Fixes 11 o'clock drift) ---
+  // --- 2. CALCULATE CENTER OF MASS ---
   const initialViewState = useMemo(() => {
     if (!data?.nodes?.length) {
         return { target: [0, 0, 0], zoom: 1 };
     }
-    
-    // Calculate the average X and Y to find the cluster's center
     const count = data.nodes.length;
     const avgX = data.nodes.reduce((sum, n) => sum + n.x, 0) / count;
     const avgY = data.nodes.reduce((sum, n) => sum + n.y, 0) / count;
@@ -78,9 +91,10 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
       minZoom: isMobile ? 0.5 : 0.8,
       maxZoom: isMobile ? 8 : 15
     };
-  }, [data]); // Re-calculates only when data loads
+  }, [data]);
 
   // --- 3. METRICS ---
+  // FIX: Restored 'maxEnergy' because it is used in updateTriggers below
   const { maxEnergy, highEnergyThreshold } = useMemo(() => {
     if (!data?.nodes || data.nodes.length === 0) return { maxEnergy: 0, highEnergyThreshold: 0 };
     const energies = data.nodes.map(n => n.energy);
@@ -88,7 +102,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     
     return { 
         maxEnergy: max, 
-        highEnergyThreshold: max * 0.15
+        highEnergyThreshold: max * 0.15 
     };
   }, [data]);
 
@@ -184,9 +198,6 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     if (!sortedNodes || sortedNodes.length < 3) return [];
     const points = sortedNodes.map(d => [d.x, d.y] as [number, number]);
     const delaunay = Delaunay.from(points);
-    // Dynamic bounds based on current view center helps, but fixed is usually fine 
-    // if we center the camera. We kept -250/250 but shifted to match the centroid could be better.
-    // For now, large static bounds work fine with the new camera target.
     const voronoi = delaunay.voronoi([-400, -400, 400, 400]);
     // @ts-ignore
     const polygons = Array.from(voronoi.cellPolygons());
@@ -276,7 +287,26 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     updateTriggers: { getColor: [selectedTicker], getWidth: [selectedTicker] }
   });
 
-  // 4. SYNAPSES
+  // 4. SECTOR LABELS (NEW)
+  const sectorLayer = new TextLayer({
+    id: 'sector-labels',
+    data: data.sectors || [], 
+    getPosition: (d: SectorNode) => [d.x, d.y],
+    getText: (d: SectorNode) => getSectorLabel(d.id).toUpperCase(),
+    getSize: 12,
+    getColor: [...THEME.slate, 150], 
+    fontFamily: 'Inter, sans-serif',
+    fontWeight: 600,
+    characterSet: 'auto',
+    opacity: 0.8,
+    outlineWidth: 2,
+    outlineColor: [0, 0, 0, 200],
+    updateTriggers: {
+        getPosition: [data.date] 
+    }
+  });
+
+  // 5. SYNAPSES
   const synapseLayer = new LineLayer({
     id: 'graph-synapses',
     data: synapseData,
@@ -288,7 +318,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     updateTriggers: { getWidth: [graphConnections], getColor: [graphConnections] }
   });
 
-  // 5. GLOW LAYER
+  // 6. GLOW LAYER
   const glowLayer = new ScatterplotLayer({
     id: 'market-glow',
     data: sortedNodes,
@@ -314,7 +344,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     transitions: { getRadius: 3000, getFillColor: 1000 }
   });
 
-  // 6. DOT LAYER
+  // 7. DOT LAYER
   const dotLayer = new ScatterplotLayer({
     id: 'market-particles',
     data: sortedNodes,
@@ -353,6 +383,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     updateTriggers: {
         getRadius: [selectedTicker, graphConnections],
         getFillColor: [selectedTicker, graphConnections],
+        // FIX: maxEnergy is now available
         getLineWidth: [maxEnergy, pulse, selectedTicker], 
         getLineColor: [maxEnergy, pulse, selectedTicker] 
     },
@@ -367,10 +398,9 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
 
         <DeckGL
             views={new OrthographicView({ controller: true })}
-            // CHANGED: Uses calculated center of mass instead of static constant
             initialViewState={initialViewState}
             controller={true}
-            layers={[cellLayer, vectorLayer, trailLayer, glowLayer, synapseLayer, dotLayer]} 
+            layers={[cellLayer, vectorLayer, trailLayer, sectorLayer, glowLayer, synapseLayer, dotLayer]} 
             style={{ backgroundColor: 'transparent' }} 
             onClick={(info: any) => {
                 if (info.object) {
