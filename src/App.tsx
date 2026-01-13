@@ -56,7 +56,7 @@ function App() {
       });
   }, []);
 
-  // 2. INTERPOLATION ENGINE (Optimized)
+  // 2. INTERPOLATION ENGINE
   const { displayNodes, displaySectors, displayNodeMap, currentDateLabel, currentFrameData } = useMemo(() => {
     if (!frames || frames.length === 0) {
         return { 
