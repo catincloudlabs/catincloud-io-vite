@@ -74,7 +74,6 @@ function calculateSectorDynamics(nodes: HydratedNode[]): SectorNode[] {
 
   // Normalize
   return Object.values(sectors).map(s => {
-    // FIX: logic is now consistent and uses the variable
     // If total energy is high, we divide by energy to get the weighted center.
     // If energy is near zero, we divide by count to get the geometric center.
     const normalizationFactor = s.energy > 1 ? s.energy : s.count; 
