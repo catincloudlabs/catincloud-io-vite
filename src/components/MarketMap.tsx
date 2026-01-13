@@ -77,20 +77,57 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     return () => clearInterval(interval);
   }, []);
 
-  // --- 2. CALCULATE CENTER OF MASS ---
+  // --- 2. SMART VIEWPORT CALCULATION (Auto-Fit) ---
   const initialViewState = useMemo(() => {
-    if (!data?.nodes?.length) {
-        return { target: [0, 0, 0], zoom: 1 };
-    }
-    const count = data.nodes.length;
-    const avgX = data.nodes.reduce((sum, n) => sum + n.x, 0) / count;
-    const avgY = data.nodes.reduce((sum, n) => sum + n.y, 0) / count;
+    // Default fallback
+    if (!data?.nodes?.length) return { target: [0, 0, 0], zoom: 1 };
+
+    // A. Calculate Bounds & Weighted Center
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    let totalEnergy = 0;
+    let weightedSumX = 0;
+    let weightedSumY = 0;
+
+    data.nodes.forEach(n => {
+        // Bounds
+        if (n.x < minX) minX = n.x;
+        if (n.x > maxX) maxX = n.x;
+        if (n.y < minY) minY = n.y;
+        if (n.y > maxY) maxY = n.y;
+
+        // Weighted Center (Bias towards high energy nodes)
+        // We add 1 to ensure even 0 energy nodes have a tiny bit of gravity
+        const weight = n.energy + 1; 
+        weightedSumX += n.x * weight;
+        weightedSumY += n.y * weight;
+        totalEnergy += weight;
+    });
+
+    const centerX = totalEnergy > 0 ? weightedSumX / totalEnergy : 0;
+    const centerY = totalEnergy > 0 ? weightedSumY / totalEnergy : 0;
+
+    // B. Dynamic Zoom Calculation
+    // Fit the data bounds into the screen with padding
+    const PADDING = 100; // Pixels of breathing room
+    const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 1000;
+    const screenHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
+
+    const dataWidth = Math.max(maxX - minX, 100); // Prevent divide by zero
+    const dataHeight = Math.max(maxY - minY, 100);
+
+    const scaleX = (screenWidth - PADDING) / dataWidth;
+    const scaleY = (screenHeight - PADDING) / dataHeight;
+    const fitScale = Math.min(scaleX, scaleY);
+
+    // Convert Scale to DeckGL Zoom Level (log2)
+    const autoZoom = Math.log2(fitScale);
 
     return {
-      target: [avgX, avgY, 0], 
-      zoom: isMobile ? 1.0 : 2.2, 
-      minZoom: isMobile ? 0.5 : 0.8,
-      maxZoom: isMobile ? 8 : 15
+      target: [centerX, centerY, 0],
+      // Clamp zoom to reasonable limits so we don't zoom in to atomic levels or out to infinity
+      zoom: Math.max(isMobile ? 0.2 : 0.5, Math.min(autoZoom, 4)),
+      minZoom: isMobile ? 0.2 : 0.5,
+      maxZoom: 15
     };
   }, [data]); 
 
