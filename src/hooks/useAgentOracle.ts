@@ -5,17 +5,21 @@ export function useAgentOracle() {
   const [messages, setMessages] = useState<Array<{type: 'agent'|'user'|'system', text: string}>>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
 
-  const sendMessage = useCallback(async (userQuery: string, context: string) => {
+  // 1. UPDATE: Added optional 'mode' parameter (string)
+  const sendMessage = useCallback(async (userQuery: string, context: string, mode?: string) => {
     // Optimistic UI Update
     setMessages(prev => [...prev, { type: 'user', text: userQuery }]);
     setIsAiLoading(true);
 
     try {
-      // THE WIRING: Matches the { message, context } in index.ts
+      // THE WIRING: Matches the { message, context, mode } in index.ts
       const { data, error } = await supabase.functions.invoke('oracle', {
         body: { 
           message: userQuery, 
-          context: context 
+          context: context,
+          // 2. UPDATE: Pass the mode into the payload
+          // If undefined, the backend defaults to 'analyst'
+          mode: mode 
         }
       });
 

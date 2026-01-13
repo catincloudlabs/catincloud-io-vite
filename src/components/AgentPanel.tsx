@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { MarketFrame } from '../App';
+import { MarketFrame } from './MarketMap';
 import { GraphConnection } from '../hooks/useKnowledgeGraph';
 import { useAgentOracle } from '../hooks/useAgentOracle';
-// @ts-ignore
 import { Minus, Plus, Loader2, SendHorizontal, Sparkles, Activity } from 'lucide-react';
 
 interface AgentPanelProps {
@@ -125,7 +124,8 @@ export function AgentPanel({
     if (!selectedTicker) lastTickerRef.current = null;
   }, [selectedTicker]);
 
-  const handleCommand = async (textOverride?: string) => {
+  // 1. UPDATE: Accept 'mode' as an optional 2nd argument
+  const handleCommand = async (textOverride?: string, mode?: string) => {
     const query = textOverride || inputValue.trim();
     if (!query) return;
 
@@ -139,7 +139,8 @@ export function AgentPanel({
       ? getSystemContext(selectedTicker, currentFrame, graphConnections || [])
       : `General Market View. SIMULATION DATE: ${currentFrame?.date}`;
 
-    await sendMessage(query, context);
+    // 2. UPDATE: Pass 'mode' to the hook (which sends it to Supabase)
+    await sendMessage(query, context, mode);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -151,7 +152,8 @@ export function AgentPanel({
       return [
         { label: `Brief ${selectedTicker}`, prompt: `Give me a short brief on ${selectedTicker}'s status.` },
         { label: "Check News", prompt: `Any relevant news impacting ${selectedTicker}?` },
-        { label: "Analyze Risk", prompt: `What are the immediate risks for ${selectedTicker}?` }
+        // 3. UPDATE: Add the new "Explain Physics" chip with the 'physicist' mode trigger
+        { label: "Explain Physics", prompt: `Explain the visual physics of ${selectedTicker}.`, mode: 'physicist' }
       ];
     }
     return [
@@ -241,7 +243,9 @@ export function AgentPanel({
                     <button 
                         key={idx} 
                         className="suggestion-chip"
-                        onClick={() => handleCommand(chip.prompt)}
+                        // 4. UPDATE: Pass the optional chip.mode to the handler
+                        // @ts-ignore
+                        onClick={() => handleCommand(chip.prompt, chip.mode)}
                         disabled={isBusy}
                         aria-label={`Ask AI: ${chip.label}`}
                     >

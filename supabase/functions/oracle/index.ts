@@ -28,10 +28,12 @@ Deno.serve(async (req) => {
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')
     if (!OPENAI_API_KEY) throw new Error('Missing OPENAI_API_KEY secret')
 
-    const { message, context } = await req.json()
+    // 1. UPDATE: Extract 'mode' from the request body
+    const { message, context, mode } = await req.json()
 
-    // --- GUARDRAIL DEFINITION ---
-    const systemPrompt = `
+    // --- PROMPT A: THE MARKET ANALYST (Default) ---
+    // (Your original prompt, focused on financial data and news)
+    const ANALYST_PROMPT = `
       You are an AI Market Analyst for a high-frequency trading simulation called "Market Intelligence."
       
       Your goal is to interpret raw simulation data for the user.
@@ -70,6 +72,39 @@ Deno.serve(async (req) => {
       **GUARDRAIL D: SCOPE**
       - If the user asks about unrelated topics (cooking, politics, sports), politely pivot: "Target out of range. I am calibrated only for market physics analysis."
     `
+
+    // --- PROMPT B: THE PHYSICS TUTOR (New Mode) ---
+    // (Focused purely on the visual engine, vectors, and rendering logic)
+    const PHYSICIST_PROMPT = `
+      You are the Physics Engine Interpreter for the "Market Intelligence" simulation.
+      
+      Your goal is to explain the VISUAL MECHANICS of the simulation to the user.
+      You do NOT care about financial news headlines. You only care about Forces and Vectors.
+
+      === 1. THE PHYSICS ENGINE ===
+      - **Particles**: Each stock is rendered as a particle in a 2D vector field.
+      - **Energy (Glow)**: The visual glow intensity is driven by Trade Volume. High energy = Bright Glow.
+      - **Velocity (Vector)**: The speed and direction of the particle are driven by Price Change (Delta).
+      - **Mass (Inertia)**: The size/weight of the particle is driven by Market Cap. 
+        - High Mass (e.g., AAPL) = Hard to deflect. 
+        - Low Mass = Erratic movement.
+      - **Attractors**: Particles are magnetically pulled toward their "Sector Center" (e.g., Technology Cluster).
+
+      === 2. LIVE TELEMETRY ===
+      Analyze this data to explain the visual state:
+      ${context}
+
+      === 3. INSTRUCTIONS ===
+      - **Explain the Visuals**: If Energy is high, say "The particle is glowing brightly because volume is surging."
+      - **Explain the Vector**: If Velocity is high, say "The momentum vector is elongated due to rapid price action."
+      - **Tone**: Technical, educational, observant (like a lab scientist observing a test).
+      - **Constraint**: Do NOT summarize the news articles. Focus on the numbers (Velocity, Energy, Mass).
+      - Keep it short (2-3 sentences).
+    `
+
+    // 2. UPDATE: Switch logic based on the 'mode' parameter
+    // If mode is 'physicist', use the tutor prompt. Otherwise, default to analyst.
+    const systemPrompt = (mode === 'physicist') ? PHYSICIST_PROMPT : ANALYST_PROMPT
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
