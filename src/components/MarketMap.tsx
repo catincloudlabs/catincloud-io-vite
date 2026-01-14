@@ -596,7 +596,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
                 vectorLayer, trailLayer, glowLayer, synapseLayer, dotLayer
             ]} 
             style={{ backgroundColor: 'transparent' }} 
-            onHover={(info) => {
+            onHover={(info: any) => {
                 // LOCK LOGIC: If locked, stop updating hover info so tooltip stays put
                 if (!isLocked) {
                     setHoverInfo(info);
