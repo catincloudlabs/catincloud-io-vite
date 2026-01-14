@@ -45,7 +45,9 @@ interface MarketMapProps {
   onNodeClick?: (node: HydratedNode) => void;
   onBackgroundClick?: () => void;
   selectedTicker?: string | null;         
-  graphConnections?: GraphConnection[];   
+  graphConnections?: GraphConnection[];
+  // --- NEW PROP ---
+  isPlaying?: boolean;   
 }
 
 // Mobile Detection
@@ -61,7 +63,15 @@ const THEME = {
   darkText: [255, 255, 255, 180] 
 };
 
-export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selectedTicker, graphConnections }: MarketMapProps) {
+export function MarketMap({ 
+  data, 
+  history, 
+  onNodeClick, 
+  onBackgroundClick, 
+  selectedTicker, 
+  graphConnections,
+  isPlaying = false // Default to false
+}: MarketMapProps) {
   
   // --- 1. HEARTBEAT SYSTEM ---
   const [pulse, setPulse] = useState(false);
@@ -171,6 +181,9 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
   }, [data, selectedTicker, graphConnections]);
 
   const trailData = useMemo(() => {
+    // OPTIMIZATION: Skip trails when playing to save performance
+    if (isPlaying) return [];
+    
     if (!history || !data) return [];
     const currentIndex = history.findIndex(f => f.date === data.date);
     if (currentIndex <= 0) return [];
@@ -213,7 +226,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
             path: pathsByTicker[ticker],
             sentiment: data.nodes.find(n => n.ticker === ticker)?.sentiment || 0
         }));
-  }, [data, history, selectedTicker, highEnergyThreshold]);
+  }, [data, history, selectedTicker, highEnergyThreshold, isPlaying]);
 
   const vectorData = useMemo(() => {
     if (!data?.nodes) return [];
@@ -244,6 +257,10 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
   }, [selectedTicker, graphConnections, data]);
 
   const voronoiData = useMemo(() => {
+    // --- CRITICAL OPTIMIZATION ---
+    // If we are animating, SKIP the expensive Voronoi calculation.
+    if (isPlaying) return [];
+
     if (!sortedNodes || sortedNodes.length < 3) return [];
     const points = sortedNodes.map(d => [d.x, d.y] as [number, number]);
     const delaunay = Delaunay.from(points);
@@ -254,7 +271,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
       polygon,
       node: sortedNodes[i]
     }));
-  }, [sortedNodes]);
+  }, [sortedNodes, isPlaying]);
 
   const sectorLayerData = useMemo(() => {
     if (!data?.sectors) return [];
@@ -316,7 +333,13 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     pickable: false,
     getDashArray: [2, 5], 
     dash: true,
-    extensions: [new PathStyleExtension({ dash: true })]
+    extensions: [new PathStyleExtension({ dash: true })],
+    
+    // --- OPTIMIZATION ---
+    visible: !isPlaying, 
+    updateTriggers: {
+        getFillColor: [isPlaying]
+    }
   });
 
   const vectorLayer = new PathLayer({
@@ -362,7 +385,10 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     capRounded: true,
     opacity: 1,
     transitions: { getColor: 1000, getWidth: 1000 },
-    updateTriggers: { getColor: [selectedTicker], getWidth: [selectedTicker] }
+    updateTriggers: { getColor: [selectedTicker], getWidth: [selectedTicker] },
+    
+    // --- OPTIMIZATION ---
+    visible: !isPlaying 
   });
 
   const synapseLayer = new LineLayer({
