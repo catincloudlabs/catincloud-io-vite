@@ -1,6 +1,6 @@
 // src/components/MarketMap.tsx
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import DeckGL from '@deck.gl/react';
 import { ScatterplotLayer, PolygonLayer, PathLayer, LineLayer, TextLayer } from '@deck.gl/layers'; 
 import { PathStyleExtension } from '@deck.gl/extensions'; 
@@ -79,6 +79,16 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     x: number;
     y: number;
   } | null>(null);
+
+  // --- NEW: DRAG STATE FOR MOBILE TOOLTIP ---
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const dragStartRef = useRef<{ x: number, y: number } | null>(null);
+  const initialOffsetRef = useRef({ x: 0, y: 0 });
+
+  // Reset drag when the target object changes
+  useEffect(() => {
+    setDragOffset({ x: 0, y: 0 });
+  }, [hoverInfo?.object?.ticker]);
 
   // --- 3. SMART VIEWPORT CALCULATION (Auto-Fit) ---
   const initialViewState = useMemo(() => {
@@ -235,7 +245,6 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     const delaunay = Delaunay.from(points);
     const voronoi = delaunay.voronoi([-400, -400, 400, 400]);
     
-    // Convert to array to satisfy types if needed, though most environments support iterable directly
     const polygons = Array.from(voronoi.cellPolygons());
     return polygons.map((polygon: any, i: number) => ({
       polygon,
@@ -358,7 +367,6 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     getSourcePosition: (d: any) => d.from,
     getTargetPosition: (d: any) => d.to,
     getColor: [...THEME.gold, 120], 
-    // Starts at 1.0px, scales very slowly with strength, caps at 2.5px.
     getWidth: (d: any) => Math.min(2.5, 1.0 + (d.strength * 0.1)), 
     widthUnits: 'pixels',
     updateTriggers: { getWidth: [graphConnections], getColor: [graphConnections] }
@@ -433,34 +441,84 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     },
   });
 
-  // --- RENDER TOOLTIP (SMART POSITIONING) ---
+  // --- RENDER TOOLTIP (SMART POSITIONING + DRAGGABLE ON MOBILE) ---
   const renderTooltip = () => {
     if (!hoverInfo || !hoverInfo.object) return null;
 
     const { object, x, y } = hoverInfo;
     
-    // Smart Flip: If near right edge, render left
+    // Desktop smart positioning logic
     const isRightSide = typeof window !== 'undefined' && x > window.innerWidth * 0.7;
+    
+    // Mobile logic: Use dragged position or initial click
+    const mobileX = x + dragOffset.x;
+    const mobileY = y + dragOffset.y;
+
     const tooltipStyle: React.CSSProperties = {
         position: 'absolute',
         zIndex: 9999, // Ensure it's on top of AgentPanel
-        pointerEvents: 'none',
-        left: isRightSide ? 'auto' : x + 20,
-        right: isRightSide ? (window.innerWidth - x) + 20 : 'auto',
-        top: y,
-        backgroundColor: 'rgba(15, 23, 42, 0.9)', // Slate-900 with opacity
+        // If mobile, allow pointer events for dragging
+        pointerEvents: isMobile ? 'auto' : 'none',
+        
+        // Conditional Positioning
+        left: isMobile ? mobileX : (isRightSide ? 'auto' : x + 20),
+        right: isMobile ? 'auto' : (isRightSide ? (window.innerWidth - x) + 20 : 'auto'),
+        top: isMobile ? mobileY : y,
+        
+        backgroundColor: 'rgba(15, 23, 42, 0.9)', 
         backdropFilter: 'blur(8px)',
-        border: '1px solid rgba(148, 163, 184, 0.2)', // Slate border
+        border: '1px solid rgba(148, 163, 184, 0.2)', 
         padding: '12px',
         borderRadius: '8px',
         boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)',
         color: 'white',
         minWidth: '200px',
-        maxWidth: '300px'
+        maxWidth: '300px',
+        // Smoother transform for dragging
+        transform: isMobile ? 'translate(-50%, -100%)' : 'none', 
+        marginTop: isMobile ? -20 : 0 // Lift finger clearance
+    };
+
+    // Touch handlers for dragging
+    const handleTouchStart = (e: React.TouchEvent) => {
+        const touch = e.touches[0];
+        dragStartRef.current = { x: touch.clientX, y: touch.clientY };
+        initialOffsetRef.current = { ...dragOffset };
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        if (!dragStartRef.current) return;
+        const touch = e.touches[0];
+        const deltaX = touch.clientX - dragStartRef.current.x;
+        const deltaY = touch.clientY - dragStartRef.current.y;
+        
+        setDragOffset({
+            x: initialOffsetRef.current.x + deltaX,
+            y: initialOffsetRef.current.y + deltaY
+        });
+        e.stopPropagation(); // Prevent map pan
+    };
+
+    const handleTouchEnd = () => {
+        dragStartRef.current = null;
     };
 
     return (
-        <div style={tooltipStyle} className="map-tooltip-container">
+        <div 
+            style={tooltipStyle} 
+            className="map-tooltip-container"
+            onTouchStart={isMobile ? handleTouchStart : undefined}
+            onTouchMove={isMobile ? handleTouchMove : undefined}
+            onTouchEnd={isMobile ? handleTouchEnd : undefined}
+        >
+            {/* Mobile Drag Handle */}
+            {isMobile && (
+                <div style={{
+                    width: '40px', height: '4px', backgroundColor: 'rgba(255,255,255,0.2)', 
+                    borderRadius: '2px', margin: '0 auto 12px auto' 
+                }} />
+            )}
+
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                 <span style={{ fontFamily: 'monospace', fontWeight: 'bold', fontSize: '1.1rem', color: `rgb(${THEME.mint.join(',')})` }}>
                     ${object.ticker}
