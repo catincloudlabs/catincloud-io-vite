@@ -95,7 +95,7 @@ function App() {
     togglePlay 
   } = useTimelineAnimation({ 
     totalFrames: frames ? frames.length : 100,
-    durationInSeconds: 45 // Adjust: 45s to play full history
+    durationInSeconds: 60 // Original value: 45s
   });
   
   // Interaction State
@@ -251,7 +251,7 @@ function App() {
       {/* --- NEW: FLOATING PLAY BUTTON (Anchored near Legend) --- */}
       <button 
           onClick={togglePlay} 
-          className="floating-play-btn"
+          className={`floating-play-btn ${isPlaying ? 'playing' : ''}`}
           title={isPlaying ? "Pause Simulation" : "Play History"}
       >
           {isPlaying ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
