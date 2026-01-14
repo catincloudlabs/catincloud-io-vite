@@ -592,31 +592,6 @@ html, body {
   pointer-events: auto;
 }
 
-/* PLAY BUTTON STYLES */
-.timeline-play-btn {
-  background: rgba(52, 211, 153, 0.1);
-  border: 1px solid rgba(52, 211, 153, 0.3);
-  color: #34d399;
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.timeline-play-btn:hover {
-  background: rgba(52, 211, 153, 0.2);
-  transform: scale(1.05);
-  box-shadow: 0 0 10px rgba(52, 211, 153, 0.2);
-}
-
-.timeline-play-btn:active {
-  transform: scale(0.95);
-}
-
 /* SLIDER STYLES */
 input[type=range] {
   -webkit-appearance: none; appearance: none;
@@ -625,8 +600,8 @@ input[type=range] {
   z-index: 1;
 }
 
-input[type=range]:focus { outline: none;
-}
+input[type=range]:focus { outline: none; }
+
 input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none; appearance: none; 
   height: 20px; width: 20px; 
@@ -649,7 +624,47 @@ input[type=range]::-moz-range-track {
 }
 
 /* ==================================================================== */
-/* 7. HEADER SELECTOR (CUSTOM DROPDOWN)                                 */
+/* 7. FLOATING CONTROLS (PLAYBACK) - NEW SECTION                        */
+/* ==================================================================== */
+.floating-play-btn {
+  position: absolute;
+  z-index: 45; /* Stacks above map, same as Legend */
+  
+  /* POSITIONING: To the Right of the Legend Toggle */
+  /* Legend is anchored at left: 32px. Toggle is ~120px wide. */
+  left: 170px; 
+  bottom: 125px; /* Aligned vertically with Legend */
+
+  /* VISUAL STYLE */
+  width: 42px;
+  height: 42px;
+  border-radius: 50%; /* Circle shape stands out as a "Tool" */
+  background: rgba(15, 23, 42, 0.6); 
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  color: var(--accent-green);
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.floating-play-btn:hover {
+  background: rgba(15, 23, 42, 0.9);
+  transform: scale(1.1);
+  border-color: var(--accent-green);
+  box-shadow: 0 0 15px rgba(52, 211, 153, 0.3);
+}
+
+.floating-play-btn:active {
+  transform: scale(0.95);
+}
+
+/* ==================================================================== */
+/* 8. HEADER SELECTOR (CUSTOM DROPDOWN)                                 */
 /* ==================================================================== */
 
 .header-selector {
@@ -817,7 +832,7 @@ input[type=range]::-moz-range-track {
 }
 
 /* ==================================================================== */
-/* 8. ANIMATIONS & UTILS                                                */
+/* 9. ANIMATIONS & UTILS                                                */
 /* ==================================================================== */
 @keyframes fadeIn { to { opacity: 1; } }
 @keyframes scaleIn { to { transform: scale(1); } }
@@ -852,7 +867,7 @@ input[type=range]::-moz-range-track {
 }
 
 /* ==================================================================== */
-/* 9. MAP LEGEND (REPOSITIONED: BOTTOM LEFT)                            */
+/* 10. MAP LEGEND (REPOSITIONED: BOTTOM LEFT)                           */
 /* ==================================================================== */
 .legend-wrapper {
   position: absolute;
@@ -978,7 +993,7 @@ input[type=range]::-moz-range-track {
 }
 
 /* ==================================================================== */
-/* 10. REFACTORED UTILITIES (Moved from inline styles)                  */
+/* 11. REFACTORED UTILITIES (Moved from inline styles)                  */
 /* ==================================================================== */
 
 /* App.tsx */
@@ -1120,7 +1135,7 @@ input[type=range]::-moz-range-track {
 }
 
 /* ==================================================================== */
-/* 7. RESPONSIVE REFINEMENTS                                            */
+/* 12. RESPONSIVE REFINEMENTS                                           */
 /* ==================================================================== */
 
 @media (max-width: 768px) {
@@ -1224,5 +1239,14 @@ input[type=range]::-moz-range-track {
     margin-bottom: 0;
     margin-top: 20px;
     max-height: 50vh; 
+  }
+
+  /* --- FLOATING CONTROLS (MOBILE) --- */
+  /* Align the Play button with the Mobile Legend */
+  .floating-play-btn {
+     top: 75px;
+     bottom: auto;
+     /* Legend is at 16px. Toggle is smaller on mobile. ~120px offset */
+     left: 140px; 
   }
 }

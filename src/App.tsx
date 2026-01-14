@@ -233,6 +233,7 @@ function App() {
         onBackgroundClick={() => setSelectedTicker(null)}
         selectedTicker={selectedTicker}      
         graphConnections={connections}
+        // Enable performance mode (disables heavy layers when playing)
         isPlaying={isPlaying}       
       />
 
@@ -246,6 +247,15 @@ function App() {
       />
 
       <Legend />
+      
+      {/* --- NEW: FLOATING PLAY BUTTON (Anchored near Legend) --- */}
+      <button 
+          onClick={togglePlay} 
+          className="floating-play-btn"
+          title={isPlaying ? "Pause Simulation" : "Play History"}
+      >
+          {isPlaying ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
+      </button>
 
       <div className="agent-panel-wrapper">
         <AgentPanel 
@@ -258,29 +268,7 @@ function App() {
 
       <div className="timeline-slider-container">
         <div className="slider-label-row">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <button 
-                    onClick={togglePlay} 
-                    className="timeline-play-btn"
-                    title={isPlaying ? "Pause Simulation" : "Play History"}
-                    // Simple inline styles for the button, move to CSS for production
-                    style={{
-                        background: 'rgba(52, 211, 153, 0.1)',
-                        border: '1px solid rgba(52, 211, 153, 0.3)',
-                        borderRadius: '4px',
-                        width: '24px', 
-                        height: '24px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        color: '#34d399'
-                    }}
-                >
-                    {isPlaying ? <Pause size={12} fill="currentColor" /> : <Play size={12} fill="currentColor" />}
-                </button>
-                <span>HISTORY</span>
-            </div>
+            <span>HISTORY</span>
             
             {/* Dynamic Label based on state */}
             <span>{isPlaying ? "SIMULATING..." : "SIMULATION PROGRESS"}</span>
