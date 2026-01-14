@@ -80,12 +80,11 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     y: number;
   } | null>(null);
 
-  // --- NEW: DRAG STATE FOR MOBILE TOOLTIP ---
+  // --- DRAG STATE FOR MOBILE TOOLTIP ---
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const dragStartRef = useRef<{ x: number, y: number } | null>(null);
   const initialOffsetRef = useRef({ x: 0, y: 0 });
 
-  // Reset drag when the target object changes
   useEffect(() => {
     setDragOffset({ x: 0, y: 0 });
   }, [hoverInfo?.object?.ticker]);
@@ -378,8 +377,10 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     getPosition: (d: HydratedNode) => [d.x, d.y],
     radiusUnits: 'common',
     getRadius: (d: HydratedNode) => {
-        if (d.ticker === selectedTicker) return 18; 
-        if (graphConnections?.some(c => c.target === d.ticker)) return 10; 
+        // DIALED BACK: 18 -> 12
+        if (d.ticker === selectedTicker) return 12; 
+        // DIALED BACK: 10 -> 8
+        if (graphConnections?.some(c => c.target === d.ticker)) return 8; 
         return 0; 
     },
     getFillColor: (d: HydratedNode) => {
@@ -401,8 +402,10 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     getPosition: (d: HydratedNode) => [d.x, d.y],
     radiusUnits: 'common', 
     getRadius: (d: HydratedNode) => {
-        if (d.ticker === selectedTicker) return 6.0; 
-        if (graphConnections?.some(c => c.target === d.ticker)) return 3.0; 
+        // DIALED BACK: 6.0 -> 3.5
+        if (d.ticker === selectedTicker) return 3.5; 
+        // DIALED BACK: 3.0 -> 2.5
+        if (graphConnections?.some(c => c.target === d.ticker)) return 2.5; 
         if (d.energy > highEnergyThreshold) return 1.8; 
         return 1.2; 
     },
@@ -441,7 +444,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     },
   });
 
-  // --- RENDER TOOLTIP (SMART POSITIONING + DRAGGABLE ON MOBILE) ---
+  // --- RENDER TOOLTIP (SMART POSITIONING + DRAGGABLE) ---
   const renderTooltip = () => {
     if (!hoverInfo || !hoverInfo.object) return null;
 
