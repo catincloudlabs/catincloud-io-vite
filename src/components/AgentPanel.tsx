@@ -12,6 +12,7 @@ interface AgentPanelProps {
   isLoading?: boolean;
 }
 
+// --- CONTEXT GENERATOR ---
 const getSystemContext = (
   ticker: string, 
   currentFrame: MarketFrame, 
@@ -41,19 +42,12 @@ const getSystemContext = (
 };
 
 const formatMessage = (text: string) => {
-  return text.split('\n').map((line, lineIdx) => {
-    // Spacer for empty lines (paragraph breaks)
-    if (!line.trim()) return <div key={lineIdx} style={{ height: '8px' }} />;
-
-    const parts = line.split(/(\*\*.*?\*\*)/g);
-    const formattedLine = parts.map((part, partIdx) => {
-      if (part.startsWith('**') && part.endsWith('**')) {
-        return <span key={partIdx} className="term-bold">{part.slice(2, -2)}</span>;
-      }
-      return part;
-    });
-
-    return <div key={lineIdx}>{formattedLine}</div>;
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <span key={i} className="term-bold">{part.slice(2, -2)}</span>;
+    }
+    return part;
   });
 };
 
@@ -151,6 +145,7 @@ export function AgentPanel({
     if (e.key === 'Enter') handleCommand();
   };
 
+  // --- Context-Aware Suggestions ---
   const getSuggestions = () => {
     // 1. STATE: Selected Ticker (Specific)
     if (selectedTicker) {

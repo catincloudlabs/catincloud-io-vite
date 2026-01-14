@@ -5,6 +5,7 @@ export function useAgentOracle() {
   const [messages, setMessages] = useState<Array<{type: 'agent'|'user'|'system', text: string}>>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
 
+  // 1. UPDATE: Added optional 'mode' parameter (string)
   const sendMessage = useCallback(async (userQuery: string, context: string, mode?: string) => {
     // Optimistic UI Update
     setMessages(prev => [...prev, { type: 'user', text: userQuery }]);
@@ -16,7 +17,8 @@ export function useAgentOracle() {
         body: { 
           message: userQuery, 
           context: context,
-          // Pass the mode into the payload
+          // 2. UPDATE: Pass the mode into the payload
+          // If undefined, the backend defaults to 'analyst'
           mode: mode 
         }
       });
@@ -26,10 +28,7 @@ export function useAgentOracle() {
       setMessages(prev => [...prev, { type: 'agent', text: data.reply }]);
     } catch (err) {
       console.error(err);
-      setMessages(prev => [...prev, { 
-        type: 'agent', 
-        text: "I'm having trouble connecting to the network right now. Please try asking again in a moment." 
-      }]);
+      setMessages(prev => [...prev, { type: 'agent', text: "ERR: Uplink failed. Connection refused." }]);
     } finally {
       setIsAiLoading(false);
     }
