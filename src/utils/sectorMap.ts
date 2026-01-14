@@ -18,7 +18,18 @@ export const SECTOR_NAMES: Record<string, string> = {
 };
 
 export const SECTOR_MAP: Record<string, string> = {
-  // --- CUSTOM HIGH CONVICTION (Crypto, AI, Space) ---
+  // --- RETAIL FAVORITES (25 Additions) ---
+  GME: 'Discretionary', RIVN: 'Discretionary', AMC: 'Communications',
+  DKNG: 'Discretionary', SOFI: 'Financials', UPST: 'Financials',
+  LCID: 'Discretionary', CVNA: 'Discretionary', CHPT: 'Industrials',
+  OPEN: 'Real Estate', RDDT: 'Communications', DJT: 'Communications',
+  HIMS: 'Healthcare', NKLA: 'Industrials', SPCE: 'Industrials',
+  BB: 'Technology', AI: 'Technology', RBLX: 'Communications',
+  U: 'Technology', PTON: 'Discretionary', CHWY: 'Discretionary',
+  TLRY: 'Staples', BYND: 'Staples', QS: 'Discretionary',
+  FUBO: 'Communications', LUNR: 'Industrials',
+
+  // --- CUSTOM HIGH CONVICTION ---
   COIN: 'Financials', HOOD: 'Financials', ARES: 'Financials', 
   MSTR: 'Financials', IBIT: 'Financials', MARA: 'Financials',
   PLTR: 'Technology', DELL: 'Technology', WDAY: 'Technology',
