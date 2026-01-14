@@ -95,7 +95,7 @@ function App() {
     togglePlay 
   } = useTimelineAnimation({ 
     totalFrames: frames ? frames.length : 100,
-    durationInSeconds: 120
+    durationInSeconds: 150
   });
   
   // Interaction State
