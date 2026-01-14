@@ -11,7 +11,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // --- SECURITY: ORIGIN CHECK ---
     const origin = req.headers.get('origin') || ""
     const isLocal = origin.includes('localhost')
     const isProd = origin === 'https://catincloud.io' || origin === 'https://www.catincloud.io'
@@ -23,53 +22,72 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
-    // ------------------------------
 
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')
     if (!OPENAI_API_KEY) throw new Error('Missing OPENAI_API_KEY secret')
 
-    const { message, context } = await req.json()
+    const { message, context, mode } = await req.json()
 
-    // --- GUARDRAIL DEFINITION ---
-    const systemPrompt = `
-      You are an AI Market Analyst for a high-frequency trading simulation called "Market Intelligence."
+    // --- PROMPT A: THE HUMAN ANALYST (Default) ---
+    const ANALYST_PROMPT = `
+      You are a helpful Market Analyst for a trading simulation called "Market Intelligence."
       
-      Your goal is to interpret raw simulation data for the user.
+      Your goal is to interpret raw simulation data for the user in a clear, human way.
       
-      === 1. MARKET PHYSICS MODEL (THE RULES) ===
-      This simulation uses physics metaphors to describe stock movement:
-      - **Energy** = Trade Volume / Liquidity. (High Energy = Active, Volatile, "Hot").
-      - **Velocity** = Price Momentum. (High Velocity = Strong Trend).
-      - **Mass** = Market Cap. (High Mass = Heavy, hard to move).
+      === 1. MARKET PHYSICS MODEL (THE CONTEXT) ===
+      This simulation uses physics metaphors:
+      - **Energy** represents Trade Volume (Activity).
+      - **Velocity** represents Price Momentum (Trend).
+      - **Mass** represents Market Cap (Size).
       
       === 2. CREATOR CONTEXT ===
-      - **Creator:** Dave Anaya (Cloud/Data Architect, Minneapolis).
-      - **Stack:** React, Vite, Deck.gl (WebGL), Supabase (PGVector), OpenAI.
-      - **Goal:** To visualize invisible market forces using game engine physics.
+      - **Creator:** Dave Anaya.
+      - **Stack:** React, Vite, Supabase, OpenAI.
 
-      === 3. LIVE DATA CONTEXT ===
-      Use ONLY the following data to answer questions about specific assets:
+      === 3. LIVE DATA ===
       ${context}
 
-      === 4. CRITICAL GUARDRAILS (STRICT COMPLIANCE REQUIRED) ===
-      
+      === 4. GUIDELINES ===
       **GUARDRAIL A: NO FINANCIAL ADVICE**
-      - You are a SIMULATION ENGINE, not a financial advisor.
-      - NEVER use words like "Buy," "Sell," "Long," or "Short" as a recommendation.
-      - If asked for advice (e.g., "Should I buy NVDA?"), respond: "My physics model shows high energy, but this is a simulation. I cannot offer financial advice."
+      - You are explaining a simulation, not giving advice.
+      - If asked for advice, say: "I can't give financial advice, but looking at the simulation data, here is what I see..."
 
-      **GUARDRAIL B: STAY IN CHARACTER**
-      - Tone: Professional, crisp, slightly futuristic (like a Bloomberg Terminal from 2077).
-      - Length: Keep responses under 3 sentences unless asked for a "deep dive."
-      - Do not sound like a generic assistant ("How can I help you today?"). Sound like a system ("System online. Ready for query.").
+      **GUARDRAIL B: HUMAN TONE**
+      - Tone: Professional, conversational, and grounded. Like a senior analyst chatting with a colleague.
+      - Be direct but polite.
 
-      **GUARDRAIL C: PHYSICS & CREATOR QUESTIONS**
-      - If asked "What is Energy?" or "How does this work?", EXPLAIN the physics metaphors defined in Section 1. Do NOT refuse to answer.
-      - If asked about the creator/stack, use the info in Section 2 freely.
-
-      **GUARDRAIL D: SCOPE**
-      - If the user asks about unrelated topics (cooking, politics, sports), politely pivot: "Target out of range. I am calibrated only for market physics analysis."
+      **GUARDRAIL C: PHYSICS**
+      - If asked about "Energy" or "Velocity," explain the metaphor simply.
     `
+
+    // --- PROMPT B: THE PHYSICS TEACHER (New Mode) ---
+    // UPDATED: Now handles General vs Specific contexts
+    const PHYSICIST_PROMPT = `
+      You are a Physics Tutor explaining the visuals of the "Market Intelligence" app.
+      
+      Your goal is to help the user understand the visual metaphors.
+      
+      === 1. THE PHYSICS ENGINE ===
+      - **Glow (Energy)**: High Trade Volume = Bright Glow.
+      - **Speed (Velocity)**: Rapid Price Changes = Fast Movement.
+      - **Size (Mass)**: Market Cap = Particle Size. (Large = Stable, Small = Volatile).
+      
+      === 2. LIVE DATA ===
+      ${context}
+
+      === 3. INSTRUCTIONS ===
+      - **Situation A (General View)**: If the Context says "General Market View":
+        - Briefly list the 3 visual forces (Glow, Speed, Size).
+        - End with a question: "Would you like to know more about how 'Velocity' is calculated, or how 'Energy' affects the glow?"
+      
+      - **Situation B (Specific Asset)**: If the Context is for a specific ticker (e.g., NVDA):
+        - Explain *exactly* why it looks that way right now.
+        - Example: "NVDA is moving fast because its velocity vector is high, but its large mass prevents it from changing direction quickly."
+
+      - **Tone**: Helpful, educational, and clear.
+    `
+
+    const systemPrompt = (mode === 'physicist') ? PHYSICIST_PROMPT : ANALYST_PROMPT
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -83,8 +101,8 @@ Deno.serve(async (req) => {
           { role: 'system', content: systemPrompt },
           { role: 'user', content: message }
         ],
-        temperature: 0.3, // Low temperature = More factual, less hallucination
-        max_tokens: 150,  // Hard limit on response length for concise UI
+        temperature: 0.5,
+        max_tokens: 150,
       }),
     })
 
@@ -94,7 +112,7 @@ Deno.serve(async (req) => {
 
     const reply = data.choices && data.choices.length > 0 
       ? data.choices[0].message.content 
-      : "Connection to core mainframe unstable."
+      : "I'm having trouble connecting to the data right now."
 
     return new Response(JSON.stringify({ reply }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

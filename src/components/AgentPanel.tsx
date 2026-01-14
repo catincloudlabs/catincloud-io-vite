@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { MarketFrame } from '../App';
+import { MarketFrame } from './MarketMap';
 import { GraphConnection } from '../hooks/useKnowledgeGraph';
 import { useAgentOracle } from '../hooks/useAgentOracle';
 // @ts-ignore
@@ -12,7 +12,6 @@ interface AgentPanelProps {
   isLoading?: boolean;
 }
 
-// --- UPDATED CONTEXT GENERATOR ---
 const getSystemContext = (
   ticker: string, 
   currentFrame: MarketFrame, 
@@ -42,12 +41,19 @@ const getSystemContext = (
 };
 
 const formatMessage = (text: string) => {
-  const parts = text.split(/(\*\*.*?\*\*)/g);
-  return parts.map((part, i) => {
-    if (part.startsWith('**') && part.endsWith('**')) {
-      return <span key={i} className="term-bold">{part.slice(2, -2)}</span>;
-    }
-    return part;
+  return text.split('\n').map((line, lineIdx) => {
+    // Spacer for empty lines (paragraph breaks)
+    if (!line.trim()) return <div key={lineIdx} style={{ height: '8px' }} />;
+
+    const parts = line.split(/(\*\*.*?\*\*)/g);
+    const formattedLine = parts.map((part, partIdx) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <span key={partIdx} className="term-bold">{part.slice(2, -2)}</span>;
+      }
+      return part;
+    });
+
+    return <div key={lineIdx}>{formattedLine}</div>;
   });
 };
 
@@ -82,7 +88,6 @@ const TypewriterMessage = ({ text, type, onTyping }: { text: string, type: strin
   return (
     <div className={`msg-row msg-${type}`}>
       {isComplete ? formatMessage(text) : displayedText}
-      {!isComplete && shouldAnimate && <span className="typing-cursor" aria-hidden="true">|</span>}
     </div>
   );
 };
@@ -115,7 +120,7 @@ export function AgentPanel({
     if (!selectedTicker || !currentFrame || isLoading) return;
     if (lastTickerRef.current === selectedTicker) return;
 
-    addSystemMessage(`Tracking **${selectedTicker}**. Metrics loaded for ${currentFrame.date}.`);
+    addSystemMessage(`Tracking **${selectedTicker}**. Data loaded for ${currentFrame.date}.`);
     
     lastTickerRef.current = selectedTicker;
     setIsExpanded(true);
@@ -125,7 +130,7 @@ export function AgentPanel({
     if (!selectedTicker) lastTickerRef.current = null;
   }, [selectedTicker]);
 
-  const handleCommand = async (textOverride?: string) => {
+  const handleCommand = async (textOverride?: string, mode?: string) => {
     const query = textOverride || inputValue.trim();
     if (!query) return;
 
@@ -139,7 +144,7 @@ export function AgentPanel({
       ? getSystemContext(selectedTicker, currentFrame, graphConnections || [])
       : `General Market View. SIMULATION DATE: ${currentFrame?.date}`;
 
-    await sendMessage(query, context);
+    await sendMessage(query, context, mode);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -147,16 +152,19 @@ export function AgentPanel({
   };
 
   const getSuggestions = () => {
+    // 1. STATE: Selected Ticker (Specific)
     if (selectedTicker) {
       return [
         { label: `Brief ${selectedTicker}`, prompt: `Give me a short brief on ${selectedTicker}'s status.` },
         { label: "Check News", prompt: `Any relevant news impacting ${selectedTicker}?` },
-        { label: "Analyze Risk", prompt: `What are the immediate risks for ${selectedTicker}?` }
+        { label: "Market Physics", prompt: `Explain the visual physics of ${selectedTicker}.`, mode: 'physicist' }
       ];
     }
+    
+    // 2. STATE: General View (Exploratory)
     return [
       { label: "Market Status", prompt: "Summarize the current market state." },
-      { label: "Velocity?", prompt: "Quickly explain how this simulation calculates velocity." },
+      { label: "Market Physics", prompt: "Explain the physics model of this simulation.", mode: 'physicist' },
       { label: "Tech Stack", prompt: "What technology is powering this dashboard?" }
     ];
   };
@@ -190,7 +198,7 @@ export function AgentPanel({
             aria-hidden="true"
           />
           <span className="terminal-title-text">
-            {isAiLoading ? "PROCESSING DATA..." : "MARKET INTELLIGENCE"}
+            {isAiLoading ? "THINKING..." : "MARKET ASSISTANT"}
           </span>
         </div>
 
@@ -225,7 +233,7 @@ export function AgentPanel({
             {isBusy && (
                  <div className="loading-indicator" role="status">
                     <Loader2 size={12} className="animate-spin" aria-hidden="true" />
-                    <span>ANALYZING MARKET VECTORS...</span>
+                    <span>Analyzing market data...</span>
                  </div>
             )}
             
@@ -241,7 +249,8 @@ export function AgentPanel({
                     <button 
                         key={idx} 
                         className="suggestion-chip"
-                        onClick={() => handleCommand(chip.prompt)}
+                        // @ts-ignore
+                        onClick={() => handleCommand(chip.prompt, chip.mode)}
                         disabled={isBusy}
                         aria-label={`Ask AI: ${chip.label}`}
                     >
@@ -253,7 +262,7 @@ export function AgentPanel({
             <div className="input-wrapper">
               <input 
                 type="text" className="terminal-input" 
-                placeholder="Initialize query sequence..." 
+                placeholder="Ask a question..." 
                 value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={handleKeyDown}
                 disabled={isBusy}
                 aria-label="Message the AI Agent"
@@ -270,7 +279,7 @@ export function AgentPanel({
           </div>
           
           <div className="disclaimer-footer" aria-hidden="true">
-            SIMULATION ONLY. NOT FINANCIAL ADVICE. SYSTEM ONLINE V2.4.
+            SIMULATION ONLY. NOT FINANCIAL ADVICE.
           </div>
         </>
       )}
