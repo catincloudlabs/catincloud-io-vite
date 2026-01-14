@@ -9,6 +9,11 @@ import Legend from './components/Legend';
 import ArchitectureModal from './components/ArchitectureModal';
 import BioModal from './components/BioModal';
 
+// --- NEW IMPORTS ---
+import { useTimelineAnimation } from './hooks/useTimelineAnimation';
+// @ts-ignore
+import { Play, Pause } from 'lucide-react'; 
+
 // Import the spline math
 import { catmullRom, catmullRomDerivative } from './utils/splineInterpolation';
 
@@ -82,8 +87,16 @@ function App() {
   const [frames, setFrames] = useState<MarketFrame[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   
-  // Timeline State (Manual scrubbing only)
-  const [timelineProgress, setTimelineProgress] = useState(0);
+  // --- TIMELINE HOOK (Replaces manual progress state) ---
+  const { 
+    progress: timelineProgress, 
+    setProgress: setTimelineProgress, 
+    isPlaying, 
+    togglePlay 
+  } = useTimelineAnimation({ 
+    totalFrames: frames ? frames.length : 100,
+    durationInSeconds: 45 // Adjust: 45s to play full history
+  });
   
   // Interaction State
   const [selectedTicker, setSelectedTicker] = useState<string | null>(null);
@@ -107,6 +120,8 @@ function App() {
         // @ts-ignore - hydrateMarketData returns the enhanced DailyFrame with nodeMap
         const hydratedFrames = hydrateMarketData(jsonPayload.data);
         setFrames(hydratedFrames);
+        
+        // Initialize timeline to end (Today) once data loads
         if (hydratedFrames.length > 0) {
             setTimelineProgress(hydratedFrames.length - 1);
         }
@@ -115,7 +130,7 @@ function App() {
         console.error("Critical Data Error:", err);
         setError(err.message);
       });
-  }, []);
+  }, []); // Intentionally empty deps to run once
 
   // 2. INTERPOLATION ENGINE (Optimized)
   const { displayNodes, displayNodeMap, currentDateLabel, currentFrameData } = useMemo(() => {
@@ -135,7 +150,6 @@ function App() {
     const t = safeProgress % 1; // Time t (0 to 1) between frames
 
     // B. Grab the 4 frames needed for Cubic Spline (P0, P1, P2, P3)
-    // We clamp boundaries: if P0 doesn't exist, reuse P1.
     const i0 = Math.max(0, currentIndex - 1);
     const i1 = currentIndex;
     const i2 = Math.min(maxIndex, currentIndex + 1);
@@ -211,7 +225,6 @@ function App() {
             date: currentDateLabel, 
             nodes: displayNodes, 
             nodeMap: displayNodeMap,
-            // --- Pass sectors from the current frame ---
             sectors: currentFrameData?.sectors || [] 
         }} 
         // @ts-ignore - MarketFrame vs DailyFrame type compatibility
@@ -219,7 +232,9 @@ function App() {
         onNodeClick={(node) => setSelectedTicker(node.ticker)}
         onBackgroundClick={() => setSelectedTicker(null)}
         selectedTicker={selectedTicker}      
-        graphConnections={connections}       
+        graphConnections={connections}
+        // OPTIONAL: Pass play state if you want to disable heavy layers during play
+        // isPlaying={isPlaying}       
       />
 
       <Header 
@@ -244,9 +259,33 @@ function App() {
 
       <div className="timeline-slider-container">
         <div className="slider-label-row">
-          <span>HISTORY</span>
-          <span>SIMULATION PROGRESS</span>
-          <span>TODAY</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <button 
+                    onClick={togglePlay} 
+                    className="timeline-play-btn"
+                    title={isPlaying ? "Pause Simulation" : "Play History"}
+                    // Simple inline styles for the button, move to CSS for production
+                    style={{
+                        background: 'rgba(52, 211, 153, 0.1)',
+                        border: '1px solid rgba(52, 211, 153, 0.3)',
+                        borderRadius: '4px',
+                        width: '24px', 
+                        height: '24px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        color: '#34d399'
+                    }}
+                >
+                    {isPlaying ? <Pause size={12} fill="currentColor" /> : <Play size={12} fill="currentColor" />}
+                </button>
+                <span>HISTORY</span>
+            </div>
+            
+            {/* Dynamic Label based on state */}
+            <span>{isPlaying ? "SIMULATING..." : "SIMULATION PROGRESS"}</span>
+            <span>TODAY</span>
         </div>
         <input 
           type="range" 
@@ -254,7 +293,11 @@ function App() {
           max={Math.max(0, frames.length - 1)} 
           step="0.01" // High resolution for smooth sliding
           value={timelineProgress}
-          onChange={(e) => setTimelineProgress(parseFloat(e.target.value))}
+          onChange={(e) => {
+              // If user grabs the slider, pause the auto-play
+              if (isPlaying) togglePlay();
+              setTimelineProgress(parseFloat(e.target.value));
+          }}
           aria-label="Simulation Timeline"
           className="slider-input"
         />

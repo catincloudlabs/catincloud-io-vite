@@ -1191,3 +1191,27 @@ input[type=range]::-moz-range-track {
     max-height: 50vh; 
   }
 }
+
+.timeline-play-btn {
+  background: rgba(52, 211, 153, 0.1); /* Mint tint */
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  color: #34d399;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.timeline-play-btn:hover {
+  background: rgba(52, 211, 153, 0.2);
+  transform: scale(1.05);
+  box-shadow: 0 0 10px rgba(52, 211, 153, 0.2);
+}
+
+.timeline-play-btn:active {
+  transform: scale(0.95);
+}
