@@ -31,24 +31,46 @@ DB_BATCH_SIZE = 25 # Reduced batch size for stability
 
 # --- MARKET UNIVERSE ---
 TICKER_UNIVERSE = [
+    # MEGA CAP & TECH
     "AAPL", "NVDA", "MSFT", "GOOGL", "AMZN", "META", "TSLA", "BRK.B", "LLY", "AVGO", "JPM",
+    
+    # SEMICONDUCTORS & HARDWARE
     "AMD", "QCOM", "TXN", "INTC", "AMAT", "MU", "LRCX", "ADI", "KLAC", "MRVL", "SNPS", 
     "CDNS", "PANW", "CRWD", "PLTR", "SMCI", "ARM", "TSM", "ASML", "ON", "MCHP", "STM",
+    
+    # SOFTWARE & CLOUD
     "ORCL", "ADBE", "CRM", "INTU", "IBM", "NOW", "UBER", "SAP", "FI", "ADP", "ACN", 
     "CSCO", "SQ", "SHOP", "WDAY", "SNOW", "TEAM", "ADSK", "DDOG", "ZM", "NET", "TTD",
     "MDB", "ZS", "GIB", "FICO", "ANET", "ESTC",
+
+    # FINANCE & PAYMENTS
     "V", "MA", "BAC", "WFC", "MS", "GS", "C", "BLK", "SPGI", "AXP", "MCO", "PGR", "CB", 
     "MMC", "AON", "USB", "PNC", "TFC", "COF", "DFS", "PYPL", "AFRM", "HOOD", "COIN",
     "KKR", "BX", "APO", "TRV", "ALL", "HIG", "MET",
+
+    # HEALTHCARE
     "UNH", "JNJ", "ABBV", "MRK", "TMO", "ABT", "DHR", "PFE", "AMGN", "ISRG", "ELV", 
     "VRTX", "REGN", "ZTS", "BSX", "BDX", "GILD", "HCA", "MCK", "CI", "HUM", "CVS", 
-    "BMY", "SYK", "EW", "MDT", "DXCM", "ILMN", "ALGN", "BIIB", "MRNA", "BNTX",
+    "BMY", "SYK", "EW", "MDT", "DXCM", "ILMN", "ALGN", "BIIB", "MRNA", "BNTX", "NVO",
+
+    # CONSUMER & RETAIL
     "WMT", "PG", "COST", "HD", "KO", "PEP", "MCD", "DIS", "NKE", "SBUX", "LOW", "PM", 
     "TGT", "TJX", "EL", "CL", "MO", "LULU", "CMG", "MAR", "BKNG", "ABNB", "HLT", "YUM",
+    
+    # INDUSTRIALS & ENERGY
     "DE", "CAT", "HON", "GE", "MMM", "ETN", "ITW", "EMR", "PH", "CMI", "PCAR", "TT",
     "XOM", "CVX", "COP", "SLB", "EOG", "MPC", "PSX", "VLO", "OXY", "HES", "KMI", "WMB",
-    "LMT", "RTX", "BA", "GD", "NOC", "LHX", "TDG", "GE", "WM", "RSG", "UNP", "CSX", "NSC",
+    "LMT", "RTX", "BA", "GD", "NOC", "LHX", "TDG", "WM", "RSG", "UNP", "CSX", "NSC",
     "DAL", "UAL", "AAL", "LUV", "FDX", "UPS",
+
+    # --- NEW ADDITIONS (AI Power, Infra, Crypto, Space) ---
+    "VST", "CEG", "NRG", "VRT",           # AI Power & Cooling
+    "EQIX", "DLR", "AMT",                 # Data Center Infra
+    "MSTR", "IBIT", "MARA",               # Crypto High Beta
+    "RKLB", "ASTS",                       # Space & Deep Tech
+    "BABA", "PDD",                        # Global Tech
+
+    # ETFS
     "SPY", "QQQ", "IWM", "DIA", "VTI", "VOO", "VEA", "VWO",
     "XLK", "XLV", "XLF", "XLE", "XLC", "XLY", "XLP", "XLI", "XLU", "XLB", "XLRE",
     "SMH", "SOXX", "XBI", "KRE", "KBE", "JETS", "ITB",

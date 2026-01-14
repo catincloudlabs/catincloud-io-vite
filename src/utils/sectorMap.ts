@@ -51,7 +51,7 @@ export const SECTOR_MAP: Record<string, string> = {
   PLTR: 'Technology', SMCI: 'Technology', SNPS: 'Technology', 
   CDNS: 'Technology',
   
-  // --- FINANCIALS ---
+  // --- FINANCIALS & CRYPTO PROXIES ---
   JPM: 'Financials', V: 'Financials', MA: 'Financials', 
   BAC: 'Financials', WFC: 'Financials', MS: 'Financials', 
   GS: 'Financials', C: 'Financials', BLK: 'Financials', 
@@ -64,6 +64,8 @@ export const SECTOR_MAP: Record<string, string> = {
   APO: 'Financials', TRV: 'Financials', ALL: 'Financials',
   HIG: 'Financials', MET: 'Financials', 'BRK.B': 'Financials', 
   BRK: 'Financials',
+  // New Crypto/High-Beta
+  MSTR: 'Financials', MARA: 'Financials', IBIT: 'Financials',
   
   // --- HEALTHCARE ---
   LLY: 'Healthcare', UNH: 'Healthcare', JNJ: 'Healthcare', 
@@ -77,6 +79,8 @@ export const SECTOR_MAP: Record<string, string> = {
   SYK: 'Healthcare', EW: 'Healthcare', MDT: 'Healthcare', 
   DXCM: 'Healthcare', ILMN: 'Healthcare', ALGN: 'Healthcare',
   BIIB: 'Healthcare', MRNA: 'Healthcare', BNTX: 'Healthcare',
+  // New Weight Loss Giant
+  NVO: 'Healthcare',
   
   // --- CONSUMER & RETAIL ---
   WMT: 'Staples', PG: 'Staples', COST: 'Staples', 
@@ -88,8 +92,10 @@ export const SECTOR_MAP: Record<string, string> = {
   CMG: 'Discretionary', MAR: 'Discretionary', BKNG: 'Discretionary', 
   ABNB: 'Discretionary', HLT: 'Discretionary', YUM: 'Discretionary', 
   DE: 'Industrials',
+  // New Global Tech
+  BABA: 'Discretionary', PDD: 'Discretionary',
   
-  // --- INDUSTRIALS ---
+  // --- INDUSTRIALS & SPACE ---
   CAT: 'Industrials', HON: 'Industrials', GE: 'Industrials', 
   MMM: 'Industrials', ETN: 'Industrials', ITW: 'Industrials', 
   EMR: 'Industrials', PH: 'Industrials', CMI: 'Industrials', 
@@ -100,12 +106,20 @@ export const SECTOR_MAP: Record<string, string> = {
   CSX: 'Industrials', NSC: 'Industrials', DAL: 'Industrials', 
   UAL: 'Industrials', AAL: 'Industrials', LUV: 'Industrials', 
   FDX: 'Industrials', UPS: 'Industrials',
+  // New Space & Infra
+  VRT: 'Industrials', RKLB: 'Industrials', ASTS: 'Industrials',
   
   // --- ENERGY ---
   XOM: 'Energy', CVX: 'Energy', COP: 'Energy', SLB: 'Energy', 
   EOG: 'Energy', MPC: 'Energy', PSX: 'Energy', VLO: 'Energy', 
   OXY: 'Energy', HES: 'Energy', KMI: 'Energy', WMB: 'Energy', 
   SHEL: 'Energy', EQNR: 'Energy',
+  
+  // --- UTILITIES (AI POWER) ---
+  VST: 'Utilities', CEG: 'Utilities', NRG: 'Utilities',
+  
+  // --- REAL ESTATE (DATA CENTERS) ---
+  EQIX: 'Real Estate', DLR: 'Real Estate', AMT: 'Real Estate',
   
   // --- INDICES & ETFs ---
   SPY: 'Indices', QQQ: 'Indices', IWM: 'Indices'
