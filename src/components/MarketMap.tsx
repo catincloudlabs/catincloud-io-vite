@@ -358,7 +358,8 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     getSourcePosition: (d: any) => d.from,
     getTargetPosition: (d: any) => d.to,
     getColor: [...THEME.gold, 120], 
-    getWidth: (d: any) => Math.max(0.5, d.strength * 0.5), 
+    // Starts at 1.0px, scales very slowly with strength, caps at 2.5px.
+    getWidth: (d: any) => Math.min(2.5, 1.0 + (d.strength * 0.1)), 
     widthUnits: 'pixels',
     updateTriggers: { getWidth: [graphConnections], getColor: [graphConnections] }
   });
