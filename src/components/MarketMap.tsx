@@ -80,11 +80,16 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     y: number;
   } | null>(null);
 
-  // --- DRAG STATE FOR MOBILE TOOLTIP ---
+  // New: Locked state for Desktop "Click to Pin" behavior
+  const [isLocked, setIsLocked] = useState(false);
+
+  // --- DRAG STATE FOR TOOLTIP ---
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const dragStartRef = useRef<{ x: number, y: number } | null>(null);
   const initialOffsetRef = useRef({ x: 0, y: 0 });
+  const isDraggingRef = useRef(false); // Ref for mouse drag tracking
 
+  // Reset drag when switching nodes
   useEffect(() => {
     setDragOffset({ x: 0, y: 0 });
   }, [hoverInfo?.object?.ticker]);
@@ -377,9 +382,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     getPosition: (d: HydratedNode) => [d.x, d.y],
     radiusUnits: 'common',
     getRadius: (d: HydratedNode) => {
-        // DIALED BACK: 18 -> 12
         if (d.ticker === selectedTicker) return 8; 
-        // DIALED BACK: 10 -> 8
         if (graphConnections?.some(c => c.target === d.ticker)) return 8; 
         return 0; 
     },
@@ -402,9 +405,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     getPosition: (d: HydratedNode) => [d.x, d.y],
     radiusUnits: 'common', 
     getRadius: (d: HydratedNode) => {
-        // DIALED BACK: 6.0 -> 3.5
         if (d.ticker === selectedTicker) return 3.0; 
-        // DIALED BACK: 3.0 -> 2.5
         if (graphConnections?.some(c => c.target === d.ticker)) return 2.0; 
         if (d.energy > highEnergyThreshold) return 1.8; 
         return 1.2; 
@@ -450,23 +451,29 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
 
     const { object, x, y } = hoverInfo;
     
-    // Desktop smart positioning logic
+    // Determine if we are in "Interactive Mode" (Mobile or Desktop Locked)
+    const isInteractive = isMobile || isLocked;
+
+    // Desktop smart positioning (only used if NOT interactive)
     const isRightSide = typeof window !== 'undefined' && x > window.innerWidth * 0.7;
     
-    // Mobile logic: Use dragged position or initial click
-    const mobileX = x + dragOffset.x;
-    const mobileY = y + dragOffset.y;
+    // Interactive Position: Use dragged offset
+    const interactiveX = x + dragOffset.x;
+    const interactiveY = y + dragOffset.y;
 
     const tooltipStyle: React.CSSProperties = {
         position: 'absolute',
-        zIndex: 9999, // Ensure it's on top of AgentPanel
-        // If mobile, allow pointer events for dragging
-        pointerEvents: isMobile ? 'auto' : 'none',
+        zIndex: 9999,
+        // Allow pointer events if interactive, so we can grab it
+        pointerEvents: isInteractive ? 'auto' : 'none',
+        cursor: isInteractive ? 'grab' : 'default',
         
-        // Conditional Positioning
-        left: isMobile ? mobileX : (isRightSide ? 'auto' : x + 20),
-        right: isMobile ? 'auto' : (isRightSide ? (window.innerWidth - x) + 20 : 'auto'),
-        top: isMobile ? mobileY : y,
+        // Conditional Positioning:
+        // If interactive, use exact coordinates (Locked Position + Drag)
+        // If hover (desktop default), use offset smart positioning
+        left: isInteractive ? interactiveX : (isRightSide ? 'auto' : x + 20),
+        right: isInteractive ? 'auto' : (isRightSide ? (window.innerWidth - x) + 20 : 'auto'),
+        top: isInteractive ? interactiveY : y,
         
         backgroundColor: 'rgba(15, 23, 42, 0.9)', 
         backdropFilter: 'blur(8px)',
@@ -477,12 +484,41 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
         color: 'white',
         minWidth: '200px',
         maxWidth: '300px',
-        // Smoother transform for dragging
-        transform: isMobile ? 'translate(-50%, -100%)' : 'none', 
-        marginTop: isMobile ? -20 : 0 // Lift finger clearance
+        // Center transform for interactive mode to make finger/cursor centered on top
+        transform: isInteractive ? 'translate(-50%, -100%)' : 'none', 
+        marginTop: isInteractive ? -20 : 0
     };
 
-    // Touch handlers for dragging
+    // --- MOUSE HANDLERS (DESKTOP DRAG) ---
+    const handleMouseDown = (e: React.MouseEvent) => {
+        if (!isInteractive) return;
+        isDraggingRef.current = true;
+        dragStartRef.current = { x: e.clientX, y: e.clientY };
+        initialOffsetRef.current = { ...dragOffset };
+        
+        // Attach global listeners to window to catch fast movements
+        document.addEventListener('mousemove', handleGlobalMouseMove);
+        document.addEventListener('mouseup', handleGlobalMouseUp);
+    };
+
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+        if (!isDraggingRef.current || !dragStartRef.current) return;
+        const deltaX = e.clientX - dragStartRef.current.x;
+        const deltaY = e.clientY - dragStartRef.current.y;
+        setDragOffset({
+            x: initialOffsetRef.current.x + deltaX,
+            y: initialOffsetRef.current.y + deltaY
+        });
+    };
+
+    const handleGlobalMouseUp = () => {
+        isDraggingRef.current = false;
+        dragStartRef.current = null;
+        document.removeEventListener('mousemove', handleGlobalMouseMove);
+        document.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+
+    // --- TOUCH HANDLERS (MOBILE DRAG) ---
     const handleTouchStart = (e: React.TouchEvent) => {
         const touch = e.touches[0];
         dragStartRef.current = { x: touch.clientX, y: touch.clientY };
@@ -499,7 +535,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
             x: initialOffsetRef.current.x + deltaX,
             y: initialOffsetRef.current.y + deltaY
         });
-        e.stopPropagation(); // Prevent map pan
+        e.stopPropagation(); 
     };
 
     const handleTouchEnd = () => {
@@ -510,15 +546,16 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
         <div 
             style={tooltipStyle} 
             className="map-tooltip-container"
-            onTouchStart={isMobile ? handleTouchStart : undefined}
-            onTouchMove={isMobile ? handleTouchMove : undefined}
-            onTouchEnd={isMobile ? handleTouchEnd : undefined}
+            onMouseDown={handleMouseDown} // Desktop Drag Start
+            onTouchStart={handleTouchStart} // Mobile Drag Start
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
         >
-            {/* Mobile Drag Handle */}
-            {isMobile && (
+            {/* Visual Drag Handle */}
+            {(isInteractive) && (
                 <div style={{
                     width: '40px', height: '4px', backgroundColor: 'rgba(255,255,255,0.2)', 
-                    borderRadius: '2px', margin: '0 auto 12px auto' 
+                    borderRadius: '2px', margin: '0 auto 12px auto', cursor: 'grab' 
                 }} />
             )}
 
@@ -559,15 +596,24 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
                 vectorLayer, trailLayer, glowLayer, synapseLayer, dotLayer
             ]} 
             style={{ backgroundColor: 'transparent' }} 
-            onHover={setHoverInfo}
+            onHover={(info) => {
+                // LOCK LOGIC: If locked, stop updating hover info so tooltip stays put
+                if (!isLocked) {
+                    setHoverInfo(info);
+                }
+            }}
             // Disable default tooltip
             getTooltip={null} 
             onClick={(info: any) => {
                 if (info.object) {
-                    if (info.object.ticker && onNodeClick) {
-                         onNodeClick(info.object);
-                    }
+                     // CLICK LOGIC: Lock the tooltip to this node
+                     setIsLocked(true);
+                     setHoverInfo(info); 
+                     if (onNodeClick) onNodeClick(info.object);
                 } else {
+                    // BACKGROUND LOGIC: Unlock and clear
+                    setIsLocked(false);
+                    setHoverInfo(null);
                     if (onBackgroundClick) onBackgroundClick();
                 }
             }}
