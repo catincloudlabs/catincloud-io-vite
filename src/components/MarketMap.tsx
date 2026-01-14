@@ -2,12 +2,11 @@
 
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import DeckGL from '@deck.gl/react';
-import { ScatterplotLayer, PolygonLayer, PathLayer, LineLayer, TextLayer } from '@deck.gl/layers'; 
+import { ScatterplotLayer, PolygonLayer, PathLayer, LineLayer } from '@deck.gl/layers'; 
 import { PathStyleExtension } from '@deck.gl/extensions'; 
 import { OrthographicView } from '@deck.gl/core';
 import { Delaunay } from 'd3-delaunay';
 import { GraphConnection } from '../hooks/useKnowledgeGraph'; 
-// Import sector labels for the tooltip
 import { getSectorLabel } from '../utils/sectorMap';
 
 export type SectorNode = {
@@ -45,7 +44,8 @@ interface MarketMapProps {
   onNodeClick?: (node: HydratedNode) => void;
   onBackgroundClick?: () => void;
   selectedTicker?: string | null;         
-  graphConnections?: GraphConnection[];   
+  graphConnections?: GraphConnection[];
+  isPlaying?: boolean;   
 }
 
 // Mobile Detection
@@ -61,7 +61,15 @@ const THEME = {
   darkText: [255, 255, 255, 180] 
 };
 
-export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selectedTicker, graphConnections }: MarketMapProps) {
+export function MarketMap({
+  data,
+  history,
+  onNodeClick,
+  onBackgroundClick,
+  selectedTicker,
+  graphConnections,
+  isPlaying = false
+}: MarketMapProps) {
   
   // --- 1. HEARTBEAT SYSTEM ---
   const [pulse, setPulse] = useState(false);
@@ -80,21 +88,19 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     y: number;
   } | null>(null);
 
-  // New: Locked state for Desktop "Click to Pin" behavior
   const [isLocked, setIsLocked] = useState(false);
 
   // --- DRAG STATE FOR TOOLTIP ---
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const dragStartRef = useRef<{ x: number, y: number } | null>(null);
   const initialOffsetRef = useRef({ x: 0, y: 0 });
-  const isDraggingRef = useRef(false); // Ref for mouse drag tracking
+  const isDraggingRef = useRef(false);
 
-  // Reset drag when switching nodes
   useEffect(() => {
     setDragOffset({ x: 0, y: 0 });
   }, [hoverInfo?.object?.ticker]);
 
-  // --- 3. SMART VIEWPORT CALCULATION (Auto-Fit) ---
+  // --- 3. SMART VIEWPORT CALCULATION ---
   const initialViewState = useMemo(() => {
     if (!data?.nodes?.length) return { target: [0, 0, 0], zoom: 1 };
 
@@ -171,6 +177,9 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
   }, [data, selectedTicker, graphConnections]);
 
   const trailData = useMemo(() => {
+    // OPTIMIZATION: Skip trails when playing
+    if (isPlaying) return [];
+
     if (!history || !data) return [];
     const currentIndex = history.findIndex(f => f.date === data.date);
     if (currentIndex <= 0) return [];
@@ -213,7 +222,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
             path: pathsByTicker[ticker],
             sentiment: data.nodes.find(n => n.ticker === ticker)?.sentiment || 0
         }));
-  }, [data, history, selectedTicker, highEnergyThreshold]);
+  }, [data, history, selectedTicker, highEnergyThreshold, isPlaying]);
 
   const vectorData = useMemo(() => {
     if (!data?.nodes) return [];
@@ -244,6 +253,9 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
   }, [selectedTicker, graphConnections, data]);
 
   const voronoiData = useMemo(() => {
+    // OPTIMIZATION: Skip voronoi when playing
+    if (isPlaying) return [];
+
     if (!sortedNodes || sortedNodes.length < 3) return [];
     const points = sortedNodes.map(d => [d.x, d.y] as [number, number]);
     const delaunay = Delaunay.from(points);
@@ -254,7 +266,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
       polygon,
       node: sortedNodes[i]
     }));
-  }, [sortedNodes]);
+  }, [sortedNodes, isPlaying]);
 
   const sectorLayerData = useMemo(() => {
     if (!data?.sectors) return [];
@@ -285,20 +297,6 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     lineWidthUnits: 'pixels',
   });
 
-  const sectorTextLayer = new TextLayer({
-    id: 'sector-labels',
-    data: sectorLayerData,
-    getPosition: (d: SectorNode) => [d.x, d.y],
-    getText: (d: SectorNode) => d.id,
-    getSize: 14,
-    getColor: [...THEME.slate, 120],
-    getAngle: 0,
-    getTextAnchor: 'middle',
-    getAlignmentBaseline: 'center',
-    fontFamily: '"Geist Mono", monospace',
-    fontWeight: 600
-  });
-
   const cellLayer = new PolygonLayer({
     id: 'voronoi-cells',
     data: voronoiData,
@@ -316,7 +314,11 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     pickable: false,
     getDashArray: [2, 5], 
     dash: true,
-    extensions: [new PathStyleExtension({ dash: true })]
+    extensions: [new PathStyleExtension({ dash: true })],    
+    visible: !isPlaying, 
+    updateTriggers: {
+        getFillColor: [isPlaying]
+    }
   });
 
   const vectorLayer = new PathLayer({
@@ -362,7 +364,8 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     capRounded: true,
     opacity: 1,
     transitions: { getColor: 1000, getWidth: 1000 },
-    updateTriggers: { getColor: [selectedTicker], getWidth: [selectedTicker] }
+    updateTriggers: { getColor: [selectedTicker], getWidth: [selectedTicker] },    
+    visible: !isPlaying 
   });
 
   const synapseLayer = new LineLayer({
@@ -592,8 +595,13 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
             initialViewState={initialViewState}
             controller={true}
             layers={[
-                cellLayer, sectorBgLayer, sectorTextLayer, 
-                vectorLayer, trailLayer, glowLayer, synapseLayer, dotLayer
+                cellLayer,
+                sectorBgLayer,
+                vectorLayer,
+                trailLayer,
+                glowLayer,
+                synapseLayer,
+                dotLayer
             ]} 
             style={{ backgroundColor: 'transparent' }} 
             onHover={(info: any) => {

@@ -570,7 +570,8 @@ html, body {
   border: 1px solid var(--glass-border);
   box-shadow: 0 10px 30px rgba(0,0,0,0.3);
   z-index: 30;
-  display: flex; flex-direction: column;
+  display: flex; 
+  flex-direction: column;
 }
 
 .slider-label-row {
@@ -582,14 +583,23 @@ html, body {
   font-weight: 500;
   letter-spacing: 0.05em;
   margin-bottom: 6px;
+  position: relative;
+  z-index: 50; 
   pointer-events: none; 
+}
+
+.slider-label-row > * {
+  pointer-events: auto;
 }
 
 /* SLIDER STYLES */
 input[type=range] {
   -webkit-appearance: none; appearance: none;
   width: 100%; background: transparent; height: 30px; margin: 0; cursor: pointer;
+  position: relative;
+  z-index: 1;
 }
+
 input[type=range]:focus { outline: none; }
 
 input[type=range]::-webkit-slider-thumb {
@@ -614,7 +624,62 @@ input[type=range]::-moz-range-track {
 }
 
 /* ==================================================================== */
-/* 7. HEADER SELECTOR (CUSTOM DROPDOWN)                                 */
+/* 7. FLOATING CONTROLS (PLAYBACK) - REPOSITIONED                       */
+/* ==================================================================== */
+.floating-play-btn {
+  position: absolute;
+  z-index: 45; 
+  
+  /* DESKTOP POSITION: "Satellite" to the right of the slider */
+  /* Slider is 32px (left) + 360px (width) = 392px edge */
+  /* We add ~16px gap -> 408px */
+  left: 408px; 
+  
+  /* Vertically align with the slider container (approx 74px height) */
+  bottom: 48px; 
+
+  /* VISUAL STYLE */
+  width: 44px;
+  height: 44px;
+  border-radius: 50%; 
+  background: rgba(15, 23, 42, 0.85); /* Slightly more opaque for prominence */
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  color: var(--accent-green);
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.floating-play-btn:hover {
+  background: rgba(15, 23, 42, 0.95);
+  transform: scale(1.1);
+  border-color: var(--accent-green);
+  box-shadow: 0 0 20px rgba(52, 211, 153, 0.4); /* Stronger glow on hover */
+}
+
+.floating-play-btn:active {
+  transform: scale(0.95);
+}
+
+/* MOBILE RESPONSIVENESS */
+@media (max-width: 768px) {
+  .floating-play-btn {
+     /* Reset Desktop Positioning */
+     left: auto;
+     
+     /* MOBILE POSITION: Float above the slider on the right */
+     right: 24px;
+     bottom: 110px; /* Clear of the slider + safe area */
+  }
+}
+
+/* ==================================================================== */
+/* 8. HEADER SELECTOR (CUSTOM DROPDOWN)                                 */
 /* ==================================================================== */
 
 .header-selector {
@@ -782,7 +847,7 @@ input[type=range]::-moz-range-track {
 }
 
 /* ==================================================================== */
-/* 8. ANIMATIONS & UTILS                                                */
+/* 9. ANIMATIONS & UTILS                                                */
 /* ==================================================================== */
 @keyframes fadeIn { to { opacity: 1; } }
 @keyframes scaleIn { to { transform: scale(1); } }
@@ -817,7 +882,7 @@ input[type=range]::-moz-range-track {
 }
 
 /* ==================================================================== */
-/* 9. MAP LEGEND (REPOSITIONED: BOTTOM LEFT)                            */
+/* 10. MAP LEGEND (REPOSITIONED: BOTTOM LEFT)                           */
 /* ==================================================================== */
 .legend-wrapper {
   position: absolute;
@@ -943,7 +1008,7 @@ input[type=range]::-moz-range-track {
 }
 
 /* ==================================================================== */
-/* 10. REFACTORED UTILITIES (Moved from inline styles)                  */
+/* 11. REFACTORED UTILITIES (Moved from inline styles)                  */
 /* ==================================================================== */
 
 /* App.tsx */
@@ -1085,7 +1150,7 @@ input[type=range]::-moz-range-track {
 }
 
 /* ==================================================================== */
-/* 7. RESPONSIVE REFINEMENTS                                            */
+/* 12. RESPONSIVE REFINEMENTS                                           */
 /* ==================================================================== */
 
 @media (max-width: 768px) {
@@ -1189,5 +1254,14 @@ input[type=range]::-moz-range-track {
     margin-bottom: 0;
     margin-top: 20px;
     max-height: 50vh; 
+  }
+
+  /* --- FLOATING CONTROLS (MOBILE) --- */
+  /* Align the Play button with the Mobile Legend */
+  .floating-play-btn {
+     top: 70px;
+     bottom: auto;
+     /* Legend is at 16px. Toggle is smaller on mobile. ~120px offset */
+     left: 120px; 
   }
 }
