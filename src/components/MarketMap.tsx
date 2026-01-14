@@ -2,12 +2,11 @@
 
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import DeckGL from '@deck.gl/react';
-import { ScatterplotLayer, PolygonLayer, PathLayer, LineLayer, TextLayer } from '@deck.gl/layers'; 
+import { ScatterplotLayer, PolygonLayer, PathLayer, LineLayer } from '@deck.gl/layers'; 
 import { PathStyleExtension } from '@deck.gl/extensions'; 
 import { OrthographicView } from '@deck.gl/core';
 import { Delaunay } from 'd3-delaunay';
 import { GraphConnection } from '../hooks/useKnowledgeGraph'; 
-// Import sector labels for the tooltip
 import { getSectorLabel } from '../utils/sectorMap';
 
 export type SectorNode = {
@@ -46,7 +45,6 @@ interface MarketMapProps {
   onBackgroundClick?: () => void;
   selectedTicker?: string | null;         
   graphConnections?: GraphConnection[];
-  // --- NEW PROP ---
   isPlaying?: boolean;   
 }
 
@@ -63,14 +61,14 @@ const THEME = {
   darkText: [255, 255, 255, 180] 
 };
 
-export function MarketMap({ 
-  data, 
-  history, 
-  onNodeClick, 
-  onBackgroundClick, 
-  selectedTicker, 
+export function MarketMap({
+  data,
+  history,
+  onNodeClick,
+  onBackgroundClick,
+  selectedTicker,
   graphConnections,
-  isPlaying = false // Default to false
+  isPlaying = false
 }: MarketMapProps) {
   
   // --- 1. HEARTBEAT SYSTEM ---
@@ -90,21 +88,19 @@ export function MarketMap({
     y: number;
   } | null>(null);
 
-  // New: Locked state for Desktop "Click to Pin" behavior
   const [isLocked, setIsLocked] = useState(false);
 
   // --- DRAG STATE FOR TOOLTIP ---
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const dragStartRef = useRef<{ x: number, y: number } | null>(null);
   const initialOffsetRef = useRef({ x: 0, y: 0 });
-  const isDraggingRef = useRef(false); // Ref for mouse drag tracking
+  const isDraggingRef = useRef(false);
 
-  // Reset drag when switching nodes
   useEffect(() => {
     setDragOffset({ x: 0, y: 0 });
   }, [hoverInfo?.object?.ticker]);
 
-  // --- 3. SMART VIEWPORT CALCULATION (Auto-Fit) ---
+  // --- 3. SMART VIEWPORT CALCULATION ---
   const initialViewState = useMemo(() => {
     if (!data?.nodes?.length) return { target: [0, 0, 0], zoom: 1 };
 
@@ -181,9 +177,9 @@ export function MarketMap({
   }, [data, selectedTicker, graphConnections]);
 
   const trailData = useMemo(() => {
-    // OPTIMIZATION: Skip trails when playing to save performance
+    // OPTIMIZATION: Skip trails when playing
     if (isPlaying) return [];
-    
+
     if (!history || !data) return [];
     const currentIndex = history.findIndex(f => f.date === data.date);
     if (currentIndex <= 0) return [];
@@ -257,8 +253,7 @@ export function MarketMap({
   }, [selectedTicker, graphConnections, data]);
 
   const voronoiData = useMemo(() => {
-    // --- CRITICAL OPTIMIZATION ---
-    // If we are animating, SKIP the expensive Voronoi calculation.
+    // OPTIMIZATION: Skip voronoi when playing
     if (isPlaying) return [];
 
     if (!sortedNodes || sortedNodes.length < 3) return [];
@@ -302,20 +297,6 @@ export function MarketMap({
     lineWidthUnits: 'pixels',
   });
 
-  const sectorTextLayer = new TextLayer({
-    id: 'sector-labels',
-    data: sectorLayerData,
-    getPosition: (d: SectorNode) => [d.x, d.y],
-    getText: (d: SectorNode) => d.id,
-    getSize: 14,
-    getColor: [...THEME.slate, 120],
-    getAngle: 0,
-    getTextAnchor: 'middle',
-    getAlignmentBaseline: 'center',
-    fontFamily: '"Geist Mono", monospace',
-    fontWeight: 600
-  });
-
   const cellLayer = new PolygonLayer({
     id: 'voronoi-cells',
     data: voronoiData,
@@ -333,9 +314,7 @@ export function MarketMap({
     pickable: false,
     getDashArray: [2, 5], 
     dash: true,
-    extensions: [new PathStyleExtension({ dash: true })],
-    
-    // --- OPTIMIZATION ---
+    extensions: [new PathStyleExtension({ dash: true })],    
     visible: !isPlaying, 
     updateTriggers: {
         getFillColor: [isPlaying]
@@ -385,9 +364,7 @@ export function MarketMap({
     capRounded: true,
     opacity: 1,
     transitions: { getColor: 1000, getWidth: 1000 },
-    updateTriggers: { getColor: [selectedTicker], getWidth: [selectedTicker] },
-    
-    // --- OPTIMIZATION ---
+    updateTriggers: { getColor: [selectedTicker], getWidth: [selectedTicker] },    
     visible: !isPlaying 
   });
 
@@ -618,8 +595,13 @@ export function MarketMap({
             initialViewState={initialViewState}
             controller={true}
             layers={[
-                cellLayer, sectorBgLayer, sectorTextLayer, 
-                vectorLayer, trailLayer, glowLayer, synapseLayer, dotLayer
+                cellLayer,
+                sectorBgLayer,
+                vectorLayer,
+                trailLayer,
+                glowLayer,
+                synapseLayer,
+                dotLayer
             ]} 
             style={{ backgroundColor: 'transparent' }} 
             onHover={(info: any) => {
