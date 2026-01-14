@@ -681,7 +681,7 @@ input[type=range]::-moz-range-track {
   z-index: 100;
   overflow: hidden; 
   animation: fadeIn 0.1s ease-out;
-  display: flex; /* NEW: Flex column to handle sticky search */
+  display: flex; /* Flex column to handle sticky search */
   flex-direction: column;
 }
 
