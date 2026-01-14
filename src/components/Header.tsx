@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 // @ts-ignore
-import { Clock, Network, User, ChevronDown, Search } from 'lucide-react';
+import { Clock, Network, User, ChevronDown, Search, Check } from 'lucide-react';
 
 interface HeaderProps {
   dateLabel: string;
@@ -19,6 +19,20 @@ const Header: React.FC<HeaderProps> = ({
   onSelectTicker, 
   watchlist 
 }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
     <header className="app-header">
       {/* LEFT: CHRONOMETER & SELECTOR */}
@@ -28,7 +42,6 @@ const Header: React.FC<HeaderProps> = ({
         <div className="header-chronometer">
           <div className="chrono-label">
             <Clock size={12} color="var(--accent-green)" />
-            {/* Added class for mobile hiding */}
             <span className="header-label-text">
               EVENT HORIZON
             </span>
@@ -39,28 +52,45 @@ const Header: React.FC<HeaderProps> = ({
         {/* Vertical Divider */}
         <div className="v-divider"></div>
 
-        {/* Ticker Selector */}
-        <div className="header-selector">
+        {/* Ticker Selector - CUSTOM DROPDOWN */}
+        <div 
+            className={`header-selector ${isOpen ? 'open' : ''}`} 
+            ref={dropdownRef} 
+            onClick={() => setIsOpen(!isOpen)}
+        >
           <div className="selector-icon">
              <Search size={12} color={selectedTicker ? "var(--accent-green)" : "var(--text-muted)"} />
           </div>
           
-          <select 
-            className="ticker-select"
-            value={selectedTicker || ""}
-            onChange={(e) => onSelectTicker(e.target.value || null)}
-            aria-label="Select Target Asset"
-          >
-            {/* Default "Reset" Option */}
-            <option value="">TICKER</option>
-            {watchlist.map(t => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
+          <div className={`ticker-display ${selectedTicker ? 'active' : ''}`}>
+             {selectedTicker || "TICKER"}
+          </div>
 
           <div className="selector-arrow">
-            <ChevronDown size={12} />
+            <ChevronDown size={12} style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
           </div>
+
+          {/* THE CUSTOM SCROLLABLE MENU */}
+          {isOpen && (
+             <div className="custom-ticker-dropdown">
+                <div 
+                   className="dropdown-item reset-item"
+                   onClick={(e) => { e.stopPropagation(); onSelectTicker(null); setIsOpen(false); }}
+                >
+                   <span>RESET VIEW</span>
+                </div>
+                {watchlist.map(t => (
+                   <div 
+                      key={t} 
+                      className={`dropdown-item ${selectedTicker === t ? 'selected' : ''}`}
+                      onClick={(e) => { e.stopPropagation(); onSelectTicker(t); setIsOpen(false); }}
+                   >
+                      <span>{t}</span>
+                      {selectedTicker === t && <Check size={12} color="var(--accent-green)" />}
+                   </div>
+                ))}
+             </div>
+          )}
         </div>
 
       </div>
