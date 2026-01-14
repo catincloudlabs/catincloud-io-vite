@@ -1259,7 +1259,7 @@ input[type=range]::-moz-range-track {
   /* --- FLOATING CONTROLS (MOBILE) --- */
   /* Align the Play button with the Mobile Legend */
   .floating-play-btn {
-     top: 75px;
+     top: 60px;
      bottom: auto;
      /* Legend is at 16px. Toggle is smaller on mobile. ~120px offset */
      left: 140px; 
