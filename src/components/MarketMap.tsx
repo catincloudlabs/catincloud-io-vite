@@ -378,7 +378,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     radiusUnits: 'common',
     getRadius: (d: HydratedNode) => {
         // DIALED BACK: 18 -> 12
-        if (d.ticker === selectedTicker) return 12; 
+        if (d.ticker === selectedTicker) return 8; 
         // DIALED BACK: 10 -> 8
         if (graphConnections?.some(c => c.target === d.ticker)) return 8; 
         return 0; 
@@ -403,9 +403,9 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     radiusUnits: 'common', 
     getRadius: (d: HydratedNode) => {
         // DIALED BACK: 6.0 -> 3.5
-        if (d.ticker === selectedTicker) return 3.5; 
+        if (d.ticker === selectedTicker) return 3.0; 
         // DIALED BACK: 3.0 -> 2.5
-        if (graphConnections?.some(c => c.target === d.ticker)) return 2.5; 
+        if (graphConnections?.some(c => c.target === d.ticker)) return 2.0; 
         if (d.energy > highEnergyThreshold) return 1.8; 
         return 1.2; 
     },
