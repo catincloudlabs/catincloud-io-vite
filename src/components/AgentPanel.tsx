@@ -12,7 +12,6 @@ interface AgentPanelProps {
   isLoading?: boolean;
 }
 
-// --- CONTEXT GENERATOR ---
 const getSystemContext = (
   ticker: string, 
   currentFrame: MarketFrame, 
