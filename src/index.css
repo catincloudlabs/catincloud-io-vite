@@ -616,6 +616,7 @@ input[type=range]::-moz-range-track {
 /* ==================================================================== */
 /* HEADER SELECTOR (CUSTOM DROPDOWN)                                    */
 /* ==================================================================== */
+
 .header-selector {
   position: relative;
   display: flex;
@@ -678,26 +679,62 @@ input[type=range]::-moz-range-track {
   border-radius: 6px;
   box-shadow: 0 10px 25px rgba(0,0,0,0.5);
   z-index: 100;
-  overflow: hidden; /* Clips the corners */
+  overflow: hidden; 
   animation: fadeIn 0.1s ease-out;
+  display: flex; /* NEW: Flex column to handle sticky search */
+  flex-direction: column;
 }
 
-/* THE SCROLL WRAPPER (This constrains the height) */
+/* SEARCH WRAPPER (Sticky Top) */
+.dropdown-search-wrapper {
+  padding: 8px;
+  border-bottom: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.03);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.dropdown-search-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--glass-border);
+  border-radius: 4px;
+  padding: 6px 24px 6px 8px; /* Right padding for 'X' button */
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  outline: none;
+  transition: border 0.2s;
+}
+
+.dropdown-search-input:focus {
+  border-color: var(--accent-green);
+}
+
+.search-clear-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+}
+.search-clear-btn:hover { color: var(--text-primary); }
+
+/* SCROLL AREA */
 .dropdown-scroll-area {
-  max-height: 300px; /* <--- THIS LIMITS THE HEIGHT */
-  overflow-y: auto;  /* <--- THIS ENABLES SCROLLING */
-  
-  /* Custom Scrollbar Styles */
+  max-height: 250px; /* Reduced slightly to account for search bar */
+  overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,0.1) transparent;
 }
 
-.dropdown-scroll-area::-webkit-scrollbar {
-  width: 6px;
-}
-.dropdown-scroll-area::-webkit-scrollbar-track {
-  background: transparent;
-}
+.dropdown-scroll-area::-webkit-scrollbar { width: 6px; }
+.dropdown-scroll-area::-webkit-scrollbar-track { background: transparent; }
 .dropdown-scroll-area::-webkit-scrollbar-thumb {
   background-color: rgba(255,255,255,0.1);
   border-radius: 3px;
@@ -725,13 +762,22 @@ input[type=range]::-moz-range-track {
   color: var(--accent-green);
 }
 
+.dropdown-empty-state {
+  padding: 12px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
 .reset-item {
   border-bottom: 1px solid var(--glass-border);
   font-style: italic;
   opacity: 0.8;
   position: sticky;
   top: 0;
-  background: #1e293b; /* Keeps it readable if scrolling behind it */
+  background: #1e293b; 
   z-index: 1;
 }
 

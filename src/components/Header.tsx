@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 // @ts-ignore
-import { Clock, Network, User, ChevronDown, Search, Check } from 'lucide-react';
+import { Clock, Network, User, ChevronDown, Search, Check, X } from 'lucide-react';
 
 interface HeaderProps {
   dateLabel: string;
@@ -20,7 +20,9 @@ const Header: React.FC<HeaderProps> = ({
   watchlist 
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState(""); // 1. New Search State
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null); // 2. Ref for auto-focus
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -32,6 +34,22 @@ const Header: React.FC<HeaderProps> = ({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // 3. Auto-focus search input when opened & Reset search when closed
+  useEffect(() => {
+    if (isOpen) {
+      // Small timeout ensures the element is rendered before focusing
+      setTimeout(() => searchInputRef.current?.focus(), 50);
+    } else {
+      // Optional: Clear search when closed (remove if you want to persist)
+      setTimeout(() => setSearch(""), 200); 
+    }
+  }, [isOpen]);
+
+  // 4. Filter Logic
+  const filteredWatchlist = watchlist.filter(t => 
+    t.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <header className="app-header">
@@ -72,25 +90,58 @@ const Header: React.FC<HeaderProps> = ({
 
           {/* THE CUSTOM SCROLLABLE MENU */}
           {isOpen && (
-             <div className="custom-ticker-dropdown">
-                {/* --- FIX: Added this scroll-area wrapper --- */}
+             <div className="custom-ticker-dropdown" onClick={(e) => e.stopPropagation()}>
+                
+                {/* 5. SEARCH BAR AREA */}
+                <div className="dropdown-search-wrapper">
+                    <input
+                        ref={searchInputRef}
+                        type="text"
+                        className="dropdown-search-input"
+                        placeholder="Search..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        // Prevent dropdown close when clicking input
+                        onClick={(e) => e.stopPropagation()} 
+                    />
+                    {search && (
+                        <button 
+                            className="search-clear-btn"
+                            onClick={() => setSearch("")}
+                        >
+                            <X size={12} />
+                        </button>
+                    )}
+                </div>
+
                 <div className="dropdown-scroll-area">
-                  <div 
-                     className="dropdown-item reset-item"
-                     onClick={(e) => { e.stopPropagation(); onSelectTicker(null); setIsOpen(false); }}
-                  >
-                     <span>RESET VIEW</span>
-                  </div>
-                  {watchlist.map(t => (
-                     <div 
-                        key={t} 
-                        className={`dropdown-item ${selectedTicker === t ? 'selected' : ''}`}
-                        onClick={(e) => { e.stopPropagation(); onSelectTicker(t); setIsOpen(false); }}
-                     >
-                        <span>{t}</span>
-                        {selectedTicker === t && <Check size={12} color="var(--accent-green)" />}
-                     </div>
-                  ))}
+                  {/* Reset Option (Only show if not searching or if explicitly wanted) */}
+                  {!search && (
+                      <div 
+                        className="dropdown-item reset-item"
+                        onClick={() => { onSelectTicker(null); setIsOpen(false); }}
+                      >
+                        <span>RESET VIEW</span>
+                      </div>
+                  )}
+
+                  {/* 6. RENDER FILTERED LIST */}
+                  {filteredWatchlist.length > 0 ? (
+                    filteredWatchlist.map(t => (
+                        <div 
+                            key={t} 
+                            className={`dropdown-item ${selectedTicker === t ? 'selected' : ''}`}
+                            onClick={() => { onSelectTicker(t); setIsOpen(false); }}
+                        >
+                            <span>{t}</span>
+                            {selectedTicker === t && <Check size={12} color="var(--accent-green)" />}
+                        </div>
+                    ))
+                  ) : (
+                    <div className="dropdown-empty-state">
+                        No asset found.
+                    </div>
+                  )}
                 </div>
              </div>
           )}
