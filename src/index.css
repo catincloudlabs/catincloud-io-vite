@@ -624,23 +624,26 @@ input[type=range]::-moz-range-track {
 }
 
 /* ==================================================================== */
-/* 7. FLOATING CONTROLS (PLAYBACK) - NEW SECTION                        */
+/* 7. FLOATING CONTROLS (PLAYBACK) - REPOSITIONED                       */
 /* ==================================================================== */
 .floating-play-btn {
   position: absolute;
-  z-index: 45; /* Stacks above map, same as Legend */
+  z-index: 45; 
   
-  /* POSITIONING: To the Right of the Legend Toggle */
-  /* Legend is anchored at left: 32px. Toggle is ~120px wide. */
-  left: 170px; 
-  bottom: 125px; /* Aligned vertically with Legend */
+  /* DESKTOP POSITION: "Satellite" to the right of the slider */
+  /* Slider is 32px (left) + 360px (width) = 392px edge */
+  /* We add ~16px gap -> 408px */
+  left: 408px; 
+  
+  /* Vertically align with the slider container (approx 74px height) */
+  bottom: 48px; 
 
   /* VISUAL STYLE */
-  width: 42px;
-  height: 42px;
-  border-radius: 50%; /* Circle shape stands out as a "Tool" */
-  background: rgba(15, 23, 42, 0.6); 
-  backdrop-filter: blur(8px);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%; 
+  background: rgba(15, 23, 42, 0.85); /* Slightly more opaque for prominence */
+  backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border);
   color: var(--accent-green);
   
@@ -649,18 +652,30 @@ input[type=range]::-moz-range-track {
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
 .floating-play-btn:hover {
-  background: rgba(15, 23, 42, 0.9);
+  background: rgba(15, 23, 42, 0.95);
   transform: scale(1.1);
   border-color: var(--accent-green);
-  box-shadow: 0 0 15px rgba(52, 211, 153, 0.3);
+  box-shadow: 0 0 20px rgba(52, 211, 153, 0.4); /* Stronger glow on hover */
 }
 
 .floating-play-btn:active {
   transform: scale(0.95);
+}
+
+/* MOBILE RESPONSIVENESS */
+@media (max-width: 768px) {
+  .floating-play-btn {
+     /* Reset Desktop Positioning */
+     left: auto;
+     
+     /* MOBILE POSITION: Float above the slider on the right */
+     right: 24px;
+     bottom: 110px; /* Clear of the slider + safe area */
+  }
 }
 
 /* ==================================================================== */
