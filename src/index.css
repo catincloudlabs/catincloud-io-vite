@@ -1262,6 +1262,6 @@ input[type=range]::-moz-range-track {
      top: 70px;
      bottom: auto;
      /* Legend is at 16px. Toggle is smaller on mobile. ~120px offset */
-     left: 130px; 
+     left: 120px; 
   }
 }
