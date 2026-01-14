@@ -73,22 +73,25 @@ const Header: React.FC<HeaderProps> = ({
           {/* THE CUSTOM SCROLLABLE MENU */}
           {isOpen && (
              <div className="custom-ticker-dropdown">
-                <div 
-                   className="dropdown-item reset-item"
-                   onClick={(e) => { e.stopPropagation(); onSelectTicker(null); setIsOpen(false); }}
-                >
-                   <span>RESET VIEW</span>
+                {/* --- FIX: Added this scroll-area wrapper --- */}
+                <div className="dropdown-scroll-area">
+                  <div 
+                     className="dropdown-item reset-item"
+                     onClick={(e) => { e.stopPropagation(); onSelectTicker(null); setIsOpen(false); }}
+                  >
+                     <span>RESET VIEW</span>
+                  </div>
+                  {watchlist.map(t => (
+                     <div 
+                        key={t} 
+                        className={`dropdown-item ${selectedTicker === t ? 'selected' : ''}`}
+                        onClick={(e) => { e.stopPropagation(); onSelectTicker(t); setIsOpen(false); }}
+                     >
+                        <span>{t}</span>
+                        {selectedTicker === t && <Check size={12} color="var(--accent-green)" />}
+                     </div>
+                  ))}
                 </div>
-                {watchlist.map(t => (
-                   <div 
-                      key={t} 
-                      className={`dropdown-item ${selectedTicker === t ? 'selected' : ''}`}
-                      onClick={(e) => { e.stopPropagation(); onSelectTicker(t); setIsOpen(false); }}
-                   >
-                      <span>{t}</span>
-                      {selectedTicker === t && <Check size={12} color="var(--accent-green)" />}
-                   </div>
-                ))}
              </div>
           )}
         </div>

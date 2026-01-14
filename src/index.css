@@ -666,26 +666,28 @@ input[type=range]::-moz-range-track {
   color: var(--text-muted);
 }
 
-/* THE CUSTOM DROPDOWN */
+/* THE CUSTOM DROPDOWN CONTAINER */
 .custom-ticker-dropdown {
   position: absolute;
   top: 36px;
   left: 0;
   width: 100%;
   min-width: 180px;
-  background: #1e293b; /* Solid dark color to prevent overlapping issues */
+  background: #1e293b; 
   border: 1px solid var(--glass-border);
   border-radius: 6px;
   box-shadow: 0 10px 25px rgba(0,0,0,0.5);
   z-index: 100;
-  overflow: hidden;
+  overflow: hidden; /* Clips the corners */
   animation: fadeIn 0.1s ease-out;
 }
 
+/* THE SCROLL WRAPPER (This constrains the height) */
 .dropdown-scroll-area {
-  max-height: 300px; /* STRICT LIMIT */
-  overflow-y: auto;
-  /* Custom Scrollbar */
+  max-height: 300px; /* <--- THIS LIMITS THE HEIGHT */
+  overflow-y: auto;  /* <--- THIS ENABLES SCROLLING */
+  
+  /* Custom Scrollbar Styles */
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,0.1) transparent;
 }
@@ -727,6 +729,10 @@ input[type=range]::-moz-range-track {
   border-bottom: 1px solid var(--glass-border);
   font-style: italic;
   opacity: 0.8;
+  position: sticky;
+  top: 0;
+  background: #1e293b; /* Keeps it readable if scrolling behind it */
+  z-index: 1;
 }
 
 /* ==================================================================== */
