@@ -12,6 +12,7 @@ interface AgentPanelProps {
   isLoading?: boolean;
 }
 
+// --- CONTEXT GENERATOR ---
 const getSystemContext = (
   ticker: string, 
   currentFrame: MarketFrame, 
@@ -42,7 +43,6 @@ const getSystemContext = (
 
 const formatMessage = (text: string) => {
   return text.split('\n').map((line, lineIdx) => {
-    // Spacer for empty lines (paragraph breaks)
     if (!line.trim()) return <div key={lineIdx} style={{ height: '8px' }} />;
 
     const parts = line.split(/(\*\*.*?\*\*)/g);
@@ -116,6 +116,7 @@ export function AgentPanel({
     if (isExpanded) scrollToBottom();
   }, [messages.length, isExpanded]);
 
+  // --- TRIGGER: When Ticker Changes ---
   useEffect(() => {
     if (!selectedTicker || !currentFrame || isLoading) return;
     if (lastTickerRef.current === selectedTicker) return;
@@ -123,7 +124,13 @@ export function AgentPanel({
     addSystemMessage(`Tracking **${selectedTicker}**. Data loaded for ${currentFrame.date}.`);
     
     lastTickerRef.current = selectedTicker;
-    setIsExpanded(true);
+
+    // UPDATE: Only auto-expand on Desktop (>768px).
+    // On mobile, the panel stays collapsed to keep the map visible,
+    // but the 'agent-terminal-active' class (handled in render) will still trigger the glow.
+    if (typeof window !== 'undefined' && window.innerWidth > 768) {
+      setIsExpanded(true);
+    }
   }, [selectedTicker, currentFrame, graphConnections, isLoading, addSystemMessage]);
 
   useEffect(() => {
@@ -152,7 +159,6 @@ export function AgentPanel({
   };
 
   const getSuggestions = () => {
-    // 1. STATE: Selected Ticker (Specific)
     if (selectedTicker) {
       return [
         { label: `Brief ${selectedTicker}`, prompt: `Give me a short brief on ${selectedTicker}'s status.` },
@@ -161,7 +167,6 @@ export function AgentPanel({
       ];
     }
     
-    // 2. STATE: General View (Exploratory)
     return [
       { label: "Market Status", prompt: "Summarize the current market state." },
       { label: "Market Physics", prompt: "Explain the physics model of this simulation.", mode: 'physicist' },

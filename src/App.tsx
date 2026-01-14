@@ -12,9 +12,29 @@ import BioModal from './components/BioModal';
 // Import the spline math
 import { catmullRom, catmullRomDerivative } from './utils/splineInterpolation';
 
+// --- SORTED WATCHLIST (Alphabetical) ---
 const WATCHLIST = [
-  "NVDA", "TSLA", "AAPL", "MSFT", "GOOGL", "AMZN", "META", 
-  "SPY", "QQQ", "IWM"
+  "AAL", "AAPL", "ABBV", "ABNB", "ABT", "ACN", "ADBE", "ADI", "ADP", "ADSK", "AFRM", "AGG", 
+  "ALGN", "ALL", "AMAT", "AMD", "AMGN", "AMT", "AMZN", "ANET", "AON", "APO", "ARM", "ASML", 
+  "ASTS", "AVGO", "AXP", "BA", "BABA", "BAC", "BDX", "BIIB", "BKNG", "BLK", "BMY", "BND", 
+  "BNTX", "BRK.B", "BSX", "BX", "C", "CAT", "CB", "CDNS", "CEG", "CI", "CL", "CMG", "CMI", 
+  "COF", "COIN", "COP", "COST", "CRM", "CRWD", "CSCO", "CSX", "CVS", "CVX", "DAL", "DBC", 
+  "DDOG", "DE", "DFS", "DHR", "DIA", "DIS", "DLR", "DXCM", "EL", "ELV", "EMR", "EOG", "EQIX", 
+  "ESTC", "ETN", "EW", "FDX", "FI", "FICO", "GD", "GE", "GIB", "GILD", "GLD", "GOOGL", "GS", 
+  "HCA", "HD", "HES", "HIG", "HLT", "HON", "HOOD", "HUM", "HYG", "IBM", "IBIT", "IEF", "ILMN", 
+  "INTC", "INTU", "ISRG", "ITB", "ITW", "IWM", "JETS", "JNJ", "JPM", "KBE", "KKR", "KLAC", 
+  "KMI", "KO", "KRE", "LABD", "LABU", "LHX", "LLY", "LMT", "LOW", "LQD", "LRCX", "LULU", 
+  "LUV", "MA", "MAR", "MARA", "MCD", "MCHP", "MCK", "MDB", "MDT", "MET", "META", "MMC", 
+  "MMM", "MO", "MPC", "MRNA", "MRVL", "MS", "MSFT", "MSTR", "MU", "NET", "NKE", "NOC", 
+  "NOW", "NRG", "NSC", "NVDA", "NVO", "ON", "ORCL", "OXY", "PANW", "PCAR", "PDD", "PEP", 
+  "PFE", "PG", "PGR", "PH", "PLTR", "PM", "PNC", "PSX", "PYPL", "QCOM", "QQQ", "REGN", 
+  "RKLB", "RSG", "RTX", "SAP", "SBUX", "SHOP", "SHY", "SLB", "SLV", "SMCI", "SMH", "SNOW", 
+  "SNPS", "SOXL", "SOXS", "SOXX", "SPGI", "SPXU", "SPY", "SQ", "SQQQ", "STM", "SYK", "TDG", 
+  "TEAM", "TFC", "TGT", "TJX", "TLT", "TMF", "TMO", "TMV", "TQQQ", "TRV", "TSLA", "TSM", 
+  "TT", "TTD", "TXN", "UAL", "UBER", "UNG", "UNH", "UNP", "UPRO", "UPS", "USB", "USO", 
+  "UVXY", "V", "VEA", "VIXY", "VLO", "VOO", "VRT", "VRTX", "VST", "VTI", "VWO", "VXX", 
+  "WDAY", "WFC", "WM", "WMB", "WMT", "XBI", "XLC", "XLE", "XLF", "XLI", "XLK", "XLP", 
+  "XLRE", "XLU", "XLV", "XLY", "XOM", "YUM", "ZM", "ZS", "ZTS"
 ];
 
 function App() {
