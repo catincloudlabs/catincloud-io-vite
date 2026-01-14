@@ -420,7 +420,7 @@ export function MarketMap({ data, history, onNodeClick, onBackgroundClick, selec
     stroked: true,
     getLineWidth: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return pulse ? 2 : 0.5; 
-        if (d.energy > highEnergyThreshold) return 0.6; 
+        if (d.energy > highEnergyThreshold) return 0.5; 
         return 0; 
     },
     getLineColor: (d: HydratedNode) => {
