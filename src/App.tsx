@@ -12,53 +12,29 @@ import BioModal from './components/BioModal';
 // Import the spline math
 import { catmullRom, catmullRomDerivative } from './utils/splineInterpolation';
 
+// --- SORTED WATCHLIST (Alphabetical) ---
 const WATCHLIST = [
-  // --- MEGA CAP & TECH ---
-  "AAPL", "NVDA", "MSFT", "GOOGL", "AMZN", "META", "TSLA", "BRK.B", "LLY", "AVGO", "JPM",
-  
-  // --- SEMICONDUCTORS & HARDWARE ---
-  "AMD", "QCOM", "TXN", "INTC", "AMAT", "MU", "LRCX", "ADI", "KLAC", "MRVL", "SNPS", 
-  "CDNS", "PANW", "CRWD", "PLTR", "SMCI", "ARM", "TSM", "ASML", "ON", "MCHP", "STM",
-  
-  // --- SOFTWARE & CLOUD ---
-  "ORCL", "ADBE", "CRM", "INTU", "IBM", "NOW", "UBER", "SAP", "FI", "ADP", "ACN", 
-  "CSCO", "SQ", "SHOP", "WDAY", "SNOW", "TEAM", "ADSK", "DDOG", "ZM", "NET", "TTD",
-  "MDB", "ZS", "GIB", "FICO", "ANET", "ESTC",
-
-  // --- FINANCIALS & PAYMENTS ---
-  "V", "MA", "BAC", "WFC", "MS", "GS", "C", "BLK", "SPGI", "AXP", "MCO", "PGR", "CB", 
-  "MMC", "AON", "USB", "PNC", "TFC", "COF", "DFS", "PYPL", "AFRM", "HOOD", "COIN",
-  "KKR", "BX", "APO", "TRV", "ALL", "HIG", "MET",
-
-  // --- HEALTHCARE ---
-  "UNH", "JNJ", "ABBV", "MRK", "TMO", "ABT", "DHR", "PFE", "AMGN", "ISRG", "ELV", 
-  "VRTX", "REGN", "ZTS", "BSX", "BDX", "GILD", "HCA", "MCK", "CI", "HUM", "CVS", 
-  "BMY", "SYK", "EW", "MDT", "DXCM", "ILMN", "ALGN", "BIIB", "MRNA", "BNTX", "NVO",
-
-  // --- CONSUMER & RETAIL ---
-  "WMT", "PG", "COST", "HD", "KO", "PEP", "MCD", "DIS", "NKE", "SBUX", "LOW", "PM", 
-  "TGT", "TJX", "EL", "CL", "MO", "LULU", "CMG", "MAR", "BKNG", "ABNB", "HLT", "YUM",
-  
-  // --- INDUSTRIALS & ENERGY ---
-  "DE", "CAT", "HON", "GE", "MMM", "ETN", "ITW", "EMR", "PH", "CMI", "PCAR", "TT",
-  "XOM", "CVX", "COP", "SLB", "EOG", "MPC", "PSX", "VLO", "OXY", "HES", "KMI", "WMB",
-  "LMT", "RTX", "BA", "GD", "NOC", "LHX", "TDG", "WM", "RSG", "UNP", "CSX", "NSC",
-  "DAL", "UAL", "AAL", "LUV", "FDX", "UPS",
-
-  // --- SPECIAL THEMES (AI Power, Infra, Crypto, Space) ---
-  "VST", "CEG", "NRG", "VRT",           // AI Power
-  "EQIX", "DLR", "AMT",                 // Data Center Infra
-  "MSTR", "IBIT", "MARA",               // Crypto High Beta
-  "RKLB", "ASTS",                       // Space
-  "BABA", "PDD",                        // Global Tech
-
-  // --- ETFS ---
-  "SPY", "QQQ", "IWM", "DIA", "VTI", "VOO", "VEA", "VWO",
-  "XLK", "XLV", "XLF", "XLE", "XLC", "XLY", "XLP", "XLI", "XLU", "XLB", "XLRE",
-  "SMH", "SOXX", "XBI", "KRE", "KBE", "JETS", "ITB",
-  "TLT", "IEF", "SHY", "LQD", "HYG", "AGG", "BND",
-  "GLD", "SLV", "USO", "UNG", "DBC",
-  "VIXY", "UVXY", "VXX", "TQQQ", "SQQQ", "SOXL", "SOXS", "SPXU", "UPRO", "LABU", "LABD", "TMF", "TMV"
+  "AAL", "AAPL", "ABBV", "ABNB", "ABT", "ACN", "ADBE", "ADI", "ADP", "ADSK", "AFRM", "AGG", 
+  "ALGN", "ALL", "AMAT", "AMD", "AMGN", "AMT", "AMZN", "ANET", "AON", "APO", "ARM", "ASML", 
+  "ASTS", "AVGO", "AXP", "BA", "BABA", "BAC", "BDX", "BIIB", "BKNG", "BLK", "BMY", "BND", 
+  "BNTX", "BRK.B", "BSX", "BX", "C", "CAT", "CB", "CDNS", "CEG", "CI", "CL", "CMG", "CMI", 
+  "COF", "COIN", "COP", "COST", "CRM", "CRWD", "CSCO", "CSX", "CVS", "CVX", "DAL", "DBC", 
+  "DDOG", "DE", "DFS", "DHR", "DIA", "DIS", "DLR", "DXCM", "EL", "ELV", "EMR", "EOG", "EQIX", 
+  "ESTC", "ETN", "EW", "FDX", "FI", "FICO", "GD", "GE", "GIB", "GILD", "GLD", "GOOGL", "GS", 
+  "HCA", "HD", "HES", "HIG", "HLT", "HON", "HOOD", "HUM", "HYG", "IBM", "IBIT", "IEF", "ILMN", 
+  "INTC", "INTU", "ISRG", "ITB", "ITW", "IWM", "JETS", "JNJ", "JPM", "KBE", "KKR", "KLAC", 
+  "KMI", "KO", "KRE", "LABD", "LABU", "LHX", "LLY", "LMT", "LOW", "LQD", "LRCX", "LULU", 
+  "LUV", "MA", "MAR", "MARA", "MCD", "MCHP", "MCK", "MDB", "MDT", "MET", "META", "MMC", 
+  "MMM", "MO", "MPC", "MRNA", "MRVL", "MS", "MSFT", "MSTR", "MU", "NET", "NKE", "NOC", 
+  "NOW", "NRG", "NSC", "NVDA", "NVO", "ON", "ORCL", "OXY", "PANW", "PCAR", "PDD", "PEP", 
+  "PFE", "PG", "PGR", "PH", "PLTR", "PM", "PNC", "PSX", "PYPL", "QCOM", "QQQ", "REGN", 
+  "RKLB", "RSG", "RTX", "SAP", "SBUX", "SHOP", "SHY", "SLB", "SLV", "SMCI", "SMH", "SNOW", 
+  "SNPS", "SOXL", "SOXS", "SOXX", "SPGI", "SPXU", "SPY", "SQ", "SQQQ", "STM", "SYK", "TDG", 
+  "TEAM", "TFC", "TGT", "TJX", "TLT", "TMF", "TMO", "TMV", "TQQQ", "TRV", "TSLA", "TSM", 
+  "TT", "TTD", "TXN", "UAL", "UBER", "UNG", "UNH", "UNP", "UPRO", "UPS", "USB", "USO", 
+  "UVXY", "V", "VEA", "VIXY", "VLO", "VOO", "VRT", "VRTX", "VST", "VTI", "VWO", "VXX", 
+  "WDAY", "WFC", "WM", "WMB", "WMT", "XBI", "XLC", "XLE", "XLF", "XLI", "XLK", "XLP", 
+  "XLRE", "XLU", "XLV", "XLY", "XOM", "YUM", "ZM", "ZS", "ZTS"
 ];
 
 function App() {
