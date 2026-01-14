@@ -23,54 +23,66 @@ END_DATE = datetime.now().strftime('%Y-%m-%d')
 MAX_WORKERS = 20 
 DB_BATCH_SIZE = 200
 
-# The Curated Universe (242 Tickers)
+# --- MARKET UNIVERSE (S&P 500 + CORE HIGH BETA/AI/CRYPTO) ---
 TICKER_UNIVERSE = [
-    # MEGA CAP & TECH
-    "AAPL", "NVDA", "MSFT", "GOOGL", "AMZN", "META", "TSLA", "BRK.B", "LLY", "AVGO", "JPM",
-    
-    # SEMICONDUCTORS & HARDWARE
-    "AMD", "QCOM", "TXN", "INTC", "AMAT", "MU", "LRCX", "ADI", "KLAC", "MRVL", "SNPS", 
-    "CDNS", "PANW", "CRWD", "PLTR", "SMCI", "ARM", "TSM", "ASML", "ON", "MCHP", "STM",
-    
-    # SOFTWARE & CLOUD
-    "ORCL", "ADBE", "CRM", "INTU", "IBM", "NOW", "UBER", "SAP", "FI", "ADP", "ACN", 
-    "CSCO", "SQ", "SHOP", "WDAY", "SNOW", "TEAM", "ADSK", "DDOG", "ZM", "NET", "TTD",
-    "MDB", "ZS", "GIB", "FICO", "ANET", "ESTC",
+    # --- CUSTOM HIGH CONVICTION (Crypto, AI, Space, ETFs) ---
+    "MSTR", "IBIT", "MARA", "COIN", "HOOD", "SQ", "RKLB", "ASTS", "VST", "CEG", 
+    "NRG", "VRT", "PLTR", "SOUN", "IONQ", "TSM", "ARM", "ASML", "BABA", "PDD", 
+    "JD", "BIDU", "EQIX", "DLR", "AMT", "SPY", "QQQ", "IWM", "DIA", "VTI", "VOO", 
+    "VEA", "VWO", "XLK", "XLV", "XLF", "XLE", "XLC", "XLY", "XLP", "XLI", "XLU", 
+    "XLB", "XLRE", "SMH", "SOXX", "XBI", "KRE", "KBE", "JETS", "ITB", "TLT", 
+    "IEF", "SHY", "LQD", "HYG", "AGG", "BND", "GLD", "SLV", "USO", "UNG", "DBC", 
+    "VIXY", "UVXY", "VXX", "TQQQ", "SQQQ", "SOXL", "SOXS", "SPXU", "UPRO", "LABU", 
+    "LABD", "TMF", "TMV",
 
-    # FINANCE & PAYMENTS
-    "V", "MA", "BAC", "WFC", "MS", "GS", "C", "BLK", "SPGI", "AXP", "MCO", "PGR", "CB", 
-    "MMC", "AON", "USB", "PNC", "TFC", "COF", "DFS", "PYPL", "AFRM", "HOOD", "COIN",
-    "KKR", "BX", "APO", "TRV", "ALL", "HIG", "MET",
-
-    # HEALTHCARE
-    "UNH", "JNJ", "ABBV", "MRK", "TMO", "ABT", "DHR", "PFE", "AMGN", "ISRG", "ELV", 
-    "VRTX", "REGN", "ZTS", "BSX", "BDX", "GILD", "HCA", "MCK", "CI", "HUM", "CVS", 
-    "BMY", "SYK", "EW", "MDT", "DXCM", "ILMN", "ALGN", "BIIB", "MRNA", "BNTX", "NVO",
-
-    # CONSUMER & RETAIL
-    "WMT", "PG", "COST", "HD", "KO", "PEP", "MCD", "DIS", "NKE", "SBUX", "LOW", "PM", 
-    "TGT", "TJX", "EL", "CL", "MO", "LULU", "CMG", "MAR", "BKNG", "ABNB", "HLT", "YUM",
-    
-    # INDUSTRIALS & ENERGY
-    "DE", "CAT", "HON", "GE", "MMM", "ETN", "ITW", "EMR", "PH", "CMI", "PCAR", "TT",
-    "XOM", "CVX", "COP", "SLB", "EOG", "MPC", "PSX", "VLO", "OXY", "HES", "KMI", "WMB",
-    "LMT", "RTX", "BA", "GD", "NOC", "LHX", "TDG", "WM", "RSG", "UNP", "CSX", "NSC",
-    "DAL", "UAL", "AAL", "LUV", "FDX", "UPS",
-
-    # --- NEW ADDITIONS (AI Power, Infra, Crypto, Space) ---
-    "VST", "CEG", "NRG", "VRT",           # AI Power & Cooling
-    "EQIX", "DLR", "AMT",                 # Data Center Infra
-    "MSTR", "IBIT", "MARA",               # Crypto High Beta
-    "RKLB", "ASTS",                       # Space & Deep Tech
-    "BABA", "PDD",                        # Global Tech
-
-    # ETFS
-    "SPY", "QQQ", "IWM", "DIA", "VTI", "VOO", "VEA", "VWO",
-    "XLK", "XLV", "XLF", "XLE", "XLC", "XLY", "XLP", "XLI", "XLU", "XLB", "XLRE",
-    "SMH", "SOXX", "XBI", "KRE", "KBE", "JETS", "ITB",
-    "TLT", "IEF", "SHY", "LQD", "HYG", "AGG", "BND",
-    "GLD", "SLV", "USO", "UNG", "DBC",
-    "VIXY", "UVXY", "VXX", "TQQQ", "SQQQ", "SOXL", "SOXS", "SPXU", "UPRO", "LABU", "LABD", "TMF", "TMV"
+    # --- S&P 500 & MARKET LEADERS ---
+    "MMM", "AOS", "ABT", "ABBV", "ACN", "ADBE", "AMD", "AES", "AFL", "A", "APD", 
+    "ABNB", "AKAM", "ALB", "ARE", "ALGN", "ALLE", "LNT", "ALL", "GOOGL", "GOOG", 
+    "MO", "AMZN", "AMCR", "AEE", "AEP", "AXP", "AIG", "AWK", "AMP", "AME", "AMGN", 
+    "APH", "ADI", "ANSS", "AON", "APA", "AAPL", "AMAT", "APTV", "ACGL", "ADM", 
+    "ANET", "AJG", "AIZ", "T", "ATO", "ADSK", "ADP", "AZO", "AVB", "AVY", "AXON", 
+    "BKR", "BALL", "BAC", "BK", "BBWI", "BAX", "BDX", "BRK.B", "BBY", "BIO", 
+    "TECH", "BIIB", "BLK", "BX", "BA", "BKNG", "BWA", "BXP", "BSX", "BMY", "AVGO", 
+    "BR", "BRO", "BF.B", "BG", "CHRW", "CDNS", "CZR", "CPT", "COF", "CAH", "KMX", 
+    "CCL", "CARR", "CTLT", "CAT", "CBOE", "CBRE", "CDW", "CE", "COR", "CNC", "CNP", 
+    "CDAY", "CF", "CRL", "SCHW", "CHTR", "CVX", "CMG", "CB", "CHD", "CI", "CINF", 
+    "CTAS", "CSCO", "C", "CFG", "CLX", "CME", "CMS", "KO", "CTSH", "CL", "CMCSA", 
+    "CAG", "COP", "ED", "STZ", "COO", "CPRT", "GLW", "CTVA", "CSGP", "COST", 
+    "CTRA", "CCI", "CSX", "CMI", "CVS", "DHI", "DHR", "DRI", "DVA", "DE", "DAL", 
+    "XRAY", "DVN", "DXCM", "FANG", "DFS", "DIS", "DG", "DLTR", "D", "DPZ", "DOV", 
+    "DOW", "DTE", "DUK", "DD", "EMN", "ETN", "EBAY", "ECL", "EIX", "EW", "EA", 
+    "ELV", "LLY", "EMR", "ENPH", "ETR", "EOG", "EPAM", "EQT", "EFX", "EQR", "ESS", 
+    "EL", "ETSY", "EG", "EVRG", "ES", "EXC", "EXPE", "EXPD", "EXR", "XOM", "FFIV", 
+    "FDS", "FICO", "FAST", "FRT", "FDX", "FITB", "FSLR", "FE", "FIS", "FI", "FLT", 
+    "FMC", "F", "FTNT", "FTV", "FOXA", "FOX", "BEN", "FCX", "GRMN", "IT", "GE", 
+    "GEHC", "GEV", "GNRC", "GD", "GIS", "GM", "GPC", "GILD", "GL", "GPN", "GS", 
+    "HAL", "HIG", "HAS", "HCA", "PEAK", "HSIC", "HSY", "HES", "HPE", "HLT", "HOLX", 
+    "HD", "HON", "HRL", "HST", "HWM", "HPQ", "HUBB", "HUM", "HBAN", "HII", "IBM", 
+    "IEX", "IDXX", "ITW", "ILMN", "INCY", "IR", "PODD", "INTC", "ICE", "IGP", "IP", 
+    "IPG", "IFF", "INTU", "ISRG", "IVZ", "INVH", "IQV", "IRM", "JBHT", "JKHY", "J", 
+    "JNJ", "JCI", "JPM", "JNPR", "K", "KVUE", "KDP", "KEY", "KEYS", "KMB", "KIM", 
+    "KMI", "KLAC", "KHC", "KR", "LHX", "LH", "LRCX", "LW", "LVS", "LDOS", "LEN", 
+    "LIN", "LYV", "LKQ", "LMT", "L", "LOW", "LULU", "LYB", "MTB", "MRO", "MPC", 
+    "MKTX", "MAR", "MMC", "MLM", "MAS", "MA", "MTCH", "MKC", "MCD", "MCK", "MDT", 
+    "MRK", "META", "MET", "MTD", "MGM", "MCHP", "MU", "MSFT", "MAA", "MRNA", "MHK", 
+    "MOH", "TAP", "MDLZ", "MPWR", "MNST", "MCO", "MS", "MOS", "MSI", "MSCI", 
+    "NDAQ", "NTAP", "NFLX", "NEM", "NWSA", "NWS", "NEE", "NKE", "NI", "NDSN", 
+    "NSC", "NTRS", "NOC", "NCLH", "NUE", "NVDA", "NVR", "NXPI", "ORLY", "OXY", 
+    "ODFL", "OMC", "ON", "OKE", "ORCL", "OGN", "OTIS", "PCAR", "PKG", "PANW", 
+    "PARA", "PH", "PAYX", "PAYC", "PYPL", "PNR", "PEP", "PFE", "PCG", "PM", "PSX", 
+    "PNW", "PXD", "PNC", "POOL", "PPG", "PPL", "PFG", "PG", "PGR", "PLD", "PRU", 
+    "PEG", "PTC", "PSA", "PHM", "QRVO", "PWR", "QCOM", "DGX", "RL", "RJF", "O", 
+    "REG", "REGN", "RF", "RSG", "RMD", "RVTY", "RHI", "ROK", "ROL", "ROP", "ROST", 
+    "RCL", "SPGI", "CRM", "SBAC", "SLB", "STX", "SEE", "SRE", "NOW", "SHW", "SPG", 
+    "SWKS", "SJM", "SNA", "SEDG", "SO", "LUV", "SWK", "SBUX", "STT", "STLD", "STE", 
+    "SYK", "SYF", "SNPS", "SYY", "TMUS", "TROW", "TTWO", "TPR", "TRGP", "TGT", 
+    "TEL", "TDY", "TFX", "TER", "TSLA", "TXN", "TXT", "TMO", "TJX", "TSCO", "TT", 
+    "TDG", "TRV", "TRMB", "TFC", "TYL", "TSN", "USB", "UDR", "ULTA", "UNP", "UAL", 
+    "UPS", "URI", "UNH", "UHS", "VLO", "VTR", "VRSN", "VRSK", "VZ", "VRTX", "VFC", 
+    "VTRS", "VICI", "V", "VMC", "WAB", "WBA", "WMT", "WBD", "WM", "WAT", "WEC", 
+    "WFC", "WELL", "WST", "WDC", "WRK", "WY", "WHR", "WMB", "WTW", "GWW", "WYNN", 
+    "XEL", "XYL", "YUM", "ZBRA", "ZBH", "ZION", "ZTS", "DELL", "KKR", "CRWD", 
+    "GDDY", "ERIE", "CNH", "DASH", "APP", "WDAY", "ARES", "WSM", "SOLV", "VLTO"
 ]
 
 # --- ROBUST UTILS ---
