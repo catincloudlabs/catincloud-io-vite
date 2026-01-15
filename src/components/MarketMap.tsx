@@ -217,11 +217,14 @@ export function MarketMap({
 
   const sortedNodes = useMemo(() => {
     if (!data?.nodes) return [];
-    // UPDATED: Removed the 'p' filter to ensure no tickers are accidentally hidden.
+    
+    // FIX: Removed the dangerous '.includes("p")' check which was deleting AAPL/JPM
     const cleanNodes = data.nodes.filter(n => {
         if (n.ticker.includes('.WS')) return false;
+        // if (n.ticker.includes('p')) return false; // <--- DELETED THIS LINE
         return true;
     });
+
     return [...cleanNodes].sort((a, b) => {
       if (a.ticker === selectedTicker) return 1;
       const aConn = graphConnections?.some(c => c.target === a.ticker);
@@ -248,7 +251,6 @@ export function MarketMap({
     const lookback = Math.max(0, currentIndex - LOOKBACK_FRAMES);
     const recentHistory = history.slice(lookback, currentIndex + 1);
 
-    // UPDATED: Force-Include ANCHOR_TICKERS in trails, even if energy is low
     const activeTickers = new Set(data.nodes.filter(n => 
         n.energy > highEnergyThreshold || 
         n.ticker === selectedTicker ||
@@ -278,7 +280,6 @@ export function MarketMap({
 
   const vectorData = useMemo(() => {
     if (!data?.nodes) return [];
-    // UPDATED: Force-Include ANCHOR_TICKERS in vectors (tails), even if energy is low
     return data.nodes.filter(n => 
         n.energy > highEnergyThreshold || 
         n.ticker === selectedTicker ||
@@ -401,10 +402,10 @@ export function MarketMap({
     getRadius: 4.0, 
     getFillColor: [0, 0, 0, 0], 
     stroked: true,
-    getLineWidth: 1.5,
+    getLineWidth: 2.0, // Thicker for better visibility
     getLineColor: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return [...THEME.mint, 255];
-        return [...THEME.infrastructure, 180]; 
+        return [...THEME.infrastructure, 255]; // 255 = Solid Opacity
     },
     pickable: true,
     autoHighlight: true, 
