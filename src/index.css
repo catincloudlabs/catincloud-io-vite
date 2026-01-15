@@ -670,13 +670,11 @@ input[type=range]::-moz-range-track {
 @media (max-width: 768px) {
   .floating-play-btn {
      /* Reset Desktop Positioning */
-     bottom: auto;
-     right: auto;
+     left: auto;
      
-     /* MOBILE POSITION: Top Left (Aligned with Legend) */
-     /* Header is ~64px + gap */
-     top: 70px;
-     left: 120px; 
+     /* MOBILE POSITION: Float above the slider on the right */
+     right: 24px;
+     bottom: 110px; /* Clear of the slider + safe area */
   }
 }
 

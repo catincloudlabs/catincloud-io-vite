@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import DeckGL from '@deck.gl/react';
+// 1. RE-ADDED TextLayer to imports
 import { ScatterplotLayer, PolygonLayer, PathLayer, LineLayer, TextLayer } from '@deck.gl/layers'; 
 import { PathStyleExtension } from '@deck.gl/extensions'; 
 import { OrthographicView } from '@deck.gl/core';
@@ -9,7 +10,6 @@ import { Delaunay } from 'd3-delaunay';
 import { GraphConnection } from '../hooks/useKnowledgeGraph'; 
 import { getSectorLabel } from '../utils/sectorMap';
 
-// ... (Keep existing Types: SectorNode, HydratedNode, MarketFrame) ...
 export type SectorNode = {
   id: string;
   x: number;
@@ -70,13 +70,14 @@ export function MarketMap({
   isPlaying = false 
 }: MarketMapProps) {
   
-  // ... (Keep existing state) ...
+  // --- 1. HEARTBEAT SYSTEM ---
   const [pulse, setPulse] = useState(false);
   useEffect(() => {
     const interval = setInterval(() => setPulse(p => !p), 3000); 
     return () => clearInterval(interval);
   }, []);
 
+  // --- 2. INTERACTION STATE ---
   const [hoverInfo, setHoverInfo] = useState<{
     object?: HydratedNode;
     x: number;
@@ -109,7 +110,7 @@ export function MarketMap({
     setDragOffset({ x: 0, y: 0 });
   }, [selectedTicker]);
 
-  // ... (Keep existing Memos: initialViewState, metrics, sortedNodes, etc.) ...
+  // --- 3. VIEWPORT ---
   const initialViewState = useMemo(() => {
     if (!data?.nodes?.length) return { target: [0, 0, 0], zoom: 1 };
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
@@ -142,6 +143,7 @@ export function MarketMap({
     };
   }, [data]); 
 
+  // --- 4. METRICS & MEMOS ---
   const { maxEnergy, highEnergyThreshold } = useMemo(() => {
     if (!data?.nodes || data.nodes.length === 0) return { maxEnergy: 0, highEnergyThreshold: 0 };
     const energies = data.nodes.map(n => n.energy);
@@ -224,6 +226,7 @@ export function MarketMap({
 
   const sectorLayerData = useMemo(() => {
     if (!data?.sectors) return [];
+    // Only show sectors that have a meaningful presence
     return data.sectors.filter(s => s.count > 2); 
   }, [data]);
 
@@ -234,19 +237,22 @@ export function MarketMap({
 
   if (!data) return null;
 
-  // --- LAYERS ---
+  // --- LAYERS ----------------------------------------------------------------
+
+  // 2. RE-ADDED: Text Layer for Sector Names (Ghost Style)
   const sectorTextLayer = new TextLayer({
     id: 'sector-labels',
     data: sectorLayerData,
     getPosition: (d: SectorNode) => [d.x, d.y],
     getText: (d: SectorNode) => getSectorLabel(d.id).toUpperCase(),
-    getSize: 11,
-    getColor: [...THEME.slate, 180],
+    getSize: 11, // Small, discrete size
+    getColor: [...THEME.slate, 180], // Low opacity slate (Ghost effect)
     getAngle: 0,
     getTextAnchor: 'middle',
     getAlignmentBaseline: 'center',
     fontFamily: '"JetBrains Mono", monospace', 
     fontWeight: 700,
+    // Optimization: Don't render text if we are in high-speed playback to reduce noise
     visible: !isPlaying
   });
 
@@ -330,59 +336,13 @@ export function MarketMap({
     },
   });
 
-  // --- MOUSE & TOUCH HANDLERS (DRAG SELECTED) ---
-  const handleMouseDown = (e: React.MouseEvent) => {
-    isDraggingRef.current = true;
-    dragStartRef.current = { x: e.clientX, y: e.clientY };
-    initialOffsetRef.current = { ...dragOffset };
-    document.addEventListener('mousemove', handleGlobalMouseMove);
-    document.addEventListener('mouseup', handleGlobalMouseUp);
-  };
-  const handleGlobalMouseMove = (e: MouseEvent) => {
-    if (!isDraggingRef.current || !dragStartRef.current) return;
-    setDragOffset({
-        x: initialOffsetRef.current.x + (e.clientX - dragStartRef.current.x),
-        y: initialOffsetRef.current.y + (e.clientY - dragStartRef.current.y)
-    });
-  };
-  const handleGlobalMouseUp = () => {
-    isDraggingRef.current = false;
-    dragStartRef.current = null;
-    document.removeEventListener('mousemove', handleGlobalMouseMove);
-    document.removeEventListener('mouseup', handleGlobalMouseUp);
-  };
-
-  // --- TOUCH HANDLERS ---
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    dragStartRef.current = { x: touch.clientX, y: touch.clientY };
-    initialOffsetRef.current = { ...dragOffset };
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!dragStartRef.current) return;
-    const touch = e.touches[0];
-    const deltaX = touch.clientX - dragStartRef.current.x;
-    const deltaY = touch.clientY - dragStartRef.current.y;
-    setDragOffset({
-        x: initialOffsetRef.current.x + deltaX,
-        y: initialOffsetRef.current.y + deltaY
-    });
-    // Stop propagation to prevent moving the map while dragging the card
-    e.stopPropagation(); 
-  };
-
-  const handleTouchEnd = () => {
-    dragStartRef.current = null;
-  };
-
-  // --- RENDER CARD ---
+  // --- RENDER CARD COMPONENT ---
   const Card = ({ node, isInteractive, style, onMouseDown, onTouchStart, onTouchMove, onTouchEnd }: any) => (
     <div 
         style={{...style, position: 'absolute'}}
         className={`map-tooltip-container ${isInteractive ? 'locked' : 'hover'}`}
         onMouseDown={onMouseDown}
-        onTouchStart={onTouchStart} // Attached Touch Handlers
+        onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
     >
@@ -407,6 +367,28 @@ export function MarketMap({
     </div>
   );
 
+  // Mouse Handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    isDraggingRef.current = true;
+    dragStartRef.current = { x: e.clientX, y: e.clientY };
+    initialOffsetRef.current = { ...dragOffset };
+    document.addEventListener('mousemove', handleGlobalMouseMove);
+    document.addEventListener('mouseup', handleGlobalMouseUp);
+  };
+  const handleGlobalMouseMove = (e: MouseEvent) => {
+    if (!isDraggingRef.current || !dragStartRef.current) return;
+    setDragOffset({
+        x: initialOffsetRef.current.x + (e.clientX - dragStartRef.current.x),
+        y: initialOffsetRef.current.y + (e.clientY - dragStartRef.current.y)
+    });
+  };
+  const handleGlobalMouseUp = () => {
+    isDraggingRef.current = false;
+    dragStartRef.current = null;
+    document.removeEventListener('mousemove', handleGlobalMouseMove);
+    document.removeEventListener('mouseup', handleGlobalMouseUp);
+  };
+
   return (
     <>
         <div className="sr-only" aria-live="polite">
@@ -418,6 +400,7 @@ export function MarketMap({
             views={new OrthographicView({ controller: true })}
             initialViewState={initialViewState}
             controller={true}
+            // 3. UPDATED: Removed sectorBgLayer, Added sectorTextLayer
             layers={[cellLayer, sectorTextLayer, vectorLayer, trailLayer, glowLayer, synapseLayer, dotLayer]} 
             style={{ backgroundColor: 'transparent' }} 
             
@@ -441,9 +424,6 @@ export function MarketMap({
                 node={selectedNode}
                 isInteractive={true} 
                 onMouseDown={handleMouseDown}
-                onTouchStart={handleTouchStart} // Pass Touch Handlers here
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
                 style={{
                     left: selectedPos.x + dragOffset.x,
                     top: selectedPos.y + dragOffset.y,
