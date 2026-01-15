@@ -385,9 +385,9 @@ export function MarketMap({
     document.removeEventListener('mouseup', handleGlobalMouseUp);
   };
 
-  // --- TOUCH HANDLERS FOR MOBILE DRAG ---
+  // --- TOUCH HANDLERS (UPDATED) ---
   const handleTouchStart = (e: React.TouchEvent) => {
-    e.stopPropagation(); // Prevents map panning
+    e.stopPropagation(); 
     isDraggingRef.current = true;
     const touch = e.touches[0];
     dragStartRef.current = { x: touch.clientX, y: touch.clientY };
@@ -396,7 +396,9 @@ export function MarketMap({
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDraggingRef.current || !dragStartRef.current) return;
-    e.stopPropagation(); // Prevents scrolling/panning
+    e.stopPropagation();
+    if (e.cancelable) e.preventDefault();
+    
     const touch = e.touches[0];
     setDragOffset({
         x: initialOffsetRef.current.x + (touch.clientX - dragStartRef.current.x),
@@ -443,7 +445,6 @@ export function MarketMap({
                 node={selectedNode}
                 isInteractive={true} 
                 onMouseDown={handleMouseDown}
-                // Attached Touch Handlers
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
