@@ -1,4 +1,3 @@
-// src/App.tsx
 import { useEffect, useState, useMemo } from 'react';
 import { hydrateMarketData } from './utils/processData';
 import { MarketMap, MarketFrame } from './components/MarketMap'; 
@@ -8,17 +7,12 @@ import { useKnowledgeGraph } from './hooks/useKnowledgeGraph';
 import Legend from './components/Legend';
 import ArchitectureModal from './components/ArchitectureModal';
 import BioModal from './components/BioModal';
-
-// --- NEW IMPORTS ---
 import { useTimelineAnimation } from './hooks/useTimelineAnimation';
-// @ts-ignore
 import { Play, Pause } from 'lucide-react'; 
-import { FilterState } from './components/FilterMenu'; // Import the type
-
-// Import the spline math
+import { FilterState } from './components/FilterMenu'; 
 import { catmullRom, catmullRomDerivative } from './utils/splineInterpolation';
 
-// --- ANCHOR CONFIGURATION (Must match MarketMap) ---
+/* --- CONFIGURATION: Anchor Assets --- */
 const ANCHOR_TICKERS = new Set([
   "SPY", "QQQ", "IWM", "DIA", 
   "AAPL", "MSFT", "NVDA", "GOOGL", 
@@ -26,7 +20,7 @@ const ANCHOR_TICKERS = new Set([
   "JPM", "V", "UNH", "XOM"
 ]);
 
-// --- SORTED WATCHLIST (Alphabetical) ---
+/* --- CONFIGURATION: Watchlist --- */
 const WATCHLIST = [
     "A", "AAL", "AAPL", "ABBV", "ABNB", "ABT", "ACGL", "ACN", "ADBE", "ADI", 
     "ADM", "ADP", "ADSK", "AEE", "AEP", "AES", "AFL", "AFRM", "AGG", "AI", 
@@ -96,16 +90,16 @@ function App() {
   const [frames, setFrames] = useState<MarketFrame[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   
-  // --- 1. FILTER STATE ---
+  // State: Filters
   const [filters, setFilters] = useState<FilterState>({
     minEnergy: 0,
-    visibleSectors: new Set(), // Empty = All Visible
+    visibleSectors: new Set(),
     showPositive: true,
     showNeutral: false,
     showNegative: true
   });
 
-  // --- TIMELINE HOOK ---
+  // State: Timeline & Interaction
   const { 
     progress: timelineProgress, 
     setProgress: setTimelineProgress, 
@@ -116,17 +110,15 @@ function App() {
     durationInSeconds: 150
   });
   
-  // Interaction State
   const [selectedTicker, setSelectedTicker] = useState<string | null>(null);
   const [isArchOpen, setArchOpen] = useState(false);
   const [isBioOpen, setBioOpen] = useState(false);
 
   const { connections, loading } = useKnowledgeGraph(selectedTicker);
 
-  // 2. EXTRACT AVAILABLE SECTORS (Run once when frames load)
+  // Memo: Derived Sector List
   const availableSectors = useMemo(() => {
     if (!frames || frames.length === 0) return [];
-    // Extract unique sectors from the last frame (most up to date)
     const sectors = new Set<string>();
     frames[frames.length - 1].nodes.forEach(n => {
         if (n.sector) sectors.add(n.sector);
@@ -134,7 +126,7 @@ function App() {
     return Array.from(sectors).sort();
   }, [frames]);
 
-  // 3. DATA LOADING
+  /* --- DATA PIPELINE --- */
   useEffect(() => {
     setError(null);
     fetch('/data/market_physics_history.json')
@@ -160,7 +152,7 @@ function App() {
       });
   }, []);
 
-  // 4. INTERPOLATION + FILTERING ENGINE
+  /* --- INTERPOLATION ENGINE --- */
   const { displayNodes, displayNodeMap, currentDateLabel, currentFrameData } = useMemo(() => {
     if (!frames || frames.length === 0) {
         return { 
@@ -171,13 +163,12 @@ function App() {
         };
     }
 
-    // A. Indices
     const maxIndex = frames.length - 1;
     const safeProgress = Math.max(0, Math.min(timelineProgress, maxIndex - 0.0001));
     const currentIndex = Math.floor(safeProgress);
     const t = safeProgress % 1; 
 
-    // B. Spline Control Points
+    // Spline Control Points
     const i0 = Math.max(0, currentIndex - 1);
     const i1 = currentIndex;
     const i2 = Math.min(maxIndex, currentIndex + 1);
@@ -190,22 +181,20 @@ function App() {
 
     if (!f1) return { displayNodes: [], displayNodeMap: new Map(), currentDateLabel: "ERROR", currentFrameData: null };
 
-    // --- C. INTERPOLATION & FILTERING LOOP ---
-    // We calculate Max Energy for the current frame to use in percentage filtering
-    const frameMaxEnergy = Math.max(...f1.nodes.map(n => n.energy), 1); // Avoid div by 0
+    const frameMaxEnergy = Math.max(...f1.nodes.map(n => n.energy), 1); 
 
     const nodes = f1.nodes
       .map(node => {
-        // --- 1. FILTER CHECK (UPDATED: ANCHORS BYPASS ALL FILTERS) ---
+        // FILTER: Anchors bypass filters
         const isAnchor = ANCHOR_TICKERS.has(node.ticker);
 
         if (!isAnchor) {
-            // SECTOR Filter
+            // SECTOR
             if (filters.visibleSectors.size > 0 && node.sector && !filters.visibleSectors.has(node.sector)) {
                 return null; 
             }
 
-            // SENTIMENT Filter
+            // SENTIMENT
             const s = node.sentiment;
             const isPos = s > 0.1;
             const isNeg = s < -0.1;
@@ -215,12 +204,12 @@ function App() {
             if (isNeg && !filters.showNegative) return null;
             if (isNeu && !filters.showNeutral) return null;
 
-            // ENERGY Filter (Signal Strength)
+            // ENERGY (Signal Strength)
             const energyPercent = (node.energy / frameMaxEnergy) * 100;
             if (energyPercent < filters.minEnergy) return null;
         }
 
-        // --- 2. PHYSICS INTERPOLATION (Only for visible nodes) ---
+        // PHYSICS: Catmull-Rom Spline
         const ticker = node.ticker;
         const p0 = f0.nodeMap.get(ticker) || node;
         const p1 = node;
@@ -240,9 +229,9 @@ function App() {
           vy: smoothVy 
         };
       })
-      .filter(Boolean); // Remove the nulls (filtered out nodes)
+      .filter(Boolean);
 
-    // @ts-ignore - TypeScript might complain about filter(Boolean) types, but it's safe here
+    // @ts-ignore
     const finalNodes = nodes as import('./components/MarketMap').HydratedNode[];
 
     return { 
@@ -251,9 +240,9 @@ function App() {
       currentDateLabel: f1.date, 
       currentFrameData: f1 
     };
-  }, [frames, timelineProgress, filters]); // Re-run when filters change
+  }, [frames, timelineProgress, filters]); 
 
-  // 5. ERROR & LOADING
+  // RENDER: Error & Loading
   if (error) return (
     <div className="app-error-container">
       <h1 className="app-error-title">System Error</h1>
@@ -268,7 +257,7 @@ function App() {
     </div>
   );
 
-  // 6. RENDER
+  // RENDER: Main App
   return (
     <div className="app-root">
       <MarketMap 
@@ -287,7 +276,6 @@ function App() {
         isPlaying={isPlaying}       
       />
 
-      {/* HEADER with FILTER PROPS */}
       <Header 
         dateLabel={currentDateLabel} 
         onOpenArch={() => setArchOpen(true)}
@@ -295,7 +283,6 @@ function App() {
         selectedTicker={selectedTicker}
         onSelectTicker={setSelectedTicker}
         watchlist={WATCHLIST}
-        
         availableSectors={availableSectors}
         filters={filters}
         setFilters={setFilters}
@@ -303,7 +290,6 @@ function App() {
 
       <Legend />
       
-      {/* FLOATING PLAY BUTTON */}
       <button 
           onClick={togglePlay} 
           className={`floating-play-btn ${isPlaying ? 'playing' : ''}`}

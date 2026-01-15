@@ -1,5 +1,4 @@
 import { useState } from 'react';
-// @ts-ignore
 import { Layers, X } from 'lucide-react';
 
 export default function Legend() {

@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-// @ts-ignore
-import { Sliders, Check, X, Zap, Activity, Layers } from 'lucide-react';
+import { Sliders, Check, Zap, Activity, Layers } from 'lucide-react';
 
 export interface FilterState {
   minEnergy: number;
@@ -51,7 +50,7 @@ const FilterMenu: React.FC<FilterMenuProps> = ({
     setFilters(prev => ({ ...prev, visibleSectors: new Set() }));
   };
 
-  // Helper to determine if we are in "Filtering Mode" (icon glow)
+  // Helper: Visual active state
   const isActive = filters.minEnergy > 0 || 
                    filters.visibleSectors.size > 0 || 
                    !filters.showPositive || 
@@ -61,7 +60,7 @@ const FilterMenu: React.FC<FilterMenuProps> = ({
   return (
     <div className="filter-menu-container" ref={menuRef}>
       
-      {/* 1. TOGGLE BUTTON */}
+      {/* TOGGLE BUTTON */}
       <button 
         onClick={() => setIsOpen(!isOpen)} 
         className={`header-icon-btn ${isActive ? 'active-filter' : ''}`}
@@ -71,11 +70,11 @@ const FilterMenu: React.FC<FilterMenuProps> = ({
         <Sliders size={16} />
       </button>
 
-      {/* 2. POPOVER MENU */}
+      {/* POPOVER MENU */}
       {isOpen && (
         <div className="filter-popover">
           
-          {/* A. SIGNAL STRENGTH */}
+          {/* SECTION: Signal Strength */}
           <div className="filter-section">
             <div className="filter-label-row">
               <div className="filter-title">
@@ -100,7 +99,7 @@ const FilterMenu: React.FC<FilterMenuProps> = ({
 
           <div className="filter-divider" />
 
-          {/* B. SENTIMENT POLARITY */}
+          {/* SECTION: Sentiment Polarity */}
           <div className="filter-section">
              <div className="filter-title">
                 <Activity size={12} color="var(--accent-green)" className="filter-icon"/>
@@ -133,7 +132,7 @@ const FilterMenu: React.FC<FilterMenuProps> = ({
 
           <div className="filter-divider" />
 
-          {/* C. SECTOR ISOLATION */}
+          {/* SECTION: Sector Isolation */}
           <div className="filter-section">
             <div className="filter-label-row">
                 <div className="filter-title">

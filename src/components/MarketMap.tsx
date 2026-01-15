@@ -1,5 +1,3 @@
-// src/components/MarketMap.tsx
-
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import DeckGL from '@deck.gl/react';
 import { ScatterplotLayer, PolygonLayer, PathLayer, LineLayer, TextLayer } from '@deck.gl/layers'; 
@@ -9,7 +7,7 @@ import { Delaunay } from 'd3-delaunay';
 import { GraphConnection } from '../hooks/useKnowledgeGraph'; 
 import { getSectorLabel } from '../utils/sectorMap';
 
-// --- TYPES ---
+/* --- DEFINITIONS --- */
 export type SectorNode = {
   id: string;
   x: number;
@@ -61,7 +59,7 @@ const THEME = {
   infrastructure: [124, 58, 237] 
 };
 
-// --- ANCHOR CONFIGURATION ---
+/* --- ANCHOR CONFIGURATION --- */
 const ANCHOR_TICKERS = new Set([
   "SPY", "QQQ", "IWM", "DIA", 
   "AAPL", "MSFT", "NVDA", "GOOGL", 
@@ -69,7 +67,7 @@ const ANCHOR_TICKERS = new Set([
   "JPM", "V", "UNH", "XOM"
 ]);
 
-// --- EXTRACTED CARD COMPONENT (Refactored to CSS classes) ---
+/* --- SUB-COMPONENT: TOOLTIP CARD --- */
 const Card = ({ node, isInteractive, style, onMouseDown, onTouchStart, onTouchMove, onTouchEnd }: any) => (
   <div 
       style={style}
@@ -113,14 +111,14 @@ export function MarketMap({
   isPlaying = false 
 }: MarketMapProps) {
   
-  // --- 1. HEARTBEAT SYSTEM ---
+  // Heartbeat for visual pulse
   const [pulse, setPulse] = useState(false);
   useEffect(() => {
     const interval = setInterval(() => setPulse(p => !p), 3000); 
     return () => clearInterval(interval);
   }, []);
 
-  // --- 2. INTERACTION STATE ---
+  // Interaction State
   const [hoverInfo, setHoverInfo] = useState<{
     object?: HydratedNode;
     x: number;
@@ -134,6 +132,7 @@ export function MarketMap({
 
   const [selectedPos, setSelectedPos] = useState<{x: number, y: number} | null>(null);
 
+  // Auto-center selected node logic
   useEffect(() => {
     if (selectedTicker && !selectedPos) {
        const cx = typeof window !== 'undefined' ? window.innerWidth / 2 : 500;
@@ -144,6 +143,7 @@ export function MarketMap({
     }
   }, [selectedTicker]);
 
+  // Dragging logic for the Card
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const dragStartRef = useRef<{ x: number, y: number } | null>(null);
   const initialOffsetRef = useRef({ x: 0, y: 0 });
@@ -153,7 +153,7 @@ export function MarketMap({
     setDragOffset({ x: 0, y: 0 });
   }, [selectedTicker]);
 
-  // --- 3. VIEWPORT (Controlled State) ---
+  // Viewport Control
   const [viewState, setViewState] = useState<any>({
     target: [0, 0, 0],
     zoom: 1,
@@ -163,6 +163,7 @@ export function MarketMap({
   
   const initializedRef = useRef(false);
 
+  // Initial Auto-Fit Logic
   useEffect(() => {
     if (initializedRef.current || !data?.nodes?.length) return;
 
@@ -206,7 +207,7 @@ export function MarketMap({
     initializedRef.current = true;
   }, [data]); 
 
-  // --- 4. METRICS & MEMOS ---
+  // --- MEMOIZED DATA CALCULATIONS ---
   const { maxEnergy, highEnergyThreshold } = useMemo(() => {
     if (!data?.nodes || data.nodes.length === 0) return { maxEnergy: 0, highEnergyThreshold: 0 };
     const energies = data.nodes.map(n => n.energy);
@@ -318,7 +319,7 @@ export function MarketMap({
 
   if (!data) return null;
 
-  // --- LAYERS ----------------------------------------------------------------
+  /* --- DECK.GL LAYERS --- */
 
   const sectorTextLayer = new TextLayer({
     id: 'sector-labels',

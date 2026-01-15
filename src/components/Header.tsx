@@ -1,6 +1,4 @@
-// src/components/Header.tsx
 import React, { useState, useRef, useEffect } from 'react';
-// @ts-ignore
 import { Clock, Network, User, ChevronDown, Search, Check, X } from 'lucide-react';
 import FilterMenu, { FilterState } from './FilterMenu';
 
@@ -32,7 +30,7 @@ const Header: React.FC<HeaderProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null); 
 
-  // Close dropdown when clicking outside
+  // EFFECT: Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -43,7 +41,7 @@ const Header: React.FC<HeaderProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Auto-focus search input when opened
+  // EFFECT: Auto-focus search input when opened
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => searchInputRef.current?.focus(), 50);
@@ -61,7 +59,6 @@ const Header: React.FC<HeaderProps> = ({
       {/* LEFT: CHRONOMETER & SELECTOR */}
       <div className="header-left">
         
-        {/* Date Display */}
         <div className="header-chronometer">
           <div className="chrono-label">
             <Clock size={12} color="var(--accent-green)" />
@@ -74,7 +71,6 @@ const Header: React.FC<HeaderProps> = ({
 
         <div className="v-divider"></div>
 
-        {/* Ticker Selector - CUSTOM DROPDOWN */}
         <div 
             className={`header-selector ${isOpen ? 'open' : ''}`} 
             ref={dropdownRef} 
@@ -152,7 +148,6 @@ const Header: React.FC<HeaderProps> = ({
       {/* RIGHT: META CONTROLS */}
       <div className="header-right">
         
-        {/* WRAPPED FILTER MENU FOR CSS TARGETING */}
         <div className="header-filter-wrapper">
             <FilterMenu 
                 availableSectors={availableSectors}

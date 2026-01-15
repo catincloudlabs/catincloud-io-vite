@@ -1,17 +1,14 @@
-// @ts-ignore
 import { Activity, Cpu, Network, Terminal } from 'lucide-react';
 
 export const SocialCardGenerator = () => {
   return (
     <div className="social-card">
       
-      {/* 1. ABSTRACT BACKGROUND GRID (The "Data") */}
+      {/* BACKGROUND ELEMENTS */}
       <div className="social-card-bg" />
-
-      {/* 2. GLOWING ORBS (The "Cluster") */}
       <div className="social-card-orbs" />
 
-      {/* 3. TOP BAR */}
+      {/* TOP BAR */}
       <div className="social-card-top">
         <div className="social-brand-row">
           <div className="social-brand-dot" />
@@ -22,7 +19,7 @@ export const SocialCardGenerator = () => {
         </div>
       </div>
 
-      {/* 4. CENTRAL HEADLINE */}
+      {/* HEADLINE */}
       <div className="social-headline-box">
         <h1 className="social-h1">
           MARKET PHYSICS<br/>ENGINE
@@ -32,7 +29,7 @@ export const SocialCardGenerator = () => {
         </p>
       </div>
 
-      {/* 5. BOTTOM METRICS / BADGES */}
+      {/* METRICS BADGES */}
       <div className="social-footer">
         <Badge icon={<Activity size={18} />} label="LIVE VELOCITY" value="60 FPS" />
         <Badge icon={<Network size={18} />} label="NODES" value="2,400+" />
