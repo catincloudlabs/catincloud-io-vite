@@ -2,14 +2,14 @@
 
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import DeckGL from '@deck.gl/react';
-import { ScatterplotLayer, PolygonLayer, PathLayer, LineLayer } from '@deck.gl/layers'; 
+// 1. RE-ADDED TextLayer to imports
+import { ScatterplotLayer, PolygonLayer, PathLayer, LineLayer, TextLayer } from '@deck.gl/layers'; 
 import { PathStyleExtension } from '@deck.gl/extensions'; 
 import { OrthographicView } from '@deck.gl/core';
 import { Delaunay } from 'd3-delaunay';
 import { GraphConnection } from '../hooks/useKnowledgeGraph'; 
 import { getSectorLabel } from '../utils/sectorMap';
 
-// ... (Keep existing Type Definitions: SectorNode, HydratedNode, MarketFrame) ...
 export type SectorNode = {
   id: string;
   x: number;
@@ -70,13 +70,14 @@ export function MarketMap({
   isPlaying = false 
 }: MarketMapProps) {
   
-  // ... (Keep existing State: pulse, hoverInfo, selectedNode, dragOffset, etc.) ...
+  // --- 1. HEARTBEAT SYSTEM ---
   const [pulse, setPulse] = useState(false);
   useEffect(() => {
     const interval = setInterval(() => setPulse(p => !p), 3000); 
     return () => clearInterval(interval);
   }, []);
 
+  // --- 2. INTERACTION STATE ---
   const [hoverInfo, setHoverInfo] = useState<{
     object?: HydratedNode;
     x: number;
@@ -109,7 +110,7 @@ export function MarketMap({
     setDragOffset({ x: 0, y: 0 });
   }, [selectedTicker]);
 
-  // ... (Keep existing Memos: initialViewState, metrics, sortedNodes, trails, vectors, voronoi) ...
+  // --- 3. VIEWPORT ---
   const initialViewState = useMemo(() => {
     if (!data?.nodes?.length) return { target: [0, 0, 0], zoom: 1 };
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
@@ -142,6 +143,7 @@ export function MarketMap({
     };
   }, [data]); 
 
+  // --- 4. METRICS & MEMOS ---
   const { maxEnergy, highEnergyThreshold } = useMemo(() => {
     if (!data?.nodes || data.nodes.length === 0) return { maxEnergy: 0, highEnergyThreshold: 0 };
     const energies = data.nodes.map(n => n.energy);
@@ -222,6 +224,12 @@ export function MarketMap({
     return polygons.map((polygon: any, i: number) => ({ polygon, node: sortedNodes[i] }));
   }, [sortedNodes, isPlaying]);
 
+  const sectorLayerData = useMemo(() => {
+    if (!data?.sectors) return [];
+    // Only show sectors that have a meaningful presence
+    return data.sectors.filter(s => s.count > 2); 
+  }, [data]);
+
   const accessibleSummary = useMemo(() => {
     if (!data?.nodes) return [];
     return [...data.nodes].sort((a, b) => b.energy - a.energy).slice(0, 5).map(n => `${n.ticker}: Energy ${n.energy.toFixed(0)}`);
@@ -231,7 +239,22 @@ export function MarketMap({
 
   // --- LAYERS ----------------------------------------------------------------
 
-  // --- REMOVED: sectorBgLayer (Visual Noise) ---
+  // 2. RE-ADDED: Text Layer for Sector Names (Ghost Style)
+  const sectorTextLayer = new TextLayer({
+    id: 'sector-labels',
+    data: sectorLayerData,
+    getPosition: (d: SectorNode) => [d.x, d.y],
+    getText: (d: SectorNode) => getSectorLabel(d.id).toUpperCase(),
+    getSize: 11, // Small, discrete size
+    getColor: [...THEME.slate, 180], // Low opacity slate (Ghost effect)
+    getAngle: 0,
+    getTextAnchor: 'middle',
+    getAlignmentBaseline: 'center',
+    fontFamily: '"JetBrains Mono", monospace', 
+    fontWeight: 700,
+    // Optimization: Don't render text if we are in high-speed playback to reduce noise
+    visible: !isPlaying
+  });
 
   const cellLayer = new PolygonLayer({
     id: 'voronoi-cells', data: voronoiData, getPolygon: (d: any) => d.polygon,
@@ -313,7 +336,7 @@ export function MarketMap({
     },
   });
 
-  // ... (Keep Card Component and Mouse Handlers same as before) ...
+  // --- RENDER CARD COMPONENT ---
   const Card = ({ node, isInteractive, style, onMouseDown, onTouchStart, onTouchMove, onTouchEnd }: any) => (
     <div 
         style={{...style, position: 'absolute'}}
@@ -344,6 +367,7 @@ export function MarketMap({
     </div>
   );
 
+  // Mouse Handlers
   const handleMouseDown = (e: React.MouseEvent) => {
     isDraggingRef.current = true;
     dragStartRef.current = { x: e.clientX, y: e.clientY };
@@ -376,8 +400,8 @@ export function MarketMap({
             views={new OrthographicView({ controller: true })}
             initialViewState={initialViewState}
             controller={true}
-            // --- REMOVED sectorBgLayer from this list ---
-            layers={[cellLayer, vectorLayer, trailLayer, glowLayer, synapseLayer, dotLayer]} 
+            // 3. UPDATED: Removed sectorBgLayer, Added sectorTextLayer
+            layers={[cellLayer, sectorTextLayer, vectorLayer, trailLayer, glowLayer, synapseLayer, dotLayer]} 
             style={{ backgroundColor: 'transparent' }} 
             
             onHover={(info: any) => setHoverInfo(info)}
