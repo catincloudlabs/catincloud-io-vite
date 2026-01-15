@@ -1,3 +1,5 @@
+/* src/index.css */
+
 /* ==================================================================== */
 /* GLOBAL RESET & VARIABLES                                             */
 /* ==================================================================== */
@@ -115,6 +117,25 @@ html, body {
   border-color: var(--accent-green);
 }
 
+.v-divider {
+  height: 24px;
+  margin: 0 12px;
+  opacity: 0.2;
+  width: 1px;
+  background: var(--text-muted);
+}
+
+.v-divider.compact {
+  height: 20px;
+  margin: 0 8px;
+}
+
+.header-label-text {
+  margin-left: 8px;
+  letter-spacing: 0.1em;
+  font-size: 0.7rem;
+}
+
 /* ==================================================================== */
 /* 2. MODALS (SHELL)                                                    */
 /* ==================================================================== */
@@ -127,7 +148,7 @@ html, body {
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(8px);
   z-index: 9999;
-  display: flex;
+  display: flex; /* Ensures centering */
   align-items: center;
   justify-content: center;
   opacity: 0;
@@ -189,6 +210,8 @@ html, body {
   border-radius: 2px;
 }
 
+.tag.ml-2 { margin-left: 8px; }
+
 .panel-toggle-btn {
   background: none;
   border: none;
@@ -230,6 +253,15 @@ html, body {
   color: var(--accent-green); 
   font-family: var(--font-mono); 
   font-size: 0.8rem; 
+}
+
+.bio-location {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
 }
 
 .bio-desc { 
@@ -403,6 +435,10 @@ html, body {
   transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+.agent-terminal-active {
+  border-color: var(--accent-green) !important;
+}
+
 .agent-terminal.expanded { height: calc(100vh - 120px); }
 .agent-terminal.collapsed { height: auto; }
 
@@ -415,6 +451,28 @@ html, body {
   justify-content: space-between;
   cursor: pointer;
   flex-shrink: 0;
+}
+
+.terminal-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.terminal-title-text {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--text-primary);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.terminal-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .terminal-body {
@@ -475,6 +533,8 @@ html, body {
 }
 
 .term-bold { font-weight: 600; color: var(--accent-green); }
+
+.msg-spacer { height: 8px; }
 
 .loading-indicator {
   display: flex; align-items: center; gap: 8px;
@@ -545,6 +605,11 @@ html, body {
   border-color: var(--accent-green);
 }
 
+.suggestion-icon {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
 .typing-cursor {
   display: inline-block;
   color: var(--accent-green);
@@ -554,7 +619,7 @@ html, body {
 }
 
 /* ==================================================================== */
-/* 6. TIMELINE SLIDER (ANCHORED LEFT)                                   */
+/* 6. TIMELINE SLIDER                                                   */
 /* ==================================================================== */
 .timeline-slider-container {
   position: absolute;
@@ -592,6 +657,12 @@ html, body {
   pointer-events: auto;
 }
 
+.slider-input {
+  width: 100%;
+  cursor: pointer;
+  display: block;
+}
+
 /* SLIDER STYLES */
 input[type=range] {
   -webkit-appearance: none; appearance: none;
@@ -624,29 +695,20 @@ input[type=range]::-moz-range-track {
 }
 
 /* ==================================================================== */
-/* 7. FLOATING CONTROLS (PLAYBACK) - REPOSITIONED                       */
+/* 7. FLOATING CONTROLS (PLAYBACK)                                      */
 /* ==================================================================== */
 .floating-play-btn {
   position: absolute;
   z-index: 45; 
-  
-  /* DESKTOP POSITION: "Satellite" to the right of the slider */
-  /* Slider is 32px (left) + 360px (width) = 392px edge */
-  /* We add ~16px gap -> 408px */
   left: 408px; 
-  
-  /* Vertically align with the slider container (approx 74px height) */
   bottom: 48px; 
-
-  /* VISUAL STYLE */
   width: 44px;
   height: 44px;
   border-radius: 50%; 
-  background: rgba(15, 23, 42, 0.85); /* Slightly more opaque for prominence */
+  background: rgba(15, 23, 42, 0.85); 
   backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border);
   color: var(--accent-green);
-  
   display: flex;
   align-items: center;
   justify-content: center;
@@ -659,22 +721,18 @@ input[type=range]::-moz-range-track {
   background: rgba(15, 23, 42, 0.95);
   transform: scale(1.1);
   border-color: var(--accent-green);
-  box-shadow: 0 0 20px rgba(52, 211, 153, 0.4); /* Stronger glow on hover */
+  box-shadow: 0 0 20px rgba(52, 211, 153, 0.4); 
 }
 
 .floating-play-btn:active {
   transform: scale(0.95);
 }
 
-/* MOBILE RESPONSIVENESS */
 @media (max-width: 768px) {
   .floating-play-btn {
-     /* Reset Desktop Positioning */
      left: auto;
-     
-     /* MOBILE POSITION: Float above the slider on the right */
      right: 24px;
-     bottom: 110px; /* Clear of the slider + safe area */
+     bottom: 110px; 
   }
 }
 
@@ -730,6 +788,14 @@ input[type=range]::-moz-range-track {
   display: flex; 
   align-items: center;
   color: var(--text-muted);
+}
+
+.selector-arrow-icon {
+  transition: transform 0.2s;
+}
+
+.selector-arrow-icon.open {
+  transform: rotate(180deg);
 }
 
 /* THE CUSTOM DROPDOWN CONTAINER */
@@ -882,11 +948,10 @@ input[type=range]::-moz-range-track {
 }
 
 /* ==================================================================== */
-/* 10. MAP LEGEND (REPOSITIONED: BOTTOM LEFT)                           */
+/* 10. MAP LEGEND                                                       */
 /* ==================================================================== */
 .legend-wrapper {
   position: absolute;
-  /* ALIGNMENT: 32px Left (Matches Slider), 125px Bottom (Clears Slider) */
   bottom: 125px; 
   left: 32px;    
   top: auto;     
@@ -928,11 +993,10 @@ input[type=range]::-moz-range-track {
   width: 200px;
   box-shadow: var(--shadow-soft);
   animation: fadeIn 0.2s ease-out;
-  /* Panel grows UPWARDS from the bottom anchor */
   position: absolute;
   bottom: 0;
   left: 0;
-  margin-bottom: 40px; /* Space between toggle button and panel */
+  margin-bottom: 40px; 
 }
 
 .legend-header {
@@ -970,312 +1034,31 @@ input[type=range]::-moz-range-track {
   font-family: var(--font-sans);
 }
 
-/* --- VISUAL GLYPHS --- */
-.symbol-line {
-  width: 24px;
-  height: 0;
-}
-
-.symbol-line.dashed {
-  border-top: 2px dashed var(--accent-green);
-}
-
-.symbol-line.solid {
-  border-top: 2px solid var(--text-muted);
-  opacity: 0.6;
-}
+.symbol-line { width: 24px; height: 0; }
+.symbol-line.dashed { border-top: 2px dashed var(--accent-green); }
+.symbol-line.solid { border-top: 2px solid var(--text-muted); opacity: 0.6; }
 
 .symbol-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #fff;
-  margin-left: 8px;
-  margin-right: 8px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #fff; margin-left: 8px; margin-right: 8px;
 }
-
-.symbol-dot.glow {
-  background: var(--accent-green);
-  box-shadow: 0 0 8px var(--accent-green);
-}
+.symbol-dot.glow { background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
 
 .symbol-grid {
-  width: 24px;
-  height: 12px;
+  width: 24px; height: 12px;
   background-image: radial-gradient(var(--text-muted) 1px, transparent 1px);
   background-size: 4px 4px;
   opacity: 0.5;
 }
 
 /* ==================================================================== */
-/* 11. REFACTORED UTILITIES (Moved from inline styles)                  */
-/* ==================================================================== */
-
-/* App.tsx */
-.app-root {
-  width: 100vw;
-  height: 100dvh;
-  position: relative;
-  overflow: hidden;
-  background: var(--background);
-}
-
-.app-loading-container,
-.app-error-container {
-  background: var(--background);
-  height: 100dvh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-primary);
-}
-
-.app-error-container {
-  flex-direction: column;
-}
-
-.app-error-title {
-  color: #ef4444;
-}
-
-.app-error-msg {
-  color: var(--text-muted);
-}
-
-.app-retry-btn {
-  margin-top: 20px;
-  padding: 10px 20px;
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  color: white;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.app-loading-text {
-  font-family: var(--font-mono);
-  font-size: 0.9rem;
-  letter-spacing: 0.1em;
-}
-
-.slider-input {
-  width: 100%;
-  cursor: pointer;
-  display: block;
-}
-
-/* MarketMap.tsx Tooltip */
-.map-tooltip {
-  padding: 12px;
-  background: var(--glass-bg);
-  color: var(--text-primary);
-  border: 1px solid var(--glass-border);
-  border-radius: 8px;
-  font-family: var(--font-sans);
-  backdrop-filter: blur(12px);
-  box-shadow: var(--shadow-soft);
-  min-width: 160px;
-}
-
-.map-tooltip-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 6px;
-}
-
-.map-tooltip-ticker {
-  font-family: var(--font-mono);
-  letter-spacing: 0.05em;
-}
-
-.map-tooltip-metric {
-  font-size: 0.7rem;
-  color: var(--accent-green);
-  font-family: var(--font-mono);
-  margin-left: 12px;
-}
-
-.map-tooltip-desc {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  line-height: 1.4;
-}
-
-/* AgentPanel.tsx */
-.agent-terminal-active {
-  border-color: var(--accent-green) !important;
-}
-
-.terminal-title-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 1;
-}
-
-.terminal-title-text {
-  font-family: var(--font-mono);
-  font-weight: 600;
-  font-size: 0.8rem;
-  color: var(--text-primary);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.terminal-controls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.suggestion-icon {
-  flex-shrink: 0;
-  opacity: 0.7;
-}
-
-/* Header.tsx */
-.v-divider {
-  height: 24px;
-  margin: 0 12px;
-  opacity: 0.2;
-  width: 1px;
-  background: var(--text-muted);
-}
-
-.header-label-text {
-  margin-left: 8px;
-  letter-spacing: 0.1em;
-  font-size: 0.7rem;
-}
-
-/* ==================================================================== */
-/* 12. RESPONSIVE REFINEMENTS                                           */
-/* ==================================================================== */
-
-@media (max-width: 768px) {
-  /* --- HEADER OPTIMIZATION --- */
-  .app-header { 
-    padding: 0 16px; 
-    height: 64px; /* Taller for touch targets */
-  }
-
-  /* Hide the "EVENT HORIZON" text, keep the icon */
-  .header-label-text { display: none; }
-  
-  /* Make the date larger */
-  .chrono-value { font-size: 1rem; }
-
-  /* Increase Touch Targets for Icons */
-  .header-icon-btn {
-    width: 44px;
-    height: 44px;
-  }
-
-  /* Expand the Selector for thumb access */
-  .header-selector {
-    height: 40px;
-    min-width: 110px;
-  }
-  
-  /* --- TIMELINE SLIDER --- */
-  /* Center it and respect the bottom safe area (iPhone Home Bar) */
-  .timeline-slider-container {
-    bottom: calc(20px + env(safe-area-inset-bottom));
-    left: 50%;
-    transform: translateX(-50%);
-    width: 92%;
-    max-width: none;
-    /* Glass morphism stronger on mobile */
-    background: rgba(15, 23, 42, 0.95);
-  }
-
-  /* --- AGENT PANEL --- */
-  .agent-panel-wrapper {
-    left: 12px; 
-    right: 12px; 
-    width: auto;
-    /* Position it above the slider + some breathing room */
-    bottom: calc(130px + env(safe-area-inset-bottom)); 
-  }
-  
-  /* Give the terminal more height when open on mobile */
-  .agent-terminal.expanded { 
-    height: 55vh; 
-    max-height: 500px;
-  }
-
-  /* Prevent iOS zoom on inputs */
-  .terminal-input { 
-    font-size: 16px !important; 
-  }
-
-  /* Larger send button */
-  .input-wrapper {
-    padding: 12px;
-  }
-  .send-btn {
-    padding: 8px;
-  }
-
-  /* --- MODALS --- */
-  .modal-box {
-    width: 100%;
-    height: 100%; /* Full screen modal on mobile */
-    max-height: none;
-    border-radius: 0;
-    border: none;
-  }
-  
-  .bio-grid { 
-    flex-direction: column; 
-    align-items: center; 
-    text-align: center; 
-  }
-  
-  /* Hide desktop arrows in Architecture diagram */
-  .desktop-arrow { display: none; }
-  .mobile-arrow { display: block; margin: 10px 0; }
-
-  /* --- LEGEND (MOBILE ADJUSTMENTS) --- */
-  .legend-wrapper {
-    /* MOVED: Top Left on Mobile. 
-       Header is ~64px. 
-       top: 100px ensures it clears the Date/Ticker selector completely. */
-    top: 75px; 
-    left: 16px; 
-    bottom: auto; /* Unset the desktop bottom anchor */
-  }
-  
-  /* Ensure the panel expands DOWNWARD on mobile since it's at the top */
-  .legend-panel {
-    top: 0;
-    bottom: auto;
-    margin-bottom: 0;
-    margin-top: 20px;
-    max-height: 50vh; 
-  }
-
-  /* --- FLOATING CONTROLS (MOBILE) --- */
-  /* Align the Play button with the Mobile Legend */
-  .floating-play-btn {
-     top: 70px;
-     bottom: auto;
-     /* Legend is at 16px. Toggle is smaller on mobile. ~120px offset */
-     left: 120px; 
-  }
-}
-
-/* ==================================================================== */
-/* 13. FILTER MENU (POPOVER)                                            */
+/* 11. FILTER MENU (POPOVER)                                            */
 /* ==================================================================== */
 
 .filter-menu-container {
   position: relative;
-  /* It sits inside the flex header, so no absolute positioning needed here */
 }
 
-/* Active state for the header icon when filters are applied */
 .header-icon-btn.active-filter {
   background: rgba(52, 211, 153, 0.15);
   border-color: var(--accent-green);
@@ -1286,10 +1069,8 @@ input[type=range]::-moz-range-track {
 .filter-popover {
   position: absolute;
   top: 48px;
-  right: -80px; /* Aligns with the icon but shifts slightly left */
+  right: -80px;
   width: 300px;
-  background: #1e293b; 
-  /* Or use var(--glass-bg) if you want transparency, but solid is easier to read for complex settings */
   background: rgba(30, 41, 59, 0.95);
   backdrop-filter: blur(16px);
   border: 1px solid var(--glass-border);
@@ -1300,7 +1081,6 @@ input[type=range]::-moz-range-track {
   animation: fadeIn 0.2s ease-out;
 }
 
-/* Sections */
 .filter-section {
   display: flex;
   flex-direction: column;
@@ -1322,6 +1102,8 @@ input[type=range]::-moz-range-track {
   color: var(--text-muted);
   letter-spacing: 0.05em;
 }
+
+.filter-icon { margin-right: 6px; }
 
 .filter-value {
   font-family: var(--font-mono);
@@ -1353,44 +1135,26 @@ input[type=range]::-moz-range-track {
 }
 .filter-reset-link:hover { color: var(--text-primary); }
 
-/* SLIDER */
 .filter-slider {
-  -webkit-appearance: none;
-  appearance: none; /* Added standard property */
-  width: 100%;
-  height: 4px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 2px;
-  outline: none;
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 4px;
+  background: rgba(255,255,255,0.1); border-radius: 2px; outline: none;
 }
 
 .filter-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none; /* Added standard property */
-  width: 16px; 
-  height: 16px;
-  border-radius: 50%;
-  background: var(--accent-ai);
-  cursor: pointer;
-  border: 2px solid #1e293b;
-  box-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+  -webkit-appearance: none; appearance: none;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--accent-ai); cursor: pointer;
+  border: 2px solid #1e293b; box-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
 }
 
 .filter-slider::-moz-range-thumb {
-  width: 16px; 
-  height: 16px;
-  border-radius: 50%;
-  background: var(--accent-ai);
-  cursor: pointer;
-  border: 2px solid #1e293b;
-  box-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--accent-ai); cursor: pointer;
+  border: 2px solid #1e293b; box-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
 }
 
-/* SENTIMENT TOGGLES */
-.sentiment-toggles {
-  display: flex;
-  gap: 8px;
-}
+.sentiment-toggles { display: flex; gap: 8px; }
 
 .sentiment-btn {
   flex: 1;
@@ -1423,43 +1187,28 @@ input[type=range]::-moz-range-track {
   color: #ef4444;
 }
 
-/* SECTOR GRID */
 .sector-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  max-height: 150px;
-  overflow-y: auto;
+  display: flex; flex-wrap: wrap; gap: 6px;
+  max-height: 150px; overflow-y: auto;
 }
 
 .sector-chip {
-  font-size: 0.65rem;
-  padding: 4px 8px;
-  border-radius: 4px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  transition: all 0.1s;
+  font-size: 0.65rem; padding: 4px 8px; border-radius: 4px;
+  background: rgba(255,255,255,0.05); border: 1px solid transparent;
+  color: var(--text-muted); cursor: pointer;
+  display: flex; align-items: center; transition: all 0.1s;
 }
 
-.sector-chip:hover {
-  background: rgba(255,255,255,0.1);
-}
-
+.sector-chip:hover { background: rgba(255,255,255,0.1); }
 .sector-chip.active {
-  background: rgba(59, 130, 246, 0.2); /* Blue tint */
-  border-color: var(--accent-blue);
-  color: #fff;
+  background: rgba(59, 130, 246, 0.2); border-color: var(--accent-blue); color: #fff;
 }
-.sector-chip.inactive {
-  opacity: 0.5;
-}
+.sector-chip.inactive { opacity: 0.5; }
+.sector-check { margin-left: 4px; }
+
 
 /* ==================================================================== */
-/* 14. MAP TOOLTIP (CARD)                                               */
+/* 12. MAP TOOLTIP CARD (MIGRATED)                                      */
 /* ==================================================================== */
 .map-tooltip-container {
   background-color: rgba(15, 23, 42, 0.9);
@@ -1472,106 +1221,303 @@ input[type=range]::-moz-range-track {
   color: white;
   min-width: 200px;
   max-width: 300px;
-  
-  /* TOUCH FIX: Prevents browser scrolling while dragging */
   touch-action: none; 
-  
-  /* Text Styles inside tooltip */
   font-family: var(--font-sans);
 }
 
-/* STATE: LOCKED (Persistent & Draggable) */
 .map-tooltip-container.locked {
   cursor: grab;
   pointer-events: auto;
   z-index: 1000;
 }
 
-.map-tooltip-container.locked:active {
-  cursor: grabbing;
-}
+.map-tooltip-container.locked:active { cursor: grabbing; }
 
-/* STATE: HOVER (Transient) */
 .map-tooltip-container.hover {
-  pointer-events: none; /* Let clicks pass through to nodes below */
-  z-index: 1001;        /* Float above locked cards */
-  margin-top: 12px;     /* Offset from cursor */
+  pointer-events: none; 
+  z-index: 1001;        
+  margin-top: 12px;     
 }
 
-/* Visual Drag Handle (Only visible in locked state via React logic) */
 .tooltip-drag-handle {
-  width: 40px;
-  height: 4px;
+  width: 40px; height: 4px;
   background-color: rgba(255, 255, 255, 0.2);
   border-radius: 2px;
   margin: 0 auto 12px auto;
   cursor: grab;
 }
 
+.map-card-header {
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  margin-bottom: 4px; 
+}
+
+.map-card-ticker {
+  font-family: var(--font-mono);
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: var(--accent-green);
+}
+
+.map-card-sector {
+  font-size: 0.8rem;
+  color: rgba(148, 163, 184, 0.8);
+}
+
+.map-card-headline {
+  font-size: 0.85rem;
+  color: #e2e8f0;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.map-card-metrics {
+  display: flex;
+  gap: 12px;
+  font-size: 0.75rem;
+  color: rgba(148, 163, 184, 0.7);
+}
+
+.text-white { color: white; }
+.text-pos { color: var(--accent-green); }
+.text-neg { color: #f87171; }
+
+
 /* ==================================================================== */
-/* 15. MOBILE HEADER SEPARATION LOGIC                                   */
+/* 13. SOCIAL CARD GENERATOR (MIGRATED)                                 */
+/* ==================================================================== */
+.social-card {
+  width: 1200px; 
+  height: 630px; 
+  background-color: #020617; 
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 40px;
+  font-family: 'JetBrains Mono', monospace;
+  color: white;
+  border: 1px solid #334155;
+}
+
+.social-card-bg {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 0;
+  opacity: 0.2;
+  background-image: 
+    radial-gradient(circle at 50% 50%, rgba(34, 197, 94, 0.1) 0%, transparent 50%),
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 100% 100%, 40px 40px, 40px 40px;
+}
+
+.social-card-orbs {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px; height: 400px;
+  background: radial-gradient(circle, rgba(34, 197, 94, 0.15) 0%, transparent 70%);
+  filter: blur(40px);
+  z-index: 1;
+}
+
+.social-card-top {
+  z-index: 10;
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center;
+}
+
+.social-brand-row {
+  display: flex; 
+  align-items: center; 
+  gap: 12px;
+}
+
+.social-brand-dot {
+  width: 12px; height: 12px; 
+  background: #22c55e; 
+  border-radius: 50%; 
+  box-shadow: 0 0 10px #22c55e;
+}
+
+.social-brand-name {
+  font-size: 1.5rem; 
+  font-weight: 700; 
+  letter-spacing: 0.05em;
+}
+
+.social-status-badge {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.social-headline-box {
+  z-index: 10;
+  textAlign: center;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+}
+
+.social-h1 {
+  font-size: 4rem; 
+  margin: 0; 
+  line-height: 1.1;
+  background: linear-gradient(to bottom right, #ffffff 40%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 20px rgba(255,255,255,0.2));
+}
+
+.social-sub {
+  font-size: 1.2rem; 
+  color: #94a3b8; 
+  max-width: 600px; 
+  line-height: 1.6;
+}
+
+.social-footer {
+  z-index: 10;
+  display: flex; 
+  gap: 24px; 
+  border-top: 1px solid rgba(255,255,255,0.1); 
+  padding-top: 24px;
+}
+
+.social-metric {
+  display: flex; align-items: center; gap: 10px;
+}
+.social-metric-icon { color: #64748b; }
+.social-metric-text { display: flex; flexDirection: column; }
+.social-metric-label { fontSize: 0.7rem; color: #64748b; fontWeight: 600; }
+.social-metric-val { fontSize: 0.9rem; color: #e2e8f0; fontWeight: 700; }
+
+/* ==================================================================== */
+/* 14. APP LAYOUT UTILS                                                 */
+/* ==================================================================== */
+
+.app-root {
+  width: 100vw; height: 100dvh;
+  position: relative; overflow: hidden;
+  background: var(--background);
+}
+
+.app-loading-container, .app-error-container {
+  background: var(--background);
+  height: 100dvh;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-primary);
+}
+
+.app-error-container { flex-direction: column; }
+.app-error-title { color: #ef4444; }
+.app-error-msg { color: var(--text-muted); }
+
+.app-retry-btn {
+  margin-top: 20px; padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none; color: white; border-radius: 4px;
+  cursor: pointer;
+}
+
+.app-loading-text {
+  font-family: var(--font-mono); font-size: 0.9rem; letter-spacing: 0.1em;
+}
+
+/* ==================================================================== */
+/* 15. RESPONSIVE REFINEMENTS                                           */
 /* ==================================================================== */
 
 @media (max-width: 768px) {
-  /* 1. EXPAND THE HEADER LEFT ZONE */
-  .header-left {
-    flex: 1; 
-    margin-right: 12px;
+  .app-header { 
+    padding: 0 16px; 
+    height: 64px; 
   }
 
-  /* 2. EXPAND THE TICKER SELECTOR (THE "TICKER BOX") */
-  .header-selector {
-    flex: 1; 
-    width: 100%;
-    max-width: none; 
+  .header-label-text { display: none; }
+  .chrono-value { font-size: 1rem; }
+  .header-icon-btn { width: 44px; height: 44px; }
+  .header-selector { height: 40px; min-width: 110px; }
+  
+  .timeline-slider-container {
+    bottom: calc(20px + env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%);
+    width: 92%;
+    max-width: none;
+    background: rgba(15, 23, 42, 0.95);
   }
 
-  /* 3. DETACH THE FILTER MENU */
+  .agent-panel-wrapper {
+    left: 12px; 
+    right: 12px; 
+    width: auto;
+    bottom: calc(130px + env(safe-area-inset-bottom)); 
+  }
+  
+  .agent-terminal.expanded { 
+    height: 55vh; 
+    max-height: 500px;
+  }
+
+  .terminal-input { font-size: 16px !important; }
+  .input-wrapper { padding: 12px; }
+  .send-btn { padding: 8px; }
+
+  .modal-box {
+    width: 100%; height: 100%; 
+    max-height: none; border-radius: 0; border: none;
+  }
+  
+  .bio-grid { 
+    flex-direction: column; align-items: center; text-align: center; 
+  }
+  
+  .legend-wrapper {
+    top: 75px; left: 16px; bottom: auto; 
+  }
+  
+  .legend-panel {
+    top: 0; bottom: auto; margin-bottom: 0; margin-top: 20px; max-height: 50vh; 
+  }
+
+  /* --- MOBILE HEADER SEPARATION LOGIC --- */
+  .header-left { flex: 1; margin-right: 12px; }
+  .header-selector { flex: 1; width: 100%; max-width: none; }
+  
   .header-filter-wrapper {
-    position: fixed;
-    top: 72px; /* Float just below the 64px header */
-    right: 16px; /* Anchor Right */
-    z-index: 45; 
+    position: fixed; top: 72px; right: 16px; z-index: 45; 
   }
 
-  /* 4. STYLE THE FLOATING FILTER BUTTON */
   .header-filter-wrapper .header-icon-btn {
     background: rgba(15, 23, 42, 0.85);
     backdrop-filter: blur(12px);
     border-color: var(--glass-border);
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    width: 44px;
-    height: 44px;
-    border-radius: 6px; /* Square Look */
+    width: 44px; height: 44px; border-radius: 6px; 
   }
 
-  /* 5. MOVE & STYLE PLAY BUTTON (MATCH FILTER BOX) */
   .floating-play-btn {
-     /* Position: Next to Filter Box */
-     /* Right = 16px (Filter Right) + 44px (Filter Width) + 12px (Gap) */
-     top: 72px;
-     right: 76px; 
-     left: auto;  /* Unset desktop left */
-     bottom: auto; /* Unset desktop bottom */
-     
-     /* Style: Match the Filter Button */
-     width: 44px;
-     height: 44px;
-     border-radius: 6px; /* SQUARE (Changed from 50%) */
+     top: 72px; right: 76px; left: auto; bottom: auto;
+     width: 44px; height: 44px; border-radius: 6px; 
      background: rgba(15, 23, 42, 0.85);
      backdrop-filter: blur(12px);
      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
   }
 
-  /* 6. ADJUST THE POPOVER POSITION */
   .header-filter-wrapper .filter-popover {
-    top: 50px; 
-    right: 0;
-    width: 280px;
+    top: 50px; right: 0; width: 280px;
   }
 
-  /* 7. HIDE THE DIVIDER BETWEEN FILTER AND ICONS */
-  .v-divider.mobile-hide {
-    display: none;
-  }
+  .v-divider.mobile-hide { display: none; }
 }
