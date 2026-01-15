@@ -11,8 +11,6 @@ interface HeaderProps {
   selectedTicker: string | null;
   onSelectTicker: (ticker: string | null) => void;
   watchlist: string[];
-  
-  // --- NEW PROPS FOR FILTERING ---
   availableSectors: string[];
   filters: FilterState;
   setFilters: React.Dispatch<React.SetStateAction<FilterState>>;
@@ -25,7 +23,6 @@ const Header: React.FC<HeaderProps> = ({
   selectedTicker, 
   onSelectTicker, 
   watchlist,
-  // Destructure new props
   availableSectors,
   filters,
   setFilters
@@ -55,7 +52,6 @@ const Header: React.FC<HeaderProps> = ({
     }
   }, [isOpen]);
 
-  // Filter Logic for Watchlist
   const filteredWatchlist = watchlist.filter(t => 
     t.toLowerCase().includes(search.toLowerCase())
   );
@@ -76,7 +72,6 @@ const Header: React.FC<HeaderProps> = ({
           <div className="chrono-value">{dateLabel}</div>
         </div>
 
-        {/* Vertical Divider */}
         <div className="v-divider"></div>
 
         {/* Ticker Selector - CUSTOM DROPDOWN */}
@@ -101,7 +96,6 @@ const Header: React.FC<HeaderProps> = ({
           {isOpen && (
              <div className="custom-ticker-dropdown" onClick={(e) => e.stopPropagation()}>
                 
-                {/* SEARCH BAR AREA */}
                 <div className="dropdown-search-wrapper">
                     <input
                         ref={searchInputRef}
@@ -123,7 +117,6 @@ const Header: React.FC<HeaderProps> = ({
                 </div>
 
                 <div className="dropdown-scroll-area">
-                  {/* Reset Option */}
                   {!search && (
                       <div 
                         className="dropdown-item reset-item"
@@ -133,7 +126,6 @@ const Header: React.FC<HeaderProps> = ({
                       </div>
                   )}
 
-                  {/* RENDER FILTERED LIST */}
                   {filteredWatchlist.length > 0 ? (
                     filteredWatchlist.map(t => (
                         <div 
@@ -160,15 +152,17 @@ const Header: React.FC<HeaderProps> = ({
       {/* RIGHT: META CONTROLS */}
       <div className="header-right">
         
-        {/* --- 1. FILTER MENU --- */}
-        <FilterMenu 
-            availableSectors={availableSectors}
-            filters={filters}
-            setFilters={setFilters}
-        />
+        {/* WRAPPED FILTER MENU FOR CSS TARGETING */}
+        <div className="header-filter-wrapper">
+            <FilterMenu 
+                availableSectors={availableSectors}
+                filters={filters}
+                setFilters={setFilters}
+            />
+        </div>
 
-        {/* Small Divider between Filters and System/Bio */}
-        <div className="v-divider" style={{ height: 20, margin: '0 8px' }}></div>
+        {/* Small Divider (Hidden on mobile via CSS if needed) */}
+        <div className="v-divider mobile-hide" style={{ height: 20, margin: '0 8px' }}></div>
 
         <button 
           onClick={onOpenArch} 

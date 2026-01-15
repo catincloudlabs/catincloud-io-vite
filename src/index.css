@@ -1507,3 +1507,52 @@ input[type=range]::-moz-range-track {
   margin: 0 auto 12px auto;
   cursor: grab;
 }
+
+/* ==================================================================== */
+/* 15. MOBILE HEADER SEPARATION LOGIC                                   */
+/* ==================================================================== */
+
+@media (max-width: 768px) {
+  /* 1. EXPAND THE HEADER LEFT ZONE */
+  .header-left {
+    flex: 1; /* Take up all available space pushed by right icons */
+    margin-right: 12px;
+  }
+
+  /* 2. EXPAND THE TICKER SELECTOR (THE "TICKER BOX") */
+  .header-selector {
+    flex: 1; /* Grow to fill the gap */
+    width: 100%;
+    max-width: none; /* Remove any desktop width limits */
+  }
+
+  /* 3. DETACH THE FILTER MENU (THE "FILTER BOX") */
+  .header-filter-wrapper {
+    position: fixed;
+    top: 72px; /* Float just below the 64px header */
+    right: 16px; /* Align with the edge */
+    z-index: 45; /* Sit nicely above the map */
+  }
+
+  /* 4. STYLE THE FLOATING FILTER BUTTON */
+  .header-filter-wrapper .header-icon-btn {
+    background: rgba(15, 23, 42, 0.85); /* Solid backing for contrast */
+    backdrop-filter: blur(12px);
+    border-color: var(--glass-border);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    width: 44px; /* Larger touch target */
+    height: 44px;
+  }
+
+  /* 5. ADJUST THE POPOVER POSITION */
+  .header-filter-wrapper .filter-popover {
+    top: 50px; /* Push down relative to the new floating button */
+    right: 0;
+    width: 280px;
+  }
+
+  /* 6. HIDE THE DIVIDER BETWEEN FILTER AND ICONS */
+  .v-divider.mobile-hide {
+    display: none;
+  }
+}
