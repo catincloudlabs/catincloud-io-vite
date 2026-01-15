@@ -148,7 +148,7 @@ html, body {
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(8px);
   z-index: 9999;
-  display: flex; /* Ensures centering */
+  display: flex; 
   align-items: center;
   justify-content: center;
   opacity: 0;
@@ -1362,7 +1362,7 @@ input[type=range]::-moz-range-track {
 
 .social-headline-box {
   z-index: 10;
-  textAlign: center;
+  text-align: center;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -1375,6 +1375,7 @@ input[type=range]::-moz-range-track {
   line-height: 1.1;
   background: linear-gradient(to bottom right, #ffffff 40%, #94a3b8 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   filter: drop-shadow(0 0 20px rgba(255,255,255,0.2));
 }
@@ -1398,9 +1399,23 @@ input[type=range]::-moz-range-track {
   display: flex; align-items: center; gap: 10px;
 }
 .social-metric-icon { color: #64748b; }
-.social-metric-text { display: flex; flexDirection: column; }
-.social-metric-label { fontSize: 0.7rem; color: #64748b; fontWeight: 600; }
-.social-metric-val { fontSize: 0.9rem; color: #e2e8f0; fontWeight: 700; }
+
+.social-metric-text { 
+  display: flex; 
+  flex-direction: column;
+}
+
+.social-metric-label { 
+  font-size: 0.7rem;
+  color: #64748b; 
+  font-weight: 600;
+}
+
+.social-metric-val { 
+  font-size: 0.9rem;
+  color: #e2e8f0; 
+  font-weight: 700;
+}
 
 /* ==================================================================== */
 /* 14. APP LAYOUT UTILS                                                 */
