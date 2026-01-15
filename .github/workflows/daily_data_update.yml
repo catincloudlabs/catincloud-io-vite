@@ -50,7 +50,7 @@ jobs:
           # Check if the file has changed before committing
           if [[ -n $(git status --porcelain public/data/market_physics_history.json) ]]; then
             git add public/data/market_physics_history.json
-            git commit -m "🤖 Daily Update: Market Physics History [skip ci]"
+            git commit -m "🤖 Daily Update: Market Physics History"
             git push
             echo "Successfully updated market history."
           else
