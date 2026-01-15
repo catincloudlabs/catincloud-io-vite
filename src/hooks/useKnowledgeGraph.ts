@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 
+/* --- KNOWLEDGE GRAPH HOOK --- */
+/* Fetches semantic correlations and news headlines for a specific ticker */
+
 export interface GraphConnection {
   target: string; 
   strength: number; 
@@ -12,10 +15,7 @@ export function useKnowledgeGraph(ticker: string | null) {
   const [internalLoading, setInternalLoading] = useState(false);
   const [lastFetchedTicker, setLastFetchedTicker] = useState<string | null>(null);
 
-  // CRITICAL FIX: Derived state. 
-  // If the requested 'ticker' doesn't match the data we have ('lastFetchedTicker'),
-  // we are effectively loading/stale. This prevents the UI from rendering 
-  // old data (or empty data) while the fetch effect is still waking up.
+  // Derived state to prevent stale data rendering
   const loading = internalLoading || (ticker !== lastFetchedTicker);
 
   useEffect(() => {
@@ -27,10 +27,9 @@ export function useKnowledgeGraph(ticker: string | null) {
 
     const fetchGraph = async () => {
       setInternalLoading(true);
-      console.log(`🔍 [Graph] Fetching intel for ${ticker}...`);
       
       try {
-        // 1. Get News IDs
+        // Step 1: Resolve News Edges
         const { data: newsEdges } = await supabase
           .from('knowledge_graph')
           .select('source_node') 
@@ -38,15 +37,14 @@ export function useKnowledgeGraph(ticker: string | null) {
           .eq('edge_type', 'MENTIONS');
 
         if (!newsEdges || newsEdges.length === 0) {
-          console.log(`⚠️ [Graph] No news edges found for ${ticker}`);
           setConnections([]);
-          setLastFetchedTicker(ticker); // Mark as fetched (even if empty)
+          setLastFetchedTicker(ticker); 
           return;
         }
 
         const newsIds = newsEdges.map(e => e.source_node);
 
-        // 2. Fetch Headlines
+        // Step 2: Hydrate Headlines
         const { data: newsArticles } = await supabase
           .from('news_vectors')
           .select('id, headline')
@@ -57,7 +55,7 @@ export function useKnowledgeGraph(ticker: string | null) {
           newsArticles.forEach(a => headlineMap.set(String(a.id), a.headline));
         }
 
-        // 3. Find Correlations
+        // Step 3: Identify Correlations
         const { data: relatedEdges } = await supabase
           .from('knowledge_graph')
           .select('target_node, source_node')
@@ -71,7 +69,7 @@ export function useKnowledgeGraph(ticker: string | null) {
           return;
         }
 
-        // 4. Aggregate
+        // Step 4: Aggregate & Rank
         const tally: Record<string, { count: number, headlines: Set<string> }> = {};
         
         relatedEdges.forEach(edge => {
@@ -93,14 +91,13 @@ export function useKnowledgeGraph(ticker: string | null) {
           .sort((a, b) => b.strength - a.strength)
           .slice(0, 6);
 
-        console.log(`✅ [Graph] Found ${sortedConnections.length} connections for ${ticker}`);
         setConnections(sortedConnections);
-        setLastFetchedTicker(ticker); // Sync complete
+        setLastFetchedTicker(ticker); 
 
       } catch (e) {
         console.error("Graph Error:", e);
         setConnections([]); 
-        setLastFetchedTicker(ticker); // Ensure we don't hang in loading state
+        setLastFetchedTicker(ticker);
       } finally {
         setInternalLoading(false);
       }
