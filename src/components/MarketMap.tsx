@@ -2,7 +2,6 @@
 
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import DeckGL from '@deck.gl/react';
-// 1. RE-ADDED TextLayer to imports
 import { ScatterplotLayer, PolygonLayer, PathLayer, LineLayer, TextLayer } from '@deck.gl/layers'; 
 import { PathStyleExtension } from '@deck.gl/extensions'; 
 import { OrthographicView } from '@deck.gl/core';
@@ -226,7 +225,6 @@ export function MarketMap({
 
   const sectorLayerData = useMemo(() => {
     if (!data?.sectors) return [];
-    // Only show sectors that have a meaningful presence
     return data.sectors.filter(s => s.count > 2); 
   }, [data]);
 
@@ -239,7 +237,6 @@ export function MarketMap({
 
   // --- LAYERS ----------------------------------------------------------------
 
-  // 2. RE-ADDED: Text Layer for Sector Names (Ghost Style)
   const sectorTextLayer = new TextLayer({
     id: 'sector-labels',
     data: sectorLayerData,
@@ -252,7 +249,6 @@ export function MarketMap({
     getAlignmentBaseline: 'center',
     fontFamily: '"JetBrains Mono", monospace', 
     fontWeight: 700,
-    // Optimization: Don't render text if we are in high-speed playback to reduce noise
     visible: !isPlaying
   });
 
@@ -389,6 +385,30 @@ export function MarketMap({
     document.removeEventListener('mouseup', handleGlobalMouseUp);
   };
 
+  // --- NEW: TOUCH HANDLERS FOR MOBILE DRAG ---
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.stopPropagation(); // Prevents map panning
+    isDraggingRef.current = true;
+    const touch = e.touches[0];
+    dragStartRef.current = { x: touch.clientX, y: touch.clientY };
+    initialOffsetRef.current = { ...dragOffset };
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDraggingRef.current || !dragStartRef.current) return;
+    e.stopPropagation(); // Prevents scrolling/panning
+    const touch = e.touches[0];
+    setDragOffset({
+        x: initialOffsetRef.current.x + (touch.clientX - dragStartRef.current.x),
+        y: initialOffsetRef.current.y + (touch.clientY - dragStartRef.current.y)
+    });
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    isDraggingRef.current = false;
+    dragStartRef.current = null;
+  };
+
   return (
     <>
         <div className="sr-only" aria-live="polite">
@@ -400,7 +420,6 @@ export function MarketMap({
             views={new OrthographicView({ controller: true })}
             initialViewState={initialViewState}
             controller={true}
-            // 3. UPDATED: Removed sectorBgLayer, Added sectorTextLayer
             layers={[cellLayer, sectorTextLayer, vectorLayer, trailLayer, glowLayer, synapseLayer, dotLayer]} 
             style={{ backgroundColor: 'transparent' }} 
             
@@ -424,6 +443,10 @@ export function MarketMap({
                 node={selectedNode}
                 isInteractive={true} 
                 onMouseDown={handleMouseDown}
+                // Attached Touch Handlers
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
                 style={{
                     left: selectedPos.x + dragOffset.x,
                     top: selectedPos.y + dragOffset.y,

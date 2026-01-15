@@ -1473,6 +1473,9 @@ input[type=range]::-moz-range-track {
   min-width: 200px;
   max-width: 300px;
   
+  /* TOUCH FIX: Prevents browser scrolling while dragging */
+  touch-action: none; 
+  
   /* Text Styles inside tooltip */
   font-family: var(--font-sans);
 }
