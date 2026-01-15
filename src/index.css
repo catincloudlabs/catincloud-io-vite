@@ -1265,3 +1265,195 @@ input[type=range]::-moz-range-track {
      left: 120px; 
   }
 }
+
+/* ==================================================================== */
+/* 13. FILTER MENU (POPOVER)                                            */
+/* ==================================================================== */
+
+.filter-menu-container {
+  position: relative;
+  /* It sits inside the flex header, so no absolute positioning needed here */
+}
+
+/* Active state for the header icon when filters are applied */
+.header-icon-btn.active-filter {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: var(--accent-green);
+  color: var(--accent-green);
+  box-shadow: 0 0 10px rgba(52, 211, 153, 0.2);
+}
+
+.filter-popover {
+  position: absolute;
+  top: 48px;
+  right: -80px; /* Aligns with the icon but shifts slightly left */
+  width: 300px;
+  background: #1e293b; 
+  /* Or use var(--glass-bg) if you want transparency, but solid is easier to read for complex settings */
+  background: rgba(30, 41, 59, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  z-index: 1000;
+  padding: 16px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Sections */
+.filter-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.filter-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.filter-title {
+  display: flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+.filter-value {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--accent-green);
+}
+
+.filter-caption {
+  font-size: 0.7rem;
+  color: #64748b;
+  font-style: italic;
+  margin-top: -4px;
+}
+
+.filter-divider {
+  height: 1px;
+  background: var(--glass-border);
+  margin: 16px 0;
+}
+
+.filter-reset-link {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+.filter-reset-link:hover { color: var(--text-primary); }
+
+/* SLIDER */
+.filter-slider {
+  -webkit-appearance: none;
+  appearance: none; /* Added standard property */
+  width: 100%;
+  height: 4px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+  outline: none;
+}
+
+.filter-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none; /* Added standard property */
+  width: 16px; 
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent-ai);
+  cursor: pointer;
+  border: 2px solid #1e293b;
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+}
+
+.filter-slider::-moz-range-thumb {
+  width: 16px; 
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent-ai);
+  cursor: pointer;
+  border: 2px solid #1e293b;
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+}
+
+/* SENTIMENT TOGGLES */
+.sentiment-toggles {
+  display: flex;
+  gap: 8px;
+}
+
+.sentiment-btn {
+  flex: 1;
+  border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.03);
+  color: var(--text-muted);
+  padding: 6px 0;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sentiment-btn.green.active {
+  background: rgba(52, 211, 153, 0.2);
+  border-color: var(--accent-green);
+  color: var(--accent-green);
+}
+
+.sentiment-btn.grey.active {
+  background: rgba(148, 163, 184, 0.2);
+  border-color: #94a3b8;
+  color: #fff;
+}
+
+.sentiment-btn.red.active {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+/* SECTOR GRID */
+.sector-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.sector-chip {
+  font-size: 0.65rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: all 0.1s;
+}
+
+.sector-chip:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.sector-chip.active {
+  background: rgba(59, 130, 246, 0.2); /* Blue tint */
+  border-color: var(--accent-blue);
+  color: #fff;
+}
+.sector-chip.inactive {
+  opacity: 0.5;
+}
