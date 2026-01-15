@@ -1457,3 +1457,50 @@ input[type=range]::-moz-range-track {
 .sector-chip.inactive {
   opacity: 0.5;
 }
+
+/* ==================================================================== */
+/* 14. MAP TOOLTIP (CARD)                                               */
+/* ==================================================================== */
+.map-tooltip-container {
+  background-color: rgba(15, 23, 42, 0.9);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  color: white;
+  min-width: 200px;
+  max-width: 300px;
+  
+  /* Text Styles inside tooltip */
+  font-family: var(--font-sans);
+}
+
+/* STATE: LOCKED (Persistent & Draggable) */
+.map-tooltip-container.locked {
+  cursor: grab;
+  pointer-events: auto;
+  z-index: 1000;
+}
+
+.map-tooltip-container.locked:active {
+  cursor: grabbing;
+}
+
+/* STATE: HOVER (Transient) */
+.map-tooltip-container.hover {
+  pointer-events: none; /* Let clicks pass through to nodes below */
+  z-index: 1001;        /* Float above locked cards */
+  margin-top: 12px;     /* Offset from cursor */
+}
+
+/* Visual Drag Handle (Only visible in locked state via React logic) */
+.tooltip-drag-handle {
+  width: 40px;
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  margin: 0 auto 12px auto;
+  cursor: grab;
+}
