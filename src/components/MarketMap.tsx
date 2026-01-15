@@ -58,7 +58,8 @@ const THEME = {
   gold: [251, 191, 36],       
   glass: [255, 255, 255],
   darkText: [255, 255, 255, 180],
-  infrastructure: [192, 132, 252] // Lilac
+  // REVERTED: Back to Slate (Infrastructure)
+  infrastructure: [100, 116, 139] 
 };
 
 // --- ANCHOR CONFIGURATION ---
@@ -218,10 +219,8 @@ export function MarketMap({
   const sortedNodes = useMemo(() => {
     if (!data?.nodes) return [];
     
-    // FIX: Removed the dangerous '.includes("p")' check which was deleting AAPL/JPM
     const cleanNodes = data.nodes.filter(n => {
         if (n.ticker.includes('.WS')) return false;
-        // if (n.ticker.includes('p')) return false; // <--- DELETED THIS LINE
         return true;
     });
 
@@ -402,7 +401,7 @@ export function MarketMap({
     getRadius: 4.0, 
     getFillColor: [0, 0, 0, 0], 
     stroked: true,
-    getLineWidth: 2.0, // Thicker for better visibility
+    getLineWidth: 2.0, 
     getLineColor: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return [...THEME.mint, 255];
         return [...THEME.infrastructure, 255]; // 255 = Solid Opacity

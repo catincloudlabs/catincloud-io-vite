@@ -18,6 +18,14 @@ import { FilterState } from './components/FilterMenu'; // Import the type
 // Import the spline math
 import { catmullRom, catmullRomDerivative } from './utils/splineInterpolation';
 
+// --- ANCHOR CONFIGURATION (Must match MarketMap) ---
+const ANCHOR_TICKERS = new Set([
+  "SPY", "QQQ", "IWM", "DIA", 
+  "AAPL", "MSFT", "NVDA", "GOOGL", 
+  "AMZN", "META", "TSLA", 
+  "JPM", "V", "UNH", "XOM"
+]);
+
 // --- SORTED WATCHLIST (Alphabetical) ---
 const WATCHLIST = [
     "A", "AAL", "AAPL", "ABBV", "ABNB", "ABT", "ACGL", "ACN", "ADBE", "ADI", 
@@ -188,26 +196,29 @@ function App() {
 
     const nodes = f1.nodes
       .map(node => {
-        // --- 1. FILTER CHECK (Pre-optimization: skip heavy math if hidden) ---
-        // SECTOR Filter
-        if (filters.visibleSectors.size > 0 && node.sector && !filters.visibleSectors.has(node.sector)) {
-            return null; 
+        // --- 1. FILTER CHECK (UPDATED: ANCHORS BYPASS ALL FILTERS) ---
+        const isAnchor = ANCHOR_TICKERS.has(node.ticker);
+
+        if (!isAnchor) {
+            // SECTOR Filter
+            if (filters.visibleSectors.size > 0 && node.sector && !filters.visibleSectors.has(node.sector)) {
+                return null; 
+            }
+
+            // SENTIMENT Filter
+            const s = node.sentiment;
+            const isPos = s > 0.1;
+            const isNeg = s < -0.1;
+            const isNeu = !isPos && !isNeg;
+
+            if (isPos && !filters.showPositive) return null;
+            if (isNeg && !filters.showNegative) return null;
+            if (isNeu && !filters.showNeutral) return null;
+
+            // ENERGY Filter (Signal Strength)
+            const energyPercent = (node.energy / frameMaxEnergy) * 100;
+            if (energyPercent < filters.minEnergy) return null;
         }
-
-        // SENTIMENT Filter
-        const s = node.sentiment;
-        const isPos = s > 0.1;
-        const isNeg = s < -0.1;
-        const isNeu = !isPos && !isNeg;
-
-        if (isPos && !filters.showPositive) return null;
-        if (isNeg && !filters.showNegative) return null;
-        if (isNeu && !filters.showNeutral) return null;
-
-        // ENERGY Filter (Signal Strength)
-        // Convert slider (0-100) to a threshold based on this frame's max energy
-        const energyPercent = (node.energy / frameMaxEnergy) * 100;
-        if (energyPercent < filters.minEnergy) return null;
 
         // --- 2. PHYSICS INTERPOLATION (Only for visible nodes) ---
         const ticker = node.ticker;
