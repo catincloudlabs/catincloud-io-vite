@@ -404,7 +404,7 @@ export function MarketMap({
     });
   };
 
-  const handleTouchEnd = (e: React.TouchEvent) => {
+  const handleTouchEnd = () => {
     isDraggingRef.current = false;
     dragStartRef.current = null;
   };
