@@ -398,24 +398,25 @@ export function MarketMap({
     getRowId: (d: HydratedNode) => d.ticker,
     getPosition: (d: HydratedNode) => [d.x, d.y],
     radiusUnits: 'common',
-    // UPDATED: Radius reduced to 3.0 (from 4.0) to be less "loud"
-    getRadius: 3.0, 
+    // RESTORED: Size 4.0
+    getRadius: 4.0, 
     
-    // UPDATED: Tint Opacity increased to 80 (approx 30%)
+    // Ghost Fill (Solid Tint)
     getFillColor: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return [...THEME.glass, 50]; 
         if (graphConnections?.some(c => c.target === d.ticker)) return [...THEME.gold, 50];
 
-        if (d.sentiment > 0.1) return [...THEME.mint, 80]; // Stronger tint
-        if (d.sentiment < -0.1) return [...THEME.red, 80]; // Stronger tint
+        if (d.sentiment > 0.1) return [...THEME.mint, 80]; 
+        if (d.sentiment < -0.1) return [...THEME.red, 80]; 
         return [0, 0, 0, 0]; 
     },
 
     stroked: true,
-    getLineWidth: 2.0, 
+    // THINNER: Width 1.0
+    getLineWidth: 1.0, 
     getLineColor: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return [...THEME.mint, 255];
-        return [...THEME.infrastructure, 255]; // Deep Violet
+        return [...THEME.infrastructure, 255]; 
     },
     pickable: true,
     autoHighlight: true, 
