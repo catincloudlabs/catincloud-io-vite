@@ -1,0 +1,58 @@
+name: Daily Market Data Update
+
+on:
+  schedule:
+    - cron: '0 07 * * *'
+  workflow_dispatch: # Allows you to manually trigger it from the Actions tab for testing
+
+jobs:
+  update-market-data:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required to commit the JSON file back to the repo
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip' # Caches dependencies to speed up future runs
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: |
+          python -m pip install -r requirements.txt
+
+      - name: Run Ingest Script (Fetch New Data)
+        working-directory: ./backend
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          MASSIVE_API_KEY: ${{ secrets.MASSIVE_API_KEY }}
+        run: python ingest.py
+
+      - name: Run History Generator (Update JSON)
+        working-directory: ./backend
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python generate_history.py
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Check if the file has changed before committing
+          if [[ -n $(git status --porcelain public/data/market_physics_history.json) ]]; then
+            git add public/data/market_physics_history.json
+            git commit -m "🤖 Daily Update: Market Physics History [skip ci]"
+            git push
+            echo "Successfully updated market history."
+          else
+            echo "No changes detected in market history."
+          fi
