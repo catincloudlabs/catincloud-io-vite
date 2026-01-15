@@ -58,8 +58,7 @@ const THEME = {
   gold: [251, 191, 36],       
   glass: [255, 255, 255],
   darkText: [255, 255, 255, 180],
-  // NEW: "Lilac" for the Anchor Rings
-  infrastructure: [192, 132, 252] 
+  infrastructure: [192, 132, 252] // Lilac
 };
 
 // --- ANCHOR CONFIGURATION ---
@@ -233,6 +232,15 @@ export function MarketMap({
     });
   }, [data, selectedTicker, graphConnections]);
 
+  // NEW: Split nodes into Anchors vs. Active for separate layering
+  const anchorNodes = useMemo(() => {
+    return sortedNodes.filter(n => ANCHOR_TICKERS.has(n.ticker));
+  }, [sortedNodes]);
+
+  const activeNodes = useMemo(() => {
+    return sortedNodes.filter(n => !ANCHOR_TICKERS.has(n.ticker));
+  }, [sortedNodes]);
+
   const trailData = useMemo(() => {
     if (isPlaying || !history || !data) return [];
     const currentIndex = history.findIndex(f => f.date === data.date);
@@ -302,8 +310,6 @@ export function MarketMap({
   if (!data) return null;
 
   // --- LAYERS ----------------------------------------------------------------
-
-  // REMOVED: anchorLabelLayer (per request)
 
   const sectorTextLayer = new TextLayer({
     id: 'sector-labels',
@@ -375,23 +381,51 @@ export function MarketMap({
     updateTriggers: { getRadius: [selectedTicker, graphConnections], getFillColor: [selectedTicker, graphConnections] },
   });
 
-  const dotLayer = new ScatterplotLayer({
-    id: 'market-particles', data: sortedNodes, getPosition: (d: HydratedNode) => [d.x, d.y], radiusUnits: 'common', 
+  // NEW: Anchor Layer (No Transitions, Static Infrastructure)
+  const anchorLayer = new ScatterplotLayer({
+    id: 'market-anchors',
+    data: anchorNodes,
+    getRowId: (d: HydratedNode) => d.ticker, // Ensure stable identity
+    getPosition: (d: HydratedNode) => [d.x, d.y],
+    radiusUnits: 'common',
+    getRadius: 4.0, // Fixed Size
+    getFillColor: [0, 0, 0, 0], // Hollow
+    stroked: true,
+    getLineWidth: 1.5,
     
-    // UPDATED: Anchors get specific size
+    // Snap color change on select (No Transition)
+    getLineColor: (d: HydratedNode) => {
+        if (d.ticker === selectedTicker) return [...THEME.mint, 255];
+        return [...THEME.infrastructure, 180]; // Lilac
+    },
+
+    pickable: true,
+    autoHighlight: true, 
+    highlightColor: [...THEME.mint, 100],
+    
+    // CRITICAL: NO TRANSITIONS defined here. 
+    // They will appear instantly on load/date switch.
+    updateTriggers: {
+        getLineColor: [selectedTicker]
+    }
+  });
+
+  // UPDATED: Dot Layer (Only Active Nodes, Keeps Transitions)
+  const dotLayer = new ScatterplotLayer({
+    id: 'market-particles', 
+    data: activeNodes, // Only render non-anchors
+    getRowId: (d: HydratedNode) => d.ticker, // Ensure smooth interpolation
+    getPosition: (d: HydratedNode) => [d.x, d.y], 
+    radiusUnits: 'common', 
+    
     getRadius: (d: HydratedNode) => {
-        if (ANCHOR_TICKERS.has(d.ticker)) return 4.0;
-        
         if (d.ticker === selectedTicker) return 3.0; 
         if (graphConnections?.some(c => c.target === d.ticker)) return 2.0; 
         if (d.energy > highEnergyThreshold) return 1.8; 
         return 1.2; 
     },
 
-    // UPDATED: Anchors are Hollow (Transparent Fill)
     getFillColor: (d: HydratedNode) => {
-        if (ANCHOR_TICKERS.has(d.ticker)) return [0, 0, 0, 0]; 
-        
         if (d.ticker === selectedTicker) return [...THEME.glass, 255]; 
         if (graphConnections?.some(c => c.target === d.ticker)) return [...THEME.gold, 255]; 
         if (d.sentiment > 0.1) return [...THEME.mint, 200]; 
@@ -401,19 +435,13 @@ export function MarketMap({
 
     stroked: true,
 
-    // UPDATED: Anchors always have a border
     getLineWidth: (d: HydratedNode) => {
-        if (ANCHOR_TICKERS.has(d.ticker)) return 1.5; 
-        
         if (d.ticker === selectedTicker) return pulse ? 2 : 0.5; 
         if (d.energy > highEnergyThreshold) return 0.5; 
         return 0; 
     },
 
-    // UPDATED: Anchors use the new Lilac color
     getLineColor: (d: HydratedNode) => {
-        if (ANCHOR_TICKERS.has(d.ticker)) return [...THEME.infrastructure, 180]; 
-        
         if (d.ticker === selectedTicker) return [...THEME.mint, 180]; 
         if (d.energy > highEnergyThreshold) return [...THEME.glass, 200]; 
         return [0, 0, 0, 0];
@@ -486,7 +514,8 @@ export function MarketMap({
             viewState={viewState}
             onViewStateChange={({ viewState }: any) => setViewState(viewState)} 
             controller={true}
-            layers={[cellLayer, sectorTextLayer, vectorLayer, trailLayer, glowLayer, synapseLayer, dotLayer]} 
+            // Add anchorLayer to the end so it renders on top
+            layers={[cellLayer, sectorTextLayer, vectorLayer, trailLayer, glowLayer, synapseLayer, dotLayer, anchorLayer]} 
             style={{ backgroundColor: 'transparent' }} 
             
             onHover={(info: any) => setHoverInfo(info)}
