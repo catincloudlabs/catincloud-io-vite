@@ -89,7 +89,7 @@ const Header: React.FC<HeaderProps> = ({
           </div>
 
           <div className="selector-arrow">
-            <ChevronDown size={12} style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+            <ChevronDown size={12} className={`selector-arrow-icon ${isOpen ? 'open' : ''}`} />
           </div>
 
           {/* THE CUSTOM SCROLLABLE MENU */}
@@ -161,8 +161,7 @@ const Header: React.FC<HeaderProps> = ({
             />
         </div>
 
-        {/* Small Divider (Hidden on mobile via CSS if needed) */}
-        <div className="v-divider mobile-hide" style={{ height: 20, margin: '0 8px' }}></div>
+        <div className="v-divider mobile-hide compact"></div>
 
         <button 
           onClick={onOpenArch} 

@@ -20,7 +20,7 @@ const ArchitectureModal: React.FC<ArchitectureModalProps> = ({ isOpen, onClose }
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose} style={{ display: 'flex' }}>
+    <div className="modal-overlay" onClick={onClose}>
       <div 
         className="modal-box architecture-modal" 
         onClick={e => e.stopPropagation()}

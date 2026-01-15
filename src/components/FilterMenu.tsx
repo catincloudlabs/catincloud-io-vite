@@ -79,7 +79,7 @@ const FilterMenu: React.FC<FilterMenuProps> = ({
           <div className="filter-section">
             <div className="filter-label-row">
               <div className="filter-title">
-                <Zap size={12} color="var(--accent-ai)" style={{marginRight: 6}}/>
+                <Zap size={12} color="var(--accent-ai)" className="filter-icon"/>
                 <span>SIGNAL STRENGTH</span>
               </div>
               <span className="filter-value">{filters.minEnergy}%</span>
@@ -103,7 +103,7 @@ const FilterMenu: React.FC<FilterMenuProps> = ({
           {/* B. SENTIMENT POLARITY */}
           <div className="filter-section">
              <div className="filter-title">
-                <Activity size={12} color="var(--accent-green)" style={{marginRight: 6}}/>
+                <Activity size={12} color="var(--accent-green)" className="filter-icon"/>
                 <span>SENTIMENT POLARITY</span>
              </div>
              <div className="sentiment-toggles">
@@ -137,7 +137,7 @@ const FilterMenu: React.FC<FilterMenuProps> = ({
           <div className="filter-section">
             <div className="filter-label-row">
                 <div className="filter-title">
-                    <Layers size={12} color="var(--accent-blue)" style={{marginRight: 6}}/>
+                    <Layers size={12} color="var(--accent-blue)" className="filter-icon"/>
                     <span>SECTOR VISIBILITY</span>
                 </div>
                 {filters.visibleSectors.size > 0 && (
@@ -159,7 +159,7 @@ const FilterMenu: React.FC<FilterMenuProps> = ({
                             onClick={() => toggleSector(sector)}
                         >
                             {sector}
-                            {isSelected && <Check size={10} style={{marginLeft: 4}} />}
+                            {isSelected && <Check size={10} className="sector-check" />}
                         </div>
                     );
                 })}
