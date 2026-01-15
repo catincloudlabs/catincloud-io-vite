@@ -267,7 +267,6 @@ function App() {
             nodeMap: displayNodeMap,
             sectors: currentFrameData?.sectors || [] 
         }} 
-        // @ts-ignore
         history={frames || []}
         onNodeClick={(node) => setSelectedTicker(node.ticker)}
         onBackgroundClick={() => setSelectedTicker(null)}
