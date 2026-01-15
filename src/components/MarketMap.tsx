@@ -58,13 +58,11 @@ const THEME = {
   gold: [251, 191, 36],       
   glass: [255, 255, 255],
   darkText: [255, 255, 255, 180],
-  // New "Infrastructure" color (Darker Slate for Anchors)
-  infrastructure: [100, 116, 139] 
+  // NEW: "Lilac" for the Anchor Rings
+  infrastructure: [192, 132, 252] 
 };
 
 // --- ANCHOR CONFIGURATION ---
-// These nodes are "Fixed Infrastructure" - they appear as hollow rings with permanent labels.
-// Matches the backend configuration in ingest.py / generate_history.py
 const ANCHOR_TICKERS = new Set([
   "SPY", "QQQ", "IWM", "DIA", 
   "AAPL", "MSFT", "NVDA", "GOOGL", 
@@ -305,23 +303,7 @@ export function MarketMap({
 
   // --- LAYERS ----------------------------------------------------------------
 
-  // NEW: Dedicated Text Layer for Anchor Labels (Always visible)
-  const anchorLabelLayer = new TextLayer({
-    id: 'anchor-labels',
-    data: data.nodes.filter(n => ANCHOR_TICKERS.has(n.ticker)),
-    getPosition: (d: HydratedNode) => [d.x, d.y],
-    getText: (d: HydratedNode) => d.ticker,
-    getSize: 12,
-    // Darker, structural grey
-    getColor: [...THEME.infrastructure, 220], 
-    getAngle: 0,
-    getTextAnchor: 'middle',
-    getAlignmentBaseline: 'center',
-    getPixelOffset: [0, 16], // Push text below the hollow ring
-    fontFamily: '"JetBrains Mono", monospace',
-    fontWeight: 700,
-    visible: !isPlaying
-  });
+  // REMOVED: anchorLabelLayer (per request)
 
   const sectorTextLayer = new TextLayer({
     id: 'sector-labels',
@@ -396,9 +378,9 @@ export function MarketMap({
   const dotLayer = new ScatterplotLayer({
     id: 'market-particles', data: sortedNodes, getPosition: (d: HydratedNode) => [d.x, d.y], radiusUnits: 'common', 
     
-    // UPDATED: Logic to give Anchors a specific size
+    // UPDATED: Anchors get specific size
     getRadius: (d: HydratedNode) => {
-        if (ANCHOR_TICKERS.has(d.ticker)) return 4.0; // Anchors are larger "hubs"
+        if (ANCHOR_TICKERS.has(d.ticker)) return 4.0;
         
         if (d.ticker === selectedTicker) return 3.0; 
         if (graphConnections?.some(c => c.target === d.ticker)) return 2.0; 
@@ -408,7 +390,7 @@ export function MarketMap({
 
     // UPDATED: Anchors are Hollow (Transparent Fill)
     getFillColor: (d: HydratedNode) => {
-        if (ANCHOR_TICKERS.has(d.ticker)) return [0, 0, 0, 0]; // Transparent
+        if (ANCHOR_TICKERS.has(d.ticker)) return [0, 0, 0, 0]; 
         
         if (d.ticker === selectedTicker) return [...THEME.glass, 255]; 
         if (graphConnections?.some(c => c.target === d.ticker)) return [...THEME.gold, 255]; 
@@ -421,14 +403,14 @@ export function MarketMap({
 
     // UPDATED: Anchors always have a border
     getLineWidth: (d: HydratedNode) => {
-        if (ANCHOR_TICKERS.has(d.ticker)) return 1.5; // Structural border
+        if (ANCHOR_TICKERS.has(d.ticker)) return 1.5; 
         
         if (d.ticker === selectedTicker) return pulse ? 2 : 0.5; 
         if (d.energy > highEnergyThreshold) return 0.5; 
         return 0; 
     },
 
-    // UPDATED: Anchors use the darker infrastructure slate
+    // UPDATED: Anchors use the new Lilac color
     getLineColor: (d: HydratedNode) => {
         if (ANCHOR_TICKERS.has(d.ticker)) return [...THEME.infrastructure, 180]; 
         
@@ -504,8 +486,7 @@ export function MarketMap({
             viewState={viewState}
             onViewStateChange={({ viewState }: any) => setViewState(viewState)} 
             controller={true}
-            // Added anchorLabelLayer to the end so labels appear on top
-            layers={[cellLayer, sectorTextLayer, vectorLayer, trailLayer, glowLayer, synapseLayer, dotLayer, anchorLabelLayer]} 
+            layers={[cellLayer, sectorTextLayer, vectorLayer, trailLayer, glowLayer, synapseLayer, dotLayer]} 
             style={{ backgroundColor: 'transparent' }} 
             
             onHover={(info: any) => setHoverInfo(info)}
