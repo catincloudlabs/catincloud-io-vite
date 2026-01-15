@@ -1,161 +1,96 @@
 // src/utils/sectorMap.ts
 
 export const SECTOR_NAMES: Record<string, string> = {
-  Technology: "Technology",
-  Semiconductors: "Semiconductors",
-  Financials: "Financials",
-  Discretionary: "Discretionary",
-  Staples: "Staples",
-  Healthcare: "Healthcare",
-  Communications: "Communications",
-  Energy: "Energy",
-  Industrials: "Industrials",
-  Materials: "Materials",
-  Utilities: "Utilities",
-  RealEstate: "Real Estate",
+  Technology: "Technology",         // The Growth Engine (Software, Big Tech, Crypto, EV)
+  Semiconductors: "Semiconductors", // The Hardware Backbone
+  Finance: "Finance",               // Banks, Payments, Insurance
+  Consumer: "Consumer",             // Retail, Food, Autos, Leisure (Merged Staples/Disc)
+  Healthcare: "Healthcare",         // Pharma, Bio, MedTech
+  Energy: "Energy",                 // Oil, Gas, Pipelines
+  Industrials: "Industrials",       // Manufacturing, Aerospace, Logistics
+  MediaTelco: "Media & Telco",      // Legacy Media, Streaming, Telecoms
+  RealEstate: "Real Estate",        // REITs
+  Utilities: "Utilities",           // Power & Water
   Indices: "Market Indices",
   Other: "Other" 
 };
 
 export const SECTOR_MAP: Record<string, string> = {
-  // --- RETAIL FAVORITES (25 Additions) ---
-  GME: 'Discretionary', RIVN: 'Discretionary', AMC: 'Communications',
-  DKNG: 'Discretionary', SOFI: 'Financials', UPST: 'Financials',
-  LCID: 'Discretionary', CVNA: 'Discretionary', CHPT: 'Industrials',
-  OPEN: 'Real Estate', RDDT: 'Communications', DJT: 'Communications',
-  HIMS: 'Healthcare', NKLA: 'Industrials', SPCE: 'Industrials',
-  BB: 'Technology', AI: 'Technology', RBLX: 'Communications',
-  U: 'Technology', PTON: 'Discretionary', CHWY: 'Discretionary',
-  TLRY: 'Staples', BYND: 'Staples', QS: 'Discretionary',
-  FUBO: 'Communications', LUNR: 'Industrials',
+  // --- TECHNOLOGY (THE GROWTH ENGINE) ---
+  // Includes: Big Tech, Software, Fintech, Crypto, EV, Internet
+  AAPL: 'Technology', MSFT: 'Technology', GOOGL: 'Technology', GOOG: 'Technology',
+  META: 'Technology', AMZN: 'Technology', TSLA: 'Technology', NFLX: 'Technology',
+  ORCL: 'Technology', CRM: 'Technology', ADBE: 'Technology', CSCO: 'Technology',
+  ACN: 'Technology', IBM: 'Technology', NOW: 'Technology', INTU: 'Technology',
+  PLTR: 'Technology', U: 'Technology', AI: 'Technology', RBLX: 'Technology',
+  SNPS: 'Technology', CDNS: 'Technology', PANW: 'Technology', CRWD: 'Technology',
+  FTNT: 'Technology', ANET: 'Technology', APH: 'Technology', MSI: 'Technology',
+  // Fintech & Crypto (High Correlation to Tech)
+  COIN: 'Technology', HOOD: 'Technology', SQ: 'Technology', PYPL: 'Technology',
+  MSTR: 'Technology', IBIT: 'Technology', MARA: 'Technology', UPST: 'Technology',
+  SOFI: 'Technology', AFRM: 'Technology', DKNG: 'Technology', // Betting is basically fintech/software
+  
+  // --- SEMICONDUCTORS (THE HARDWARE) ---
+  NVDA: 'Semiconductors', AMD: 'Semiconductors', AVGO: 'Semiconductors',
+  QCOM: 'Semiconductors', INTC: 'Semiconductors', TSM: 'Semiconductors',
+  ARM: 'Semiconductors', MU: 'Semiconductors', AMAT: 'Semiconductors',
+  LRCX: 'Semiconductors', ADI: 'Semiconductors', KLAC: 'Semiconductors',
+  TXN: 'Semiconductors', MRVL: 'Semiconductors', ON: 'Semiconductors',
+  MCHP: 'Semiconductors', STM: 'Semiconductors', NXP: 'Semiconductors',
+  SWKS: 'Semiconductors', QRVO: 'Semiconductors', MPWR: 'Semiconductors',
+  TER: 'Semiconductors', SMH: 'Semiconductors', SOXL: 'Semiconductors',
 
-  // --- CUSTOM HIGH CONVICTION ---
-  COIN: 'Financials', HOOD: 'Financials', ARES: 'Financials', 
-  MSTR: 'Financials', IBIT: 'Financials', MARA: 'Financials',
-  PLTR: 'Technology', DELL: 'Technology', WDAY: 'Technology',
-  DASH: 'Discretionary', APP: 'Technology', GEV: 'Utilities', 
-  SOLV: 'Healthcare', VLTO: 'Industrials', SOUN: 'Technology', 
-  IONQ: 'Technology', RKLB: 'Industrials', ASTS: 'Industrials',
-  VRT: 'Industrials', VST: 'Utilities', CEG: 'Utilities', 
-  NRG: 'Utilities', BABA: 'Discretionary', PDD: 'Discretionary',
-  JD: 'Discretionary', BIDU: 'Communications',
+  // --- CONSUMER (THE REAL ECONOMY) ---
+  // Merged Discretionary + Staples + Autos (Legacy)
+  WMT: 'Consumer', COST: 'Consumer', TGT: 'Consumer', HD: 'Consumer',
+  LOW: 'Consumer', MCD: 'Consumer', SBUX: 'Consumer', NKE: 'Consumer',
+  LULU: 'Consumer', CMG: 'Consumer', TJX: 'Consumer', ROST: 'Consumer',
+  KO: 'Consumer', PEP: 'Consumer', PG: 'Consumer', PM: 'Consumer',
+  MO: 'Consumer', EL: 'Consumer', CL: 'Consumer', KMB: 'Consumer',
+  GIS: 'Consumer', KHC: 'Consumer', KR: 'Consumer', SYY: 'Consumer',
+  STZ: 'Consumer', TSN: 'Consumer', HRL: 'Consumer', CAG: 'Consumer',
+  F: 'Consumer', GM: 'Consumer', HMC: 'Consumer', TM: 'Consumer',
+  BKNG: 'Consumer', ABNB: 'Consumer', MAR: 'Consumer', HLT: 'Consumer',
+  RCL: 'Consumer', CCL: 'Consumer', NCLH: 'Consumer', MGM: 'Consumer',
+  CZR: 'Consumer', WYNN: 'Consumer', LVS: 'Consumer', DHI: 'Consumer',
+  LEN: 'Consumer', EBAY: 'Consumer', ETSY: 'Consumer', CHWY: 'Consumer',
+  PTON: 'Consumer', GME: 'Consumer', AMC: 'Consumer', // Meme stocks are consumer sentiment
 
-  // --- MEGA CAP & TECH ---
-  AAPL: 'Technology', MSFT: 'Technology', NVDA: 'Semiconductors',
-  GOOGL: 'Communications', GOOG: 'Communications', META: 'Communications',
-  AMZN: 'Discretionary', TSLA: 'Discretionary', AVGO: 'Semiconductors',
-  ORCL: 'Technology', CRM: 'Technology', ADBE: 'Technology',
-  CSCO: 'Technology', ACN: 'Technology', IBM: 'Technology',
-  NOW: 'Technology', INTU: 'Technology', QCOM: 'Semiconductors',
-  AMD: 'Semiconductors', TXN: 'Semiconductors', INTC: 'Semiconductors',
-  AMAT: 'Semiconductors', MU: 'Semiconductors', LRCX: 'Semiconductors',
-  ADI: 'Semiconductors', KLAC: 'Semiconductors', MRVL: 'Semiconductors',
-  SNPS: 'Technology', CDNS: 'Technology', PANW: 'Technology',
-  CRWD: 'Technology', FTNT: 'Technology', ANET: 'Technology',
-  APH: 'Technology', MSI: 'Technology', TEL: 'Technology',
-  GLW: 'Technology', HPE: 'Technology', HPQ: 'Technology',
-  IT: 'Technology', DXC: 'Technology', STX: 'Technology',
-  WDC: 'Technology', NTAP: 'Technology', FFIV: 'Technology',
-  AKAM: 'Technology', JNPR: 'Technology', TYL: 'Technology',
-  FSLR: 'Technology', ENPH: 'Technology', SEDG: 'Technology',
-  SMCI: 'Technology', ARM: 'Semiconductors', TSM: 'Semiconductors',
-  ASML: 'Semiconductors', ON: 'Semiconductors', MCHP: 'Semiconductors',
-  STM: 'Semiconductors', NXP: 'Semiconductors', SWKS: 'Semiconductors',
-  QRVO: 'Semiconductors', MPWR: 'Semiconductors', TER: 'Semiconductors',
+  // --- FINANCE (THE RAILS) ---
+  JPM: 'Finance', BAC: 'Finance', WFC: 'Finance', C: 'Finance',
+  GS: 'Finance', MS: 'Finance', BLK: 'Finance', SCHW: 'Finance',
+  AXP: 'Finance', V: 'Finance', MA: 'Finance', // V/MA act as stable financials
+  BR: 'Finance', 'BRK.B': 'Finance', SPGI: 'Finance', MCO: 'Finance',
+  PGR: 'Finance', CB: 'Finance', MMC: 'Finance', AON: 'Finance',
+  USB: 'Finance', PNC: 'Finance', TFC: 'Finance', COF: 'Finance',
+  DFS: 'Finance', BK: 'Finance', STT: 'Finance', TROW: 'Finance',
+  ICE: 'Finance', CME: 'Finance', CBOE: 'Finance', NDAQ: 'Finance',
+  AIG: 'Finance', ALL: 'Finance', TRV: 'Finance', ARES: 'Finance',
 
-  // --- FINANCIALS ---
-  JPM: 'Financials', V: 'Financials', MA: 'Financials',
-  BAC: 'Financials', WFC: 'Financials', MS: 'Financials',
-  GS: 'Financials', C: 'Financials', BLK: 'Financials',
-  SPGI: 'Financials', AXP: 'Financials', MCO: 'Financials',
-  PGR: 'Financials', CB: 'Financials', MMC: 'Financials',
-  AON: 'Financials', USB: 'Financials', PNC: 'Financials',
-  TFC: 'Financials', COF: 'Financials', DFS: 'Financials',
-  PYPL: 'Financials', FI: 'Financials', FIS: 'Financials',
-  GPN: 'Financials', BK: 'Financials', STT: 'Financials',
-  TROW: 'Financials', NDAQ: 'Financials', ICE: 'Financials',
-  CME: 'Financials', CBOE: 'Financials', MSCI: 'Financials',
-  SCHW: 'Financials', SBNY: 'Financials', FITB: 'Financials',
-  CFG: 'Financials', HBAN: 'Financials', RF: 'Financials',
-  KEY: 'Financials', SYF: 'Financials', ALL: 'Financials',
-  TRV: 'Financials', HIG: 'Financials', CINF: 'Financials',
-  PFG: 'Financials', PRU: 'Financials', MET: 'Financials',
-  AFL: 'Financials', AIG: 'Financials', GL: 'Financials',
-  WTW: 'Financials', AJG: 'Financials', BRO: 'Financials',
-  WRB: 'Financials', RE: 'Financials', AIZ: 'Financials',
-  JKHY: 'Financials', BR: 'Financials', 'BRK.B': 'Financials',
+  // --- HEALTHCARE (DEFENSIVE GROWTH) ---
+  LLY: 'Healthcare', UNH: 'Healthcare', JNJ: 'Healthcare', ABBV: 'Healthcare',
+  MRK: 'Healthcare', TMO: 'Healthcare', ABT: 'Healthcare', DHR: 'Healthcare',
+  PFE: 'Healthcare', AMGN: 'Healthcare', ISRG: 'Healthcare', ELV: 'Healthcare',
+  VRTX: 'Healthcare', REGN: 'Healthcare', ZTS: 'Healthcare', BSX: 'Healthcare',
+  BDX: 'Healthcare', GILD: 'Healthcare', HCA: 'Healthcare', MCK: 'Healthcare',
+  CI: 'Healthcare', HUM: 'Healthcare', CVS: 'Healthcare', BMY: 'Healthcare',
+  SYK: 'Healthcare', EW: 'Healthcare', MDT: 'Healthcare', DXCM: 'Healthcare',
+  ILMN: 'Healthcare', ALGN: 'Healthcare', BIIB: 'Healthcare', MRNA: 'Healthcare',
+  HIMS: 'Healthcare', SOLV: 'Healthcare', RVTY: 'Healthcare',
 
-  // --- HEALTHCARE ---
-  LLY: 'Healthcare', UNH: 'Healthcare', JNJ: 'Healthcare',
-  ABBV: 'Healthcare', MRK: 'Healthcare', TMO: 'Healthcare',
-  ABT: 'Healthcare', DHR: 'Healthcare', PFE: 'Healthcare',
-  AMGN: 'Healthcare', ISRG: 'Healthcare', ELV: 'Healthcare',
-  VRTX: 'Healthcare', REGN: 'Healthcare', ZTS: 'Healthcare',
-  BSX: 'Healthcare', BDX: 'Healthcare', GILD: 'Healthcare',
-  HCA: 'Healthcare', MCK: 'Healthcare', CI: 'Healthcare',
-  HUM: 'Healthcare', CVS: 'Healthcare', BMY: 'Healthcare',
-  SYK: 'Healthcare', EW: 'Healthcare', MDT: 'Healthcare',
-  DXCM: 'Healthcare', ILMN: 'Healthcare', ALGN: 'Healthcare',
-  BIIB: 'Healthcare', MRNA: 'Healthcare', BNTX: 'Healthcare',
-  NVO: 'Healthcare', IDXX: 'Healthcare', RMD: 'Healthcare',
-  WST: 'Healthcare', STE: 'Healthcare', TFX: 'Healthcare',
-  COO: 'Healthcare', HOLX: 'Healthcare', WAT: 'Healthcare',
-  MTD: 'Healthcare', PKI: 'Healthcare', A: 'Healthcare',
-  RVTY: 'Healthcare', LH: 'Healthcare', DGX: 'Healthcare',
-  CNC: 'Healthcare', MOH: 'Healthcare', UHS: 'Healthcare',
-  CAH: 'Healthcare', COR: 'Healthcare',
+  // --- INDUSTRIALS (BUILDERS & MOVERS) ---
+  CAT: 'Industrials', DE: 'Industrials', HON: 'Industrials', GE: 'Industrials',
+  UNP: 'Industrials', UPS: 'Industrials', FDX: 'Industrials', RTX: 'Industrials',
+  BA: 'Industrials', LMT: 'Industrials', NOC: 'Industrials', GD: 'Industrials',
+  ADP: 'Industrials', ITW: 'Industrials', ETN: 'Industrials', WM: 'Industrials',
+  MMM: 'Industrials', CSX: 'Industrials', NSC: 'Industrials', EMR: 'Industrials',
+  PH: 'Industrials', PCAR: 'Industrials', CMI: 'Industrials', TT: 'Industrials',
+  LHX: 'Industrials', TDG: 'Industrials', CARR: 'Industrials', OTIS: 'Industrials',
+  DAL: 'Industrials', UAL: 'Industrials', AAL: 'Industrials', LUV: 'Industrials',
+  RKLB: 'Industrials', SPCE: 'Industrials', LUNR: 'Industrials', // Space is Industrial frontier
+  ASTS: 'Industrials',
 
-  // --- CONSUMER DISCRETIONARY ---
-  HD: 'Discretionary', MCD: 'Discretionary', NKE: 'Discretionary',
-  SBUX: 'Discretionary', LOW: 'Discretionary', TJX: 'Discretionary',
-  BKNG: 'Discretionary', ABNB: 'Discretionary', MAR: 'Discretionary',
-  HLT: 'Discretionary', CMG: 'Discretionary', YUM: 'Discretionary',
-  LULU: 'Discretionary', F: 'Discretionary', GM: 'Discretionary',
-  TSCO: 'Discretionary', ORLY: 'Discretionary', AZO: 'Discretionary',
-  ROST: 'Discretionary', DG: 'Discretionary', DLTR: 'Discretionary',
-  TGT: 'Discretionary', BBY: 'Discretionary', EBAY: 'Discretionary',
-  EXPE: 'Discretionary', RCL: 'Discretionary', CCL: 'Discretionary',
-  NCLH: 'Discretionary', MGM: 'Discretionary', CZR: 'Discretionary',
-  WYNN: 'Discretionary', LVS: 'Discretionary', DHI: 'Discretionary',
-  LEN: 'Discretionary', PHM: 'Discretionary', NVR: 'Discretionary',
-  GPC: 'Discretionary', KMX: 'Discretionary', LKQ: 'Discretionary',
-  DPZ: 'Discretionary', DRI: 'Discretionary',
-
-  // --- CONSUMER STAPLES ---
-  WMT: 'Staples', PG: 'Staples', COST: 'Staples', KO: 'Staples',
-  PEP: 'Staples', PM: 'Staples', EL: 'Staples', CL: 'Staples',
-  MO: 'Staples', KMB: 'Staples', GIS: 'Staples', MDLZ: 'Staples',
-  KHC: 'Staples', KR: 'Staples', SYY: 'Staples', ADM: 'Staples',
-  STZ: 'Staples', 'BF.B': 'Staples', TSN: 'Staples', HRL: 'Staples',
-  CAG: 'Staples', K: 'Staples', MKC: 'Staples', CLX: 'Staples',
-  CHD: 'Staples', SJM: 'Staples', TAP: 'Staples',
-
-  // --- COMMUNICATIONS ---
-  DIS: 'Communications', NFLX: 'Communications', CMCSA: 'Communications',
-  TMUS: 'Communications', VZ: 'Communications', T: 'Communications',
-  CHTR: 'Communications', WBD: 'Communications', PARA: 'Communications',
-  FOXA: 'Communications', FOX: 'Communications', NWSA: 'Communications',
-  NWS: 'Communications', OMC: 'Communications', IPG: 'Communications',
-  TTD: 'Communications', LYV: 'Communications', EA: 'Communications',
-  TTWO: 'Communications', ATVI: 'Communications', MTCH: 'Communications',
-
-  // --- INDUSTRIALS ---
-  CAT: 'Industrials', DE: 'Industrials', HON: 'Industrials',
-  GE: 'Industrials', UNP: 'Industrials', UPS: 'Industrials',
-  RTX: 'Industrials', BA: 'Industrials', LMT: 'Industrials',
-  ADP: 'Industrials', ITW: 'Industrials', ETN: 'Industrials',
-  WM: 'Industrials', MMM: 'Industrials', CSX: 'Industrials',
-  NSC: 'Industrials', FDX: 'Industrials', NOC: 'Industrials',
-  GD: 'Industrials', EMR: 'Industrials', PH: 'Industrials',
-  PCAR: 'Industrials', CMI: 'Industrials', TT: 'Industrials',
-  LHX: 'Industrials', TDG: 'Industrials', CARR: 'Industrials',
-  OTIS: 'Industrials', ROK: 'Industrials', AME: 'Industrials',
-  DAL: 'Industrials', UAL: 'Industrials', AAL: 'Industrials',
-  LUV: 'Industrials', JETS: 'Industrials', PAYX: 'Industrials',
-  CTAS: 'Industrials', VRSK: 'Industrials', EFX: 'Industrials',
-  FAST: 'Industrials', GWW: 'Industrials', URI: 'Industrials',
-
-  // --- ENERGY ---
+  // --- ENERGY (COMMODITIES) ---
   XOM: 'Energy', CVX: 'Energy', COP: 'Energy', SLB: 'Energy',
   EOG: 'Energy', MPC: 'Energy', PSX: 'Energy', VLO: 'Energy',
   OXY: 'Energy', HES: 'Energy', KMI: 'Energy', WMB: 'Energy',
@@ -163,36 +98,42 @@ export const SECTOR_MAP: Record<string, string> = {
   MRO: 'Energy', CTRA: 'Energy', EQT: 'Energy', TRGP: 'Energy',
   OKE: 'Energy', SHEL: 'Energy', EQNR: 'Energy',
 
-  // --- UTILITIES & POWER ---
-  NEE: 'Utilities', SO: 'Utilities', DUK: 'Utilities',
-  SRE: 'Utilities', AEP: 'Utilities', D: 'Utilities',
-  PEG: 'Utilities', EXC: 'Utilities', XEL: 'Utilities',
-  ED: 'Utilities', EIX: 'Utilities', WEC: 'Utilities',
-  ES: 'Utilities', ETR: 'Utilities', PPL: 'Utilities',
-  FE: 'Utilities', CMS: 'Utilities', AWK: 'Utilities',
+  // --- MEDIA & TELCO (CONTENT & PIPES) ---
+  DIS: 'MediaTelco', CMCSA: 'MediaTelco', TMUS: 'MediaTelco',
+  VZ: 'MediaTelco', T: 'MediaTelco', CHTR: 'MediaTelco',
+  WBD: 'MediaTelco', PARA: 'MediaTelco', FOXA: 'MediaTelco',
+  FOX: 'MediaTelco', NWSA: 'MediaTelco', NWS: 'MediaTelco',
+  OMC: 'MediaTelco', IPG: 'MediaTelco', LYV: 'MediaTelco',
+  TTWO: 'MediaTelco', EA: 'MediaTelco', MTCH: 'MediaTelco',
+  DJT: 'MediaTelco', RDDT: 'MediaTelco',
 
-  // --- REAL ESTATE & DATA CENTERS ---
+  // --- REAL ESTATE (YIELD) ---
   PLD: 'Real Estate', AMT: 'Real Estate', EQIX: 'Real Estate',
   CCI: 'Real Estate', PSA: 'Real Estate', O: 'Real Estate',
   DLR: 'Real Estate', SPG: 'Real Estate', WELL: 'Real Estate',
   VICI: 'Real Estate', CSGP: 'Real Estate', AVB: 'Real Estate',
   EQR: 'Real Estate', CBRE: 'Real Estate', WY: 'Real Estate',
-  SBAC: 'Real Estate', EXR: 'Real Estate', MAA: 'Real Estate',
-  IRM: 'Real Estate', HST: 'Real Estate', VTR: 'Real Estate',
+  OPEN: 'Real Estate', Z: 'Real Estate', RDFN: 'Real Estate',
 
-  // --- MATERIALS ---
-  LIN: 'Materials', SHW: 'Materials', FCX: 'Materials',
-  APD: 'Materials', ECL: 'Materials', NEM: 'Materials',
-  DOW: 'Materials', DD: 'Materials', PPG: 'Materials',
-  LYB: 'Materials', NUE: 'Materials', STLD: 'Materials',
-  MLM: 'Materials', VMC: 'Materials', ALB: 'Materials',
-  FMC: 'Materials', MOS: 'Materials', CTVA: 'Materials',
-  CF: 'Materials', IFF: 'Materials', BALL: 'Materials',
+  // --- UTILITIES (DEFENSIVE) ---
+  NEE: 'Utilities', SO: 'Utilities', DUK: 'Utilities', SRE: 'Utilities',
+  AEP: 'Utilities', D: 'Utilities', PEG: 'Utilities', EXC: 'Utilities',
+  XEL: 'Utilities', ED: 'Utilities', EIX: 'Utilities', WEC: 'Utilities',
+  ES: 'Utilities', ETR: 'Utilities', PPL: 'Utilities', FE: 'Utilities',
+  CMS: 'Utilities', AWK: 'Utilities', VST: 'Utilities', CEG: 'Utilities',
+  NRG: 'Utilities', GEV: 'Utilities',
 
-  // --- INDICES & ETFs ---
+  // --- MATERIALS (RAW) ---
+  LIN: 'Industrials', SHW: 'Industrials', // Simplified Materials into Industrials for cleaner map
+  FCX: 'Industrials', APD: 'Industrials', NEM: 'Industrials',
+  DOW: 'Industrials', DD: 'Industrials', PPG: 'Industrials',
+  NUE: 'Industrials', AA: 'Industrials',
+
+  // --- INDICES ---
   SPY: 'Indices', QQQ: 'Indices', IWM: 'Indices', DIA: 'Indices',
   VTI: 'Indices', VOO: 'Indices', GLD: 'Indices', SLV: 'Indices',
-  USO: 'Indices', UNG: 'Indices', TLT: 'Indices', HYG: 'Indices'
+  USO: 'Indices', UNG: 'Indices', TLT: 'Indices', HYG: 'Indices',
+  VIXY: 'Indices', UVXY: 'Indices'
 };
 
 export function getSectorForTicker(ticker: string): string {
