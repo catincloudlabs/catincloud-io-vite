@@ -412,8 +412,7 @@ export function MarketMap({
     },
 
     stroked: true,
-    // THINNER: Width 1.0
-    getLineWidth: 1.0, 
+    getLineWidth: 0.8, 
     getLineColor: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return [...THEME.mint, 255];
         return [...THEME.infrastructure, 255]; 
