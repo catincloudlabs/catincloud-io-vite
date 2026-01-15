@@ -1,4 +1,4 @@
-# Data Science & Math (The Engine)
+# Data Science & Math
 numpy>=1.26.0
 pandas>=2.1.0
 scipy>=1.11.0
