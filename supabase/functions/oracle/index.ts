@@ -60,8 +60,7 @@ Deno.serve(async (req) => {
       - If asked about "Energy" or "Velocity," explain the metaphor simply.
     `
 
-    // --- PROMPT B: THE PHYSICS TEACHER (New Mode) ---
-    // UPDATED: Now handles General vs Specific contexts
+    // --- PROMPT B: THE PHYSICS TEACHER ---
     const PHYSICIST_PROMPT = `
       You are a Physics Tutor explaining the visuals of the "Market Intelligence" app.
       
