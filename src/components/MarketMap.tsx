@@ -57,8 +57,20 @@ const THEME = {
   slate: [148, 163, 184],     
   gold: [251, 191, 36],       
   glass: [255, 255, 255],
-  darkText: [255, 255, 255, 180] 
+  darkText: [255, 255, 255, 180],
+  // New "Infrastructure" color (Darker Slate for Anchors)
+  infrastructure: [100, 116, 139] 
 };
+
+// --- ANCHOR CONFIGURATION ---
+// These nodes are "Fixed Infrastructure" - they appear as hollow rings with permanent labels.
+// Matches the backend configuration in ingest.py / generate_history.py
+const ANCHOR_TICKERS = new Set([
+  "SPY", "QQQ", "IWM", "DIA", 
+  "AAPL", "MSFT", "NVDA", "GOOGL", 
+  "AMZN", "META", "TSLA", 
+  "JPM", "V", "UNH", "XOM"
+]);
 
 // --- EXTRACTED CARD COMPONENT ---
 const Card = ({ node, isInteractive, style, onMouseDown, onTouchStart, onTouchMove, onTouchEnd }: any) => (
@@ -145,7 +157,7 @@ export function MarketMap({
     setDragOffset({ x: 0, y: 0 });
   }, [selectedTicker]);
 
-  // --- 3. VIEWPORT (FIXED: Controlled State) ---
+  // --- 3. VIEWPORT (Controlled State) ---
   const [viewState, setViewState] = useState<any>({
     target: [0, 0, 0],
     zoom: 1,
@@ -153,15 +165,11 @@ export function MarketMap({
     maxZoom: 15
   });
   
-  // We use this ref to ensure we only auto-calculate the bounds ONCE (on load).
-  // This prevents the camera from snapping back when the date changes.
   const initializedRef = useRef(false);
 
   useEffect(() => {
-    // 1. If we already set the camera, or if data is empty, do nothing.
     if (initializedRef.current || !data?.nodes?.length) return;
 
-    // 2. Perform the Auto-Fit Logic (One Time Only)
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
     let totalEnergy = 0;
     let weightedSumX = 0;
@@ -192,7 +200,6 @@ export function MarketMap({
     const fitScale = Math.min(scaleX, scaleY);
     const autoZoom = Math.log2(fitScale);
 
-    // 3. Update the persistent ViewState
     setViewState({
       target: [centerX, centerY, 0],
       zoom: Math.max(isMobile ? 0.2 : 0.5, Math.min(autoZoom, 4)),
@@ -200,7 +207,6 @@ export function MarketMap({
       maxZoom: 15
     });
 
-    // 4. Mark as initialized so we don't do this again on date change
     initializedRef.current = true;
   }, [data]); 
 
@@ -299,6 +305,24 @@ export function MarketMap({
 
   // --- LAYERS ----------------------------------------------------------------
 
+  // NEW: Dedicated Text Layer for Anchor Labels (Always visible)
+  const anchorLabelLayer = new TextLayer({
+    id: 'anchor-labels',
+    data: data.nodes.filter(n => ANCHOR_TICKERS.has(n.ticker)),
+    getPosition: (d: HydratedNode) => [d.x, d.y],
+    getText: (d: HydratedNode) => d.ticker,
+    getSize: 12,
+    // Darker, structural grey
+    getColor: [...THEME.infrastructure, 220], 
+    getAngle: 0,
+    getTextAnchor: 'middle',
+    getAlignmentBaseline: 'center',
+    getPixelOffset: [0, 16], // Push text below the hollow ring
+    fontFamily: '"JetBrains Mono", monospace',
+    fontWeight: 700,
+    visible: !isPlaying
+  });
+
   const sectorTextLayer = new TextLayer({
     id: 'sector-labels',
     data: sectorLayerData,
@@ -371,21 +395,48 @@ export function MarketMap({
 
   const dotLayer = new ScatterplotLayer({
     id: 'market-particles', data: sortedNodes, getPosition: (d: HydratedNode) => [d.x, d.y], radiusUnits: 'common', 
+    
+    // UPDATED: Logic to give Anchors a specific size
     getRadius: (d: HydratedNode) => {
-        if (d.ticker === selectedTicker) return 3.0; if (graphConnections?.some(c => c.target === d.ticker)) return 2.0; 
-        if (d.energy > highEnergyThreshold) return 1.8; return 1.2; 
+        if (ANCHOR_TICKERS.has(d.ticker)) return 4.0; // Anchors are larger "hubs"
+        
+        if (d.ticker === selectedTicker) return 3.0; 
+        if (graphConnections?.some(c => c.target === d.ticker)) return 2.0; 
+        if (d.energy > highEnergyThreshold) return 1.8; 
+        return 1.2; 
     },
+
+    // UPDATED: Anchors are Hollow (Transparent Fill)
     getFillColor: (d: HydratedNode) => {
-        if (d.ticker === selectedTicker) return [...THEME.glass, 255]; if (graphConnections?.some(c => c.target === d.ticker)) return [...THEME.gold, 255]; 
-        if (d.sentiment > 0.1) return [...THEME.mint, 200]; if (d.sentiment < -0.1) return [...THEME.red, 200]; return [...THEME.slate, 180]; 
+        if (ANCHOR_TICKERS.has(d.ticker)) return [0, 0, 0, 0]; // Transparent
+        
+        if (d.ticker === selectedTicker) return [...THEME.glass, 255]; 
+        if (graphConnections?.some(c => c.target === d.ticker)) return [...THEME.gold, 255]; 
+        if (d.sentiment > 0.1) return [...THEME.mint, 200]; 
+        if (d.sentiment < -0.1) return [...THEME.red, 200]; 
+        return [...THEME.slate, 180]; 
     },
+
     stroked: true,
+
+    // UPDATED: Anchors always have a border
     getLineWidth: (d: HydratedNode) => {
-        if (d.ticker === selectedTicker) return pulse ? 2 : 0.5; if (d.energy > highEnergyThreshold) return 0.5; return 0; 
+        if (ANCHOR_TICKERS.has(d.ticker)) return 1.5; // Structural border
+        
+        if (d.ticker === selectedTicker) return pulse ? 2 : 0.5; 
+        if (d.energy > highEnergyThreshold) return 0.5; 
+        return 0; 
     },
+
+    // UPDATED: Anchors use the darker infrastructure slate
     getLineColor: (d: HydratedNode) => {
-        if (d.ticker === selectedTicker) return [...THEME.mint, 180]; if (d.energy > highEnergyThreshold) return [...THEME.glass, 200]; return [0, 0, 0, 0];
+        if (ANCHOR_TICKERS.has(d.ticker)) return [...THEME.infrastructure, 180]; 
+        
+        if (d.ticker === selectedTicker) return [...THEME.mint, 180]; 
+        if (d.energy > highEnergyThreshold) return [...THEME.glass, 200]; 
+        return [0, 0, 0, 0];
     },
+
     lineWidthUnits: 'common', pickable: true, autoHighlight: true, highlightColor: [...THEME.mint, 100],
     transitions: { getLineWidth: 1000, getLineColor: 1000, getRadius: 1000 },
     updateTriggers: {
@@ -450,10 +501,11 @@ export function MarketMap({
 
         <DeckGL
             views={new OrthographicView({ controller: true })}
-            viewState={viewState} // CHANGED: Now controlled
-            onViewStateChange={({ viewState }: any ) => setViewState(viewState)} // CHANGED: Update state on interaction
+            viewState={viewState}
+            onViewStateChange={({ viewState }: any) => setViewState(viewState)} 
             controller={true}
-            layers={[cellLayer, sectorTextLayer, vectorLayer, trailLayer, glowLayer, synapseLayer, dotLayer]} 
+            // Added anchorLabelLayer to the end so labels appear on top
+            layers={[cellLayer, sectorTextLayer, vectorLayer, trailLayer, glowLayer, synapseLayer, dotLayer, anchorLabelLayer]} 
             style={{ backgroundColor: 'transparent' }} 
             
             onHover={(info: any) => setHoverInfo(info)}
