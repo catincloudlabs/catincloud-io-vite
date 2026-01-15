@@ -1515,43 +1515,62 @@ input[type=range]::-moz-range-track {
 @media (max-width: 768px) {
   /* 1. EXPAND THE HEADER LEFT ZONE */
   .header-left {
-    flex: 1; /* Take up all available space pushed by right icons */
+    flex: 1; 
     margin-right: 12px;
   }
 
   /* 2. EXPAND THE TICKER SELECTOR (THE "TICKER BOX") */
   .header-selector {
-    flex: 1; /* Grow to fill the gap */
+    flex: 1; 
     width: 100%;
-    max-width: none; /* Remove any desktop width limits */
+    max-width: none; 
   }
 
   /* 3. DETACH THE FILTER MENU (THE "FILTER BOX") */
   .header-filter-wrapper {
     position: fixed;
     top: 72px; /* Float just below the 64px header */
-    right: 16px; /* Align with the edge */
-    z-index: 45; /* Sit nicely above the map */
+    right: 16px; /* Anchor Right */
+    z-index: 45; 
   }
 
   /* 4. STYLE THE FLOATING FILTER BUTTON */
   .header-filter-wrapper .header-icon-btn {
-    background: rgba(15, 23, 42, 0.85); /* Solid backing for contrast */
+    background: rgba(15, 23, 42, 0.85);
     backdrop-filter: blur(12px);
     border-color: var(--glass-border);
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    width: 44px; /* Larger touch target */
+    width: 44px;
     height: 44px;
+    border-radius: 6px; /* Square Look */
   }
 
-  /* 5. ADJUST THE POPOVER POSITION */
+  /* 5. MOVE & STYLE PLAY BUTTON (MATCH FILTER BOX) */
+  .floating-play-btn {
+     /* Position: Next to Filter Box */
+     /* Right = 16px (Filter Right) + 44px (Filter Width) + 12px (Gap) */
+     top: 72px;
+     right: 72px; 
+     left: auto;  /* Unset desktop left */
+     bottom: auto; /* Unset desktop bottom */
+     
+     /* Style: Match the Filter Button */
+     width: 44px;
+     height: 44px;
+     border-radius: 6px; /* SQUARE (Changed from 50%) */
+     background: rgba(15, 23, 42, 0.85);
+     backdrop-filter: blur(12px);
+     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+
+  /* 6. ADJUST THE POPOVER POSITION */
   .header-filter-wrapper .filter-popover {
-    top: 50px; /* Push down relative to the new floating button */
+    top: 50px; 
     right: 0;
     width: 280px;
   }
 
-  /* 6. HIDE THE DIVIDER BETWEEN FILTER AND ICONS */
+  /* 7. HIDE THE DIVIDER BETWEEN FILTER AND ICONS */
   .v-divider.mobile-hide {
     display: none;
   }
