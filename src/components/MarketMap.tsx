@@ -85,11 +85,27 @@ export function MarketMap({
     y: number;
   } | null>(null);
 
-  // Selected Node (Persistent)
+  // Selected Node (Persistent Logic)
   const selectedNode = useMemo(() => {
     if (!selectedTicker || !data) return null;
     return data.nodes.find(n => n.ticker === selectedTicker) || null;
   }, [selectedTicker, data]);
+
+  // --- 3. POSITIONING STATE (FIXED) ---
+  // We need to track where on SCREEN the selected card should be.
+  const [selectedPos, setSelectedPos] = useState<{x: number, y: number} | null>(null);
+
+  // If selectedTicker changes externally (e.g. from Header search), reset position to Center Screen
+  useEffect(() => {
+    if (selectedTicker && !selectedPos) {
+       // Default to center if we don't have a click coordinate
+       const cx = typeof window !== 'undefined' ? window.innerWidth / 2 : 500;
+       const cy = typeof window !== 'undefined' ? window.innerHeight / 2 : 400;
+       setSelectedPos({ x: cx, y: cy });
+    } else if (!selectedTicker) {
+       setSelectedPos(null);
+    }
+  }, [selectedTicker]);
 
   // --- DRAG STATE (Only for Selected Node) ---
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -97,6 +113,7 @@ export function MarketMap({
   const initialOffsetRef = useRef({ x: 0, y: 0 });
   const isDraggingRef = useRef(false);
 
+  // Reset drag when switching nodes
   useEffect(() => {
     setDragOffset({ x: 0, y: 0 });
   }, [selectedTicker]);
@@ -314,12 +331,12 @@ export function MarketMap({
     },
   });
 
-  // --- RENDER CARD COMPONENT (Using styles from index.css) ---
+  // --- RENDER CARD COMPONENT ---
   const Card = ({ node, isInteractive, style, onMouseDown, onTouchStart, onTouchMove, onTouchEnd }: any) => (
     <div 
         style={{
             ...style,
-            position: 'absolute', // Position is dynamic
+            position: 'absolute', // Ensure absolute pos for tracking
         }}
         className={`map-tooltip-container ${isInteractive ? 'locked' : 'hover'}`}
         onMouseDown={onMouseDown}
@@ -386,36 +403,39 @@ export function MarketMap({
             layers={[cellLayer, sectorBgLayer, vectorLayer, trailLayer, glowLayer, synapseLayer, dotLayer]} 
             style={{ backgroundColor: 'transparent' }} 
             
-            // 1. ALWAYS UPDATE HOVER (No "isLocked" blocking)
             onHover={(info: any) => setHoverInfo(info)}
             getTooltip={null} 
             
-            // 2. CLICK SELECTS (Persistent)
+            // --- UPDATED CLICK HANDLER ---
             onClick={(info: any) => {
                 if (info.object) {
+                     // 1. CAPTURE SCREEN COORDS
+                     setSelectedPos({ x: info.x, y: info.y });
+                     // 2. TRIGGER SELECTION
                      if (onNodeClick) onNodeClick(info.object);
                 } else {
                     if (onBackgroundClick) onBackgroundClick();
+                    setSelectedPos(null);
                 }
             }}
         />
 
         {/* 3. PERSISTENT CARD (SELECTED NODE) */}
-        {selectedNode && (
+        {selectedNode && selectedPos && (
             <Card 
                 node={selectedNode}
                 isInteractive={true} 
                 onMouseDown={handleMouseDown}
                 style={{
-                    left: selectedNode.x + dragOffset.x,
-                    top: selectedNode.y + dragOffset.y,
-                    transform: 'translate(-50%, -120%)' 
+                    // Use captured screen coordinates + drag offset
+                    left: selectedPos.x + dragOffset.x,
+                    top: selectedPos.y + dragOffset.y,
+                    transform: 'translate(-50%, -120%)' // Position it above the click point
                 }}
             />
         )}
 
         {/* 4. HOVER TOOLTIP (TRANSIENT) */}
-        {/* Only show if hovering a node AND it's not the one already selected */}
         {hoverInfo?.object && hoverInfo.object.ticker !== selectedTicker && (
             <Card 
                 node={hoverInfo.object}
