@@ -60,13 +60,12 @@ const THEME = {
   darkText: [255, 255, 255, 180] 
 };
 
-// --- EXTRACTED CARD COMPONENT (Fixes Re-render/Drag Issue) ---
+// --- EXTRACTED CARD COMPONENT ---
 const Card = ({ node, isInteractive, style, onMouseDown, onTouchStart, onTouchMove, onTouchEnd }: any) => (
   <div 
       style={{
           ...style, 
           position: 'absolute',
-          // CRITICAL: Tells browser NOT to scroll when dragging this element
           touchAction: 'none' 
       }}
       className={`map-tooltip-container ${isInteractive ? 'locked' : 'hover'}`}
@@ -146,37 +145,63 @@ export function MarketMap({
     setDragOffset({ x: 0, y: 0 });
   }, [selectedTicker]);
 
-  // --- 3. VIEWPORT ---
-  const initialViewState = useMemo(() => {
-    if (!data?.nodes?.length) return { target: [0, 0, 0], zoom: 1 };
+  // --- 3. VIEWPORT (FIXED: Controlled State) ---
+  const [viewState, setViewState] = useState<any>({
+    target: [0, 0, 0],
+    zoom: 1,
+    minZoom: isMobile ? 0.2 : 0.5,
+    maxZoom: 15
+  });
+  
+  // We use this ref to ensure we only auto-calculate the bounds ONCE (on load).
+  // This prevents the camera from snapping back when the date changes.
+  const initializedRef = useRef(false);
+
+  useEffect(() => {
+    // 1. If we already set the camera, or if data is empty, do nothing.
+    if (initializedRef.current || !data?.nodes?.length) return;
+
+    // 2. Perform the Auto-Fit Logic (One Time Only)
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
     let totalEnergy = 0;
     let weightedSumX = 0;
     let weightedSumY = 0;
+
     data.nodes.forEach(n => {
         if (n.x < minX) minX = n.x; if (n.x > maxX) maxX = n.x;
         if (n.y < minY) minY = n.y; if (n.y > maxY) maxY = n.y;
+        
         const weight = n.energy + 1; 
-        weightedSumX += n.x * weight; weightedSumY += n.y * weight;
+        weightedSumX += n.x * weight; 
+        weightedSumY += n.y * weight;
         totalEnergy += weight;
     });
+
     const centerX = totalEnergy > 0 ? weightedSumX / totalEnergy : 0;
     const centerY = totalEnergy > 0 ? weightedSumY / totalEnergy : 0;
+    
     const PADDING = 100; 
     const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 1000;
     const screenHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
+    
     const dataWidth = Math.max(maxX - minX, 100); 
     const dataHeight = Math.max(maxY - minY, 100);
+    
     const scaleX = (screenWidth - PADDING) / dataWidth;
     const scaleY = (screenHeight - PADDING) / dataHeight;
     const fitScale = Math.min(scaleX, scaleY);
     const autoZoom = Math.log2(fitScale);
-    return {
+
+    // 3. Update the persistent ViewState
+    setViewState({
       target: [centerX, centerY, 0],
       zoom: Math.max(isMobile ? 0.2 : 0.5, Math.min(autoZoom, 4)),
       minZoom: isMobile ? 0.2 : 0.5,
       maxZoom: 15
-    };
+    });
+
+    // 4. Mark as initialized so we don't do this again on date change
+    initializedRef.current = true;
   }, [data]); 
 
   // --- 4. METRICS & MEMOS ---
@@ -279,8 +304,8 @@ export function MarketMap({
     data: sectorLayerData,
     getPosition: (d: SectorNode) => [d.x, d.y],
     getText: (d: SectorNode) => getSectorLabel(d.id).toUpperCase(),
-    getSize: 11, // Small, discrete size
-    getColor: [...THEME.slate, 180], // Low opacity slate (Ghost effect)
+    getSize: 11,
+    getColor: [...THEME.slate, 180], 
     getAngle: 0,
     getTextAnchor: 'middle',
     getAlignmentBaseline: 'center',
@@ -425,7 +450,8 @@ export function MarketMap({
 
         <DeckGL
             views={new OrthographicView({ controller: true })}
-            initialViewState={initialViewState}
+            viewState={viewState} // CHANGED: Now controlled
+            onViewStateChange={({ viewState }: any ) => setViewState(viewState)} // CHANGED: Update state on interaction
             controller={true}
             layers={[cellLayer, sectorTextLayer, vectorLayer, trailLayer, glowLayer, synapseLayer, dotLayer]} 
             style={{ backgroundColor: 'transparent' }} 
