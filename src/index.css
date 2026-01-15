@@ -1526,7 +1526,7 @@ input[type=range]::-moz-range-track {
     max-width: none; 
   }
 
-  /* 3. DETACH THE FILTER MENU (THE "FILTER BOX") */
+  /* 3. DETACH THE FILTER MENU */
   .header-filter-wrapper {
     position: fixed;
     top: 72px; /* Float just below the 64px header */
@@ -1550,7 +1550,7 @@ input[type=range]::-moz-range-track {
      /* Position: Next to Filter Box */
      /* Right = 16px (Filter Right) + 44px (Filter Width) + 12px (Gap) */
      top: 72px;
-     right: 72px; 
+     right: 74px; 
      left: auto;  /* Unset desktop left */
      bottom: auto; /* Unset desktop bottom */
      
