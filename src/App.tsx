@@ -93,7 +93,7 @@ function App() {
     minEnergy: 0,
     visibleSectors: new Set(), // Empty = All Visible
     showPositive: true,
-    showNeutral: true,
+    showNeutral: false,
     showNegative: true
   });
 
