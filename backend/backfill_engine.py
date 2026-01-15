@@ -24,7 +24,18 @@ MAX_WORKERS = 20
 DB_BATCH_SIZE = 200
 
 # --- MARKET UNIVERSE (S&P 500 + CORE HIGH BETA/AI/CRYPTO) ---
-TICKER_UNIVERSE = [
+
+# The "Pins" that hold the map steady. 
+# We ensure these are ALWAYS ingested so the Visualization Engine (Procrustes) has anchors.
+ANCHOR_TICKERS = [
+    "SPY", "QQQ", "IWM", "DIA",       # Indices
+    "AAPL", "MSFT", "NVDA", "GOOGL",  # Mag 7
+    "AMZN", "META", "TSLA",           # Mag 7
+    "JPM", "V", "UNH", "XOM"          # Sector Leaders
+]
+
+# Standard Universe (Manual List)
+MANUAL_TICKERS = [
     "A", "AAL", "AAPL", "ABBV", "ABNB", "ABT", "ACGL", "ACN", "ADBE", "ADI", 
     "ADM", "ADP", "ADSK", "AEE", "AEP", "AES", "AFL", "AFRM", "AGG", "AI", 
     "AIG", "AIZ", "AJG", "AKAM", "ALB", "ALGN", "ALL", "ALLE", "AMAT", "AMC", 
@@ -88,6 +99,9 @@ TICKER_UNIVERSE = [
     "XLE", "XLF", "XLI", "XLK", "XLP", "XLRE", "XLU", "XLV", "XLY", "XOM", 
     "XRAY", "XYL", "YUM", "ZBH", "ZBRA", "ZION", "ZTS"
 ]
+
+# Guarantee that ANCHOR_TICKERS are present in the final universe
+TICKER_UNIVERSE = list(set(MANUAL_TICKERS + ANCHOR_TICKERS))
 
 # --- ROBUST UTILS ---
 

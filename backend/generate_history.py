@@ -2,7 +2,7 @@ import os
 import json
 import pandas as pd
 import numpy as np
-import umap  # CHANGED: Import UMAP
+import umap
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from supabase import create_client, Client, ClientOptions
@@ -22,13 +22,22 @@ supabase: Client = create_client(
     options=opts
 )
 
-# CONFIG
+# --- CONFIGURATION ---
 HISTORY_DAYS = 90
 # UMAP Params
 N_NEIGHBORS = 30     # Controls how much local vs global structure is preserved
 MIN_DIST = 0.1       # Controls how tightly points are packed together
 METRIC = 'cosine'    # Cosine distance is usually better for embeddings
 TARGET_CANVAS_SIZE = 150 
+
+# The "Pins" that hold the map steady. 
+# Use ETFs and Mega Caps that represent the "Market Structure".
+ANCHOR_TICKERS = [
+    "SPY", "QQQ", "IWM", "DIA",       # Indices
+    "AAPL", "MSFT", "NVDA", "GOOGL",  # Mag 7
+    "AMZN", "META", "TSLA",           # Mag 7
+    "JPM", "V", "UNH", "XOM"          # Sector Leaders
+]
 
 # --- MATH UTILS ---
 
@@ -52,34 +61,52 @@ def normalize_to_bounds(matrix, target_radius=150):
 
 def align_to_reference(source_matrix, target_matrix, source_tickers, target_tickers):
     """
-    Rotates target_matrix (Today) to best fit source_matrix (Yesterday).
-    Even with UMAP init, this rigid alignment helps prevent slow rotational drift.
+    Rotates target_matrix (Today) to fit source_matrix (Yesterday),
+    BUT only uses ANCHOR_TICKERS to calculate the rotation.
+    This prevents volatile outliers (like GME) from dragging the whole map.
     """
-    common_tickers = list(set(source_tickers) & set(target_tickers))
+    # 1. Identify Common Anchors (The "Pins")
+    common_anchors = list(
+        set(source_tickers) & set(target_tickers) & set(ANCHOR_TICKERS)
+    )
     
-    if len(common_tickers) < 3:
-        return target_matrix
-
-    src_indices = [source_tickers.index(t) for t in common_tickers]
-    tgt_indices = [target_tickers.index(t) for t in common_tickers]
+    # Fallback: If we don't have enough anchors (rare), use all common tickers
+    if len(common_anchors) < 3:
+        common_anchors = list(set(source_tickers) & set(target_tickers))
     
-    A = source_matrix[src_indices]
-    B = target_matrix[tgt_indices]
+    if len(common_anchors) < 3:
+        return target_matrix # Cannot align
+        
+    # 2. Extract Coordinates for Anchors ONLY
+    src_indices = [source_tickers.index(t) for t in common_anchors]
+    tgt_indices = [target_tickers.index(t) for t in common_anchors]
+    
+    A_anchors = source_matrix[src_indices]
+    B_anchors = target_matrix[tgt_indices]
 
-    centroid_A = np.mean(A, axis=0)
-    centroid_B = np.mean(B, axis=0)
-    AA = A - centroid_A
-    BB = B - centroid_B
+    # 3. Calculate Centroids (Based on Anchors)
+    centroid_A = np.mean(A_anchors, axis=0)
+    centroid_B = np.mean(B_anchors, axis=0)
 
+    # 4. Center the Anchors
+    AA = A_anchors - centroid_A
+    BB = B_anchors - centroid_B
+
+    # 5. Compute Rotation (SVD) using only Anchors
     H = np.dot(BB.T, AA)
     U, S, Vt = np.linalg.svd(H)
     R = np.dot(Vt.T, U.T)
 
+    # Handle Reflection (Ensure strictly rotation, not mirror image)
     if np.linalg.det(R) < 0:
         Vt[1, :] *= -1
         R = np.dot(Vt.T, U.T)
 
-    return np.dot(target_matrix - centroid_B, R) + centroid_A
+    # 6. APPLY the transform to the FULL Target Matrix
+    # We shift the full matrix by the ANCHOR centroid, rotate, then shift back.
+    aligned_matrix = np.dot(target_matrix - centroid_B, R) + centroid_A
+    
+    return aligned_matrix
 
 @retry(stop=stop_after_attempt(5), wait=wait_exponential(multiplier=1, min=2, max=10))
 def fetch_daily_vectors_rpc(target_date):
@@ -118,7 +145,7 @@ def fetch_daily_vectors_rpc(target_date):
 
 # --- MAIN EXECUTION ---
 if __name__ == "__main__":
-    print(f"🚀 Starting Stabilized Walk-Forward Generation (UMAP)...")
+    print(f"🚀 Starting Stabilized Walk-Forward Generation (Anchored UMAP)...")
     
     end_date = datetime.now()
     dates = [(end_date - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(HISTORY_DAYS)]
