@@ -57,16 +57,25 @@ const THEME = {
   slate: [148, 163, 184],     
   gold: [251, 191, 36],       
   glass: [255, 255, 255],
-  darkText: [255, 255, 255, 180] 
+  darkText: [255, 255, 255, 180],
+  // Deep Violet (Structure/Anchor)
+  infrastructure: [124, 58, 237] 
 };
 
-// --- EXTRACTED CARD COMPONENT (Fixes Re-render/Drag Issue) ---
+// --- ANCHOR CONFIGURATION ---
+const ANCHOR_TICKERS = new Set([
+  "SPY", "QQQ", "IWM", "DIA", 
+  "AAPL", "MSFT", "NVDA", "GOOGL", 
+  "AMZN", "META", "TSLA", 
+  "JPM", "V", "UNH", "XOM"
+]);
+
+// --- EXTRACTED CARD COMPONENT ---
 const Card = ({ node, isInteractive, style, onMouseDown, onTouchStart, onTouchMove, onTouchEnd }: any) => (
   <div 
       style={{
           ...style, 
           position: 'absolute',
-          // CRITICAL: Tells browser NOT to scroll when dragging this element
           touchAction: 'none' 
       }}
       className={`map-tooltip-container ${isInteractive ? 'locked' : 'hover'}`}
@@ -146,37 +155,57 @@ export function MarketMap({
     setDragOffset({ x: 0, y: 0 });
   }, [selectedTicker]);
 
-  // --- 3. VIEWPORT ---
-  const initialViewState = useMemo(() => {
-    if (!data?.nodes?.length) return { target: [0, 0, 0], zoom: 1 };
+  // --- 3. VIEWPORT (Controlled State) ---
+  const [viewState, setViewState] = useState<any>({
+    target: [0, 0, 0],
+    zoom: 1,
+    minZoom: isMobile ? 0.2 : 0.5,
+    maxZoom: 15
+  });
+  
+  const initializedRef = useRef(false);
+
+  useEffect(() => {
+    if (initializedRef.current || !data?.nodes?.length) return;
+
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
     let totalEnergy = 0;
     let weightedSumX = 0;
     let weightedSumY = 0;
+
     data.nodes.forEach(n => {
         if (n.x < minX) minX = n.x; if (n.x > maxX) maxX = n.x;
         if (n.y < minY) minY = n.y; if (n.y > maxY) maxY = n.y;
+        
         const weight = n.energy + 1; 
-        weightedSumX += n.x * weight; weightedSumY += n.y * weight;
+        weightedSumX += n.x * weight; 
+        weightedSumY += n.y * weight;
         totalEnergy += weight;
     });
+
     const centerX = totalEnergy > 0 ? weightedSumX / totalEnergy : 0;
     const centerY = totalEnergy > 0 ? weightedSumY / totalEnergy : 0;
+    
     const PADDING = 100; 
     const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 1000;
     const screenHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
+    
     const dataWidth = Math.max(maxX - minX, 100); 
     const dataHeight = Math.max(maxY - minY, 100);
+    
     const scaleX = (screenWidth - PADDING) / dataWidth;
     const scaleY = (screenHeight - PADDING) / dataHeight;
     const fitScale = Math.min(scaleX, scaleY);
     const autoZoom = Math.log2(fitScale);
-    return {
+
+    setViewState({
       target: [centerX, centerY, 0],
       zoom: Math.max(isMobile ? 0.2 : 0.5, Math.min(autoZoom, 4)),
       minZoom: isMobile ? 0.2 : 0.5,
       maxZoom: 15
-    };
+    });
+
+    initializedRef.current = true;
   }, [data]); 
 
   // --- 4. METRICS & MEMOS ---
@@ -189,11 +218,12 @@ export function MarketMap({
 
   const sortedNodes = useMemo(() => {
     if (!data?.nodes) return [];
+    
     const cleanNodes = data.nodes.filter(n => {
         if (n.ticker.includes('.WS')) return false;
-        if (n.ticker.includes('p')) return false;
         return true;
     });
+
     return [...cleanNodes].sort((a, b) => {
       if (a.ticker === selectedTicker) return 1;
       const aConn = graphConnections?.some(c => c.target === a.ticker);
@@ -204,6 +234,14 @@ export function MarketMap({
     });
   }, [data, selectedTicker, graphConnections]);
 
+  const anchorNodes = useMemo(() => {
+    return sortedNodes.filter(n => ANCHOR_TICKERS.has(n.ticker));
+  }, [sortedNodes]);
+
+  const activeNodes = useMemo(() => {
+    return sortedNodes.filter(n => !ANCHOR_TICKERS.has(n.ticker));
+  }, [sortedNodes]);
+
   const trailData = useMemo(() => {
     if (isPlaying || !history || !data) return [];
     const currentIndex = history.findIndex(f => f.date === data.date);
@@ -211,7 +249,13 @@ export function MarketMap({
     const LOOKBACK_FRAMES = 5; 
     const lookback = Math.max(0, currentIndex - LOOKBACK_FRAMES);
     const recentHistory = history.slice(lookback, currentIndex + 1);
-    const activeTickers = new Set(data.nodes.filter(n => n.energy > highEnergyThreshold || n.ticker === selectedTicker).map(n => n.ticker));
+
+    const activeTickers = new Set(data.nodes.filter(n => 
+        n.energy > highEnergyThreshold || 
+        n.ticker === selectedTicker ||
+        ANCHOR_TICKERS.has(n.ticker) 
+    ).map(n => n.ticker));
+
     const pathsByTicker: Record<string, number[][]> = {};
     const dist = (p1: number[], p2: number[]) => Math.sqrt(Math.pow(p2[0] - p1[0], 2) + Math.pow(p2[1] - p1[1], 2));
     recentHistory.forEach(frame => {
@@ -235,7 +279,11 @@ export function MarketMap({
 
   const vectorData = useMemo(() => {
     if (!data?.nodes) return [];
-    return data.nodes.filter(n => n.energy > highEnergyThreshold || n.ticker === selectedTicker).map(n => ({
+    return data.nodes.filter(n => 
+        n.energy > highEnergyThreshold || 
+        n.ticker === selectedTicker ||
+        ANCHOR_TICKERS.has(n.ticker)
+    ).map(n => ({
         ticker: n.ticker, path: [[n.x, n.y], [n.x + n.vx, n.y + n.vy]], energy: n.energy, sentiment: n.sentiment
     }));
   }, [data, highEnergyThreshold, selectedTicker]);
@@ -279,8 +327,8 @@ export function MarketMap({
     data: sectorLayerData,
     getPosition: (d: SectorNode) => [d.x, d.y],
     getText: (d: SectorNode) => getSectorLabel(d.id).toUpperCase(),
-    getSize: 11, // Small, discrete size
-    getColor: [...THEME.slate, 180], // Low opacity slate (Ghost effect)
+    getSize: 11,
+    getColor: [...THEME.slate, 180], 
     getAngle: 0,
     getTextAnchor: 'middle',
     getAlignmentBaseline: 'center',
@@ -344,23 +392,76 @@ export function MarketMap({
     updateTriggers: { getRadius: [selectedTicker, graphConnections], getFillColor: [selectedTicker, graphConnections] },
   });
 
-  const dotLayer = new ScatterplotLayer({
-    id: 'market-particles', data: sortedNodes, getPosition: (d: HydratedNode) => [d.x, d.y], radiusUnits: 'common', 
-    getRadius: (d: HydratedNode) => {
-        if (d.ticker === selectedTicker) return 3.0; if (graphConnections?.some(c => c.target === d.ticker)) return 2.0; 
-        if (d.energy > highEnergyThreshold) return 1.8; return 1.2; 
-    },
+  const anchorLayer = new ScatterplotLayer({
+    id: 'market-anchors',
+    data: anchorNodes,
+    getRowId: (d: HydratedNode) => d.ticker,
+    getPosition: (d: HydratedNode) => [d.x, d.y],
+    radiusUnits: 'common',
+    // RESTORED: Size 4.0
+    getRadius: 4.0, 
+    
+    // Ghost Fill (Solid Tint)
     getFillColor: (d: HydratedNode) => {
-        if (d.ticker === selectedTicker) return [...THEME.glass, 255]; if (graphConnections?.some(c => c.target === d.ticker)) return [...THEME.gold, 255]; 
-        if (d.sentiment > 0.1) return [...THEME.mint, 200]; if (d.sentiment < -0.1) return [...THEME.red, 200]; return [...THEME.slate, 180]; 
+        if (d.ticker === selectedTicker) return [...THEME.glass, 50]; 
+        if (graphConnections?.some(c => c.target === d.ticker)) return [...THEME.gold, 50];
+
+        if (d.sentiment > 0.1) return [...THEME.mint, 80]; 
+        if (d.sentiment < -0.1) return [...THEME.red, 80]; 
+        return [0, 0, 0, 0]; 
     },
+
     stroked: true,
-    getLineWidth: (d: HydratedNode) => {
-        if (d.ticker === selectedTicker) return pulse ? 2 : 0.5; if (d.energy > highEnergyThreshold) return 0.5; return 0; 
-    },
+    getLineWidth: 0.8, 
     getLineColor: (d: HydratedNode) => {
-        if (d.ticker === selectedTicker) return [...THEME.mint, 180]; if (d.energy > highEnergyThreshold) return [...THEME.glass, 200]; return [0, 0, 0, 0];
+        if (d.ticker === selectedTicker) return [...THEME.mint, 255];
+        return [...THEME.infrastructure, 255]; 
     },
+    pickable: true,
+    autoHighlight: true, 
+    highlightColor: [...THEME.mint, 100],
+    updateTriggers: {
+        getLineColor: [selectedTicker],
+        getFillColor: [selectedTicker, graphConnections] 
+    }
+  });
+
+  const dotLayer = new ScatterplotLayer({
+    id: 'market-particles', 
+    data: activeNodes, 
+    getRowId: (d: HydratedNode) => d.ticker, 
+    getPosition: (d: HydratedNode) => [d.x, d.y], 
+    radiusUnits: 'common', 
+    
+    getRadius: (d: HydratedNode) => {
+        if (d.ticker === selectedTicker) return 3.0; 
+        if (graphConnections?.some(c => c.target === d.ticker)) return 2.0; 
+        if (d.energy > highEnergyThreshold) return 1.8; 
+        return 1.2; 
+    },
+
+    getFillColor: (d: HydratedNode) => {
+        if (d.ticker === selectedTicker) return [...THEME.glass, 255]; 
+        if (graphConnections?.some(c => c.target === d.ticker)) return [...THEME.gold, 255]; 
+        if (d.sentiment > 0.1) return [...THEME.mint, 200]; 
+        if (d.sentiment < -0.1) return [...THEME.red, 200]; 
+        return [...THEME.slate, 180]; 
+    },
+
+    stroked: true,
+
+    getLineWidth: (d: HydratedNode) => {
+        if (d.ticker === selectedTicker) return pulse ? 2 : 0.5; 
+        if (d.energy > highEnergyThreshold) return 0.5; 
+        return 0; 
+    },
+
+    getLineColor: (d: HydratedNode) => {
+        if (d.ticker === selectedTicker) return [...THEME.mint, 180]; 
+        if (d.energy > highEnergyThreshold) return [...THEME.glass, 200]; 
+        return [0, 0, 0, 0];
+    },
+
     lineWidthUnits: 'common', pickable: true, autoHighlight: true, highlightColor: [...THEME.mint, 100],
     transitions: { getLineWidth: 1000, getLineColor: 1000, getRadius: 1000 },
     updateTriggers: {
@@ -425,9 +526,10 @@ export function MarketMap({
 
         <DeckGL
             views={new OrthographicView({ controller: true })}
-            initialViewState={initialViewState}
+            viewState={viewState}
+            onViewStateChange={({ viewState }: any) => setViewState(viewState)} 
             controller={true}
-            layers={[cellLayer, sectorTextLayer, vectorLayer, trailLayer, glowLayer, synapseLayer, dotLayer]} 
+            layers={[cellLayer, sectorTextLayer, vectorLayer, trailLayer, glowLayer, synapseLayer, dotLayer, anchorLayer]} 
             style={{ backgroundColor: 'transparent' }} 
             
             onHover={(info: any) => setHoverInfo(info)}
