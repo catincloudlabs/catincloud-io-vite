@@ -217,9 +217,9 @@ export function MarketMap({
 
   const sortedNodes = useMemo(() => {
     if (!data?.nodes) return [];
+    // UPDATED: Removed the 'p' filter to ensure no tickers are accidentally hidden.
     const cleanNodes = data.nodes.filter(n => {
         if (n.ticker.includes('.WS')) return false;
-        if (n.ticker.includes('p')) return false;
         return true;
     });
     return [...cleanNodes].sort((a, b) => {
@@ -232,7 +232,6 @@ export function MarketMap({
     });
   }, [data, selectedTicker, graphConnections]);
 
-  // NEW: Split nodes into Anchors vs. Active for separate layering
   const anchorNodes = useMemo(() => {
     return sortedNodes.filter(n => ANCHOR_TICKERS.has(n.ticker));
   }, [sortedNodes]);
@@ -248,7 +247,14 @@ export function MarketMap({
     const LOOKBACK_FRAMES = 5; 
     const lookback = Math.max(0, currentIndex - LOOKBACK_FRAMES);
     const recentHistory = history.slice(lookback, currentIndex + 1);
-    const activeTickers = new Set(data.nodes.filter(n => n.energy > highEnergyThreshold || n.ticker === selectedTicker).map(n => n.ticker));
+
+    // UPDATED: Force-Include ANCHOR_TICKERS in trails, even if energy is low
+    const activeTickers = new Set(data.nodes.filter(n => 
+        n.energy > highEnergyThreshold || 
+        n.ticker === selectedTicker ||
+        ANCHOR_TICKERS.has(n.ticker) 
+    ).map(n => n.ticker));
+
     const pathsByTicker: Record<string, number[][]> = {};
     const dist = (p1: number[], p2: number[]) => Math.sqrt(Math.pow(p2[0] - p1[0], 2) + Math.pow(p2[1] - p1[1], 2));
     recentHistory.forEach(frame => {
@@ -272,7 +278,12 @@ export function MarketMap({
 
   const vectorData = useMemo(() => {
     if (!data?.nodes) return [];
-    return data.nodes.filter(n => n.energy > highEnergyThreshold || n.ticker === selectedTicker).map(n => ({
+    // UPDATED: Force-Include ANCHOR_TICKERS in vectors (tails), even if energy is low
+    return data.nodes.filter(n => 
+        n.energy > highEnergyThreshold || 
+        n.ticker === selectedTicker ||
+        ANCHOR_TICKERS.has(n.ticker)
+    ).map(n => ({
         ticker: n.ticker, path: [[n.x, n.y], [n.x + n.vx, n.y + n.vy]], energy: n.energy, sentiment: n.sentiment
     }));
   }, [data, highEnergyThreshold, selectedTicker]);
@@ -381,40 +392,32 @@ export function MarketMap({
     updateTriggers: { getRadius: [selectedTicker, graphConnections], getFillColor: [selectedTicker, graphConnections] },
   });
 
-  // NEW: Anchor Layer (No Transitions, Static Infrastructure)
   const anchorLayer = new ScatterplotLayer({
     id: 'market-anchors',
     data: anchorNodes,
-    getRowId: (d: HydratedNode) => d.ticker, // Ensure stable identity
+    getRowId: (d: HydratedNode) => d.ticker,
     getPosition: (d: HydratedNode) => [d.x, d.y],
     radiusUnits: 'common',
-    getRadius: 4.0, // Fixed Size
-    getFillColor: [0, 0, 0, 0], // Hollow
+    getRadius: 4.0, 
+    getFillColor: [0, 0, 0, 0], 
     stroked: true,
     getLineWidth: 1.5,
-    
-    // Snap color change on select (No Transition)
     getLineColor: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return [...THEME.mint, 255];
-        return [...THEME.infrastructure, 180]; // Lilac
+        return [...THEME.infrastructure, 180]; 
     },
-
     pickable: true,
     autoHighlight: true, 
     highlightColor: [...THEME.mint, 100],
-    
-    // CRITICAL: NO TRANSITIONS defined here. 
-    // They will appear instantly on load/date switch.
     updateTriggers: {
         getLineColor: [selectedTicker]
     }
   });
 
-  // UPDATED: Dot Layer (Only Active Nodes, Keeps Transitions)
   const dotLayer = new ScatterplotLayer({
     id: 'market-particles', 
-    data: activeNodes, // Only render non-anchors
-    getRowId: (d: HydratedNode) => d.ticker, // Ensure smooth interpolation
+    data: activeNodes, 
+    getRowId: (d: HydratedNode) => d.ticker, 
     getPosition: (d: HydratedNode) => [d.x, d.y], 
     radiusUnits: 'common', 
     
@@ -514,7 +517,6 @@ export function MarketMap({
             viewState={viewState}
             onViewStateChange={({ viewState }: any) => setViewState(viewState)} 
             controller={true}
-            // Add anchorLayer to the end so it renders on top
             layers={[cellLayer, sectorTextLayer, vectorLayer, trailLayer, glowLayer, synapseLayer, dotLayer, anchorLayer]} 
             style={{ backgroundColor: 'transparent' }} 
             
