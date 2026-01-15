@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import DeckGL from '@deck.gl/react';
+// 1. RE-ADDED TextLayer to imports
 import { ScatterplotLayer, PolygonLayer, PathLayer, LineLayer, TextLayer } from '@deck.gl/layers'; 
 import { PathStyleExtension } from '@deck.gl/extensions'; 
 import { OrthographicView } from '@deck.gl/core';
@@ -88,12 +89,10 @@ export function MarketMap({
     return data.nodes.find(n => n.ticker === selectedTicker) || null;
   }, [selectedTicker, data]);
 
-  // Position of the selected card (in screen coordinates)
   const [selectedPos, setSelectedPos] = useState<{x: number, y: number} | null>(null);
 
   useEffect(() => {
     if (selectedTicker && !selectedPos) {
-       // Default to center if selected externally (e.g. search)
        const cx = typeof window !== 'undefined' ? window.innerWidth / 2 : 500;
        const cy = typeof window !== 'undefined' ? window.innerHeight / 2 : 400;
        setSelectedPos({ x: cx, y: cy });
@@ -102,7 +101,6 @@ export function MarketMap({
     }
   }, [selectedTicker]);
 
-  // Dragging State
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const dragStartRef = useRef<{ x: number, y: number } | null>(null);
   const initialOffsetRef = useRef({ x: 0, y: 0 });
@@ -241,7 +239,7 @@ export function MarketMap({
 
   // --- LAYERS ----------------------------------------------------------------
 
-  // Text Layer for Sector Names (Ghost Style)
+  // 2. RE-ADDED: Text Layer for Sector Names (Ghost Style)
   const sectorTextLayer = new TextLayer({
     id: 'sector-labels',
     data: sectorLayerData,
@@ -254,6 +252,7 @@ export function MarketMap({
     getAlignmentBaseline: 'center',
     fontFamily: '"JetBrains Mono", monospace', 
     fontWeight: 700,
+    // Optimization: Don't render text if we are in high-speed playback to reduce noise
     visible: !isPlaying
   });
 
@@ -337,59 +336,10 @@ export function MarketMap({
     },
   });
 
-  // --- MOUSE HANDLERS (DESKTOP) ---
-  const handleMouseDown = (e: React.MouseEvent) => {
-    isDraggingRef.current = true;
-    dragStartRef.current = { x: e.clientX, y: e.clientY };
-    initialOffsetRef.current = { ...dragOffset };
-    document.addEventListener('mousemove', handleGlobalMouseMove);
-    document.addEventListener('mouseup', handleGlobalMouseUp);
-  };
-  const handleGlobalMouseMove = (e: MouseEvent) => {
-    if (!isDraggingRef.current || !dragStartRef.current) return;
-    setDragOffset({
-        x: initialOffsetRef.current.x + (e.clientX - dragStartRef.current.x),
-        y: initialOffsetRef.current.y + (e.clientY - dragStartRef.current.y)
-    });
-  };
-  const handleGlobalMouseUp = () => {
-    isDraggingRef.current = false;
-    dragStartRef.current = null;
-    document.removeEventListener('mousemove', handleGlobalMouseMove);
-    document.removeEventListener('mouseup', handleGlobalMouseUp);
-  };
-
-  // --- TOUCH HANDLERS (MOBILE) ---
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    dragStartRef.current = { x: touch.clientX, y: touch.clientY };
-    initialOffsetRef.current = { ...dragOffset };
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!dragStartRef.current) return;
-    const touch = e.touches[0];
-    const deltaX = touch.clientX - dragStartRef.current.x;
-    const deltaY = touch.clientY - dragStartRef.current.y;
-    setDragOffset({
-        x: initialOffsetRef.current.x + deltaX,
-        y: initialOffsetRef.current.y + deltaY
-    });
-    e.stopPropagation(); // Stop map drag
-  };
-
-  const handleTouchEnd = () => {
-    dragStartRef.current = null;
-  };
-
   // --- RENDER CARD COMPONENT ---
   const Card = ({ node, isInteractive, style, onMouseDown, onTouchStart, onTouchMove, onTouchEnd }: any) => (
     <div 
-        style={{
-            ...style, 
-            position: 'absolute',
-            touchAction: 'none' // Prevent browser scroll/zoom gestures while dragging
-        }}
+        style={{...style, position: 'absolute'}}
         className={`map-tooltip-container ${isInteractive ? 'locked' : 'hover'}`}
         onMouseDown={onMouseDown}
         onTouchStart={onTouchStart}
@@ -417,6 +367,28 @@ export function MarketMap({
     </div>
   );
 
+  // Mouse Handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    isDraggingRef.current = true;
+    dragStartRef.current = { x: e.clientX, y: e.clientY };
+    initialOffsetRef.current = { ...dragOffset };
+    document.addEventListener('mousemove', handleGlobalMouseMove);
+    document.addEventListener('mouseup', handleGlobalMouseUp);
+  };
+  const handleGlobalMouseMove = (e: MouseEvent) => {
+    if (!isDraggingRef.current || !dragStartRef.current) return;
+    setDragOffset({
+        x: initialOffsetRef.current.x + (e.clientX - dragStartRef.current.x),
+        y: initialOffsetRef.current.y + (e.clientY - dragStartRef.current.y)
+    });
+  };
+  const handleGlobalMouseUp = () => {
+    isDraggingRef.current = false;
+    dragStartRef.current = null;
+    document.removeEventListener('mousemove', handleGlobalMouseMove);
+    document.removeEventListener('mouseup', handleGlobalMouseUp);
+  };
+
   return (
     <>
         <div className="sr-only" aria-live="polite">
@@ -428,6 +400,7 @@ export function MarketMap({
             views={new OrthographicView({ controller: true })}
             initialViewState={initialViewState}
             controller={true}
+            // 3. UPDATED: Removed sectorBgLayer, Added sectorTextLayer
             layers={[cellLayer, sectorTextLayer, vectorLayer, trailLayer, glowLayer, synapseLayer, dotLayer]} 
             style={{ backgroundColor: 'transparent' }} 
             
@@ -451,9 +424,6 @@ export function MarketMap({
                 node={selectedNode}
                 isInteractive={true} 
                 onMouseDown={handleMouseDown}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
                 style={{
                     left: selectedPos.x + dragOffset.x,
                     top: selectedPos.y + dragOffset.y,
