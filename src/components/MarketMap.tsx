@@ -9,6 +9,7 @@ import { Delaunay } from 'd3-delaunay';
 import { GraphConnection } from '../hooks/useKnowledgeGraph'; 
 import { getSectorLabel } from '../utils/sectorMap';
 
+// ... (Keep existing Type Definitions: SectorNode, HydratedNode, MarketFrame) ...
 export type SectorNode = {
   id: string;
   x: number;
@@ -69,36 +70,28 @@ export function MarketMap({
   isPlaying = false 
 }: MarketMapProps) {
   
-  // --- 1. HEARTBEAT SYSTEM ---
+  // ... (Keep existing State: pulse, hoverInfo, selectedNode, dragOffset, etc.) ...
   const [pulse, setPulse] = useState(false);
   useEffect(() => {
     const interval = setInterval(() => setPulse(p => !p), 3000); 
     return () => clearInterval(interval);
   }, []);
 
-  // --- 2. INTERACTION STATE ---
-  
-  // Hover State (Transient)
   const [hoverInfo, setHoverInfo] = useState<{
     object?: HydratedNode;
     x: number;
     y: number;
   } | null>(null);
 
-  // Selected Node (Persistent Logic)
   const selectedNode = useMemo(() => {
     if (!selectedTicker || !data) return null;
     return data.nodes.find(n => n.ticker === selectedTicker) || null;
   }, [selectedTicker, data]);
 
-  // --- 3. POSITIONING STATE (FIXED) ---
-  // We need to track where on SCREEN the selected card should be.
   const [selectedPos, setSelectedPos] = useState<{x: number, y: number} | null>(null);
 
-  // If selectedTicker changes externally (e.g. from Header search), reset position to Center Screen
   useEffect(() => {
     if (selectedTicker && !selectedPos) {
-       // Default to center if we don't have a click coordinate
        const cx = typeof window !== 'undefined' ? window.innerWidth / 2 : 500;
        const cy = typeof window !== 'undefined' ? window.innerHeight / 2 : 400;
        setSelectedPos({ x: cx, y: cy });
@@ -107,18 +100,16 @@ export function MarketMap({
     }
   }, [selectedTicker]);
 
-  // --- DRAG STATE (Only for Selected Node) ---
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const dragStartRef = useRef<{ x: number, y: number } | null>(null);
   const initialOffsetRef = useRef({ x: 0, y: 0 });
   const isDraggingRef = useRef(false);
 
-  // Reset drag when switching nodes
   useEffect(() => {
     setDragOffset({ x: 0, y: 0 });
   }, [selectedTicker]);
 
-  // --- 3. VIEWPORT ---
+  // ... (Keep existing Memos: initialViewState, metrics, sortedNodes, trails, vectors, voronoi) ...
   const initialViewState = useMemo(() => {
     if (!data?.nodes?.length) return { target: [0, 0, 0], zoom: 1 };
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
@@ -151,7 +142,6 @@ export function MarketMap({
     };
   }, [data]); 
 
-  // --- 4. METRICS & MEMOS ---
   const { maxEnergy, highEnergyThreshold } = useMemo(() => {
     if (!data?.nodes || data.nodes.length === 0) return { maxEnergy: 0, highEnergyThreshold: 0 };
     const energies = data.nodes.map(n => n.energy);
@@ -232,11 +222,6 @@ export function MarketMap({
     return polygons.map((polygon: any, i: number) => ({ polygon, node: sortedNodes[i] }));
   }, [sortedNodes, isPlaying]);
 
-  const sectorLayerData = useMemo(() => {
-    if (!data?.sectors) return [];
-    return data.sectors.filter(s => s.count > 2); 
-  }, [data]);
-
   const accessibleSummary = useMemo(() => {
     if (!data?.nodes) return [];
     return [...data.nodes].sort((a, b) => b.energy - a.energy).slice(0, 5).map(n => `${n.ticker}: Energy ${n.energy.toFixed(0)}`);
@@ -244,12 +229,9 @@ export function MarketMap({
 
   if (!data) return null;
 
-  // --- LAYERS ---
-  const sectorBgLayer = new ScatterplotLayer({
-    id: 'sector-centers', data: sectorLayerData, getPosition: (d: SectorNode) => [d.x, d.y],
-    getRadius: (d: SectorNode) => Math.sqrt(d.energy) * 10 + 20, getFillColor: [0, 0, 0, 0], 
-    stroked: true, getLineColor: [...THEME.slate, 40], getLineWidth: 1, lineWidthUnits: 'pixels',
-  });
+  // --- LAYERS ----------------------------------------------------------------
+
+  // --- REMOVED: sectorBgLayer (Visual Noise) ---
 
   const cellLayer = new PolygonLayer({
     id: 'voronoi-cells', data: voronoiData, getPolygon: (d: any) => d.polygon,
@@ -331,13 +313,10 @@ export function MarketMap({
     },
   });
 
-  // --- RENDER CARD COMPONENT ---
+  // ... (Keep Card Component and Mouse Handlers same as before) ...
   const Card = ({ node, isInteractive, style, onMouseDown, onTouchStart, onTouchMove, onTouchEnd }: any) => (
     <div 
-        style={{
-            ...style,
-            position: 'absolute', // Ensure absolute pos for tracking
-        }}
+        style={{...style, position: 'absolute'}}
         className={`map-tooltip-container ${isInteractive ? 'locked' : 'hover'}`}
         onMouseDown={onMouseDown}
         onTouchStart={onTouchStart}
@@ -345,7 +324,6 @@ export function MarketMap({
         onTouchEnd={onTouchEnd}
     >
         {isInteractive && <div className="tooltip-drag-handle" />}
-        
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
             <span style={{ fontFamily: 'monospace', fontWeight: 'bold', fontSize: '1.1rem', color: `rgb(${THEME.mint.join(',')})` }}>
                 ${node.ticker}
@@ -366,7 +344,6 @@ export function MarketMap({
     </div>
   );
 
-  // --- MOUSE HANDLERS (DRAG SELECTED) ---
   const handleMouseDown = (e: React.MouseEvent) => {
     isDraggingRef.current = true;
     dragStartRef.current = { x: e.clientX, y: e.clientY };
@@ -388,7 +365,6 @@ export function MarketMap({
     document.removeEventListener('mouseup', handleGlobalMouseUp);
   };
 
-  // --- RENDER LOGIC ---
   return (
     <>
         <div className="sr-only" aria-live="polite">
@@ -400,18 +376,16 @@ export function MarketMap({
             views={new OrthographicView({ controller: true })}
             initialViewState={initialViewState}
             controller={true}
-            layers={[cellLayer, sectorBgLayer, vectorLayer, trailLayer, glowLayer, synapseLayer, dotLayer]} 
+            // --- REMOVED sectorBgLayer from this list ---
+            layers={[cellLayer, vectorLayer, trailLayer, glowLayer, synapseLayer, dotLayer]} 
             style={{ backgroundColor: 'transparent' }} 
             
             onHover={(info: any) => setHoverInfo(info)}
             getTooltip={null} 
             
-            // --- UPDATED CLICK HANDLER ---
             onClick={(info: any) => {
                 if (info.object) {
-                     // 1. CAPTURE SCREEN COORDS
                      setSelectedPos({ x: info.x, y: info.y });
-                     // 2. TRIGGER SELECTION
                      if (onNodeClick) onNodeClick(info.object);
                 } else {
                     if (onBackgroundClick) onBackgroundClick();
@@ -420,22 +394,21 @@ export function MarketMap({
             }}
         />
 
-        {/* 3. PERSISTENT CARD (SELECTED NODE) */}
+        {/* Persistent Card */}
         {selectedNode && selectedPos && (
             <Card 
                 node={selectedNode}
                 isInteractive={true} 
                 onMouseDown={handleMouseDown}
                 style={{
-                    // Use captured screen coordinates + drag offset
                     left: selectedPos.x + dragOffset.x,
                     top: selectedPos.y + dragOffset.y,
-                    transform: 'translate(-50%, -120%)' // Position it above the click point
+                    transform: 'translate(-50%, -120%)' 
                 }}
             />
         )}
 
-        {/* 4. HOVER TOOLTIP (TRANSIENT) */}
+        {/* Transient Hover Tooltip */}
         {hoverInfo?.object && hoverInfo.object.ticker !== selectedTicker && (
             <Card 
                 node={hoverInfo.object}
