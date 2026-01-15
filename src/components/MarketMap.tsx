@@ -58,8 +58,7 @@ const THEME = {
   gold: [251, 191, 36],       
   glass: [255, 255, 255],
   darkText: [255, 255, 255, 180],
-  // REVERTED: Back to Slate (Infrastructure)
-  infrastructure: [100, 116, 139] 
+  infrastructure: [192, 132, 252] // Lilac
 };
 
 // --- ANCHOR CONFIGURATION ---
@@ -399,18 +398,33 @@ export function MarketMap({
     getPosition: (d: HydratedNode) => [d.x, d.y],
     radiusUnits: 'common',
     getRadius: 4.0, 
-    getFillColor: [0, 0, 0, 0], 
+    
+    // UPDATED: "Ghost Fill" Logic
+    getFillColor: (d: HydratedNode) => {
+        // 1. Interaction (Highlight)
+        if (d.ticker === selectedTicker) return [...THEME.glass, 50]; 
+        if (graphConnections?.some(c => c.target === d.ticker)) return [...THEME.gold, 50];
+
+        // 2. Ghost Sentiment (15-20% Opacity)
+        if (d.sentiment > 0.1) return [...THEME.mint, 40]; 
+        if (d.sentiment < -0.1) return [...THEME.red, 40]; 
+        
+        // 3. Neutral is still transparent
+        return [0, 0, 0, 0]; 
+    },
+
     stroked: true,
     getLineWidth: 2.0, 
     getLineColor: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return [...THEME.mint, 255];
-        return [...THEME.infrastructure, 255]; // 255 = Solid Opacity
+        return [...THEME.infrastructure, 255]; // Solid Purple
     },
     pickable: true,
     autoHighlight: true, 
     highlightColor: [...THEME.mint, 100],
     updateTriggers: {
-        getLineColor: [selectedTicker]
+        getLineColor: [selectedTicker],
+        getFillColor: [selectedTicker, graphConnections] // Updated triggers
     }
   });
 
