@@ -8,12 +8,14 @@ from supabase import create_client, Client
 from openai import OpenAI
 from tenacity import retry, wait_random_exponential, stop_after_attempt, retry_if_exception_type
 
-# 1. SETUP
+# --- DAILY INGESTION ENGINE ---
+# Fetches fresh OHLC data and news, generates embeddings, and updates the knowledge graph.
+
 load_dotenv()
 MASSIVE_KEY = os.getenv("MASSIVE_API_KEY")
 MASSIVE_BASE_URL = "https://api.polygon.io" 
 
-# Use a Global Session for Connection Pooling (Fixes Socket Exhaustion)
+# Connection Pooling
 session = requests.Session()
 adapter = requests.adapters.HTTPAdapter(pool_connections=20, pool_maxsize=20)
 session.mount('https://', adapter)
@@ -24,23 +26,18 @@ supabase: Client = create_client(
     os.getenv("SUPABASE_SERVICE_KEY")
 )
 
-# --- CONFIGURATION ---
+# Configuration
 MAX_WORKERS = 10 
 NEWS_LOOKBACK_LIMIT = 3
-DB_BATCH_SIZE = 25 # Reduced batch size for stability
+DB_BATCH_SIZE = 25 
 
-# --- MARKET UNIVERSE ---
-
-# The "Pins" that hold the map steady. 
-# We ensure these are ALWAYS ingested so the Visualization Engine (Procrustes) has anchors.
 ANCHOR_TICKERS = [
-    "SPY", "QQQ", "IWM", "DIA",       # Indices
-    "AAPL", "MSFT", "NVDA", "GOOGL",  # Mag 7
-    "AMZN", "META", "TSLA",           # Mag 7
-    "JPM", "V", "UNH", "XOM"          # Sector Leaders
+    "SPY", "QQQ", "IWM", "DIA",       
+    "AAPL", "MSFT", "NVDA", "GOOGL",  
+    "AMZN", "META", "TSLA",           
+    "JPM", "V", "UNH", "XOM"          
 ]
 
-# Standard Universe (Manual List)
 MANUAL_TICKERS = [
     "A", "AAL", "AAPL", "ABBV", "ABNB", "ABT", "ACGL", "ACN", "ADBE", "ADI", 
     "ADM", "ADP", "ADSK", "AEE", "AEP", "AES", "AFL", "AFRM", "AGG", "AI", 
@@ -106,25 +103,35 @@ MANUAL_TICKERS = [
     "XRAY", "XYL", "YUM", "ZBH", "ZBRA", "ZION", "ZTS"
 ]
 
-# Guarantee that ANCHOR_TICKERS are present in the final universe
 TICKER_UNIVERSE = list(set(MANUAL_TICKERS + ANCHOR_TICKERS))
+
+# --- UTILS ---
 
 @retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
 def get_embedding(text):
     text = text.replace("\n", " ")
     return openai_client.embeddings.create(input=[text], model="text-embedding-3-small").data[0].embedding
 
-# --- PHASE 1: STOCK DATA ---
+def upload_stock_batch(records):
+    if not records: return
+    try:
+        supabase.table("stocks_ohlc").upsert(
+            records, 
+            on_conflict="ticker,date"
+        ).execute()
+        print(f" 💾 Stocks DB Commit: Saved {len(records)} tickers.")
+    except Exception as e:
+        print(f" ❌ Stocks DB Error: {e}")
+
+# --- PROCESSORS ---
 
 def fetch_single_stock(ticker):
-    """ Fetches OHLC data for a single stock using pooled session. """
     yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
     url = f"{MASSIVE_BASE_URL}/v1/open-close/{ticker}/{yesterday}?adjusted=true&apiKey={MASSIVE_KEY}"
     
     attempts = 0
     while attempts < 3:
         try:
-            # USE SESSION HERE
             resp = session.get(url, timeout=10)
             if resp.status_code == 429:
                 time.sleep(2)
@@ -146,23 +153,9 @@ def fetch_single_stock(ticker):
             return None
     return None
 
-def upload_stock_batch(records):
-    if not records: return
-    try:
-        supabase.table("stocks_ohlc").upsert(
-            records, 
-            on_conflict="ticker,date"
-        ).execute()
-        print(f" 💾 Stocks DB Commit: Saved {len(records)} tickers.")
-    except Exception as e:
-        print(f" ❌ Stocks DB Error: {e}")
-
-# --- PHASE 2: TARGETED NEWS DATA ---
-
 def fetch_ticker_news(ticker):
     url = f"{MASSIVE_BASE_URL}/v2/reference/news?ticker={ticker}&limit={NEWS_LOOKBACK_LIMIT}&apiKey={MASSIVE_KEY}"
     try:
-        # USE SESSION HERE
         resp = session.get(url, timeout=10)
         if resp.status_code == 200:
             return resp.json().get("results", [])
@@ -171,7 +164,6 @@ def fetch_ticker_news(ticker):
     return []
 
 def process_article_embedding(article):
-    """ Generates embedding but DOES NOT upload. Returns data for batching. """
     headline = article.get("title", "")
     description = article.get("description", "") or ""
     text_content = f"{headline}: {description}"
@@ -202,18 +194,17 @@ def process_article_embedding(article):
     except Exception as e:
         return None, []
 
-# FIX 3: Add Retry Logic to Uploads to handle 10054/10013 errors gracefully
 @retry(stop=stop_after_attempt(5), wait=wait_random_exponential(min=2, max=10))
 def upload_news_batch(vectors, edges):
     if not vectors: return
     
-    # 1. Upload Vectors
+    # Upload Vectors
     res = supabase.table("news_vectors").upsert(
         vectors, 
         on_conflict="url"
     ).execute()
     
-    # 2. Map URLs to new IDs for Edges
+    # Map URLs to new IDs for Edges
     if res.data:
         url_to_id = {item['url']: item['id'] for item in res.data}
         final_edges = []
@@ -235,13 +226,13 @@ def upload_news_batch(vectors, edges):
                 ignore_duplicates=True
             ).execute()
 
-# --- MAIN EXECUTION ---
+# --- EXECUTION ---
 
 if __name__ == "__main__":
     start_time = time.time()
     print(f"🚀 Starting Engine for {len(TICKER_UNIVERSE)} Tickers...")
     
-    # PART 1: STOCKS
+    # 1. Stocks
     print("\n📊 Phase 1: Fetching Market Physics (OHLC)...")
     valid_records = []
     
@@ -254,7 +245,7 @@ if __name__ == "__main__":
     for i in range(0, len(valid_records), DB_BATCH_SIZE):
         upload_stock_batch(valid_records[i:i + DB_BATCH_SIZE])
 
-    # PART 2: NEWS
+    # 2. News
     print("\n🧠 Phase 2: Targeted Knowledge Ingestion...")
     
     unique_articles = {} 
@@ -295,7 +286,6 @@ if __name__ == "__main__":
                 page_vectors = []
                 page_edges = []
                 
-                # FIX 4: Tiny sleep to let OS reclaim sockets
                 time.sleep(0.5)
 
         if page_vectors:
