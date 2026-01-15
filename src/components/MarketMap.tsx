@@ -9,6 +9,7 @@ import { Delaunay } from 'd3-delaunay';
 import { GraphConnection } from '../hooks/useKnowledgeGraph'; 
 import { getSectorLabel } from '../utils/sectorMap';
 
+// --- TYPES ---
 export type SectorNode = {
   id: string;
   x: number;
@@ -58,6 +59,42 @@ const THEME = {
   glass: [255, 255, 255],
   darkText: [255, 255, 255, 180] 
 };
+
+// --- EXTRACTED CARD COMPONENT (Fixes Re-render/Drag Issue) ---
+const Card = ({ node, isInteractive, style, onMouseDown, onTouchStart, onTouchMove, onTouchEnd }: any) => (
+  <div 
+      style={{
+          ...style, 
+          position: 'absolute',
+          // CRITICAL: Tells browser NOT to scroll when dragging this element
+          touchAction: 'none' 
+      }}
+      className={`map-tooltip-container ${isInteractive ? 'locked' : 'hover'}`}
+      onMouseDown={onMouseDown}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+  >
+      {isInteractive && <div className="tooltip-drag-handle" />}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+          <span style={{ fontFamily: 'monospace', fontWeight: 'bold', fontSize: '1.1rem', color: `rgb(${THEME.mint.join(',')})` }}>
+              ${node.ticker}
+          </span>
+          <span style={{ fontSize: '0.8rem', color: `rgba(${THEME.slate.join(',')}, 0.8)` }}>
+              {getSectorLabel(node.sector || "Other")}
+          </span>
+      </div>
+      <div style={{ fontSize: '0.85rem', color: '#e2e8f0', marginBottom: '8px', lineHeight: '1.4' }}>
+          {node.headline || "No active headline"}
+      </div>
+      <div style={{ display: 'flex', gap: '12px', fontSize: '0.75rem', color: `rgba(${THEME.slate.join(',')}, 0.7)` }}>
+              <span>E: <span style={{color: 'white'}}>{node.energy.toFixed(0)}</span></span>
+              <span>Sent: <span style={{color: node.sentiment > 0 ? '#34d399' : node.sentiment < 0 ? '#f87171' : 'white'}}>
+              {node.sentiment.toFixed(2)}
+              </span></span>
+      </div>
+  </div>
+);
 
 export function MarketMap({ 
   data, 
@@ -332,38 +369,7 @@ export function MarketMap({
     },
   });
 
-  // --- RENDER CARD COMPONENT ---
-  const Card = ({ node, isInteractive, style, onMouseDown, onTouchStart, onTouchMove, onTouchEnd }: any) => (
-    <div 
-        style={{...style, position: 'absolute'}}
-        className={`map-tooltip-container ${isInteractive ? 'locked' : 'hover'}`}
-        onMouseDown={onMouseDown}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-    >
-        {isInteractive && <div className="tooltip-drag-handle" />}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-            <span style={{ fontFamily: 'monospace', fontWeight: 'bold', fontSize: '1.1rem', color: `rgb(${THEME.mint.join(',')})` }}>
-                ${node.ticker}
-            </span>
-            <span style={{ fontSize: '0.8rem', color: `rgba(${THEME.slate.join(',')}, 0.8)` }}>
-                {getSectorLabel(node.sector || "Other")}
-            </span>
-        </div>
-        <div style={{ fontSize: '0.85rem', color: '#e2e8f0', marginBottom: '8px', lineHeight: '1.4' }}>
-            {node.headline || "No active headline"}
-        </div>
-        <div style={{ display: 'flex', gap: '12px', fontSize: '0.75rem', color: `rgba(${THEME.slate.join(',')}, 0.7)` }}>
-                <span>E: <span style={{color: 'white'}}>{node.energy.toFixed(0)}</span></span>
-                <span>Sent: <span style={{color: node.sentiment > 0 ? '#34d399' : node.sentiment < 0 ? '#f87171' : 'white'}}>
-                {node.sentiment.toFixed(2)}
-                </span></span>
-        </div>
-    </div>
-  );
-
-  // Mouse Handlers
+  // --- MOUSE HANDLERS ---
   const handleMouseDown = (e: React.MouseEvent) => {
     isDraggingRef.current = true;
     dragStartRef.current = { x: e.clientX, y: e.clientY };
@@ -385,7 +391,7 @@ export function MarketMap({
     document.removeEventListener('mouseup', handleGlobalMouseUp);
   };
 
-  // --- TOUCH HANDLERS (UPDATED) ---
+  // --- TOUCH HANDLERS ---
   const handleTouchStart = (e: React.TouchEvent) => {
     e.stopPropagation(); 
     isDraggingRef.current = true;
@@ -397,7 +403,6 @@ export function MarketMap({
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDraggingRef.current || !dragStartRef.current) return;
     e.stopPropagation();
-    if (e.cancelable) e.preventDefault();
     
     const touch = e.touches[0];
     setDragOffset({
