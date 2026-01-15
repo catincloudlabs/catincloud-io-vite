@@ -385,7 +385,7 @@ export function MarketMap({
     document.removeEventListener('mouseup', handleGlobalMouseUp);
   };
 
-  // --- NEW: TOUCH HANDLERS FOR MOBILE DRAG ---
+  // --- TOUCH HANDLERS FOR MOBILE DRAG ---
   const handleTouchStart = (e: React.TouchEvent) => {
     e.stopPropagation(); // Prevents map panning
     isDraggingRef.current = true;
