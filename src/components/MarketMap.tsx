@@ -58,7 +58,7 @@ const THEME = {
   gold: [251, 191, 36],       
   glass: [255, 255, 255],
   darkText: [255, 255, 255, 180],
-  // UPDATED: Deep Violet (Structure/Anchor)
+  // Deep Violet (Structure/Anchor)
   infrastructure: [124, 58, 237] 
 };
 
@@ -398,23 +398,24 @@ export function MarketMap({
     getRowId: (d: HydratedNode) => d.ticker,
     getPosition: (d: HydratedNode) => [d.x, d.y],
     radiusUnits: 'common',
-    getRadius: 4.0, 
+    // UPDATED: Radius reduced to 3.0 (from 4.0) to be less "loud"
+    getRadius: 3.0, 
     
-    // "Ghost Fill" Logic: Faint sentiment inside, transparent neutral
+    // UPDATED: Tint Opacity increased to 80 (approx 30%)
     getFillColor: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return [...THEME.glass, 50]; 
         if (graphConnections?.some(c => c.target === d.ticker)) return [...THEME.gold, 50];
 
-        if (d.sentiment > 0.1) return [...THEME.mint, 40]; // Faint Green
-        if (d.sentiment < -0.1) return [...THEME.red, 40]; // Faint Red
-        return [0, 0, 0, 0]; // Transparent Neutral
+        if (d.sentiment > 0.1) return [...THEME.mint, 80]; // Stronger tint
+        if (d.sentiment < -0.1) return [...THEME.red, 80]; // Stronger tint
+        return [0, 0, 0, 0]; 
     },
 
     stroked: true,
     getLineWidth: 2.0, 
     getLineColor: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return [...THEME.mint, 255];
-        return [...THEME.infrastructure, 255]; // Deep Violet Solid Border
+        return [...THEME.infrastructure, 255]; // Deep Violet
     },
     pickable: true,
     autoHighlight: true, 
