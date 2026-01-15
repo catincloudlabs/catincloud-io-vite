@@ -1,6 +1,8 @@
+// src/components/Header.tsx
 import React, { useState, useRef, useEffect } from 'react';
 // @ts-ignore
 import { Clock, Network, User, ChevronDown, Search, Check, X } from 'lucide-react';
+import FilterMenu, { FilterState } from './FilterMenu';
 
 interface HeaderProps {
   dateLabel: string;
@@ -9,6 +11,11 @@ interface HeaderProps {
   selectedTicker: string | null;
   onSelectTicker: (ticker: string | null) => void;
   watchlist: string[];
+  
+  // --- NEW PROPS FOR FILTERING ---
+  availableSectors: string[];
+  filters: FilterState;
+  setFilters: React.Dispatch<React.SetStateAction<FilterState>>;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
@@ -17,12 +24,16 @@ const Header: React.FC<HeaderProps> = ({
   onOpenBio, 
   selectedTicker, 
   onSelectTicker, 
-  watchlist 
+  watchlist,
+  // Destructure new props
+  availableSectors,
+  filters,
+  setFilters
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [search, setSearch] = useState(""); // 1. New Search State
+  const [search, setSearch] = useState(""); 
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null); // 2. Ref for auto-focus
+  const searchInputRef = useRef<HTMLInputElement>(null); 
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -35,18 +46,16 @@ const Header: React.FC<HeaderProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // 3. Auto-focus search input when opened & Reset search when closed
+  // Auto-focus search input when opened
   useEffect(() => {
     if (isOpen) {
-      // Small timeout ensures the element is rendered before focusing
       setTimeout(() => searchInputRef.current?.focus(), 50);
     } else {
-      // Optional: Clear search when closed (remove if you want to persist)
       setTimeout(() => setSearch(""), 200); 
     }
   }, [isOpen]);
 
-  // 4. Filter Logic
+  // Filter Logic for Watchlist
   const filteredWatchlist = watchlist.filter(t => 
     t.toLowerCase().includes(search.toLowerCase())
   );
@@ -92,7 +101,7 @@ const Header: React.FC<HeaderProps> = ({
           {isOpen && (
              <div className="custom-ticker-dropdown" onClick={(e) => e.stopPropagation()}>
                 
-                {/* 5. SEARCH BAR AREA */}
+                {/* SEARCH BAR AREA */}
                 <div className="dropdown-search-wrapper">
                     <input
                         ref={searchInputRef}
@@ -101,7 +110,6 @@ const Header: React.FC<HeaderProps> = ({
                         placeholder="Search..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        // Prevent dropdown close when clicking input
                         onClick={(e) => e.stopPropagation()} 
                     />
                     {search && (
@@ -115,7 +123,7 @@ const Header: React.FC<HeaderProps> = ({
                 </div>
 
                 <div className="dropdown-scroll-area">
-                  {/* Reset Option (Only show if not searching or if explicitly wanted) */}
+                  {/* Reset Option */}
                   {!search && (
                       <div 
                         className="dropdown-item reset-item"
@@ -125,7 +133,7 @@ const Header: React.FC<HeaderProps> = ({
                       </div>
                   )}
 
-                  {/* 6. RENDER FILTERED LIST */}
+                  {/* RENDER FILTERED LIST */}
                   {filteredWatchlist.length > 0 ? (
                     filteredWatchlist.map(t => (
                         <div 
@@ -151,6 +159,17 @@ const Header: React.FC<HeaderProps> = ({
       
       {/* RIGHT: META CONTROLS */}
       <div className="header-right">
+        
+        {/* --- 1. FILTER MENU --- */}
+        <FilterMenu 
+            availableSectors={availableSectors}
+            filters={filters}
+            setFilters={setFilters}
+        />
+
+        {/* Small Divider between Filters and System/Bio */}
+        <div className="v-divider" style={{ height: 20, margin: '0 8px' }}></div>
+
         <button 
           onClick={onOpenArch} 
           className="header-icon-btn" 
