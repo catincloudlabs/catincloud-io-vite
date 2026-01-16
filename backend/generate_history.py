@@ -57,7 +57,7 @@ def normalize_to_bounds(matrix, target_radius=150):
     return centered * scale_factor
 
 def align_to_reference(source_matrix, target_matrix, source_tickers, target_tickers):
-    # Identify Common Anchors
+    # Identify Common anchors
     common_anchors = list(
         set(source_tickers) & set(target_tickers) & set(ANCHOR_TICKERS)
     )
@@ -68,7 +68,7 @@ def align_to_reference(source_matrix, target_matrix, source_tickers, target_tick
     if len(common_anchors) < 3:
         return target_matrix
         
-    # Extract Coordinates for Anchors
+    # Extract Coordinates for anchors
     src_indices = [source_tickers.index(t) for t in common_anchors]
     tgt_indices = [target_tickers.index(t) for t in common_anchors]
     
