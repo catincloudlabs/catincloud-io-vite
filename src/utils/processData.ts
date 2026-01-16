@@ -1,4 +1,3 @@
-// src/utils/processData.ts
 import { getSectorForTicker } from './sectorMap';
 
 // --- CONFIGURATION ---

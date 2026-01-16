@@ -86,12 +86,12 @@ def align_to_reference(source_matrix, target_matrix, source_tickers, target_tick
     # 5. Compute Rotation (SVD) anchors
     H = np.dot(BB.T, AA)
     U, S, Vt = np.linalg.svd(H)
-    R = np.dot(Vt.T, U.T)
+    R = np.dot(U, Vt)
 
     # Handle reflection (ensure strictly rotation, not mirror image)
     if np.linalg.det(R) < 0:
         Vt[1, :] *= -1
-        R = np.dot(Vt.T, U.T)
+        R = np.dot(U, Vt)
 
     # Shift the full matrix by the anchor centroid, rotate, then shift back
     aligned_matrix = np.dot(target_matrix - centroid_B, R) + centroid_A
