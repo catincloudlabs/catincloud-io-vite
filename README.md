@@ -4,7 +4,7 @@
 
 The application features a semantic Knowledge Graph, a timeline playback engine, and an AI "Oracle" that interprets market movements using natural language.
 
-## 🚀 Live Demo
+## 🐯 Live Demo
 
 Visit [catincloud.io](https://catincloud.io)
 
