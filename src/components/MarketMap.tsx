@@ -73,10 +73,11 @@ const Card = ({ node, isInteractive, style, onMouseDown, onTouchStart, onTouchMo
       style={style}
       className={`map-tooltip-container ${isInteractive ? 'locked' : 'hover'}`}
       onMouseDown={onMouseDown}
-      onTouchStart={onTouchStart}
+      onTouchStart={handleCardTouchStart(onTouchStart)}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
-      onClick={(e) => e.stopPropagation()} // Stop propagation to prevent map deselection
+      // SAFETY: Stop clicks on the card from bubbling to the map
+      onClick={(e) => e.stopPropagation()} 
   >
       {isInteractive && <div className="tooltip-drag-handle" />}
       
@@ -101,6 +102,12 @@ const Card = ({ node, isInteractive, style, onMouseDown, onTouchStart, onTouchMo
       </div>
   </div>
 );
+
+// Wrapper to ensure touch start always stops propagation
+const handleCardTouchStart = (originalHandler: any) => (e: React.TouchEvent) => {
+  e.stopPropagation();
+  if (originalHandler) originalHandler(e);
+};
 
 export function MarketMap({ 
   data, 
@@ -471,7 +478,6 @@ export function MarketMap({
 
   // --- MOUSE HANDLERS ---
   const handleMouseDown = (e: React.MouseEvent) => {
-    // STOP PROPAGATION: Prevents dragging logic from bubbling up to parents causing issues on some mobile browsers
     e.stopPropagation();
     isDraggingRef.current = true;
     dragStartRef.current = { x: e.clientX, y: e.clientY };
@@ -537,16 +543,15 @@ export function MarketMap({
             getTooltip={null} 
             
             onClick={(info: any) => {
+                const now = Date.now();
                 if (info.object) {
                      // RECORD TIMESTAMP: Marks a deliberate user selection
-                     lastSelectionTimeRef.current = Date.now();
+                     lastSelectionTimeRef.current = now;
                      setSelectedPos({ x: info.x, y: info.y });
                      if (onNodeClick) onNodeClick(info.object);
                 } else {
-                    // TIME GATE: Only deselect if enough time has passed since the last selection
-                    // This ignores "ghost clicks" that fire ~300ms after a tap on mobile
-                    const timeSinceSelection = Date.now() - lastSelectionTimeRef.current;
-                    if (timeSinceSelection > 500) { 
+                    // Protect against late ghost clicks or accidental touches 
+                    if (now - lastSelectionTimeRef.current > 2000) { 
                         if (onBackgroundClick) onBackgroundClick();
                         setSelectedPos(null);
                     }
