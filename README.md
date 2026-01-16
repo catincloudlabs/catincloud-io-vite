@@ -1,6 +1,6 @@
 # catincloud.io - Market Physics Terminal
 
-**catincloud.io** is a Single Page Application (SPA) that reimagines stock market data as a particle physics simulation. Built with React, Vite, and Deck.gl, it visualizes financial assets as physical bodies where trade volume becomes "Energy" and price momentum becomes "Velocity."
+**catincloud.io** is a Single Page Application (SPA) that reimagines stock market data as a particle physics simulation. Built with React, Vite, and Deck.gl, it visualizes financial assets as physical bodies where a combination of trade volume and news sentiment becomes "Energy" and price momentum becomes "Velocity."
 
 The application features a semantic Knowledge Graph, a timeline playback engine, and an AI "Oracle" that interprets market movements using natural language.
 
