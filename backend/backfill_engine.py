@@ -19,7 +19,7 @@ POLYGON_BASE_URL = "https://api.polygon.io"
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 supabase: Client = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SERVICE_KEY"))
 
-# Configuration: Target Regime
+# Configuration
 START_DATE = "2025-10-15"
 END_DATE = datetime.now().strftime('%Y-%m-%d')
 MAX_WORKERS = 20 
@@ -100,7 +100,7 @@ MANUAL_TICKERS = [
 
 TICKER_UNIVERSE = list(set(MANUAL_TICKERS + ANCHOR_TICKERS))
 
-# --- UTILS ---
+# --- ROBUST UTILS ---
 
 @retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
 def get_embedding(text):
@@ -122,7 +122,7 @@ def upload_stock_batch(records):
 def upload_news_batch(vectors, edges):
     if not vectors: return
     try:
-        # Upload Vectors
+        # Upload vectors
         res = supabase.table("news_vectors").upsert(
             vectors, 
             on_conflict="url"

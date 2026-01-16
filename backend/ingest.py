@@ -105,8 +105,6 @@ MANUAL_TICKERS = [
 
 TICKER_UNIVERSE = list(set(MANUAL_TICKERS + ANCHOR_TICKERS))
 
-# --- UTILS ---
-
 @retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
 def get_embedding(text):
     text = text.replace("\n", " ")
@@ -194,17 +192,18 @@ def process_article_embedding(article):
     except Exception as e:
         return None, []
 
+# Retry logic
 @retry(stop=stop_after_attempt(5), wait=wait_random_exponential(min=2, max=10))
 def upload_news_batch(vectors, edges):
     if not vectors: return
     
-    # Upload Vectors
+    # Upload vectors
     res = supabase.table("news_vectors").upsert(
         vectors, 
         on_conflict="url"
     ).execute()
     
-    # Map URLs to new IDs for Edges
+    # Map URLs to new IDs for edges
     if res.data:
         url_to_id = {item['url']: item['id'] for item in res.data}
         final_edges = []

@@ -42,14 +42,17 @@ ANCHOR_TICKERS = [
 # --- MATH UTILS ---
 
 def normalize_to_bounds(matrix, target_radius=150):
+    # Center the data at (0,0)
     centroid = np.mean(matrix, axis=0)
     centered = matrix - centroid
     
+    # Find the current max distance from center (95th percentile to ignore outliers)
     distances = np.linalg.norm(centered, axis=1)
     current_radius = np.percentile(distances, 95)
     
-    if current_radius == 0: return matrix 
+    if current_radius == 0: return matrix # Safety check
 
+    # Scale it up/down to match target_radius
     scale_factor = target_radius / current_radius
     return centered * scale_factor
 
@@ -63,29 +66,34 @@ def align_to_reference(source_matrix, target_matrix, source_tickers, target_tick
         common_anchors = list(set(source_tickers) & set(target_tickers))
     
     if len(common_anchors) < 3:
-        return target_matrix 
+        return target_matrix
         
+    # Extract Coordinates for Anchors
     src_indices = [source_tickers.index(t) for t in common_anchors]
     tgt_indices = [target_tickers.index(t) for t in common_anchors]
     
     A_anchors = source_matrix[src_indices]
     B_anchors = target_matrix[tgt_indices]
 
+    # 3. Calculate centroids based on anchors
     centroid_A = np.mean(A_anchors, axis=0)
     centroid_B = np.mean(B_anchors, axis=0)
 
+    # 4. Center anchors
     AA = A_anchors - centroid_A
     BB = B_anchors - centroid_B
 
-    # Procrustes Rotation (SVD)
+    # 5. Compute Rotation (SVD) anchors
     H = np.dot(BB.T, AA)
     U, S, Vt = np.linalg.svd(H)
     R = np.dot(Vt.T, U.T)
 
+    # Handle reflection (ensure strictly rotation, not mirror image)
     if np.linalg.det(R) < 0:
         Vt[1, :] *= -1
         R = np.dot(Vt.T, U.T)
 
+    # Shift the full matrix by the anchor centroid, rotate, then shift back
     aligned_matrix = np.dot(target_matrix - centroid_B, R) + centroid_A
     
     return aligned_matrix
@@ -165,12 +173,14 @@ if __name__ == "__main__":
             prev_map = {t: pos for t, pos in zip(prev_tickers, prev_matrix)}
             init_build = []
             
+            # Calculate the mean position to use as a fallback for new tickers
             default_pos = np.mean(prev_matrix, axis=0) 
             
             for t in current_tickers:
                 if t in prev_map:
                     init_build.append(prev_map[t])
                 else:
+                    # Add a tiny bit of noise to the center so they don't stack perfectly
                     jitter = np.random.normal(0, 1, 2)
                     init_build.append(default_pos + jitter)
                     
@@ -190,7 +200,7 @@ if __name__ == "__main__":
         embeddings_raw = reducer.fit_transform(current_matrix)
         embeddings_scaled = normalize_to_bounds(embeddings_raw, TARGET_CANVAS_SIZE)
 
-        # Alignment
+        # Procrustes alignment
         if prev_matrix is not None:
             embeddings_stabilized = align_to_reference(
                 source_matrix=prev_matrix, 
@@ -201,7 +211,7 @@ if __name__ == "__main__":
         else:
             embeddings_stabilized = embeddings_scaled
             
-        # Record Frame
+        # Save
         for i, row in df.iterrows():
             ticker = row['ticker']
             x, y = embeddings_stabilized[i]
