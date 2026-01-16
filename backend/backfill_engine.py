@@ -2,13 +2,16 @@ import os
 import requests
 import time
 import concurrent.futures
-from datetime import datetime, timedelta
+from datetime import datetime
 from dotenv import load_dotenv
 from supabase import create_client, Client
 from openai import OpenAI
 from tenacity import retry, wait_random_exponential, stop_after_attempt
 
-# 1. SETUP
+# --- BACKFILL ORCHESTRATOR ---
+# Bulk processor for historical OHLC data and news archives.
+# Populates the initial database state for the targeted regime.
+
 load_dotenv()
 MASSIVE_KEY = os.getenv("MASSIVE_API_KEY")
 POLYGON_BASE_URL = "https://api.polygon.io" 
@@ -16,25 +19,20 @@ POLYGON_BASE_URL = "https://api.polygon.io"
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 supabase: Client = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SERVICE_KEY"))
 
-# --- CONFIGURATION: TARGETED REGIME ---
-# "The AI Catalyst Window"
+# Configuration
 START_DATE = "2025-10-15"
 END_DATE = datetime.now().strftime('%Y-%m-%d')
 MAX_WORKERS = 20 
 DB_BATCH_SIZE = 200
 
-# --- MARKET UNIVERSE (S&P 500 + CORE HIGH BETA/AI/CRYPTO) ---
-
-# The "Pins" that hold the map steady. 
-# We ensure these are ALWAYS ingested so the Visualization Engine (Procrustes) has anchors.
+# Market Universe (S&P 500 + Core High Beta/AI/Crypto)
 ANCHOR_TICKERS = [
-    "SPY", "QQQ", "IWM", "DIA",       # Indices
-    "AAPL", "MSFT", "NVDA", "GOOGL",  # Mag 7
-    "AMZN", "META", "TSLA",           # Mag 7
-    "JPM", "V", "UNH", "XOM"          # Sector Leaders
+    "SPY", "QQQ", "IWM", "DIA",       
+    "AAPL", "MSFT", "NVDA", "GOOGL",  
+    "AMZN", "META", "TSLA",           
+    "JPM", "V", "UNH", "XOM"          
 ]
 
-# Standard Universe (Manual List)
 MANUAL_TICKERS = [
     "A", "AAL", "AAPL", "ABBV", "ABNB", "ABT", "ACGL", "ACN", "ADBE", "ADI", 
     "ADM", "ADP", "ADSK", "AEE", "AEP", "AES", "AFL", "AFRM", "AGG", "AI", 
@@ -100,7 +98,6 @@ MANUAL_TICKERS = [
     "XRAY", "XYL", "YUM", "ZBH", "ZBRA", "ZION", "ZTS"
 ]
 
-# Guarantee that ANCHOR_TICKERS are present in the final universe
 TICKER_UNIVERSE = list(set(MANUAL_TICKERS + ANCHOR_TICKERS))
 
 # --- ROBUST UTILS ---
@@ -123,16 +120,15 @@ def upload_stock_batch(records):
         print(f" ❌ DB Error (Batch Skipped): {str(e)[:100]}...")
 
 def upload_news_batch(vectors, edges):
-    """ Helper to atomically upload a batch of news """
     if not vectors: return
     try:
-        # 1. Upload Vectors (Must happen first to get IDs)
+        # Upload vectors
         res = supabase.table("news_vectors").upsert(
             vectors, 
             on_conflict="url"
         ).execute()
         
-        # 2. Map new IDs to edges
+        # Map new IDs to edges
         if res.data:
             url_to_id = {item['url']: item['id'] for item in res.data}
             
@@ -158,11 +154,10 @@ def upload_news_batch(vectors, edges):
     except Exception as e:
         print(f" ❌ News Upload Error: {str(e)[:100]}")
 
-# --- PART 1: OPTIMIZED STOCK HISTORY ---
+# --- PROCESSORS ---
 
 @retry(stop=stop_after_attempt(5), wait=wait_random_exponential(min=1, max=10))
 def fetch_ticker_history(ticker):
-    # UPDATED: Use hardcoded dates instead of relative math
     url = f"{POLYGON_BASE_URL}/v2/aggs/ticker/{ticker}/range/1/day/{START_DATE}/{END_DATE}?adjusted=true&sort=asc&apiKey={MASSIVE_KEY}"
     
     resp = requests.get(url, timeout=15)
@@ -190,10 +185,7 @@ def fetch_ticker_history(ticker):
         })
     return records
 
-# --- PART 2: PARALLELIZED NEWS ARCHIVE ---
-
 def process_single_article(article):
-    """ Worker function to process one article independently """
     headline = article.get("title", "")
     description = article.get("description", "") or ""
     text_content = f"{headline}: {description}"
@@ -228,7 +220,6 @@ def process_single_article(article):
 def backfill_news():
     print(f"\n📰 Starting Parallel News Backfill ({START_DATE} to {END_DATE})...")
     
-    # UPDATED: Use both .gte (start) and .lte (end) to bound the regime
     url = f"{POLYGON_BASE_URL}/v2/reference/news?published_utc.gte={START_DATE}&published_utc.lte={END_DATE}&limit=1000&sort=published_utc&order=desc&apiKey={MASSIVE_KEY}"
     
     total_processed = 0
@@ -282,7 +273,7 @@ def backfill_news():
 if __name__ == "__main__":
     start_time = time.time()
     
-    # 1. STOCKS
+    # 1. Stocks
     print(f"🚀 Backfilling STOCKS for {len(TICKER_UNIVERSE)} tickers...")
     all_stock_records = []
     
@@ -303,7 +294,7 @@ if __name__ == "__main__":
         batch = all_stock_records[i:i + DB_BATCH_SIZE]
         upload_stock_batch(batch)
     
-    # 2. NEWS
+    # 2. News
     backfill_news()
     
     print(f"\n✨ BACKFILL COMPLETE in {time.time() - start_time:.2f}s")

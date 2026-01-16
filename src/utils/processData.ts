@@ -3,9 +3,7 @@ import { getSectorForTicker } from './sectorMap';
 
 // --- CONFIGURATION ---
 const TARGET_WORLD_SIZE = 800; 
-// ---------------------
 
-// 1. Define Types
 export type SectorNode = {
   id: string;       // e.g., "Technology"
   x: number;        // Weighted Center X
@@ -45,9 +43,8 @@ export type DailyFrame = {
   nodeMap: Map<string, HydratedNode>;
 };
 
-// --- HELPER: SECTOR MATH (FIXED) ---
+// --- HELPER: SECTOR MATH ---
 function calculateSectorDynamics(nodes: HydratedNode[]): SectorNode[] {
-  // Accumulator Structure
   type SectorAccumulator = {
     sumX: number;
     sumY: number;
@@ -75,30 +72,26 @@ function calculateSectorDynamics(nodes: HydratedNode[]): SectorNode[] {
 
     const s = sectors[sectorName];
     
-    // 1. Define Weight
-    // We clamp minimum weight to 0.2 so even quiet stocks contribute slightly to the center.
-    // This prevents the sector from "snapping" wildly to a single active stock.
+    // Clamp minimum weight to prevent jitter on low-energy days
     const weight = Math.max(node.energy, 0.2);
 
-    // 2. Accumulate Weighted Numerators
+    // Accumulate weighted numerators
     s.sumX += node.x * weight;
     s.sumY += node.y * weight;
     s.sumVx += node.vx * weight;
     s.sumVy += node.vy * weight;
 
-    // 3. Accumulate Denominator
+    // Accumulate denominator
     s.totalWeight += weight;
     
-    // 4. Track Raw Stats
+    // Track raw stats
     s.totalEnergy += node.energy;
     s.count++;
   });
 
-  // 5. Normalize (Calculate Averages)
+  // Normalize (calculate averages)
   return Object.keys(sectors).map(key => {
     const s = sectors[key];
-    
-    // Safety check to avoid division by zero
     const normalizationFactor = s.totalWeight > 0 ? s.totalWeight : 1;
     
     return {
@@ -116,11 +109,10 @@ function calculateSectorDynamics(nodes: HydratedNode[]): SectorNode[] {
   });
 }
 
-// 2. Main Processing Function
+// Main: Hydration Pipeline
 export function hydrateMarketData(rawData: RawDataPoint[]): DailyFrame[] {
   
-  // --- A. AUTO-SCALING ---
-  // (Identifies the bounds of the raw coordinate system to map it to our canvas size)
+  // 1. Auto-Scale Calculation
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
   
   rawData.forEach(p => {
@@ -138,13 +130,13 @@ export function hydrateMarketData(rawData: RawDataPoint[]): DailyFrame[] {
   const rawCenterX = (minX + maxX) / 2;
   const rawCenterY = (minY + maxY) / 2;
 
-  // --- B. GROUPING ---
+  // 2. Group By Date
   const grouped: Record<string, RawDataPoint[]> = {};
   rawData.forEach(item => {
     if (typeof item.x !== 'number' || typeof item.y !== 'number') return;
     if (!grouped[item.date]) grouped[item.date] = [];
     
-    // Scale & Center here
+    // scale and center
     grouped[item.date].push({
         ...item,
         x: (item.x - rawCenterX) * scaleFactor,
@@ -152,7 +144,7 @@ export function hydrateMarketData(rawData: RawDataPoint[]): DailyFrame[] {
     });
   });
 
-  // --- C. FRAME BUILDING ---
+  // 3. Frame Construction & Physics
   const sortedDates = Object.keys(grouped).sort();
 
   return sortedDates.map((date, index) => {
@@ -169,7 +161,7 @@ export function hydrateMarketData(rawData: RawDataPoint[]): DailyFrame[] {
       const vx = nextState ? nextState.x - stock.x : 0;
       const vy = nextState ? nextState.y - stock.y : 0;
       
-      // Calculate Energy (Kinetic + Sentiment)
+      // Calculate Energy (kinetic + sentiment)
       const energy = (Math.abs(vx) + Math.abs(vy)) * (1 + Math.abs(stock.sentiment));
       
       // Look up the sector using utility
@@ -187,7 +179,6 @@ export function hydrateMarketData(rawData: RawDataPoint[]): DailyFrame[] {
       };
     });
 
-    // --- NEW: Calculate Sectors using corrected Weighted Centroid Logic ---
     const sectors = calculateSectorDynamics(nodes);
 
     const nodeMap = new Map<string, HydratedNode>();

@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { MarketFrame } from './MarketMap';
 import { GraphConnection } from '../hooks/useKnowledgeGraph';
 import { useAgentOracle } from '../hooks/useAgentOracle';
-// @ts-ignore
 import { Minus, Plus, Loader2, SendHorizontal, Sparkles, Activity } from 'lucide-react';
 
 interface AgentPanelProps {
@@ -12,7 +11,7 @@ interface AgentPanelProps {
   isLoading?: boolean;
 }
 
-// --- CONTEXT GENERATOR ---
+/* --- CONTEXT ENGINE --- */
 const getSystemContext = (
   ticker: string, 
   currentFrame: MarketFrame, 
@@ -43,7 +42,7 @@ const getSystemContext = (
 
 const formatMessage = (text: string) => {
   return text.split('\n').map((line, lineIdx) => {
-    if (!line.trim()) return <div key={lineIdx} style={{ height: '8px' }} />;
+    if (!line.trim()) return <div key={lineIdx} className="msg-spacer" />;
 
     const parts = line.split(/(\*\*.*?\*\*)/g);
     const formattedLine = parts.map((part, partIdx) => {
@@ -60,7 +59,6 @@ const formatMessage = (text: string) => {
 const TypewriterMessage = ({ text, type, onTyping }: { text: string, type: string, onTyping: () => void }) => {
   const [displayedText, setDisplayedText] = useState("");
   const [isComplete, setIsComplete] = useState(false);
-  
   const shouldAnimate = type === 'agent';
 
   useEffect(() => {
@@ -116,18 +114,14 @@ export function AgentPanel({
     if (isExpanded) scrollToBottom();
   }, [messages.length, isExpanded]);
 
-  // --- TRIGGER: When Ticker Changes ---
+  /* TRACKING LOGIC */
   useEffect(() => {
     if (!selectedTicker || !currentFrame || isLoading) return;
     if (lastTickerRef.current === selectedTicker) return;
 
     addSystemMessage(`Tracking **${selectedTicker}**. Data loaded for ${currentFrame.date}.`);
-    
     lastTickerRef.current = selectedTicker;
 
-    // UPDATE: Only auto-expand on Desktop (>768px).
-    // On mobile, the panel stays collapsed to keep the map visible,
-    // but the 'agent-terminal-active' class (handled in render) will still trigger the glow.
     if (typeof window !== 'undefined' && window.innerWidth > 768) {
       setIsExpanded(true);
     }
@@ -166,7 +160,6 @@ export function AgentPanel({
         { label: "Market Physics", prompt: `Explain the visual physics of ${selectedTicker}.`, mode: 'physicist' }
       ];
     }
-    
     return [
       { label: "Market Status", prompt: "Summarize the current market state." },
       { label: "Market Physics", prompt: "Explain the physics model of this simulation.", mode: 'physicist' },
@@ -175,7 +168,6 @@ export function AgentPanel({
   };
 
   if (!currentFrame) return null;
-
   const isBusy = isLoading || isAiLoading;
 
   return (
@@ -184,7 +176,6 @@ export function AgentPanel({
       role="region"
       aria-label="AI Market Agent"
     >
-      
       {/* HEADER */}
       <div 
         className="terminal-header" 
@@ -241,13 +232,11 @@ export function AgentPanel({
                     <span>Analyzing market data...</span>
                  </div>
             )}
-            
             <div ref={chatEndRef} />
           </div>
 
           {/* INPUT AREA */}
           <div className="terminal-input-area">
-            
             <div className="chips-row" role="group" aria-label="Suggested Queries">
                 <Sparkles size={12} color="var(--accent-green)" className="suggestion-icon" aria-hidden="true" />
                 {getSuggestions().map((chip, idx) => (

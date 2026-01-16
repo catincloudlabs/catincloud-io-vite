@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-// @ts-ignore
-import { Sliders, Check, X, Zap, Activity, Layers } from 'lucide-react';
+import { Sliders, Check, Zap, Activity, Layers } from 'lucide-react';
 
 export interface FilterState {
   minEnergy: number;
@@ -51,7 +50,7 @@ const FilterMenu: React.FC<FilterMenuProps> = ({
     setFilters(prev => ({ ...prev, visibleSectors: new Set() }));
   };
 
-  // Helper to determine if we are in "Filtering Mode" (icon glow)
+  // Helper: Visual active state
   const isActive = filters.minEnergy > 0 || 
                    filters.visibleSectors.size > 0 || 
                    !filters.showPositive || 
@@ -61,7 +60,7 @@ const FilterMenu: React.FC<FilterMenuProps> = ({
   return (
     <div className="filter-menu-container" ref={menuRef}>
       
-      {/* 1. TOGGLE BUTTON */}
+      {/* TOGGLE BUTTON */}
       <button 
         onClick={() => setIsOpen(!isOpen)} 
         className={`header-icon-btn ${isActive ? 'active-filter' : ''}`}
@@ -71,15 +70,15 @@ const FilterMenu: React.FC<FilterMenuProps> = ({
         <Sliders size={16} />
       </button>
 
-      {/* 2. POPOVER MENU */}
+      {/* POPOVER MENU */}
       {isOpen && (
         <div className="filter-popover">
           
-          {/* A. SIGNAL STRENGTH */}
+          {/* SECTION: Signal Strength */}
           <div className="filter-section">
             <div className="filter-label-row">
               <div className="filter-title">
-                <Zap size={12} color="var(--accent-ai)" style={{marginRight: 6}}/>
+                <Zap size={12} color="var(--accent-ai)" className="filter-icon"/>
                 <span>SIGNAL STRENGTH</span>
               </div>
               <span className="filter-value">{filters.minEnergy}%</span>
@@ -100,10 +99,10 @@ const FilterMenu: React.FC<FilterMenuProps> = ({
 
           <div className="filter-divider" />
 
-          {/* B. SENTIMENT POLARITY */}
+          {/* SECTION: Sentiment Polarity */}
           <div className="filter-section">
              <div className="filter-title">
-                <Activity size={12} color="var(--accent-green)" style={{marginRight: 6}}/>
+                <Activity size={12} color="var(--accent-green)" className="filter-icon"/>
                 <span>SENTIMENT POLARITY</span>
              </div>
              <div className="sentiment-toggles">
@@ -133,11 +132,11 @@ const FilterMenu: React.FC<FilterMenuProps> = ({
 
           <div className="filter-divider" />
 
-          {/* C. SECTOR ISOLATION */}
+          {/* SECTION: Sector Isolation */}
           <div className="filter-section">
             <div className="filter-label-row">
                 <div className="filter-title">
-                    <Layers size={12} color="var(--accent-blue)" style={{marginRight: 6}}/>
+                    <Layers size={12} color="var(--accent-blue)" className="filter-icon"/>
                     <span>SECTOR VISIBILITY</span>
                 </div>
                 {filters.visibleSectors.size > 0 && (
@@ -159,7 +158,7 @@ const FilterMenu: React.FC<FilterMenuProps> = ({
                             onClick={() => toggleSector(sector)}
                         >
                             {sector}
-                            {isSelected && <Check size={10} style={{marginLeft: 4}} />}
+                            {isSelected && <Check size={10} className="sector-check" />}
                         </div>
                     );
                 })}

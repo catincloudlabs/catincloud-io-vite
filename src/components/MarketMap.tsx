@@ -1,5 +1,3 @@
-// src/components/MarketMap.tsx
-
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import DeckGL from '@deck.gl/react';
 import { ScatterplotLayer, PolygonLayer, PathLayer, LineLayer, TextLayer } from '@deck.gl/layers'; 
@@ -9,7 +7,7 @@ import { Delaunay } from 'd3-delaunay';
 import { GraphConnection } from '../hooks/useKnowledgeGraph'; 
 import { getSectorLabel } from '../utils/sectorMap';
 
-// --- TYPES ---
+/* --- DEFINITIONS --- */
 export type SectorNode = {
   id: string;
   x: number;
@@ -58,11 +56,10 @@ const THEME = {
   gold: [251, 191, 36],       
   glass: [255, 255, 255],
   darkText: [255, 255, 255, 180],
-  // Deep Violet (Structure/Anchor)
   infrastructure: [124, 58, 237] 
 };
 
-// --- ANCHOR CONFIGURATION ---
+/* --- ANCHOR CONFIGURATION --- */
 const ANCHOR_TICKERS = new Set([
   "SPY", "QQQ", "IWM", "DIA", 
   "AAPL", "MSFT", "NVDA", "GOOGL", 
@@ -70,14 +67,10 @@ const ANCHOR_TICKERS = new Set([
   "JPM", "V", "UNH", "XOM"
 ]);
 
-// --- EXTRACTED CARD COMPONENT ---
+/* --- SUB-COMPONENT: TOOLTIP CARD --- */
 const Card = ({ node, isInteractive, style, onMouseDown, onTouchStart, onTouchMove, onTouchEnd }: any) => (
   <div 
-      style={{
-          ...style, 
-          position: 'absolute',
-          touchAction: 'none' 
-      }}
+      style={style}
       className={`map-tooltip-container ${isInteractive ? 'locked' : 'hover'}`}
       onMouseDown={onMouseDown}
       onTouchStart={onTouchStart}
@@ -85,22 +78,25 @@ const Card = ({ node, isInteractive, style, onMouseDown, onTouchStart, onTouchMo
       onTouchEnd={onTouchEnd}
   >
       {isInteractive && <div className="tooltip-drag-handle" />}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-          <span style={{ fontFamily: 'monospace', fontWeight: 'bold', fontSize: '1.1rem', color: `rgb(${THEME.mint.join(',')})` }}>
+      
+      <div className="map-card-header">
+          <span className="map-card-ticker">
               ${node.ticker}
           </span>
-          <span style={{ fontSize: '0.8rem', color: `rgba(${THEME.slate.join(',')}, 0.8)` }}>
+          <span className="map-card-sector">
               {getSectorLabel(node.sector || "Other")}
           </span>
       </div>
-      <div style={{ fontSize: '0.85rem', color: '#e2e8f0', marginBottom: '8px', lineHeight: '1.4' }}>
+      
+      <div className="map-card-headline">
           {node.headline || "No active headline"}
       </div>
-      <div style={{ display: 'flex', gap: '12px', fontSize: '0.75rem', color: `rgba(${THEME.slate.join(',')}, 0.7)` }}>
-              <span>E: <span style={{color: 'white'}}>{node.energy.toFixed(0)}</span></span>
-              <span>Sent: <span style={{color: node.sentiment > 0 ? '#34d399' : node.sentiment < 0 ? '#f87171' : 'white'}}>
-              {node.sentiment.toFixed(2)}
-              </span></span>
+      
+      <div className="map-card-metrics">
+          <span>E: <span className="text-white">{node.energy.toFixed(0)}</span></span>
+          <span>Sent: <span className={node.sentiment > 0 ? 'text-pos' : node.sentiment < 0 ? 'text-neg' : 'text-white'}>
+            {node.sentiment.toFixed(2)}
+          </span></span>
       </div>
   </div>
 );
@@ -115,14 +111,14 @@ export function MarketMap({
   isPlaying = false 
 }: MarketMapProps) {
   
-  // --- 1. HEARTBEAT SYSTEM ---
+  // Heartbeat for visual pulse
   const [pulse, setPulse] = useState(false);
   useEffect(() => {
     const interval = setInterval(() => setPulse(p => !p), 3000); 
     return () => clearInterval(interval);
   }, []);
 
-  // --- 2. INTERACTION STATE ---
+  // Interaction State
   const [hoverInfo, setHoverInfo] = useState<{
     object?: HydratedNode;
     x: number;
@@ -136,6 +132,7 @@ export function MarketMap({
 
   const [selectedPos, setSelectedPos] = useState<{x: number, y: number} | null>(null);
 
+  // Auto-center selected node logic
   useEffect(() => {
     if (selectedTicker && !selectedPos) {
        const cx = typeof window !== 'undefined' ? window.innerWidth / 2 : 500;
@@ -146,6 +143,7 @@ export function MarketMap({
     }
   }, [selectedTicker]);
 
+  // Dragging logic for the Card
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const dragStartRef = useRef<{ x: number, y: number } | null>(null);
   const initialOffsetRef = useRef({ x: 0, y: 0 });
@@ -155,7 +153,7 @@ export function MarketMap({
     setDragOffset({ x: 0, y: 0 });
   }, [selectedTicker]);
 
-  // --- 3. VIEWPORT (Controlled State) ---
+  // Viewport Control
   const [viewState, setViewState] = useState<any>({
     target: [0, 0, 0],
     zoom: 1,
@@ -165,6 +163,7 @@ export function MarketMap({
   
   const initializedRef = useRef(false);
 
+  // Initial Auto-Fit Logic
   useEffect(() => {
     if (initializedRef.current || !data?.nodes?.length) return;
 
@@ -208,7 +207,7 @@ export function MarketMap({
     initializedRef.current = true;
   }, [data]); 
 
-  // --- 4. METRICS & MEMOS ---
+  // --- MEMOIZED DATA CALCULATIONS ---
   const { maxEnergy, highEnergyThreshold } = useMemo(() => {
     if (!data?.nodes || data.nodes.length === 0) return { maxEnergy: 0, highEnergyThreshold: 0 };
     const energies = data.nodes.map(n => n.energy);
@@ -320,7 +319,7 @@ export function MarketMap({
 
   if (!data) return null;
 
-  // --- LAYERS ----------------------------------------------------------------
+  /* --- DECK.GL LAYERS --- */
 
   const sectorTextLayer = new TextLayer({
     id: 'sector-labels',
@@ -398,10 +397,7 @@ export function MarketMap({
     getRowId: (d: HydratedNode) => d.ticker,
     getPosition: (d: HydratedNode) => [d.x, d.y],
     radiusUnits: 'common',
-    // RESTORED: Size 4.0
     getRadius: 4.0, 
-    
-    // Ghost Fill (Solid Tint)
     getFillColor: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return [...THEME.glass, 50]; 
         if (graphConnections?.some(c => c.target === d.ticker)) return [...THEME.gold, 50];
@@ -410,7 +406,6 @@ export function MarketMap({
         if (d.sentiment < -0.1) return [...THEME.red, 80]; 
         return [0, 0, 0, 0]; 
     },
-
     stroked: true,
     getLineWidth: 0.8, 
     getLineColor: (d: HydratedNode) => {
