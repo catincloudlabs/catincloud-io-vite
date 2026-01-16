@@ -76,6 +76,7 @@ const Card = ({ node, isInteractive, style, onMouseDown, onTouchStart, onTouchMo
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
+      onClick={(e) => e.stopPropagation()} // Stop propagation to prevent map deselection
   >
       {isInteractive && <div className="tooltip-drag-handle" />}
       
@@ -131,6 +132,9 @@ export function MarketMap({
   }, [selectedTicker, data]);
 
   const [selectedPos, setSelectedPos] = useState<{x: number, y: number} | null>(null);
+  
+  // Ref to track last selection time to prevent "ghost click" deselection on mobile
+  const lastSelectionTimeRef = useRef(0);
 
   // Auto-center selected node logic
   useEffect(() => {
@@ -467,6 +471,8 @@ export function MarketMap({
 
   // --- MOUSE HANDLERS ---
   const handleMouseDown = (e: React.MouseEvent) => {
+    // STOP PROPAGATION: Prevents dragging logic from bubbling up to parents causing issues on some mobile browsers
+    e.stopPropagation();
     isDraggingRef.current = true;
     dragStartRef.current = { x: e.clientX, y: e.clientY };
     initialOffsetRef.current = { ...dragOffset };
@@ -532,11 +538,18 @@ export function MarketMap({
             
             onClick={(info: any) => {
                 if (info.object) {
+                     // RECORD TIMESTAMP: Marks a deliberate user selection
+                     lastSelectionTimeRef.current = Date.now();
                      setSelectedPos({ x: info.x, y: info.y });
                      if (onNodeClick) onNodeClick(info.object);
                 } else {
-                    if (onBackgroundClick) onBackgroundClick();
-                    setSelectedPos(null);
+                    // TIME GATE: Only deselect if enough time has passed since the last selection.
+                    // This ignores "ghost clicks" that fire ~300ms after a tap on mobile.
+                    const timeSinceSelection = Date.now() - lastSelectionTimeRef.current;
+                    if (timeSinceSelection > 500) { 
+                        if (onBackgroundClick) onBackgroundClick();
+                        setSelectedPos(null);
+                    }
                 }
             }}
         />
