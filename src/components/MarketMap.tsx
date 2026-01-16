@@ -382,7 +382,7 @@ export function MarketMap({
   const glowLayer = new ScatterplotLayer({
     id: 'market-glow', data: sortedNodes, getPosition: (d: HydratedNode) => [d.x, d.y], radiusUnits: 'common',
     getRadius: (d: HydratedNode) => {
-        if (d.ticker === selectedTicker) return 8; if (graphConnections?.some(c => c.target === d.ticker)) return 8; return 0; 
+        if (d.ticker === selectedTicker) return 8; return 0; 
     },
     getFillColor: (d: HydratedNode) => {
         if (d.ticker === selectedTicker) return [...THEME.mint, 40]; if (graphConnections?.some(c => c.target === d.ticker)) return [...THEME.gold, 40]; return [0,0,0,0];
