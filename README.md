@@ -10,12 +10,11 @@ Visit [catincloud.io](https://catincloud.io)
 
 ## ⚛️ The Physics Metaphor
 
-The core logic translates standard OHLCV (Open, High, Low, Close, Volume) data into Newtonian physics concepts:
+The core logic translates market data into a Newtonian simulation where semantic relevance and momentum drive the visuals, rather than static metrics like Market Cap.
 
-* **Energy (Glow):** Represents **Trade Volume**. High activity creates a brighter glow.
-* **Velocity (Motion):** Represents **Price Momentum**. Fast price changes result in higher velocity vectors.
-* **Mass (Size):** Represents **Market Cap**. Larger companies appear as larger, heavier particles that are harder to displace.
-* **Gravity/Attraction:** Represents **Semantic Relationships**. Stocks mentioned together in news cycles (via vector embeddings) form visible elastic connections (Synapses).
+* **Energy (Glow):** A composite force calculated from **Price Momentum** + **News Sentiment**. Tickers with high velocity or strong sentiment (positive or negative) enter high-energy states, glowing brighter and reacting more volatilely.
+* **Gravity (Anchors):** "Mathematical Anchors" (such as **SPY**, **QQQ**, and the **Mag7**) act as supermassive objects with strong gravitational fields.
+* **Attraction (The Pull):** Unlike standard sector grouping, these Anchors utilize the **Knowledge Graph** to exert a "semantic pull," drawing in tickers that share recent news context, narrative correlations, or similar price physics.
 
 ## 🛠 Tech Stack
 
