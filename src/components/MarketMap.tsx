@@ -73,11 +73,9 @@ const Card = ({ node, isInteractive, style, onMouseDown, onTouchStart, onTouchMo
       style={style}
       className={`map-tooltip-container ${isInteractive ? 'locked' : 'hover'}`}
       onMouseDown={onMouseDown}
-      onTouchStart={handleCardTouchStart(onTouchStart)}
+      onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
-      // SAFETY: Stop clicks on the card from bubbling to the map
-      onClick={(e) => e.stopPropagation()} 
   >
       {isInteractive && <div className="tooltip-drag-handle" />}
       
@@ -102,12 +100,6 @@ const Card = ({ node, isInteractive, style, onMouseDown, onTouchStart, onTouchMo
       </div>
   </div>
 );
-
-// Wrapper to ensure touch start always stops propagation
-const handleCardTouchStart = (originalHandler: any) => (e: React.TouchEvent) => {
-  e.stopPropagation();
-  if (originalHandler) originalHandler(e);
-};
 
 export function MarketMap({ 
   data, 
@@ -139,9 +131,6 @@ export function MarketMap({
   }, [selectedTicker, data]);
 
   const [selectedPos, setSelectedPos] = useState<{x: number, y: number} | null>(null);
-  
-  // Ref to track last selection time to prevent ghost click deselection on mobile
-  const lastSelectionTimeRef = useRef(0);
 
   // Auto-center selected node logic
   useEffect(() => {
@@ -154,7 +143,7 @@ export function MarketMap({
     }
   }, [selectedTicker]);
 
-  // Dragging logic for the card
+  // Dragging logic for the Card
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const dragStartRef = useRef<{ x: number, y: number } | null>(null);
   const initialOffsetRef = useRef({ x: 0, y: 0 });
@@ -478,7 +467,6 @@ export function MarketMap({
 
   // --- MOUSE HANDLERS ---
   const handleMouseDown = (e: React.MouseEvent) => {
-    e.stopPropagation();
     isDraggingRef.current = true;
     dragStartRef.current = { x: e.clientX, y: e.clientY };
     initialOffsetRef.current = { ...dragOffset };
@@ -543,18 +531,12 @@ export function MarketMap({
             getTooltip={null} 
             
             onClick={(info: any) => {
-                const now = Date.now();
                 if (info.object) {
-                     // RECORD TIMESTAMP: Marks a deliberate user selection
-                     lastSelectionTimeRef.current = now;
                      setSelectedPos({ x: info.x, y: info.y });
                      if (onNodeClick) onNodeClick(info.object);
                 } else {
-                    // Protect against late ghost clicks or accidental touches 
-                    if (now - lastSelectionTimeRef.current > 2000) { 
-                        if (onBackgroundClick) onBackgroundClick();
-                        setSelectedPos(null);
-                    }
+                    if (onBackgroundClick) onBackgroundClick();
+                    setSelectedPos(null);
                 }
             }}
         />

@@ -1208,9 +1208,12 @@ input[type=range]::-moz-range-track {
 
 
 /* ==================================================================== */
-/* 12. MAP TOOLTIP CARD (MIGRATED)                                      */
+/* 12. MAP TOOLTIP CARD                                                 */
 /* ==================================================================== */
+
 .map-tooltip-container {
+  position: absolute; 
+  user-select: none;  
   background-color: rgba(15, 23, 42, 0.9);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -1223,19 +1226,20 @@ input[type=range]::-moz-range-track {
   max-width: 300px;
   touch-action: none; 
   font-family: var(--font-sans);
+  z-index: 1000;
 }
 
 .map-tooltip-container.locked {
   cursor: grab;
   pointer-events: auto;
-  z-index: 1000;
+  z-index: 1005; 
 }
 
 .map-tooltip-container.locked:active { cursor: grabbing; }
 
 .map-tooltip-container.hover {
-  pointer-events: none; 
-  z-index: 1001;        
+  pointer-events: none;
+  z-index: 1010;
   margin-top: 12px;     
 }
 
@@ -1284,9 +1288,8 @@ input[type=range]::-moz-range-track {
 .text-pos { color: var(--accent-green); }
 .text-neg { color: #f87171; }
 
-
 /* ==================================================================== */
-/* 13. SOCIAL CARD GENERATOR (MIGRATED)                                 */
+/* 13. SOCIAL CARD GENERATOR                                            */
 /* ==================================================================== */
 .social-card {
   width: 1200px; 
