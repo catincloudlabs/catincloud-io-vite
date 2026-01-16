@@ -1,19 +1,17 @@
 // src/utils/processData.ts
 import { getSectorForTicker } from './sectorMap';
 
-/* --- DATA HYDRATION & PHYSICS ENGINE --- */
-/* Normalizes raw backend data into screen coordinates and calculates velocity/energy */
-
+// --- CONFIGURATION ---
 const TARGET_WORLD_SIZE = 800; 
 
 export type SectorNode = {
-  id: string;       
-  x: number;        
-  y: number;        
-  vx: number;       
-  vy: number;       
-  energy: number;   
-  count: number;    
+  id: string;       // e.g., "Technology"
+  x: number;        // Weighted Center X
+  y: number;        // Weighted Center Y
+  vx: number;       // Weighted Velocity X
+  vy: number;       // Weighted Velocity Y
+  energy: number;   // Total Sector Energy (Sum)
+  count: number;    // Number of tickers
 };
 
 type RawDataPoint = {
@@ -45,15 +43,15 @@ export type DailyFrame = {
   nodeMap: Map<string, HydratedNode>;
 };
 
-// Sub-routine: Weighted Centroid Calculation
+// --- HELPER: SECTOR MATH ---
 function calculateSectorDynamics(nodes: HydratedNode[]): SectorNode[] {
   type SectorAccumulator = {
     sumX: number;
     sumY: number;
     sumVx: number;
     sumVy: number;
-    totalWeight: number; 
-    totalEnergy: number; 
+    totalWeight: number; // The Denominator
+    totalEnergy: number; // Pure Energy Sum (for visual sizing)
     count: number;
   };
 
@@ -77,26 +75,34 @@ function calculateSectorDynamics(nodes: HydratedNode[]): SectorNode[] {
     // Clamp minimum weight to prevent jitter on low-energy days
     const weight = Math.max(node.energy, 0.2);
 
+    // Accumulate weighted numerators
     s.sumX += node.x * weight;
     s.sumY += node.y * weight;
     s.sumVx += node.vx * weight;
     s.sumVy += node.vy * weight;
 
+    // Accumulate denominator
     s.totalWeight += weight;
+    
+    // Track raw stats
     s.totalEnergy += node.energy;
     s.count++;
   });
 
+  // Normalize (calculate averages)
   return Object.keys(sectors).map(key => {
     const s = sectors[key];
     const normalizationFactor = s.totalWeight > 0 ? s.totalWeight : 1;
     
     return {
       id: key,
+      // Weighted Center of Mass
       x: s.sumX / normalizationFactor, 
       y: s.sumY / normalizationFactor,
+      // Weighted Average Momentum
       vx: s.sumVx / normalizationFactor, 
       vy: s.sumVy / normalizationFactor,
+      // Aggregates
       energy: s.totalEnergy, 
       count: s.count
     };
@@ -130,6 +136,7 @@ export function hydrateMarketData(rawData: RawDataPoint[]): DailyFrame[] {
     if (typeof item.x !== 'number' || typeof item.y !== 'number') return;
     if (!grouped[item.date]) grouped[item.date] = [];
     
+    // scale and center
     grouped[item.date].push({
         ...item,
         x: (item.x - rawCenterX) * scaleFactor,
@@ -145,6 +152,7 @@ export function hydrateMarketData(rawData: RawDataPoint[]): DailyFrame[] {
     const nextDate = sortedDates[index + 1];
     const nextDayData = nextDate ? grouped[nextDate] : [];
 
+    // Create a lookup for the next day to calculate velocity
     const nextDayLookup = new Map<string, RawDataPoint>();
     nextDayData.forEach(p => nextDayLookup.set(p.ticker, p));
 
@@ -153,7 +161,10 @@ export function hydrateMarketData(rawData: RawDataPoint[]): DailyFrame[] {
       const vx = nextState ? nextState.x - stock.x : 0;
       const vy = nextState ? nextState.y - stock.y : 0;
       
+      // Calculate Energy (kinetic + sentiment)
       const energy = (Math.abs(vx) + Math.abs(vy)) * (1 + Math.abs(stock.sentiment));
+      
+      // Look up the sector using utility
       const sector = getSectorForTicker(stock.ticker);
 
       return {
