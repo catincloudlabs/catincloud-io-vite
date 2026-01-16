@@ -133,7 +133,7 @@ export function MarketMap({
 
   const [selectedPos, setSelectedPos] = useState<{x: number, y: number} | null>(null);
   
-  // Ref to track last selection time to prevent "ghost click" deselection on mobile
+  // Ref to track last selection time to prevent ghost click deselection on mobile
   const lastSelectionTimeRef = useRef(0);
 
   // Auto-center selected node logic
@@ -147,7 +147,7 @@ export function MarketMap({
     }
   }, [selectedTicker]);
 
-  // Dragging logic for the Card
+  // Dragging logic for the card
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const dragStartRef = useRef<{ x: number, y: number } | null>(null);
   const initialOffsetRef = useRef({ x: 0, y: 0 });
