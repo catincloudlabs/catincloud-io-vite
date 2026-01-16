@@ -113,7 +113,7 @@ python ingest.py
 This project is private property of **Catincloud Labs**.
 
 * **Creator:** Dave Anaya
-* **Copyright:** © 2024 Catincloud Labs. All Rights Reserved.
+* **Copyright:** © 2026 Catincloud Labs. All Rights Reserved.
 
 ---
 *Disclaimer: This application is a simulation for educational and visualization purposes only. It does not constitute financial advice.*
