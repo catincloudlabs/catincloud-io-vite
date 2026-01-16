@@ -388,7 +388,7 @@ export function MarketMap({
         if (d.ticker === selectedTicker) return [...THEME.mint, 40]; if (graphConnections?.some(c => c.target === d.ticker)) return [...THEME.gold, 40]; return [0,0,0,0];
     },
     stroked: false, transitions: { getRadius: 500, getFillColor: 500 },
-    updateTriggers: { getRadius: [selectedTicker, graphConnections], getFillColor: [selectedTicker, graphConnections] },
+    updateTriggers: { getRadius: [selectedTicker], getFillColor: [selectedTicker, graphConnections] },
   });
 
   const anchorLayer = new ScatterplotLayer({
