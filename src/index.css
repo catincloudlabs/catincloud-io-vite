@@ -1514,7 +1514,7 @@ input[type=range]::-moz-range-track {
   .header-selector { flex: 1; width: 100%; max-width: none; }
   
   .header-filter-wrapper {
-    position: fixed; top: 72px; right: 16px; z-index: 45; 
+    position: fixed; top: 76px; right: 16px; z-index: 45; 
   }
 
   .header-filter-wrapper .header-icon-btn {
@@ -1526,7 +1526,7 @@ input[type=range]::-moz-range-track {
   }
 
   .floating-play-btn {
-     top: 72px; right: 76px; left: auto; bottom: auto;
+     top: 76px; right: 76px; left: auto; bottom: auto;
      width: 44px; height: 44px; border-radius: 6px; 
      background: rgba(15, 23, 42, 0.85);
      backdrop-filter: blur(12px);
