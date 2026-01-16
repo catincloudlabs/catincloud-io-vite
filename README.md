@@ -4,7 +4,7 @@
 
 The application features a semantic Knowledge Graph, a timeline playback engine, and an AI "Oracle" that interprets market movements using natural language.
 
-## 🐯 Live Demo
+## 🐆 Live Demo
 
 Visit [catincloud.io](https://catincloud.io)
 
@@ -32,7 +32,7 @@ The core logic translates market data into a Newtonian simulation where semantic
 * **AI/ML:** OpenAI (GPT-4o-mini for analysis, text-embedding-3-small for semantic search)
 * **Ingestion:** Python (ETL pipeline)
 
-## ✨ Key Features
+## 🐅 Key Features
 
 * **Interactive Market Map:** A zoomable, pan-able infinite canvas rendering hundreds of tickers as dynamic particles.
 * **Timeline Simulation:** Playback control to watch market physics evolve over time (historical playback).
@@ -40,7 +40,7 @@ The core logic translates market data into a Newtonian simulation where semantic
 * **Knowledge Graph:** Visual "synapses" draw lines between companies that share semantic context in recent news cycles.
 * **Voronoi Sentiment Cells:** Background tessellation acting as a heat map for market sentiment (Red/Green).
 
-## 📦 Installation & Setup
+## 🐈‍⬛ Installation & Setup
 
 ### Prerequisites
 * Node.js (v18+)
