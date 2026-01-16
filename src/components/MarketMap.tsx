@@ -543,8 +543,8 @@ export function MarketMap({
                      setSelectedPos({ x: info.x, y: info.y });
                      if (onNodeClick) onNodeClick(info.object);
                 } else {
-                    // TIME GATE: Only deselect if enough time has passed since the last selection.
-                    // This ignores "ghost clicks" that fire ~300ms after a tap on mobile.
+                    // TIME GATE: Only deselect if enough time has passed since the last selection
+                    // This ignores "ghost clicks" that fire ~300ms after a tap on mobile
                     const timeSinceSelection = Date.now() - lastSelectionTimeRef.current;
                     if (timeSinceSelection > 500) { 
                         if (onBackgroundClick) onBackgroundClick();
