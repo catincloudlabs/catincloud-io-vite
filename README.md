@@ -53,53 +53,51 @@ The core logic translates standard OHLCV (Open, High, Low, Close, Volume) data i
 git clone [https://github.com/catincloudlabs/catincloud-io-vite.git](https://github.com/catincloudlabs/catincloud-io-vite.git)
 cd catincloud-io-vite
 ```
-2. Frontend Setup
-        ```bash
-        npm install
-        npm run dev
-        ```
+### 2. Frontend Setup
+```bash
+npm install
+npm run dev
+```
 The app will run at `http://localhost:5173`.
-3. Environment Variables
 
+### 3. Environment Variables
 Create a `.env` file in the root directory:
-        ```plaintext
-        VITE_SUPABASE_URL=your_supabase_url
-        VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-        ```
-4. Backend (Data Ingestion)
+```plaintext
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
+### 4. Backend (Data Ingestion)
 The data pipeline runs via Python. It fetches OHLC data and News, generates embeddings, and pushes to Supabase.
-Bash
 
+```bash
 cd backend
 pip install -r requirements.txt
+```
 
-Create a .env file in the backend/ folder:
-Code snippet
-
+Create a `.env` file in the `backend/` folder:
+```plaintext
 MASSIVE_API_KEY=your_polygon_io_key
 OPENAI_API_KEY=your_openai_key
 SUPABASE_URL=your_supabase_url
 SUPABASE_SERVICE_KEY=your_service_role_key
+```
 
 Run the ingestion engine:
-Bash
-
+```bash
 python ingest.py
+```
 
-🧠 Architecture Overview
-Data Flow
+## 🧠 Architecture Overview
 
-    Ingest (`backend/ingest.py`): Fetches daily data -> Vectorizes News -> Updates Supabase.
+### Data Flow
+* **Ingest (`backend/ingest.py`):** Fetches daily data -> Vectorizes News -> Updates Supabase.
+* **Hydration (`src/utils/processData.ts`):** Frontend fetches JSON history -> Calculates spline trajectories -> Feeds React State.
+* **Rendering (`src/components/MarketMap.tsx`):** Deck.gl renders the frame.
+* **Analysis (`supabase/functions/oracle`):** User asks question -> Edge Function grabs context -> OpenAI generates explanation.
 
-    Hydration (`src/utils/processData.ts`): Frontend fetches JSON history -> Calculates spline trajectories -> Feeds React State.
-
-    Rendering (`src/components/MarketMap.tsx`): Deck.gl renders the frame.
-
-    Analysis (`supabase/functions/oracle`): User asks question -> Edge Function grabs context -> OpenAI generates explanation.
-
-Directory Structure
-
+### Directory Structure
+```text
 ├── backend/            # Python ETL scripts (Polygon -> Supabase)
 ├── public/             # Static assets (datasets, logos)
 ├── src/
@@ -109,13 +107,14 @@ Directory Structure
 │   └── App.tsx         # Main entry point
 ├── supabase/           # Edge functions and DB config
 └── package.json
+```
 
-🛡️ License
+## 🛡️ License
 
-This project is private property of Catincloud Labs.
+This project is private property of **Catincloud Labs**.
 
-    Creator: Dave Anaya
+* **Creator:** Dave Anaya
+* **Copyright:** © 2024 Catincloud Labs. All Rights Reserved.
 
-    Copyright: © 2024 Catincloud Labs. All Rights Reserved.
-
-Disclaimer: This application is a simulation for educational and visualization purposes only. It does not constitute financial advice.
+---
+*Disclaimer: This application is a simulation for educational and visualization purposes only. It does not constitute financial advice.*
