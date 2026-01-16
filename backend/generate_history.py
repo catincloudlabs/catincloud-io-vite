@@ -200,7 +200,7 @@ if __name__ == "__main__":
         embeddings_raw = reducer.fit_transform(current_matrix)
         embeddings_scaled = normalize_to_bounds(embeddings_raw, TARGET_CANVAS_SIZE)
 
-        # Procrustes alignment
+        # Procrustes Alignment
         if prev_matrix is not None:
             embeddings_stabilized = align_to_reference(
                 source_matrix=prev_matrix, 
