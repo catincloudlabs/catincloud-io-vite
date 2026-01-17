@@ -325,6 +325,7 @@ function App() {
           aria-label="Simulation Timeline"
           className="slider-input"
         />
+        <div className="slider-disclaimer">SIMULATION ONLY. NOT FINANCIAL ADVICE.</div>
       </div>
 
       <ArchitectureModal isOpen={isArchOpen} onClose={() => setArchOpen(false)} />
