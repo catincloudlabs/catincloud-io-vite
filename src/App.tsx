@@ -289,23 +289,7 @@ function App() {
 
       <Legend />
       
-      <button 
-          onClick={togglePlay} 
-          className={`floating-play-btn ${isPlaying ? 'playing' : ''}`}
-          title={isPlaying ? "Pause Simulation" : "Play History"}
-      >
-          {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
-      </button>
-
-      <div className="agent-panel-wrapper">
-        <AgentPanel 
-          currentFrame={currentFrameData} 
-          selectedTicker={selectedTicker}
-          graphConnections={connections}
-          isLoading={loading}
-        />
-      </div>
-
+      {/* TIMELINE CONTROLS WRAPPER (Aligned & Grouped) */}
       <div className="timeline-wrapper">
         <div className="timeline-slider-container">
           <div className="slider-label-row">
@@ -326,10 +310,29 @@ function App() {
             aria-label="Simulation Timeline"
             className="slider-input"
           />
+          {/* Disclaimer is positioned absolute relative to this container in CSS */}
+          <div className="disclaimer-footer" aria-hidden="true">
+            SIMULATION ONLY. NOT FINANCIAL ADVICE.
+          </div>
         </div>
-        <div className="disclaimer-footer" aria-hidden="true">
-          SIMULATION ONLY. NOT FINANCIAL ADVICE.
-        </div>
+
+        {/* Play Button sits in the flex flow next to the pill */}
+        <button 
+            onClick={togglePlay} 
+            className={`floating-play-btn ${isPlaying ? 'playing' : ''}`}
+            title={isPlaying ? "Pause Simulation" : "Play History"}
+        >
+            {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
+        </button>
+      </div>
+
+      <div className="agent-panel-wrapper">
+        <AgentPanel 
+          currentFrame={currentFrameData} 
+          selectedTicker={selectedTicker}
+          graphConnections={connections}
+          isLoading={loading}
+        />
       </div>
 
       <ArchitectureModal isOpen={isArchOpen} onClose={() => setArchOpen(false)} />

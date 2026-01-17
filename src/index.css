@@ -619,28 +619,27 @@ html, body {
 }
 
 /* ==================================================================== */
-/* 6. TIMELINE SLIDER                                                   */
+/* 6. TIMELINE SLIDER & CONTROLS                                        */
 /* ==================================================================== */
 
-/* NEW: Wrapper handles positioning on the screen */
+/* Wrapper: Positions the whole control group (Pill + Button) */
 .timeline-wrapper {
   position: absolute;
-  bottom: 32px; 
+  bottom: 40px; 
   left: 32px;   
-  width: 360px; 
-  max-width: 40vw; 
-  z-index: 30;
+  z-index: 40;
   display: flex; 
-  flex-direction: column;
-  align-items: center; 
-  pointer-events: none; /* Let clicks pass through empty space */
+  align-items: center; /* Vertically aligns Pill and Play Button */
+  gap: 16px;           /* Space between Pill and Play Button */
+  pointer-events: none; /* Let clicks pass through gaps */
 }
 
-/* MODIFIED: Slider Container handles the visual "Pill" look */
+/* The Pill Box itself */
 .timeline-slider-container {
   pointer-events: auto;
-  position: relative; 
-  width: 100%; 
+  position: relative; /* Anchor for the disclaimer */
+  width: 360px;       /* Fixed width for stability */
+  max-width: 60vw;
   background: rgba(15, 23, 42, 0.85);
   backdrop-filter: blur(12px);
   padding: 12px 24px;
@@ -651,19 +650,22 @@ html, body {
   flex-direction: column;
 }
 
-/* NEW: Specific style for the footer when inside the timeline wrapper */
+/* Disclaimer: Anchored specifically to the Pill */
 .timeline-wrapper .disclaimer-footer {
-  margin-top: 8px; 
+  position: absolute;
+  top: 100%;    /* Pushes it directly below the pill */
+  left: 0;
+  width: 100%;  /* Matches pill width */
+  margin-top: 10px; 
   padding: 0;
   background: none; 
   border: none;     
   font-family: var(--font-mono);
   font-size: 0.6rem;
+  text-align: center;
   color: var(--text-muted);
   opacity: 0.6;
   text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-  width: auto;
-  letter-spacing: 0.05em;
   pointer-events: auto;
 }
 
@@ -681,9 +683,7 @@ html, body {
   pointer-events: none; 
 }
 
-.slider-label-row > * {
-  pointer-events: auto;
-}
+.slider-label-row > * { pointer-events: auto; }
 
 .slider-input {
   width: 100%;
@@ -691,16 +691,13 @@ html, body {
   display: block;
 }
 
-/* SLIDER STYLES */
+/* SLIDER INPUT STYLES */
 input[type=range] {
   -webkit-appearance: none; appearance: none;
   width: 100%; background: transparent; height: 30px; margin: 0; cursor: pointer;
-  position: relative;
-  z-index: 1;
+  position: relative; z-index: 1;
 }
-
 input[type=range]:focus { outline: none; }
-
 input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none; appearance: none; 
   height: 20px; width: 20px; 
@@ -725,13 +722,14 @@ input[type=range]::-moz-range-track {
 /* ==================================================================== */
 /* 7. FLOATING CONTROLS (PLAYBACK)                                      */
 /* ==================================================================== */
+
+/* Now relative to the flex wrapper in Section 6 */
 .floating-play-btn {
-  position: absolute;
-  z-index: 45; 
-  left: 408px; 
-  bottom: 48px; 
-  width: 44px;
-  height: 44px;
+  pointer-events: auto;
+  position: relative; /* Removed absolute positioning */
+  flex-shrink: 0;     /* Prevent shrinking */
+  width: 48px;        /* Slightly larger for touch targets */
+  height: 48px;
   border-radius: 50%; 
   background: rgba(15, 23, 42, 0.85); 
   backdrop-filter: blur(12px);
@@ -752,17 +750,7 @@ input[type=range]::-moz-range-track {
   box-shadow: 0 0 20px rgba(52, 211, 153, 0.4); 
 }
 
-.floating-play-btn:active {
-  transform: scale(0.95);
-}
-
-@media (max-width: 768px) {
-  .floating-play-btn {
-     left: auto;
-     right: 24px;
-     bottom: 110px; 
-  }
-}
+.floating-play-btn:active { transform: scale(0.95); }
 
 /* ==================================================================== */
 /* 8. HEADER SELECTOR (CUSTOM DROPDOWN)                                 */
@@ -980,7 +968,8 @@ input[type=range]::-moz-range-track {
 /* ==================================================================== */
 .legend-wrapper {
   position: absolute;
-  bottom: 125px; 
+  /* Increased bottom spacing to clear the timeline controls */
+  bottom: 180px; 
   left: 32px;    
   top: auto;     
   z-index: 45;   
@@ -989,21 +978,15 @@ input[type=range]::-moz-range-track {
 
 .legend-toggle-btn {
   pointer-events: auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  display: flex; align-items: center; gap: 8px;
   background: rgba(15, 23, 42, 0.6);
   backdrop-filter: blur(8px);
   border: 1px solid var(--glass-border);
   border-radius: 6px;
   padding: 8px 12px;
   color: var(--accent-green);
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  transition: all 0.2s;
+  font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600;
+  letter-spacing: 0.05em; cursor: pointer; transition: all 0.2s;
 }
 
 .legend-toggle-btn:hover {
@@ -1022,8 +1005,7 @@ input[type=range]::-moz-range-track {
   box-shadow: var(--shadow-soft);
   animation: fadeIn 0.2s ease-out;
   position: absolute;
-  bottom: 0;
-  left: 0;
+  bottom: 0; left: 0;
   margin-bottom: 40px; 
 }
 
@@ -1070,6 +1052,7 @@ input[type=range]::-moz-range-track {
   width: 8px; height: 8px; border-radius: 50%;
   background: #fff; margin-left: 8px; margin-right: 8px;
 }
+
 .symbol-dot.glow { background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
 
 .symbol-grid {
@@ -1504,56 +1487,34 @@ input[type=range]::-moz-range-track {
 /* ==================================================================== */
 
 @media (max-width: 768px) {
-  .app-header { 
-    padding: 0 16px; 
-    height: 64px; 
-  }
-
+  .app-header { padding: 0 16px; height: 64px; }
   .header-label-text { display: none; }
   .chrono-value { font-size: 1rem; }
   .header-icon-btn { width: 44px; height: 44px; }
   .header-selector { height: 40px; min-width: 110px; }
   
-  /* MODIFIED: Mobile positioning applied to wrapper instead of container */
+  /* Timeline Responsive Logic */
   .timeline-wrapper {
-    bottom: calc(20px + env(safe-area-inset-bottom));
+    bottom: calc(30px + env(safe-area-inset-bottom));
     left: 50%;
     transform: translateX(-50%);
     width: 92%;
     max-width: none;
+    justify-content: center; /* Centers the group on mobile */
   }
 
   .timeline-slider-container {
+    flex: 1; /* Allows slider to take available space */
+    width: auto;
     background: rgba(15, 23, 42, 0.95);
   }
-
-  .agent-panel-wrapper {
-    left: 12px; 
-    right: 12px; 
-    width: auto;
-    bottom: calc(130px + env(safe-area-inset-bottom)); 
-  }
   
-  .agent-terminal.expanded { 
-    height: 55vh; 
-    max-height: 500px;
-  }
-
-  .terminal-input { font-size: 16px !important; }
-  .input-wrapper { padding: 12px; }
-  .send-btn { padding: 8px; }
-
-  .modal-box {
-    width: 100%; height: 100%; 
-    max-height: none; border-radius: 0; border: none;
-  }
-  
-  .bio-grid { 
-    flex-direction: column; align-items: center; text-align: center; 
-  }
-  
+  /* Legend Responsive Logic */
   .legend-wrapper {
-    top: 75px; left: 16px; bottom: auto; 
+    /* Anchored to top-left on mobile to avoid bottom clutter */
+    top: 76px; 
+    left: 16px; 
+    bottom: auto; 
   }
   
   .legend-panel {
