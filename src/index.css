@@ -1587,7 +1587,7 @@ input[type=range]::-moz-range-track {
   .v-divider.mobile-hide { display: none; }
 
   .timeline-wrapper {
-    bottom: calc(48px + env(safe-area-inset-bottom));
+    bottom: calc(18px + env(safe-area-inset-bottom));
     left: 50%;
     transform: translateX(-50%);
     width:88%;
