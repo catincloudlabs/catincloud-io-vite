@@ -1598,8 +1598,4 @@ input[type=range]::-moz-range-track {
     background: rgba(15, 23, 42, 0.95);
   }
 
-  .slider-disclaimer {
-    margin-top: 16px; 
-    font-size: 0.6rem; /* Slightly larger text for readability on mobile */
-  }
 }
