@@ -1289,135 +1289,154 @@ input[type=range]::-moz-range-track {
 .text-neg { color: #f87171; }
 
 /* ==================================================================== */
-/* 13. SOCIAL CARD GENERATOR                                            */
+/* 13. SOCIAL CARD GENERATOR (Modern Minimalist)                        */
 /* ==================================================================== */
-.social-card {
-  width: 1200px; 
-  height: 630px; 
-  background-color: #020617; 
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 40px;
-  font-family: 'JetBrains Mono', monospace;
-  color: white;
-  border: 1px solid #334155;
+
+.social-card-modern {
+    width: 1200px;
+    height: 630px;
+    background-color: #0f172a; /* Slate 900 */
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 80px 100px;
+    font-family: var(--font-sans);
+    color: white;
+    border: 1px solid #1e293b;
 }
 
-.social-card-bg {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  z-index: 0;
-  opacity: 0.2;
-  background-image: 
-    radial-gradient(circle at 50% 50%, rgba(34, 197, 94, 0.1) 0%, transparent 50%),
-    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-  background-size: 100% 100%, 40px 40px, 40px 40px;
+/* Background Effects */
+.modern-bg-gradient {
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 1000px;
+    height: 1000px;
+    background: radial-gradient(circle, rgba(52, 211, 153, 0.03) 0%, transparent 60%);
+    z-index: 0;
+    pointer-events: none;
 }
 
-.social-card-orbs {
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  width: 600px; height: 400px;
-  background: radial-gradient(circle, rgba(34, 197, 94, 0.15) 0%, transparent 70%);
-  filter: blur(40px);
-  z-index: 1;
+.modern-accent-line {
+    position: absolute;
+    top: 0;
+    left: 60px;
+    width: 1px;
+    height: 100%;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.05), rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05));
+    z-index: 0;
 }
 
-.social-card-top {
-  z-index: 10;
-  display: flex; 
-  justify-content: space-between; 
-  align-items: center;
+/* Content Layout */
+.modern-content {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    justify-content: center;
 }
 
-.social-brand-row {
-  display: flex; 
-  align-items: center; 
-  gap: 12px;
+/* Header */
+.modern-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 40px;
 }
 
-.social-brand-dot {
-  width: 12px; height: 12px; 
-  background: #22c55e; 
-  border-radius: 50%; 
-  box-shadow: 0 0 10px #22c55e;
+.modern-brand {
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: #94a3b8; /* Slate 400 */
 }
 
-.social-brand-name {
-  font-size: 1.5rem; 
-  font-weight: 700; 
-  letter-spacing: 0.05em;
+.modern-badge {
+    background: rgba(255,255,255,0.08);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
 }
 
-.social-status-badge {
-  background: rgba(34, 197, 94, 0.1);
-  color: #22c55e;
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  font-weight: 600;
+/* Typography */
+.modern-title {
+    font-size: 5.5rem;
+    line-height: 1.05;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin: 0 0 24px 0;
+    color: white;
 }
 
-.social-headline-box {
-  z-index: 10;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  align-items: center;
+.text-mint {
+    color: var(--accent-green);
+    position: relative;
+    display: inline-block;
 }
 
-.social-h1 {
-  font-size: 4rem; 
-  margin: 0; 
-  line-height: 1.1;
-  background: linear-gradient(to bottom right, #ffffff 40%, #94a3b8 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 20px rgba(255,255,255,0.2));
+/* Optional: Add a subtle underline to 'Refined' */
+.text-mint::after {
+    content: '';
+    position: absolute;
+    bottom: 8px;
+    left: 0;
+    width: 100%;
+    height: 6px;
+    background: var(--accent-green);
+    opacity: 0.2;
+    z-index: -1;
 }
 
-.social-sub {
-  font-size: 1.2rem; 
-  color: #94a3b8; 
-  max-width: 600px; 
-  line-height: 1.6;
+.modern-sub {
+    font-size: 1.5rem;
+    font-weight: 400;
+    color: #94a3b8; /* Slate 400 */
+    max-width: 650px;
+    margin: 0;
+    line-height: 1.5;
 }
 
-.social-footer {
-  z-index: 10;
-  display: flex; 
-  gap: 24px; 
-  border-top: 1px solid rgba(255,255,255,0.1); 
-  padding-top: 24px;
+/* Feature Grid Footer */
+.modern-feature-grid {
+    margin-top: auto; /* Pushes to bottom */
+    padding-top: 40px;
+    display: flex;
+    gap: 40px;
+    border-top: 1px solid rgba(255,255,255,0.05);
 }
 
-.social-metric {
-  display: flex; align-items: center; gap: 10px;
-}
-.social-metric-icon { color: #64748b; }
-
-.social-metric-text { 
-  display: flex; 
-  flex-direction: column;
+.modern-feature {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
-.social-metric-label { 
-  font-size: 0.7rem;
-  color: #64748b; 
-  font-weight: 600;
+.feature-icon {
+    color: var(--accent-green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: rgba(52, 211, 153, 0.1);
+    border-radius: 6px;
 }
 
-.social-metric-val { 
-  font-size: 0.9rem;
-  color: #e2e8f0; 
-  font-weight: 700;
+.feature-label {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #e2e8f0; /* Slate 200 */
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 /* ==================================================================== */
