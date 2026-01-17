@@ -1515,7 +1515,7 @@ input[type=range]::-moz-range-track {
   .header-selector { height: 40px; min-width: 110px; }
   
   .timeline-slider-container {
-    bottom: calc(20px + env(safe-area-inset-bottom));
+    bottom: calc(24px + env(safe-area-inset-bottom));
     left: 50%;
     transform: translateX(-50%);
     width: 92%;
@@ -1587,14 +1587,10 @@ input[type=range]::-moz-range-track {
   .v-divider.mobile-hide { display: none; }
 
   .timeline-wrapper {
-    bottom: calc(24px + env(safe-area-inset-bottom));
+    bottom: calc(20px + env(safe-area-inset-bottom));
     left: 50%;
     transform: translateX(-50%);
     width:88%;
     max-width: none;
-  }
-  
-  .timeline-slider-container {
-    background: rgba(15, 23, 42, 0.95);
   }
 }
