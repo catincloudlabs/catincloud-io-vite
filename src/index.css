@@ -1515,7 +1515,7 @@ input[type=range]::-moz-range-track {
   .header-selector { height: 40px; min-width: 110px; }
   
   .timeline-slider-container {
-    bottom: calc(24px + env(safe-area-inset-bottom));
+    bottom: calc(20px + env(safe-area-inset-bottom));
     left: 50%;
     transform: translateX(-50%);
     width: 92%;
@@ -1573,7 +1573,7 @@ input[type=range]::-moz-range-track {
   }
 
   .floating-play-btn {
-     top: 86px; right: 76px; left: auto; bottom: auto;
+     top: 76px; right: 76px; left: auto; bottom: auto;
      width: 44px; height: 44px; border-radius: 6px; 
      background: rgba(15, 23, 42, 0.85);
      backdrop-filter: blur(12px);
