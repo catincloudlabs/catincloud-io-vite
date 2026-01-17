@@ -621,22 +621,50 @@ html, body {
 /* ==================================================================== */
 /* 6. TIMELINE SLIDER                                                   */
 /* ==================================================================== */
-.timeline-slider-container {
+
+/* NEW: Wrapper handles positioning on the screen */
+.timeline-wrapper {
   position: absolute;
   bottom: 32px; 
   left: 32px;   
-  transform: none; 
   width: 360px; 
   max-width: 40vw; 
+  z-index: 30;
+  display: flex; 
+  flex-direction: column;
+  align-items: center; 
+  pointer-events: none; /* Let clicks pass through empty space */
+}
+
+/* MODIFIED: Slider Container handles the visual "Pill" look */
+.timeline-slider-container {
+  pointer-events: auto;
+  position: relative; 
+  width: 100%; 
   background: rgba(15, 23, 42, 0.85);
   backdrop-filter: blur(12px);
   padding: 12px 24px;
   border-radius: 99px;
   border: 1px solid var(--glass-border);
   box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-  z-index: 30;
   display: flex; 
   flex-direction: column;
+}
+
+/* NEW: Specific style for the footer when inside the timeline wrapper */
+.timeline-wrapper .disclaimer-footer {
+  margin-top: 8px; 
+  padding: 0;
+  background: none; 
+  border: none;     
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  opacity: 0.6;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+  width: auto;
+  letter-spacing: 0.05em;
+  pointer-events: auto;
 }
 
 .slider-label-row {
@@ -1486,12 +1514,16 @@ input[type=range]::-moz-range-track {
   .header-icon-btn { width: 44px; height: 44px; }
   .header-selector { height: 40px; min-width: 110px; }
   
-  .timeline-slider-container {
+  /* MODIFIED: Mobile positioning applied to wrapper instead of container */
+  .timeline-wrapper {
     bottom: calc(20px + env(safe-area-inset-bottom));
     left: 50%;
     transform: translateX(-50%);
     width: 92%;
     max-width: none;
+  }
+
+  .timeline-slider-container {
     background: rgba(15, 23, 42, 0.95);
   }
 

@@ -306,25 +306,30 @@ function App() {
         />
       </div>
 
-      <div className="timeline-slider-container">
-        <div className="slider-label-row">
-            <span>HISTORY</span>
-            <span>{isPlaying ? "SIMULATING..." : "SIMULATION PROGRESS"}</span>
-            <span>TODAY</span>
+      <div className="timeline-wrapper">
+        <div className="timeline-slider-container">
+          <div className="slider-label-row">
+              <span>HISTORY</span>
+              <span>{isPlaying ? "SIMULATING..." : "SIMULATION PROGRESS"}</span>
+              <span>TODAY</span>
+          </div>
+          <input 
+            type="range" 
+            min="0" 
+            max={Math.max(0, frames.length - 1)} 
+            step="0.01"
+            value={timelineProgress}
+            onChange={(e) => {
+                if (isPlaying) togglePlay();
+                setTimelineProgress(parseFloat(e.target.value));
+            }}
+            aria-label="Simulation Timeline"
+            className="slider-input"
+          />
         </div>
-        <input 
-          type="range" 
-          min="0" 
-          max={Math.max(0, frames.length - 1)} 
-          step="0.01"
-          value={timelineProgress}
-          onChange={(e) => {
-              if (isPlaying) togglePlay();
-              setTimelineProgress(parseFloat(e.target.value));
-          }}
-          aria-label="Simulation Timeline"
-          className="slider-input"
-        />
+        <div className="disclaimer-footer" aria-hidden="true">
+          SIMULATION ONLY. NOT FINANCIAL ADVICE.
+        </div>
       </div>
 
       <ArchitectureModal isOpen={isArchOpen} onClose={() => setArchOpen(false)} />
