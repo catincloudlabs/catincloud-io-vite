@@ -968,8 +968,7 @@ input[type=range]::-moz-range-track {
 /* ==================================================================== */
 .legend-wrapper {
   position: absolute;
-  /* Increased bottom spacing to clear the timeline controls */
-  bottom: 130px; 
+  bottom: 135px; 
   left: 32px;    
   top: auto;     
   z-index: 45;   
