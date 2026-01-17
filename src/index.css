@@ -1486,41 +1486,74 @@ input[type=range]::-moz-range-track {
 /* ==================================================================== */
 
 @media (max-width: 768px) {
-  .app-header { padding: 0 16px; height: 64px; }
+  .app-header { 
+    padding: 0 16px; 
+    height: 64px; 
+  }
+
   .header-label-text { display: none; }
   .chrono-value { font-size: 1rem; }
   .header-icon-btn { width: 44px; height: 44px; }
   .header-selector { height: 40px; min-width: 110px; }
   
-  /* Timeline Responsive Logic */
+  /* --- KEY FIX: UNGROUP THE CONTROLS ON MOBILE --- */
+  
+  /* 1. Reset the wrapper so it doesn't effect layout positioning */
   .timeline-wrapper {
-    bottom: calc(30px + env(safe-area-inset-bottom));
+    position: static; /* Removes absolute positioning context */
+    display: block;   /* Removes flexbox alignment */
+    width: auto;
+    height: auto;
+    pointer-events: none;
+  }
+
+  /* 2. Slider: Return to original Bottom-Center position */
+  .timeline-slider-container {
+    position: absolute;
+    /* Lifted slightly (from 20px to 36px) to make room for disclaimer text below */
+    bottom: calc(36px + env(safe-area-inset-bottom));
     left: 50%;
     transform: translateX(-50%);
     width: 92%;
     max-width: none;
-    justify-content: center; /* Centers the group on mobile */
-  }
-
-  .timeline-slider-container {
-    flex: 1; /* Allows slider to take available space */
-    width: auto;
     background: rgba(15, 23, 42, 0.95);
+    z-index: 50;
+    margin: 0;
   }
   
-  /* Legend Responsive Logic */
+  /* 3. Disclaimer: Tighten spacing for mobile */
+  .timeline-wrapper .disclaimer-footer {
+    margin-top: 6px;
+    font-size: 0.55rem;
+  }
+
+  /* 4. Play Button: Return to original "Floating" position (Bottom Right) */
+  .floating-play-btn {
+     position: absolute;
+     top: auto;
+     left: auto;
+     right: 24px;
+     /* Keeps it physically separated from the slider, as originally designed */
+     bottom: 110px; 
+     width: 44px; 
+     height: 44px; 
+     border-radius: 50%;
+     z-index: 55;
+  }
+  
+  /* 5. Legend: Return to original Top-Left position */
   .legend-wrapper {
-    /* Anchored to top-left on mobile to avoid bottom clutter */
-    top: 76px; 
+    top: 75px; 
     left: 16px; 
     bottom: auto; 
+    z-index: 45;
   }
   
   .legend-panel {
     top: 0; bottom: auto; margin-bottom: 0; margin-top: 20px; max-height: 50vh; 
   }
 
-  /* --- MOBILE HEADER SEPARATION LOGIC --- */
+  /* --- HEADER & UTILS --- */
   .header-left { flex: 1; margin-right: 12px; }
   .header-selector { flex: 1; width: 100%; max-width: none; }
   
@@ -1536,18 +1569,35 @@ input[type=range]::-moz-range-track {
     width: 44px; height: 44px; border-radius: 6px; 
   }
 
-  .floating-play-btn {
-     top: 76px; right: 76px; left: auto; bottom: auto;
-     width: 44px; height: 44px; border-radius: 6px; 
-     background: rgba(15, 23, 42, 0.85);
-     backdrop-filter: blur(12px);
-     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  }
-
   .header-filter-wrapper .filter-popover {
     top: 50px; right: 0; width: 280px;
   }
 
   .v-divider.mobile-hide { display: none; }
 
+  .agent-panel-wrapper {
+    left: 12px; 
+    right: 12px; 
+    width: auto;
+    /* Adjust to avoid overlapping the play button */
+    bottom: calc(160px + env(safe-area-inset-bottom)); 
+  }
+  
+  .agent-terminal.expanded { 
+    height: 55vh; 
+    max-height: 500px;
+  }
+
+  .terminal-input { font-size: 16px !important; }
+  .input-wrapper { padding: 12px; }
+  .send-btn { padding: 8px; }
+
+  .modal-box {
+    width: 100%; height: 100%; 
+    max-height: none; border-radius: 0; border: none;
+  }
+  
+  .bio-grid { 
+    flex-direction: column; align-items: center; text-align: center; 
+  }
 }
