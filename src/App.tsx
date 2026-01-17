@@ -12,9 +12,6 @@ import { Play, Pause } from 'lucide-react';
 import { FilterState } from './components/FilterMenu'; 
 import { catmullRom, catmullRomDerivative } from './utils/splineInterpolation';
 
-// Social Card Generator
-import { SocialCardGenerator } from './components/SocialCardGenerator';
-
 /* --- CONFIGURATION: Anchor Assets --- */
 const ANCHOR_TICKERS = new Set([
   "SPY", "QQQ", "IWM", "DIA", 
@@ -90,24 +87,6 @@ const WATCHLIST = [
 ];
 
 function App() {
-  /* --- SOCIAL CARD MODE --- */
-  // If the path is /social, render ONLY the generator.
-  if (window.location.pathname === '/social') {
-    return (
-      <div style={{ 
-        width: '100vw', 
-        height: '100vh', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        background: '#0f172a' // Matches the new card background (Slate 900)
-      }}>
-        <SocialCardGenerator />
-      </div>
-    );
-  }
-
-  /* --- NORMAL APP LOGIC --- */
   const [frames, setFrames] = useState<MarketFrame[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   
@@ -327,34 +306,25 @@ function App() {
         />
       </div>
 
-      {/* TIMELINE WRAPPER: Handles positioning */}
-      <div className="timeline-wrapper">
-        
-        {/* INNER CONTAINER: The "Glass Pill" */}
-        <div className="timeline-slider-container">
-          <div className="slider-label-row">
-              <span>HISTORY</span>
-              <span>{isPlaying ? "SIMULATING..." : "SIMULATION PROGRESS"}</span>
-              <span>TODAY</span>
-          </div>
-          <input 
-            type="range" 
-            min="0" 
-            max={Math.max(0, frames.length - 1)} 
-            step="0.01"
-            value={timelineProgress}
-            onChange={(e) => {
-                if (isPlaying) togglePlay();
-                setTimelineProgress(parseFloat(e.target.value));
-            }}
-            aria-label="Simulation Timeline"
-            className="slider-input"
-          />
+      <div className="timeline-slider-container">
+        <div className="slider-label-row">
+            <span>HISTORY</span>
+            <span>{isPlaying ? "SIMULATING..." : "SIMULATION PROGRESS"}</span>
+            <span>TODAY</span>
         </div>
-
-        {/* DISCLAIMER: Outside and below the pill */}
-        <div className="slider-disclaimer">SIMULATION ONLY. NOT FINANCIAL ADVICE.</div>
-      
+        <input 
+          type="range" 
+          min="0" 
+          max={Math.max(0, frames.length - 1)} 
+          step="0.01"
+          value={timelineProgress}
+          onChange={(e) => {
+              if (isPlaying) togglePlay();
+              setTimelineProgress(parseFloat(e.target.value));
+          }}
+          aria-label="Simulation Timeline"
+          className="slider-input"
+        />
       </div>
 
       <ArchitectureModal isOpen={isArchOpen} onClose={() => setArchOpen(false)} />
