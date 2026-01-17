@@ -289,13 +289,42 @@ function App() {
 
       <Legend />
       
-      <button 
-          onClick={togglePlay} 
-          className={`floating-play-btn ${isPlaying ? 'playing' : ''}`}
-          title={isPlaying ? "Pause Simulation" : "Play History"}
-      >
-          {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
-      </button>
+      {/* TIMELINE CONTROLS WRAPPER (Aligned & Grouped) */}
+      <div className="timeline-wrapper">
+        <div className="timeline-slider-container">
+          <div className="slider-label-row">
+              <span>HISTORY</span>
+              <span>{isPlaying ? "SIMULATING..." : "SIMULATION PROGRESS"}</span>
+              <span>TODAY</span>
+          </div>
+          <input 
+            type="range" 
+            min="0" 
+            max={Math.max(0, frames.length - 1)} 
+            step="0.01"
+            value={timelineProgress}
+            onChange={(e) => {
+                if (isPlaying) togglePlay();
+                setTimelineProgress(parseFloat(e.target.value));
+            }}
+            aria-label="Simulation Timeline"
+            className="slider-input"
+          />
+          {/* Disclaimer is positioned absolute relative to this container in CSS */}
+          <div className="disclaimer-footer" aria-hidden="true">
+            SIMULATION ONLY. NOT FINANCIAL ADVICE.
+          </div>
+        </div>
+
+        {/* Play Button sits in the flex flow next to the pill */}
+        <button 
+            onClick={togglePlay} 
+            className={`floating-play-btn ${isPlaying ? 'playing' : ''}`}
+            title={isPlaying ? "Pause Simulation" : "Play History"}
+        >
+            {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
+        </button>
+      </div>
 
       <div className="agent-panel-wrapper">
         <AgentPanel 
@@ -303,27 +332,6 @@ function App() {
           selectedTicker={selectedTicker}
           graphConnections={connections}
           isLoading={loading}
-        />
-      </div>
-
-      <div className="timeline-slider-container">
-        <div className="slider-label-row">
-            <span>HISTORY</span>
-            <span>{isPlaying ? "SIMULATING..." : "SIMULATION PROGRESS"}</span>
-            <span>TODAY</span>
-        </div>
-        <input 
-          type="range" 
-          min="0" 
-          max={Math.max(0, frames.length - 1)} 
-          step="0.01"
-          value={timelineProgress}
-          onChange={(e) => {
-              if (isPlaying) togglePlay();
-              setTimelineProgress(parseFloat(e.target.value));
-          }}
-          aria-label="Simulation Timeline"
-          className="slider-input"
         />
       </div>
 
