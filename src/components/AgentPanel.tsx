@@ -271,10 +271,6 @@ export function AgentPanel({
               </button>
             </div>
           </div>
-          
-          <div className="disclaimer-footer" aria-hidden="true">
-            SIMULATION ONLY. NOT FINANCIAL ADVICE.
-          </div>
         </>
       )}
     </div>
