@@ -1,53 +1,49 @@
-import { Activity, Cpu, Network, Terminal } from 'lucide-react';
+import { TrendingUp, Globe, Zap, Box } from 'lucide-react';
 
 export const SocialCardGenerator = () => {
   return (
-    <div className="social-card">
+    <div className="social-card-modern">
       
-      {/* BACKGROUND ELEMENTS */}
-      <div className="social-card-bg" />
-      <div className="social-card-orbs" />
+      {/* Subtle Background Accents */}
+      <div className="modern-bg-gradient" />
+      <div className="modern-accent-line" />
 
-      {/* TOP BAR */}
-      <div className="social-card-top">
-        <div className="social-brand-row">
-          <div className="social-brand-dot" />
-          <span className="social-brand-name">CATINCLOUD.IO</span>
+      {/* Main Content Layer */}
+      <div className="modern-content">
+        
+        {/* Header Row */}
+        <div className="modern-header">
+            <span className="modern-brand">CATINCLOUD.IO</span>
+            <span className="modern-badge">BETA</span>
         </div>
-        <div className="social-status-badge">
-          SYSTEM_ONLINE_v2.4
-        </div>
-      </div>
 
-      {/* HEADLINE */}
-      <div className="social-headline-box">
-        <h1 className="social-h1">
-          MARKET PHYSICS<br/>ENGINE
+        {/* Hero Typography */}
+        <h1 className="modern-title">
+          Market Intelligence,<br />
+          <span className="text-mint">Refined.</span>
         </h1>
-        <p className="social-sub">
-          Real-time visualization of high-dimensional financial data using hybrid intelligence.
+
+        <p className="modern-sub">
+          A high-dimensional physics engine for real-time financial visualization and analysis.
         </p>
-      </div>
 
-      {/* METRICS BADGES */}
-      <div className="social-footer">
-        <Badge icon={<Activity size={18} />} label="LIVE VELOCITY" value="60 FPS" />
-        <Badge icon={<Network size={18} />} label="NODES" value="2,400+" />
-        <Badge icon={<Cpu size={18} />} label="LATENCY" value="<16ms" />
-        <Badge icon={<Terminal size={18} />} label="AGENT" value="ACTIVE" />
-      </div>
+        {/* Clean Feature Grid */}
+        <div className="modern-feature-grid">
+           <FeatureItem icon={<TrendingUp size={20} />} label="Market Physics" />
+           <FeatureItem icon={<Globe size={20} />} label="Global Nodes" />
+           <FeatureItem icon={<Zap size={20} />} label="Live Signals" />
+           <FeatureItem icon={<Box size={20} />} label="3D Engine" />
+        </div>
 
+      </div>
     </div>
   );
 };
 
-// Helper for the badges
-const Badge = ({ icon, label, value }: any) => (
-  <div className="social-metric">
-    <div className="social-metric-icon">{icon}</div>
-    <div className="social-metric-text">
-      <span className="social-metric-label">{label}</span>
-      <span className="social-metric-val">{value}</span>
-    </div>
+// Helper Component for the bottom grid
+const FeatureItem = ({ icon, label }: any) => (
+  <div className="modern-feature">
+    <div className="feature-icon">{icon}</div>
+    <span className="feature-label">{label}</span>
   </div>
 );
