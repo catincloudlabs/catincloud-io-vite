@@ -1498,7 +1498,7 @@ input[type=range]::-moz-range-track {
   
   /* --- KEY FIX: UNGROUP THE CONTROLS ON MOBILE --- */
   
-  /* 1. Reset the wrapper so it doesn't effect layout positioning */
+  /* 1. Reset the wrapper so it doesn't affect layout positioning */
   .timeline-wrapper {
     position: static; /* Removes absolute positioning context */
     display: block;   /* Removes flexbox alignment */
@@ -1507,10 +1507,9 @@ input[type=range]::-moz-range-track {
     pointer-events: none;
   }
 
-  /* 2. Slider: Return to original Bottom-Center position */
+  /* 2. Slider: Centered at Bottom */
   .timeline-slider-container {
     position: absolute;
-    /* Lifted slightly (from 20px to 36px) to make room for disclaimer text below */
     bottom: calc(36px + env(safe-area-inset-bottom));
     left: 50%;
     transform: translateX(-50%);
@@ -1527,23 +1526,28 @@ input[type=range]::-moz-range-track {
     font-size: 0.55rem;
   }
 
-  /* 4. Play Button: Return to original "Floating" position (Bottom Right) */
+  /* 4. Play Button: RESTORED TO ORIGINAL TOP-RIGHT POSITION */
   .floating-play-btn {
      position: absolute;
-     top: auto;
+     top: 76px;    /* Aligned with the row below header */
+     right: 76px;  /* Sits to the left of the Filter Toggle */
      left: auto;
-     right: 24px;
-     /* Keeps it physically separated from the slider, as originally designed */
-     bottom: 110px; 
+     bottom: auto; /* Remove bottom anchor */
+     
      width: 44px; 
      height: 44px; 
-     border-radius: 50%;
+     border-radius: 6px; /* Original square-ish mobile shape */
+     
+     /* Ensure it looks correct against the dark background */
+     background: rgba(15, 23, 42, 0.85);
+     backdrop-filter: blur(12px);
+     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
      z-index: 55;
   }
   
-  /* 5. Legend: Return to original Top-Left position */
+  /* 5. Legend: Top-Left position */
   .legend-wrapper {
-    top: 75px; 
+    top: 76px; 
     left: 16px; 
     bottom: auto; 
     z-index: 45;
@@ -1557,6 +1561,7 @@ input[type=range]::-moz-range-track {
   .header-left { flex: 1; margin-right: 12px; }
   .header-selector { flex: 1; width: 100%; max-width: none; }
   
+  /* Filter Button Position (Reference point for Play Button) */
   .header-filter-wrapper {
     position: fixed; top: 76px; right: 16px; z-index: 45; 
   }
@@ -1575,12 +1580,12 @@ input[type=range]::-moz-range-track {
 
   .v-divider.mobile-hide { display: none; }
 
+  /* Agent Panel: Give it space so it doesn't hit the slider */
   .agent-panel-wrapper {
     left: 12px; 
     right: 12px; 
     width: auto;
-    /* Adjust to avoid overlapping the play button */
-    bottom: calc(160px + env(safe-area-inset-bottom)); 
+    bottom: calc(150px + env(safe-area-inset-bottom)); 
   }
   
   .agent-terminal.expanded { 
