@@ -1516,7 +1516,7 @@ input[type=range]::-moz-range-track {
   
   .timeline-slider-container {
     bottom: calc(20px + env(safe-area-inset-bottom));
-    left: 50%;
+    left: 0%;
     transform: translateX(-50%);
     width: 92%;
     max-width: none;
