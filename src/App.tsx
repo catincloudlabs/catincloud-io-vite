@@ -12,9 +12,6 @@ import { Play, Pause } from 'lucide-react';
 import { FilterState } from './components/FilterMenu'; 
 import { catmullRom, catmullRomDerivative } from './utils/splineInterpolation';
 
-// --- NEW IMPORT: Social Card Generator ---
-import { SocialCardGenerator } from './components/SocialCardGenerator';
-
 /* --- CONFIGURATION: Anchor Assets --- */
 const ANCHOR_TICKERS = new Set([
   "SPY", "QQQ", "IWM", "DIA", 
@@ -90,24 +87,6 @@ const WATCHLIST = [
 ];
 
 function App() {
-  /* --- SOCIAL CARD MODE --- */
-  // If the path is /social, render ONLY the generator.
-  if (window.location.pathname === '/social') {
-    return (
-      <div style={{ 
-        width: '100vw', 
-        height: '100vh', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        background: '#020617' // Matches the card background for seamless screenshots
-      }}>
-        <SocialCardGenerator />
-      </div>
-    );
-  }
-
-  /* --- NORMAL APP LOGIC --- */
   const [frames, setFrames] = useState<MarketFrame[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   
