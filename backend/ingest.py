@@ -6,16 +6,15 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from supabase import create_client, Client
 from openai import OpenAI
-from tenacity import retry, wait_random_exponential, stop_after_attempt, retry_if_exception_type
+from tenacity import retry, wait_random_exponential, stop_after_attempt
+import networkx as nx
+import community as community_louvain  # python-louvain
 
-# --- DAILY INGESTION ENGINE ---
-# Fetches fresh OHLC data and news, generates embeddings, and updates the knowledge graph.
-
+# --- CONFIGURATION & SETUP ---
 load_dotenv()
 MASSIVE_KEY = os.getenv("MASSIVE_API_KEY")
 MASSIVE_BASE_URL = "https://api.polygon.io" 
 
-# Connection Pooling
 session = requests.Session()
 adapter = requests.adapters.HTTPAdapter(pool_connections=20, pool_maxsize=20)
 session.mount('https://', adapter)
@@ -26,7 +25,6 @@ supabase: Client = create_client(
     os.getenv("SUPABASE_SERVICE_KEY")
 )
 
-# Configuration
 MAX_WORKERS = 10 
 NEWS_LOOKBACK_LIMIT = 3
 DB_BATCH_SIZE = 25 
@@ -37,7 +35,6 @@ ANCHOR_TICKERS = [
     "AMZN", "META", "TSLA",           
     "JPM", "V", "UNH", "XOM"          
 ]
-
 MANUAL_TICKERS = [
     "A", "AAL", "AAPL", "ABBV", "ABNB", "ABT", "ACGL", "ACN", "ADBE", "ADI", 
     "ADM", "ADP", "ADSK", "AEE", "AEP", "AES", "AFL", "AFRM", "AGG", "AI", 
@@ -102,9 +99,132 @@ MANUAL_TICKERS = [
     "XLE", "XLF", "XLI", "XLK", "XLP", "XLRE", "XLU", "XLV", "XLY", "XOM", 
     "XRAY", "XYL", "YUM", "ZBH", "ZBRA", "ZION", "ZTS"
 ]
-
 TICKER_UNIVERSE = list(set(MANUAL_TICKERS + ANCHOR_TICKERS))
 
+# --- CLASS: COMMUNITY DETECTOR ---
+class CommunityDetector:
+    def __init__(self, supabase_client):
+        self.supabase = supabase_client
+        self.graph = nx.Graph()
+
+    def fetch_and_build(self):
+        """Fetches recent edges and builds the NetworkX graph."""
+        print("   > 🕸️ Fetching Knowledge Graph for Community Detection...")
+        
+        # 1. Fetch Edges (Ticker-to-Ticker via News)
+        # We only want 'MENTIONS' edges from the last 7 days to keep it relevant
+        try:
+            # Note: You might need to adjust this query depending on your exact schema volume
+            response = self.supabase.table('knowledge_graph')\
+                .select("*").eq('edge_type', 'MENTIONS').execute()
+            
+            edges = response.data
+            if not edges:
+                print("   > ⚠️ No edges found. Skipping detection.")
+                return
+
+            print(f"   > 🕸️ Analyzing {len(edges)} connections...")
+            
+            # 2. Build Graph
+            for edge in edges:
+                # We are connecting Target (Ticker) <-> Source (News ID)
+                # This creates a bipartite graph. We need to project it to Ticker <-> Ticker
+                # OR: simpler approach for now -> If we have direct Ticker-Ticker edges.
+                
+                # Assuming your structure is News -> Ticker. 
+                # To find Ticker <-> Ticker, we look for News nodes with degree > 1
+                self.graph.add_edge(edge['source_node'], edge['target_node'], weight=edge.get('weight', 1))
+
+        except Exception as e:
+            print(f"   > ❌ Graph Build Error: {e}")
+
+    def run_detection(self):
+        """Runs Louvain Algorithm and PageRank to label communities."""
+        if self.graph.number_of_nodes() == 0:
+            return
+
+        # 1. Project to Ticker-Only Graph
+        # Currently the graph is Mixed (News IDs + Ticker Strings)
+        # We need to filter for Ticker nodes only.
+        ticker_nodes = [n for n in self.graph.nodes() if isinstance(n, str) and n.isupper() and len(n) < 6]
+        
+        if len(ticker_nodes) < 2: 
+            return
+
+        # Create a projection: Two tickers are connected if they share a News Article
+        projected_graph = nx.Graph()
+        
+        # (This is a simplified projection for speed)
+        # Iterate all news nodes (numeric IDs usually)
+        news_nodes = [n for n in self.graph.nodes() if n not in ticker_nodes]
+        
+        for news in news_nodes:
+            neighbors = list(self.graph.neighbors(news))
+            # If a news story mentions multiple tickers, connect them all
+            for i in range(len(neighbors)):
+                for j in range(i + 1, len(neighbors)):
+                    t1, t2 = neighbors[i], neighbors[j]
+                    if t1 in ticker_nodes and t2 in ticker_nodes:
+                        if projected_graph.has_edge(t1, t2):
+                            projected_graph[t1][t2]['weight'] += 1
+                        else:
+                            projected_graph.add_edge(t1, t2, weight=1)
+
+        print(f"   > 🧮 Projected Graph: {projected_graph.number_of_nodes()} Tickers, {projected_graph.number_of_edges()} Links")
+
+        if projected_graph.number_of_nodes() == 0:
+            return
+
+        # 2. Run Louvain
+        # Returns dict: {ticker: community_id}
+        partition = community_louvain.best_partition(projected_graph)
+        
+        # 3. Analyze Communities
+        # We need to label them. "Community 4" means nothing. "The NVDA Cluster" means everything.
+        community_groups = {}
+        for ticker, com_id in partition.items():
+            if com_id not in community_groups: community_groups[com_id] = []
+            community_groups[com_id].append(ticker)
+            
+        # Run PageRank on the projected graph for "Importance"
+        pagerank = nx.pagerank(projected_graph)
+        
+        updates = []
+        today = datetime.now().strftime('%Y-%m-%d')
+
+        print(f"   > 🏷️ Discovered {len(community_groups)} unique market clusters.")
+
+        for com_id, members in community_groups.items():
+            # Find the member with the highest PageRank
+            leader = max(members, key=lambda x: pagerank.get(x, 0))
+            label = f"{leader}-Linked" # e.g., "NVDA-Linked"
+            
+            # Prepare DB updates
+            for ticker in members:
+                updates.append({
+                    "ticker": ticker,
+                    "date": today,
+                    "community_id": com_id,
+                    "community_label": label
+                })
+
+        # 4. Save to Supabase
+        # We are updating the 'stocks_ohlc' table. 
+        # Note: You need to add 'community_id' and 'community_label' columns to your Supabase table first!
+        if updates:
+            print(f"   > 💾 Saving {len(updates)} community classifications...")
+            # We use upsert. Since (ticker, date) is unique, this updates the row.
+            try:
+                # Chunking for safety
+                batch_size = 50
+                for i in range(0, len(updates), batch_size):
+                    batch = updates[i:i+batch_size]
+                    self.supabase.table("stocks_ohlc").upsert(batch, on_conflict="ticker,date").execute()
+            except Exception as e:
+                print(f"   > ❌ Save Error: {e}")
+
+
+# --- HELPER FUNCTIONS (UNCHANGED) ---
 @retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
 def get_embedding(text):
     text = text.replace("\n", " ")
@@ -113,20 +233,14 @@ def get_embedding(text):
 def upload_stock_batch(records):
     if not records: return
     try:
-        supabase.table("stocks_ohlc").upsert(
-            records, 
-            on_conflict="ticker,date"
-        ).execute()
+        supabase.table("stocks_ohlc").upsert(records, on_conflict="ticker,date").execute()
         print(f" 💾 Stocks DB Commit: Saved {len(records)} tickers.")
     except Exception as e:
         print(f" ❌ Stocks DB Error: {e}")
 
-# --- PROCESSORS ---
-
 def fetch_single_stock(ticker):
     yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
     url = f"{MASSIVE_BASE_URL}/v1/open-close/{ticker}/{yesterday}?adjusted=true&apiKey={MASSIVE_KEY}"
-    
     attempts = 0
     while attempts < 3:
         try:
@@ -136,7 +250,6 @@ def fetch_single_stock(ticker):
                 attempts += 1
                 continue
             if resp.status_code != 200: return None
-                
             data = resp.json()
             return {
                 "ticker": data.get("symbol"),
@@ -166,12 +279,9 @@ def process_article_embedding(article):
     description = article.get("description", "") or ""
     text_content = f"{headline}: {description}"
     article_url = article.get("article_url")
-    
     if len(text_content) < 15 or not article_url: return None, []
-
     try:
         vector = get_embedding(text_content)
-        
         vector_record = {
             "ticker": "MARKET",
             "headline": headline,
@@ -179,7 +289,6 @@ def process_article_embedding(article):
             "url": article_url,
             "embedding": vector
         }
-        
         edge_stubs = []
         for t in article.get("tickers", []):
             edge_stubs.append({
@@ -187,27 +296,17 @@ def process_article_embedding(article):
                 "target_node": t,
                 "weight": 1.0
             })
-            
         return vector_record, edge_stubs
     except Exception as e:
         return None, []
 
-# Retry logic
 @retry(stop=stop_after_attempt(5), wait=wait_random_exponential(min=2, max=10))
 def upload_news_batch(vectors, edges):
     if not vectors: return
-    
-    # Upload vectors
-    res = supabase.table("news_vectors").upsert(
-        vectors, 
-        on_conflict="url"
-    ).execute()
-    
-    # Map URLs to new IDs for edges
+    res = supabase.table("news_vectors").upsert(vectors, on_conflict="url").execute()
     if res.data:
         url_to_id = {item['url']: item['id'] for item in res.data}
         final_edges = []
-        
         for stub in edges:
             article_id = url_to_id.get(stub['source_url'])
             if article_id:
@@ -217,16 +316,10 @@ def upload_news_batch(vectors, edges):
                     "edge_type": "MENTIONS",
                     "weight": stub['weight']
                 })
-        
         if final_edges:
-            supabase.table("knowledge_graph").upsert(
-                final_edges, 
-                on_conflict="source_node,target_node,edge_type",
-                ignore_duplicates=True
-            ).execute()
+            supabase.table("knowledge_graph").upsert(final_edges, on_conflict="source_node,target_node,edge_type", ignore_duplicates=True).execute()
 
-# --- EXECUTION ---
-
+# --- MAIN EXECUTION ---
 if __name__ == "__main__":
     start_time = time.time()
     print(f"🚀 Starting Engine for {len(TICKER_UNIVERSE)} Tickers...")
@@ -234,7 +327,6 @@ if __name__ == "__main__":
     # 1. Stocks
     print("\n📊 Phase 1: Fetching Market Physics (OHLC)...")
     valid_records = []
-    
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         future_to_ticker = {executor.submit(fetch_single_stock, t): t for t in TICKER_UNIVERSE}
         for future in concurrent.futures.as_completed(future_to_ticker):
@@ -246,9 +338,7 @@ if __name__ == "__main__":
 
     # 2. News
     print("\n🧠 Phase 2: Targeted Knowledge Ingestion...")
-    
     unique_articles = {} 
-    
     print(f"   > Scouting news for {len(TICKER_UNIVERSE)} targets...")
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         future_to_ticker = {executor.submit(fetch_ticker_news, t): t for t in TICKER_UNIVERSE}
@@ -284,7 +374,6 @@ if __name__ == "__main__":
                 # RESET
                 page_vectors = []
                 page_edges = []
-                
                 time.sleep(0.5)
 
         if page_vectors:
@@ -293,6 +382,12 @@ if __name__ == "__main__":
                 print(f"     ... processed {len(unique_articles)}/{len(unique_articles)}")
             except Exception as e:
                 print(f" ❌ Error uploading final batch: {e}")
+
+    # 3. Community Detection (NEW)
+    print("\n🕸️ Phase 3: Mathematical Clustering (Bubble Detection)...")
+    detector = CommunityDetector(supabase)
+    detector.fetch_and_build()
+    detector.run_detection()
 
     duration = time.time() - start_time
     print(f"\n✨ SYSTEM UPDATE COMPLETE in {duration:.2f} seconds.")
