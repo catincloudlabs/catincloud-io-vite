@@ -2,7 +2,7 @@ import os
 import requests
 import time
 import concurrent.futures
-from datetime import datetime
+from datetime import datetime, timedelta, date
 from dotenv import load_dotenv
 from supabase import create_client, Client
 from openai import OpenAI
@@ -12,13 +12,13 @@ import community as community_louvain
 
 # --- BACKFILL ORCHESTRATOR ---
 # Bulk processor for historical OHLC data (with Mass) and news archives.
-# Populates the initial database state for the targeted regime.
+# Runs a "Time Machine" simulation to calculate historical bubbles day-by-day.
 
 load_dotenv()
 MASSIVE_KEY = os.getenv("MASSIVE_API_KEY")
 POLYGON_BASE_URL = "https://api.polygon.io" 
 
-# Session for connection pooling (Speed up)
+# Connection Pooling
 session = requests.Session()
 adapter = requests.adapters.HTTPAdapter(pool_connections=20, pool_maxsize=20)
 session.mount('https://', adapter)
@@ -28,11 +28,13 @@ supabase: Client = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_
 
 # Configuration
 START_DATE = "2025-10-15"
-END_DATE = datetime.now().strftime('%Y-%m-%d')
+END_DATE = "2025-10-29"
+# END_DATE = datetime.now().strftime('%Y-%m-%d')
 MAX_WORKERS = 20 
 DB_BATCH_SIZE = 200
+NEWS_LOOKBACK_WINDOW = 3 # Days of context for the graph
 
-# Market Universe (S&P 500 + Core High Beta/AI/Crypto)
+# Market Universe
 ANCHOR_TICKERS = [
     "SPY", "QQQ", "IWM", "DIA",       
     "AAPL", "MSFT", "NVDA", "GOOGL",  
@@ -107,106 +109,151 @@ MANUAL_TICKERS = [
 
 TICKER_UNIVERSE = list(set(MANUAL_TICKERS + ANCHOR_TICKERS))
 
-# --- CLASS: COMMUNITY DETECTOR ---
-class CommunityDetector:
+# --- CLASS: TIME MACHINE DETECTOR ---
+
+class HistoricalCommunityDetector:
     def __init__(self, supabase_client):
         self.supabase = supabase_client
-        self.graph = nx.Graph()
+        # In-memory stores for speed
+        self.all_edges = []  # List of {source_node, target_node, weight}
+        self.news_dates = {} # Map: news_id -> datetime_object
 
-    def fetch_and_build(self):
-        """Fetches recent edges and builds the NetworkX graph."""
-        print("   > 🕸️ Fetching Knowledge Graph for Community Detection...")
+    def fetch_entire_history(self):
+        """Pre-fetches ALL graph data to avoid hitting DB in the loop."""
+        print("   > 🕸️  Pre-fetching entire Knowledge Graph & News Dates...")
+        
+        # 1. Fetch News Dates (news_vectors)
+        # We need to know WHEN every news ID happened to do the rolling window.
         try:
-            # Fetch 'MENTIONS' edges from the graph
-            response = self.supabase.table('knowledge_graph')\
-                .select("*").eq('edge_type', 'MENTIONS').execute()
-            
-            edges = response.data
-            if not edges:
-                print("   > ⚠️ No edges found. Skipping detection.")
-                return
-
-            print(f"   > 🕸️ Analyzing {len(edges)} connections...")
-            
-            # Build bipartite graph (Ticker <-> NewsID)
-            for edge in edges:
-                self.graph.add_edge(edge['source_node'], edge['target_node'], weight=edge.get('weight', 1))
-
+            # Note: For massive datasets, you'd paginate this. For <50k articles, this is fine.
+            resp = self.supabase.table('news_vectors').select("id, published_at").execute()
+            for row in resp.data:
+                try:
+                    # Parse ISO string to date obj
+                    dt = datetime.fromisoformat(row['published_at'].replace('Z', '+00:00')).date()
+                    self.news_dates[str(row['id'])] = dt
+                except:
+                    pass
         except Exception as e:
-            print(f"   > ❌ Graph Build Error: {e}")
-
-    def run_detection(self):
-        """Runs Louvain Algorithm and PageRank to label communities."""
-        if self.graph.number_of_nodes() == 0:
+            print(f"   > ❌ Error fetching news dates: {e}")
             return
 
-        # 1. Project to Ticker-Only Graph
-        # Filter for nodes that look like Tickers (Uppercase strings, short length)
-        ticker_nodes = [n for n in self.graph.nodes() if isinstance(n, str) and n.isupper() and len(n) < 6]
+        # 2. Fetch All Edges
+        try:
+            # We only care about MENTIONS for community detection
+            resp = self.supabase.table('knowledge_graph').select("*").eq('edge_type', 'MENTIONS').execute()
+            self.all_edges = resp.data
+            print(f"   > ✅ Loaded {len(self.all_edges)} edges and {len(self.news_dates)} news dates.")
+        except Exception as e:
+            print(f"   > ❌ Error fetching edges: {e}")
+
+    def run_time_machine(self, start_str, end_str):
+        """Iterates through every day and calculates the bubbles for THAT day."""
         
-        if len(ticker_nodes) < 2: 
+        start_date = datetime.strptime(start_str, "%Y-%m-%d").date()
+        end_date = datetime.strptime(end_str, "%Y-%m-%d").date()
+        
+        delta = end_date - start_date
+        total_days = delta.days + 1
+        
+        print(f"\n⏳ Starting Time Machine: Simulating {total_days} days of market physics...")
+
+        for i in range(total_days):
+            current_date = start_date + timedelta(days=i)
+            self._process_single_date(current_date)
+
+    def _process_single_date(self, simulation_date):
+        """Builds graph from window [date-3, date], runs Louvain, updates DB."""
+        
+        # 1. Define Window
+        window_start = simulation_date - timedelta(days=NEWS_LOOKBACK_WINDOW)
+        
+        # 2. Filter Edges in Memory (The Time Slice)
+        active_edges = []
+        for edge in self.all_edges:
+            news_id = str(edge['source_node'])
+            news_date = self.news_dates.get(news_id)
+            
+            if news_date and window_start <= news_date <= simulation_date:
+                active_edges.append(edge)
+
+        if len(active_edges) < 10:
+            # Not enough data to form bubbles today
             return
 
-        projected_graph = nx.Graph()
+        # 3. Build Graph
+        G = nx.Graph()
+        # Edge structure: NewsID -> Ticker. We project to Ticker <-> Ticker
+        # For speed in Python, we use a simple projection logic
         
-        # Simple projection: If two tickers share a neighbor (News ID), they are connected
-        news_nodes = [n for n in self.graph.nodes() if n not in ticker_nodes]
-        
-        for news in news_nodes:
-            neighbors = list(self.graph.neighbors(news))
-            for i in range(len(neighbors)):
-                for j in range(i + 1, len(neighbors)):
-                    t1, t2 = neighbors[i], neighbors[j]
-                    if t1 in ticker_nodes and t2 in ticker_nodes:
-                        if projected_graph.has_edge(t1, t2):
-                            projected_graph[t1][t2]['weight'] += 1
-                        else:
-                            projected_graph.add_edge(t1, t2, weight=1)
+        # Group tickers by News ID
+        news_to_tickers = {}
+        for edge in active_edges:
+            n_id = edge['source_node']
+            tick = edge['target_node']
+            if n_id not in news_to_tickers: news_to_tickers[n_id] = []
+            news_to_tickers[n_id].append(tick)
 
-        print(f"   > 🧮 Projected Graph: {projected_graph.number_of_nodes()} Tickers, {projected_graph.number_of_edges()} Links")
+        # Add edges between tickers that share news
+        for n_id, tickers in news_to_tickers.items():
+            for x in range(len(tickers)):
+                for y in range(x + 1, len(tickers)):
+                    t1, t2 = tickers[x], tickers[y]
+                    if G.has_edge(t1, t2):
+                        G[t1][t2]['weight'] += 1
+                    else:
+                        G.add_edge(t1, t2, weight=1)
 
-        if projected_graph.number_of_nodes() == 0:
-            return
+        if G.number_of_nodes() < 3: return
 
-        # 2. Run Louvain (The Physics Calculation)
-        partition = community_louvain.best_partition(projected_graph)
-        
-        # 3. Analyze Communities
+        # 4. Run Louvain (The Math)
+        try:
+            partition = community_louvain.best_partition(G)
+        except:
+            return # Graph likely disconnected or empty
+
+        # 5. Label Communities
         community_groups = {}
         for ticker, com_id in partition.items():
             if com_id not in community_groups: community_groups[com_id] = []
             community_groups[com_id].append(ticker)
-            
-        pagerank = nx.pagerank(projected_graph)
+
+        # Simple PageRank for finding the "Leader"
+        pagerank = nx.pagerank(G)
         
         updates = []
-        today = datetime.now().strftime('%Y-%m-%d')
-
-        print(f"   > 🏷️ Discovered {len(community_groups)} unique market clusters.")
+        date_str = simulation_date.strftime("%Y-%m-%d")
 
         for com_id, members in community_groups.items():
-            # Find the "King" of the bubble (Highest PageRank)
             leader = max(members, key=lambda x: pagerank.get(x, 0))
             label = f"{leader}-Linked" 
             
             for ticker in members:
                 updates.append({
                     "ticker": ticker,
-                    "date": today,
+                    "date": date_str,
                     "community_id": com_id,
                     "community_label": label
                 })
 
-        # 4. Save to Supabase
+        # 6. Push to DB (Batch Upsert)
         if updates:
-            print(f"   > 💾 Saving {len(updates)} community classifications...")
+            print(f"   > 📅 {date_str}: Identified {len(community_groups)} bubbles ({len(updates)} tickers).")
             try:
-                batch_size = 50
-                for i in range(0, len(updates), batch_size):
-                    batch = updates[i:i+batch_size]
-                    self.supabase.table("stocks_ohlc").upsert(batch, on_conflict="ticker,date").execute()
+                # We perform upsert. 
+                # Note: This relies on stocks_ohlc ALREADY having rows for this date (from step 1).
+                # If a ticker has no price data for this day (e.g. weekend), this upsert might insert a row with null price.
+                # That is acceptable.
+                
+                batch_size = 100
+                for k in range(0, len(updates), batch_size):
+                    self.supabase.table("stocks_ohlc").upsert(
+                        updates[k:k+batch_size], 
+                        on_conflict="ticker,date"
+                    ).execute()
             except Exception as e:
-                print(f"   > ❌ Save Error: {e}")
+                print(f"     ❌ Write failed: {e}")
+
 
 # --- ROBUST UTILS ---
 
@@ -266,8 +313,9 @@ def upload_news_batch(vectors, edges):
 
 @retry(stop=stop_after_attempt(5), wait=wait_random_exponential(min=1, max=10))
 def fetch_ticker_history(ticker):
-    # 1. Fetch Fundamental Mass (Market Cap) - Shares Outstanding
-    # We fetch this once per ticker. In a backfill, we use current shares as the "Mass" constant.
+    # 1. Fetch Fundamental Mass (Market Cap Constant)
+    # Optimization: We fetch shares once and apply to all dates. 
+    # Realistically shares change, but for visualization "constant shares" is acceptable approx.
     weighted_shares = 0
     try:
         details_url = f"{POLYGON_BASE_URL}/v3/reference/tickers/{ticker}?apiKey={MASSIVE_KEY}"
@@ -275,7 +323,7 @@ def fetch_ticker_history(ticker):
         if det_resp.status_code == 200:
             weighted_shares = det_resp.json().get("results", {}).get("weighted_shares_outstanding", 0)
     except Exception:
-        pass # Fallback to 0 Mass if unavailable
+        pass 
     
     # 2. Fetch Price History
     url = f"{POLYGON_BASE_URL}/v2/aggs/ticker/{ticker}/range/1/day/{START_DATE}/{END_DATE}?adjusted=true&sort=asc&apiKey={MASSIVE_KEY}"
@@ -295,7 +343,7 @@ def fetch_ticker_history(ticker):
         for bar in data["results"]:
             date_str = datetime.fromtimestamp(bar["t"] / 1000).strftime('%Y-%m-%d')
             
-            # Calculate Market Cap (Mass)
+            # CALCULATE MASS
             close_price = bar.get("c", 0)
             market_cap = close_price * weighted_shares
 
@@ -307,7 +355,7 @@ def fetch_ticker_history(ticker):
                 "low": bar.get("l"),
                 "close": close_price,
                 "volume": bar.get("v"),
-                "market_cap": market_cap # NEW METRIC
+                "market_cap": market_cap # The New Metric
             })
         return records
     except Exception as e:
@@ -401,7 +449,7 @@ def backfill_news():
 if __name__ == "__main__":
     start_time = time.time()
     
-    # 1. Stocks
+    # 1. Stocks & Mass
     print(f"🚀 Backfilling STOCKS for {len(TICKER_UNIVERSE)} tickers...")
     all_stock_records = []
     
@@ -425,10 +473,10 @@ if __name__ == "__main__":
     # 2. News
     backfill_news()
 
-    # 3. Community Detection (The Bubble Calculation)
-    print("\n🕸️ Phase 3: Calculating Historical Bubbles...")
-    detector = CommunityDetector(supabase)
-    detector.fetch_and_build()
-    detector.run_detection()
+    # 3. Time Machine (Historical Bubbles)
+    print("\n🕸️ Phase 3: Activating Time Machine (Historical Bubble Detection)...")
+    detector = HistoricalCommunityDetector(supabase)
+    detector.fetch_entire_history() # Load memory
+    detector.run_time_machine(START_DATE, END_DATE) # Run simulation loop
     
     print(f"\n✨ BACKFILL COMPLETE in {time.time() - start_time:.2f}s")
