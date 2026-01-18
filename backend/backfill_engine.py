@@ -7,14 +7,21 @@ from dotenv import load_dotenv
 from supabase import create_client, Client
 from openai import OpenAI
 from tenacity import retry, wait_random_exponential, stop_after_attempt
+import networkx as nx
+import community as community_louvain
 
 # --- BACKFILL ORCHESTRATOR ---
-# Bulk processor for historical OHLC data and news archives.
+# Bulk processor for historical OHLC data (with Mass) and news archives.
 # Populates the initial database state for the targeted regime.
 
 load_dotenv()
 MASSIVE_KEY = os.getenv("MASSIVE_API_KEY")
 POLYGON_BASE_URL = "https://api.polygon.io" 
+
+# Session for connection pooling (Speed up)
+session = requests.Session()
+adapter = requests.adapters.HTTPAdapter(pool_connections=20, pool_maxsize=20)
+session.mount('https://', adapter)
 
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 supabase: Client = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SERVICE_KEY"))
@@ -100,6 +107,107 @@ MANUAL_TICKERS = [
 
 TICKER_UNIVERSE = list(set(MANUAL_TICKERS + ANCHOR_TICKERS))
 
+# --- CLASS: COMMUNITY DETECTOR ---
+class CommunityDetector:
+    def __init__(self, supabase_client):
+        self.supabase = supabase_client
+        self.graph = nx.Graph()
+
+    def fetch_and_build(self):
+        """Fetches recent edges and builds the NetworkX graph."""
+        print("   > 🕸️ Fetching Knowledge Graph for Community Detection...")
+        try:
+            # Fetch 'MENTIONS' edges from the graph
+            response = self.supabase.table('knowledge_graph')\
+                .select("*").eq('edge_type', 'MENTIONS').execute()
+            
+            edges = response.data
+            if not edges:
+                print("   > ⚠️ No edges found. Skipping detection.")
+                return
+
+            print(f"   > 🕸️ Analyzing {len(edges)} connections...")
+            
+            # Build bipartite graph (Ticker <-> NewsID)
+            for edge in edges:
+                self.graph.add_edge(edge['source_node'], edge['target_node'], weight=edge.get('weight', 1))
+
+        except Exception as e:
+            print(f"   > ❌ Graph Build Error: {e}")
+
+    def run_detection(self):
+        """Runs Louvain Algorithm and PageRank to label communities."""
+        if self.graph.number_of_nodes() == 0:
+            return
+
+        # 1. Project to Ticker-Only Graph
+        # Filter for nodes that look like Tickers (Uppercase strings, short length)
+        ticker_nodes = [n for n in self.graph.nodes() if isinstance(n, str) and n.isupper() and len(n) < 6]
+        
+        if len(ticker_nodes) < 2: 
+            return
+
+        projected_graph = nx.Graph()
+        
+        # Simple projection: If two tickers share a neighbor (News ID), they are connected
+        news_nodes = [n for n in self.graph.nodes() if n not in ticker_nodes]
+        
+        for news in news_nodes:
+            neighbors = list(self.graph.neighbors(news))
+            for i in range(len(neighbors)):
+                for j in range(i + 1, len(neighbors)):
+                    t1, t2 = neighbors[i], neighbors[j]
+                    if t1 in ticker_nodes and t2 in ticker_nodes:
+                        if projected_graph.has_edge(t1, t2):
+                            projected_graph[t1][t2]['weight'] += 1
+                        else:
+                            projected_graph.add_edge(t1, t2, weight=1)
+
+        print(f"   > 🧮 Projected Graph: {projected_graph.number_of_nodes()} Tickers, {projected_graph.number_of_edges()} Links")
+
+        if projected_graph.number_of_nodes() == 0:
+            return
+
+        # 2. Run Louvain (The Physics Calculation)
+        partition = community_louvain.best_partition(projected_graph)
+        
+        # 3. Analyze Communities
+        community_groups = {}
+        for ticker, com_id in partition.items():
+            if com_id not in community_groups: community_groups[com_id] = []
+            community_groups[com_id].append(ticker)
+            
+        pagerank = nx.pagerank(projected_graph)
+        
+        updates = []
+        today = datetime.now().strftime('%Y-%m-%d')
+
+        print(f"   > 🏷️ Discovered {len(community_groups)} unique market clusters.")
+
+        for com_id, members in community_groups.items():
+            # Find the "King" of the bubble (Highest PageRank)
+            leader = max(members, key=lambda x: pagerank.get(x, 0))
+            label = f"{leader}-Linked" 
+            
+            for ticker in members:
+                updates.append({
+                    "ticker": ticker,
+                    "date": today,
+                    "community_id": com_id,
+                    "community_label": label
+                })
+
+        # 4. Save to Supabase
+        if updates:
+            print(f"   > 💾 Saving {len(updates)} community classifications...")
+            try:
+                batch_size = 50
+                for i in range(0, len(updates), batch_size):
+                    batch = updates[i:i+batch_size]
+                    self.supabase.table("stocks_ohlc").upsert(batch, on_conflict="ticker,date").execute()
+            except Exception as e:
+                print(f"   > ❌ Save Error: {e}")
+
 # --- ROBUST UTILS ---
 
 @retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
@@ -158,32 +266,52 @@ def upload_news_batch(vectors, edges):
 
 @retry(stop=stop_after_attempt(5), wait=wait_random_exponential(min=1, max=10))
 def fetch_ticker_history(ticker):
+    # 1. Fetch Fundamental Mass (Market Cap) - Shares Outstanding
+    # We fetch this once per ticker. In a backfill, we use current shares as the "Mass" constant.
+    weighted_shares = 0
+    try:
+        details_url = f"{POLYGON_BASE_URL}/v3/reference/tickers/{ticker}?apiKey={MASSIVE_KEY}"
+        det_resp = session.get(details_url, timeout=10)
+        if det_resp.status_code == 200:
+            weighted_shares = det_resp.json().get("results", {}).get("weighted_shares_outstanding", 0)
+    except Exception:
+        pass # Fallback to 0 Mass if unavailable
+    
+    # 2. Fetch Price History
     url = f"{POLYGON_BASE_URL}/v2/aggs/ticker/{ticker}/range/1/day/{START_DATE}/{END_DATE}?adjusted=true&sort=asc&apiKey={MASSIVE_KEY}"
     
-    resp = requests.get(url, timeout=15)
-    
-    if resp.status_code == 429:
-        raise Exception("Rate Limited")
-        
-    if resp.status_code != 200:
+    try:
+        resp = session.get(url, timeout=15)
+        if resp.status_code == 429:
+            raise Exception("Rate Limited")
+            
+        if resp.status_code != 200:
+            return []
+            
+        data = resp.json()
+        if "results" not in data: return []
+            
+        records = []
+        for bar in data["results"]:
+            date_str = datetime.fromtimestamp(bar["t"] / 1000).strftime('%Y-%m-%d')
+            
+            # Calculate Market Cap (Mass)
+            close_price = bar.get("c", 0)
+            market_cap = close_price * weighted_shares
+
+            records.append({
+                "ticker": ticker,
+                "date": date_str,
+                "open": bar.get("o"),
+                "high": bar.get("h"),
+                "low": bar.get("l"),
+                "close": close_price,
+                "volume": bar.get("v"),
+                "market_cap": market_cap # NEW METRIC
+            })
+        return records
+    except Exception as e:
         return []
-        
-    data = resp.json()
-    if "results" not in data: return []
-        
-    records = []
-    for bar in data["results"]:
-        date_str = datetime.fromtimestamp(bar["t"] / 1000).strftime('%Y-%m-%d')
-        records.append({
-            "ticker": ticker,
-            "date": date_str,
-            "open": bar.get("o"),
-            "high": bar.get("h"),
-            "low": bar.get("l"),
-            "close": bar.get("c"),
-            "volume": bar.get("v")
-        })
-    return records
 
 def process_single_article(article):
     headline = article.get("title", "")
@@ -227,7 +355,7 @@ def backfill_news():
     
     while next_url:
         try:
-            resp = requests.get(next_url, timeout=20)
+            resp = session.get(next_url, timeout=20)
             if resp.status_code != 200:
                 print(f"❌ News Error {resp.status_code}")
                 break
@@ -287,7 +415,7 @@ if __name__ == "__main__":
             except Exception as e:
                 print(f"Worker Error: {e}")
             completed += 1
-            if completed % 50 == 0: print(f"  ... {completed}/{len(TICKER_UNIVERSE)}")
+            if completed % 50 == 0: print(f"   ... {completed}/{len(TICKER_UNIVERSE)}")
 
     print(f"📦 Uploading {len(all_stock_records)} historical stock rows...")
     for i in range(0, len(all_stock_records), DB_BATCH_SIZE):
@@ -296,5 +424,11 @@ if __name__ == "__main__":
     
     # 2. News
     backfill_news()
+
+    # 3. Community Detection (The Bubble Calculation)
+    print("\n🕸️ Phase 3: Calculating Historical Bubbles...")
+    detector = CommunityDetector(supabase)
+    detector.fetch_and_build()
+    detector.run_detection()
     
     print(f"\n✨ BACKFILL COMPLETE in {time.time() - start_time:.2f}s")
