@@ -28,8 +28,7 @@ supabase: Client = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_
 
 # Configuration
 START_DATE = "2025-10-15"
-END_DATE = "2025-10-29"
-# END_DATE = datetime.now().strftime('%Y-%m-%d')
+END_DATE = datetime.now().strftime('%Y-%m-%d')
 MAX_WORKERS = 20 
 DB_BATCH_SIZE = 200
 NEWS_LOOKBACK_WINDOW = 3 # Days of context for the graph
