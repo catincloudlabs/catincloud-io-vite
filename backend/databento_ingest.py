@@ -30,8 +30,8 @@ db_client = db.Historical(DATABENTO_KEY)
 # --- GLOBAL SETTINGS ---
 # The Window: Jan 2026 (The Future Simulation)
 # We fetch 2025 data to act as the "Seed" for the simulation.
-START_DATE = "2025-01-02"
-END_DATE = "2025-01-10"
+START_DATE = "2025-10-01"
+END_DATE = "2025-10-07"
 BATCH_SIZE = 500
 
 # Databento is heavy, so we throttle physics threads. 
