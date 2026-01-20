@@ -10,9 +10,10 @@ from tenacity import retry, wait_random_exponential, stop_after_attempt
 import networkx as nx
 import community as community_louvain
 
-# --- BACKFILL ORCHESTRATOR ---
-# Bulk processor for historical OHLC data (with Mass) and news archives.
-# Runs a "Time Machine" simulation to calculate historical bubbles day-by-day.
+# --- BACKFILL ORCHESTRATOR (NARRATIVE ENGINE) ---
+# 1. Fetches Price & Market Cap (Polygon)
+# 2. Fetches News & Embeddings (Polygon + OpenAI)
+# 3. Runs "Time Machine" to calculate historical communities
 
 load_dotenv()
 MASSIVE_KEY = os.getenv("MASSIVE_API_KEY")
@@ -27,14 +28,13 @@ openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 supabase: Client = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SERVICE_KEY"))
 
 # Configuration
-START_DATE = "2025-10-01"
-END_DATE = datetime.now().strftime('%Y-%m-%d')
+START_DATE = "2025-01-02"  # Start of simulation window
+END_DATE = "2025-01-15"    # End of simulation window
 MAX_WORKERS = 20 
 DB_BATCH_SIZE = 200
-NEWS_LOOKBACK_WINDOW = 3 # Days of context for the graph
+NEWS_LOOKBACK_WINDOW = 3   # Rolling window for community detection
 
 # --- THE GALAXY UNIVERSE ---
-# Full 600+ ticker list
 ANCHOR_TICKERS = [
     "SPY", "QQQ", "IWM", "DIA",       
     "AAPL", "MSFT", "NVDA", "GOOGL",  
@@ -42,75 +42,71 @@ ANCHOR_TICKERS = [
     "JPM", "V", "UNH", "XOM"          
 ]
 
+# UNCOMMENT THIS LIST FOR THE FULL PRODUCTION RUN
 MANUAL_TICKERS = [
-    "AAPL", "MSFT", "NVDA", "GOOGL",
-    "AMZN", "META", "TSLA",
+    "A", "AAL", "AAPL", "ABBV", "ABNB", "ABT", "ACGL", "ACN", "ADBE", "ADI", 
+    "ADM", "ADP", "ADSK", "AEE", "AEP", "AES", "AFL", "AFRM", "AGG", "AI", 
+    "AIG", "AIZ", "AJG", "AKAM", "ALB", "ALGN", "ALL", "ALLE", "AMAT", "AMC", 
+    "AMCR", "AMD", "AME", "AMGN", "AMP", "AMT", "AMZN", "ANET", "ANSS", "AON", 
+    "AOS", "APA", "APD", "APH", "APP", "APTV", "ARE", "ARES", "ARM", "ASML", 
+    "ASTS", "ATO", "AVB", "AVGO", "AVY", "AWK", "AXON", "AXP", "AZO", "BA", 
+    "BABA", "BAC", "BALL", "BAX", "BB", "BBWI", "BBY", "BCS", "BDX", "BEN", 
+    "BF.B", "BG", "BIIB", "BIO", "BK", "BKNG", "BKR", "BLK", "BMY", "BND", 
+    "BR", "BRK.B", "BRO", "BSX", "BWA", "BX", "BXP", "BYND", "C", "CAG", 
+    "CAH", "CARR", "CAT", "CB", "CBOE", "CBRE", "CCI", "CCL", "CDAY", "CDNS", 
+    "CDW", "CE", "CEG", "CF", "CFG", "CHD", "CHPT", "CHRW", "CHTR", "CHWY", 
+    "CI", "CINF", "CL", "CLX", "CMCSA", "CME", "CMG", "CMI", "CMS", "CNC", 
+    "CNH", "CNP", "COF", "COIN", "COO", "COP", "COR", "COST", "CPRT", "CPT", 
+    "CRL", "CRM", "CRWD", "CSCO", "CSGP", "CSX", "CTAS", "CTLT", "CTRA", "CTSH", 
+    "CTVA", "CVNA", "CVS", "CVX", "CZR", "D", "DAL", "DASH", "DBC", "DD", 
+    "DE", "DELL", "DFS", "DG", "DGX", "DHI", "DHR", "DIA", "DIS", "DJT", 
+    "DKNG", "DLR", "DLTR", "DOV", "DOW", "DPZ", "DRI", "DTE", "DUK", "DVA", 
+    "DVN", "DXCM", "EA", "EBAY", "ECL", "ED", "EFX", "EG", "EIX", "EL", 
+    "ELV", "EMN", "EMR", "ENPH", "EOG", "EPAM", "EQIX", "EQR", "EQT", "ERIE", 
+    "ES", "ESS", "ETN", "ETR", "ETSY", "EVRG", "EW", "EXC", "EXPD", "EXPE", 
+    "EXR", "F", "FANG", "FAST", "FCX", "FDS", "FDX", "FE", "FFIV", "FI", 
+    "FICO", "FIS", "FITB", "FLT", "FMC", "FOX", "FOXA", "FRT", "FSLR", "FTNT", 
+    "FTV", "FUBO", "GD", "GDDY", "GE", "GEHC", "GEV", "GILD", "GIS", "GL", 
+    "GLD", "GLW", "GM", "GME", "GNRC", "GOOG", "GOOGL", "GPC", "GPN", "GRMN", 
+    "GS", "GWW", "HAL", "HAS", "HBAN", "HCA", "HD", "HES", "HIG", "HII", 
+    "HIMS", "HLT", "HOLX", "HON", "HOOD", "HPE", "HPQ", "HRL", "HSIC", "HST", 
+    "HSY", "HUBB", "HUM", "HWM", "HYG", "IBM", "IBIT", "ICE", "IDXX", "IEF", 
+    "IEX", "IFF", "IGP", "ILMN", "INCY", "INTC", "INTU", "INVH", "IONQ", "IP", 
+    "IPG", "IQV", "IR", "IRM", "ISRG", "IT", "ITB", "ITW", "IVZ", "IWM", 
+    "J", "JBHT", "JCI", "JD", "JETS", "JKHY", "JNJ", "JNPR", "JPM", "K", 
+    "KBE", "KDP", "KEY", "KEYS", "KHC", "KIM", "KKR", "KLAC", "KMB", "KMI", 
+    "KMX", "KO", "KR", "KRE", "KVUE", "L", "LABD", "LABU", "LCID", "LDOS", 
+    "LEN", "LH", "LHX", "LIN", "LKQ", "LLY", "LMT", "LNT", "LOW", "LQD", 
+    "LRCX", "LULU", "LUNR", "LUV", "LVS", "LW", "LYB", "LYV", "MA", "MAA", 
+    "MAR", "MARA", "MAS", "MCD", "MCHP", "MCK", "MCO", "MDLZ", "MDT", "MET", 
+    "META", "MGM", "MHK", "MKC", "MKTX", "MLM", "MMC", "MMM", "MNST", "MO", 
+    "MOH", "MOS", "MPC", "MPWR", "MRK", "MRNA", "MRO", "MRVL", "MS", "MSCI", 
+    "MSFT", "MSI", "MSTR", "MTB", "MTCH", "MTD", "MU", "NCLH", "NDAQ", "NDSN", 
+    "NEE", "NEM", "NFLX", "NI", "NKLA", "NKE", "NOC", "NOW", "NRG", "NSC", 
+    "NTAP", "NTRS", "NUE", "NVDA", "NVR", "NWS", "NWSA", "NXPI", "O", "ODFL", 
+    "OGN", "OKE", "OMC", "ON", "OPEN", "ORCL", "ORLY", "OTIS", "OXY", "PANW", 
+    "PARA", "PAYC", "PAYX", "PCAR", "PCG", "PDD", "PEAK", "PEG", "PEP", "PFE", 
+    "PFG", "PG", "PGR", "PH", "PHM", "PKG", "PLD", "PLTR", "PM", "PNC", 
+    "PNR", "PNW", "PODD", "POOL", "PPG", "PPL", "PRU", "PSA", "PSX", "PTC", 
+    "PTON", "PWR", "PXD", "PYPL", "QCOM", "QQQ", "QRVO", "QS", "RBLX", "RCL", 
+    "RDDT", "REG", "REGN", "RF", "RHI", "RJF", "RKLB", "RL", "RMD", "RIVN", 
+    "ROK", "ROL", "ROP", "ROST", "RSG", "RTX", "RVTY", "SBAC", "SBUX", "SCHW", 
+    "SEE", "SHW", "SHY", "SJM", "SLB", "SLV", "SMH", "SNA", "SNPS", "SO", 
+    "SOFI", "SOLV", "SOUN", "SOXL", "SOXS", "SOXX", "SPCE", "SPG", "SPGI", 
+    "SPXU", "SPY", "SQ", "SQQQ", "SRE", "STE", "STLD", "STM", "STT", "STX", 
+    "STZ", "SWK", "SWKS", "SYF", "SYK", "SYY", "T", "TAP", "TDG", "TDY", 
+    "TECH", "TEL", "TER", "TFC", "TFX", "TGT", "TJX", "TLR", "TLRY", "TLT", 
+    "TMF", "TMO", "TMUS", "TMV", "TPR", "TQQQ", "TRGP", "TRMB", "TROW", "TRV", 
+    "TSCO", "TSLA", "TSM", "TSN", "TT", "TTD", "TTWO", "TXN", "TXT", "TYL", 
+    "U", "UAL", "UDR", "UHS", "ULTA", "UNG", "UNH", "UNP", "UPS", "UPRO", 
+    "UPST", "URI", "USB", "USO", "UVXY", "V", "VEA", "VFC", "VICI", "VIXY", 
+    "VLO", "VLTO", "VMC", "VNO", "VOO", "VRSK", "VRSN", "VRT", "VRTX", "VTI", 
+    "VTR", "VTRS", "VST", "VWO", "VXX", "VZ", "WAB", "WAT", "WBA", "WBD", 
+    "WDC", "WDAY", "WEC", "WELL", "WFC", "WHR", "WM", "WMB", "WMT", "WRB", 
+    "WRK", "WSM", "WST", "WTW", "WY", "WYNN", "XBI", "XEL", "XLB", "XLC", 
+    "XLE", "XLF", "XLI", "XLK", "XLP", "XLRE", "XLU", "XLV", "XLY", "XOM", 
+    "XRAY", "XYL", "YUM", "ZBH", "ZBRA", "ZION", "ZTS"
 ]
-
-# MANUAL_TICKERS = [
-#     "A", "AAL", "AAPL", "ABBV", "ABNB", "ABT", "ACGL", "ACN", "ADBE", "ADI", 
-#     "ADM", "ADP", "ADSK", "AEE", "AEP", "AES", "AFL", "AFRM", "AGG", "AI", 
-#     "AIG", "AIZ", "AJG", "AKAM", "ALB", "ALGN", "ALL", "ALLE", "AMAT", "AMC", 
-#     "AMCR", "AMD", "AME", "AMGN", "AMP", "AMT", "AMZN", "ANET", "ANSS", "AON", 
-#     "AOS", "APA", "APD", "APH", "APP", "APTV", "ARE", "ARES", "ARM", "ASML", 
-#     "ASTS", "ATO", "AVB", "AVGO", "AVY", "AWK", "AXON", "AXP", "AZO", "BA", 
-#     "BABA", "BAC", "BALL", "BAX", "BB", "BBWI", "BBY", "BCS", "BDX", "BEN", 
-#     "BF.B", "BG", "BIIB", "BIO", "BK", "BKNG", "BKR", "BLK", "BMY", "BND", 
-#     "BR", "BRK.B", "BRO", "BSX", "BWA", "BX", "BXP", "BYND", "C", "CAG", 
-#     "CAH", "CARR", "CAT", "CB", "CBOE", "CBRE", "CCI", "CCL", "CDAY", "CDNS", 
-#     "CDW", "CE", "CEG", "CF", "CFG", "CHD", "CHPT", "CHRW", "CHTR", "CHWY", 
-#     "CI", "CINF", "CL", "CLX", "CMCSA", "CME", "CMG", "CMI", "CMS", "CNC", 
-#     "CNH", "CNP", "COF", "COIN", "COO", "COP", "COR", "COST", "CPRT", "CPT", 
-#     "CRL", "CRM", "CRWD", "CSCO", "CSGP", "CSX", "CTAS", "CTLT", "CTRA", "CTSH", 
-#     "CTVA", "CVNA", "CVS", "CVX", "CZR", "D", "DAL", "DASH", "DBC", "DD", 
-#     "DE", "DELL", "DFS", "DG", "DGX", "DHI", "DHR", "DIA", "DIS", "DJT", 
-#     "DKNG", "DLR", "DLTR", "DOV", "DOW", "DPZ", "DRI", "DTE", "DUK", "DVA", 
-#     "DVN", "DXCM", "EA", "EBAY", "ECL", "ED", "EFX", "EG", "EIX", "EL", 
-#     "ELV", "EMN", "EMR", "ENPH", "EOG", "EPAM", "EQIX", "EQR", "EQT", "ERIE", 
-#     "ES", "ESS", "ETN", "ETR", "ETSY", "EVRG", "EW", "EXC", "EXPD", "EXPE", 
-#     "EXR", "F", "FANG", "FAST", "FCX", "FDS", "FDX", "FE", "FFIV", "FI", 
-#     "FICO", "FIS", "FITB", "FLT", "FMC", "FOX", "FOXA", "FRT", "FSLR", "FTNT", 
-#     "FTV", "FUBO", "GD", "GDDY", "GE", "GEHC", "GEV", "GILD", "GIS", "GL", 
-#     "GLD", "GLW", "GM", "GME", "GNRC", "GOOG", "GOOGL", "GPC", "GPN", "GRMN", 
-#     "GS", "GWW", "HAL", "HAS", "HBAN", "HCA", "HD", "HES", "HIG", "HII", 
-#     "HIMS", "HLT", "HOLX", "HON", "HOOD", "HPE", "HPQ", "HRL", "HSIC", "HST", 
-#     "HSY", "HUBB", "HUM", "HWM", "HYG", "IBM", "IBIT", "ICE", "IDXX", "IEF", 
-#     "IEX", "IFF", "IGP", "ILMN", "INCY", "INTC", "INTU", "INVH", "IONQ", "IP", 
-#     "IPG", "IQV", "IR", "IRM", "ISRG", "IT", "ITB", "ITW", "IVZ", "IWM", 
-#     "J", "JBHT", "JCI", "JD", "JETS", "JKHY", "JNJ", "JNPR", "JPM", "K", 
-#     "KBE", "KDP", "KEY", "KEYS", "KHC", "KIM", "KKR", "KLAC", "KMB", "KMI", 
-#     "KMX", "KO", "KR", "KRE", "KVUE", "L", "LABD", "LABU", "LCID", "LDOS", 
-#     "LEN", "LH", "LHX", "LIN", "LKQ", "LLY", "LMT", "LNT", "LOW", "LQD", 
-#     "LRCX", "LULU", "LUNR", "LUV", "LVS", "LW", "LYB", "LYV", "MA", "MAA", 
-#     "MAR", "MARA", "MAS", "MCD", "MCHP", "MCK", "MCO", "MDLZ", "MDT", "MET", 
-#     "META", "MGM", "MHK", "MKC", "MKTX", "MLM", "MMC", "MMM", "MNST", "MO", 
-#     "MOH", "MOS", "MPC", "MPWR", "MRK", "MRNA", "MRO", "MRVL", "MS", "MSCI", 
-#     "MSFT", "MSI", "MSTR", "MTB", "MTCH", "MTD", "MU", "NCLH", "NDAQ", "NDSN", 
-#     "NEE", "NEM", "NFLX", "NI", "NKLA", "NKE", "NOC", "NOW", "NRG", "NSC", 
-#     "NTAP", "NTRS", "NUE", "NVDA", "NVR", "NWS", "NWSA", "NXPI", "O", "ODFL", 
-#     "OGN", "OKE", "OMC", "ON", "OPEN", "ORCL", "ORLY", "OTIS", "OXY", "PANW", 
-#     "PARA", "PAYC", "PAYX", "PCAR", "PCG", "PDD", "PEAK", "PEG", "PEP", "PFE", 
-#     "PFG", "PG", "PGR", "PH", "PHM", "PKG", "PLD", "PLTR", "PM", "PNC", 
-#     "PNR", "PNW", "PODD", "POOL", "PPG", "PPL", "PRU", "PSA", "PSX", "PTC", 
-#     "PTON", "PWR", "PXD", "PYPL", "QCOM", "QQQ", "QRVO", "QS", "RBLX", "RCL", 
-#     "RDDT", "REG", "REGN", "RF", "RHI", "RJF", "RKLB", "RL", "RMD", "RIVN", 
-#     "ROK", "ROL", "ROP", "ROST", "RSG", "RTX", "RVTY", "SBAC", "SBUX", "SCHW", 
-#     "SEE", "SHW", "SHY", "SJM", "SLB", "SLV", "SMH", "SNA", "SNPS", "SO", 
-#     "SOFI", "SOLV", "SOUN", "SOXL", "SOXS", "SOXX", "SPCE", "SPG", "SPGI", 
-#     "SPXU", "SPY", "SQ", "SQQQ", "SRE", "STE", "STLD", "STM", "STT", "STX", 
-#     "STZ", "SWK", "SWKS", "SYF", "SYK", "SYY", "T", "TAP", "TDG", "TDY", 
-#     "TECH", "TEL", "TER", "TFC", "TFX", "TGT", "TJX", "TLR", "TLRY", "TLT", 
-#     "TMF", "TMO", "TMUS", "TMV", "TPR", "TQQQ", "TRGP", "TRMB", "TROW", "TRV", 
-#     "TSCO", "TSLA", "TSM", "TSN", "TT", "TTD", "TTWO", "TXN", "TXT", "TYL", 
-#     "U", "UAL", "UDR", "UHS", "ULTA", "UNG", "UNH", "UNP", "UPS", "UPRO", 
-#     "UPST", "URI", "USB", "USO", "UVXY", "V", "VEA", "VFC", "VICI", "VIXY", 
-#     "VLO", "VLTO", "VMC", "VNO", "VOO", "VRSK", "VRSN", "VRT", "VRTX", "VTI", 
-#     "VTR", "VTRS", "VST", "VWO", "VXX", "VZ", "WAB", "WAT", "WBA", "WBD", 
-#     "WDC", "WDAY", "WEC", "WELL", "WFC", "WHR", "WM", "WMB", "WMT", "WRB", 
-#     "WRK", "WSM", "WST", "WTW", "WY", "WYNN", "XBI", "XEL", "XLB", "XLC", 
-#     "XLE", "XLF", "XLI", "XLK", "XLP", "XLRE", "XLU", "XLV", "XLY", "XOM", 
-#     "XRAY", "XYL", "YUM", "ZBH", "ZBRA", "ZION", "ZTS"
-# ]
 
 TICKER_UNIVERSE = list(set(MANUAL_TICKERS + ANCHOR_TICKERS))
 
@@ -125,8 +121,8 @@ class HistoricalCommunityDetector:
     def fetch_entire_history(self):
         print("   > 🕸️  Pre-fetching entire Knowledge Graph & News Dates...")
         
-        # 1. Fetch News Dates
         try:
+            # 1. Fetch News Dates
             resp = self.supabase.table('news_vectors').select("id, published_at").execute()
             for row in resp.data:
                 try:
@@ -138,8 +134,8 @@ class HistoricalCommunityDetector:
             print(f"   > ❌ Error fetching news dates: {e}")
             return
 
-        # 2. Fetch All Edges
         try:
+            # 2. Fetch All Edges
             resp = self.supabase.table('knowledge_graph').select("*").eq('edge_type', 'MENTIONS').execute()
             self.all_edges = resp.data
             print(f"   > ✅ Loaded {len(self.all_edges)} edges and {len(self.news_dates)} news dates.")
@@ -162,6 +158,7 @@ class HistoricalCommunityDetector:
     def _process_single_date(self, simulation_date):
         window_start = simulation_date - timedelta(days=NEWS_LOOKBACK_WINDOW)
         
+        # 1. Filter Edges for this window
         active_edges = []
         for edge in self.all_edges:
             news_id = str(edge['source_node'])
@@ -170,10 +167,13 @@ class HistoricalCommunityDetector:
             if news_date and window_start <= news_date <= simulation_date:
                 active_edges.append(edge)
 
-        if len(active_edges) < 10:
+        if len(active_edges) < 5:
             return
 
+        # 2. Build Graph (Weighted by Density)
         G = nx.Graph()
+        
+        # Group tickers by Article
         news_to_tickers = {}
         for edge in active_edges:
             n_id = edge['source_node']
@@ -181,35 +181,49 @@ class HistoricalCommunityDetector:
             if n_id not in news_to_tickers: news_to_tickers[n_id] = []
             news_to_tickers[n_id].append(tick)
 
+        # Add edges with Inverse Frequency Weighting
         for n_id, tickers in news_to_tickers.items():
+            num_tickers = len(tickers)
+            if num_tickers < 2: continue
+            
+            # The more tickers in an article, the weaker the bond
+            # 2 tickers -> 1.0
+            # 10 tickers -> 0.11
+            weight_increment = 1.0 / (num_tickers - 1)
+            
             for x in range(len(tickers)):
                 for y in range(x + 1, len(tickers)):
                     t1, t2 = tickers[x], tickers[y]
                     if G.has_edge(t1, t2):
-                        G[t1][t2]['weight'] += 1
+                        G[t1][t2]['weight'] += weight_increment
                     else:
-                        G.add_edge(t1, t2, weight=1)
+                        G.add_edge(t1, t2, weight=weight_increment)
 
         if G.number_of_nodes() < 3: return
 
+        # 3. Detect Communities (Louvain)
         try:
-            partition = community_louvain.best_partition(G)
+            partition = community_louvain.best_partition(G, weight='weight')
         except:
             return 
 
+        # 4. Label Communities via PageRank
         community_groups = {}
         for ticker, com_id in partition.items():
             if com_id not in community_groups: community_groups[com_id] = []
             community_groups[com_id].append(ticker)
 
-        pagerank = nx.pagerank(G)
+        pagerank = nx.pagerank(G, weight='weight')
         
         updates = []
         date_str = simulation_date.strftime("%Y-%m-%d")
 
         for com_id, members in community_groups.items():
+            # Filter small noise bubbles
+            if len(members) < 2: continue
+            
             leader = max(members, key=lambda x: pagerank.get(x, 0))
-            label = f"{leader}-Linked" 
+            label = f"{leader}-Linked"
             
             for ticker in members:
                 updates.append({
@@ -219,13 +233,15 @@ class HistoricalCommunityDetector:
                     "community_label": label
                 })
 
+        # 5. Save to DB
         if updates:
-            print(f"   > 📅 {date_str}: Identified {len(community_groups)} bubbles ({len(updates)} tickers).")
+            print(f"   > 📅 {date_str}: Identified {len(community_groups)} sectors. Writing {len(updates)} rows...")
             try:
-                batch_size = 100
-                for k in range(0, len(updates), batch_size):
+                # Upsert in chunks to avoid timeouts
+                chunk_size = 200
+                for k in range(0, len(updates), chunk_size):
                     self.supabase.table("stocks_ohlc").upsert(
-                        updates[k:k+batch_size], 
+                        updates[k:k+chunk_size], 
                         on_conflict="ticker,date"
                     ).execute()
             except Exception as e:
@@ -254,11 +270,13 @@ def upload_stock_batch(records):
 def upload_news_batch(vectors, edges):
     if not vectors: return
     try:
+        # Upload vectors
         res = supabase.table("news_vectors").upsert(
             vectors, 
             on_conflict="url"
         ).execute()
         
+        # Map new IDs to edges
         if res.data:
             url_to_id = {item['url']: item['id'] for item in res.data}
             
