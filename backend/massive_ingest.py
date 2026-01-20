@@ -28,8 +28,8 @@ openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 supabase: Client = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SERVICE_KEY"))
 
 # Configuration
-START_DATE = "2025-01-07"  # Start of simulation window
-END_DATE = "2025-01-15"    # End of simulation window
+START_DATE = "2025-10-01"
+END_DATE = datetime.now().strftime('%Y-%m-%d')
 MAX_WORKERS = 20 
 DB_BATCH_SIZE = 200
 NEWS_LOOKBACK_WINDOW = 3   # Rolling window for community detection
