@@ -2,188 +2,174 @@ import os
 import requests
 import time
 import concurrent.futures
-from datetime import datetime
+import warnings
+import pandas as pd
+import numpy as np
+import databento as db
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 from dotenv import load_dotenv
 from supabase import create_client, Client
 from openai import OpenAI
 from tenacity import retry, wait_random_exponential, stop_after_attempt
 
-# --- BACKFILL ORCHESTRATOR ---
-# Bulk processor for historical OHLC data and news archives.
-# Populates the initial database state for the targeted regime.
+# --- SILENCE THE NOISE ---
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings("ignore", message="The size of this streaming request")
 
+# --- CONFIGURATION ---
 load_dotenv()
-MASSIVE_KEY = os.getenv("MASSIVE_API_KEY")
-POLYGON_BASE_URL = "https://api.polygon.io" 
+DATABENTO_KEY = os.getenv("DATABENTO_API_KEY")
+MASSIVE_KEY = os.getenv("MASSIVE_API_KEY") # Polygon Key
+OPENAI_KEY = os.getenv("OPENAI_API_KEY")
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 
-openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-supabase: Client = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SERVICE_KEY"))
+if not DATABENTO_KEY or not SUPABASE_URL:
+    raise ValueError("❌ Missing Keys in .env")
 
-# Configuration
-START_DATE = "2025-10-15"
-END_DATE = datetime.now().strftime('%Y-%m-%d')
-MAX_WORKERS = 20 
-DB_BATCH_SIZE = 200
+# CLIENTS
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+db_client = db.Historical(DATABENTO_KEY)
+openai_client = OpenAI(api_key=OPENAI_KEY)
 
-# Market Universe (S&P 500 + Core High Beta/AI/Crypto)
+# --- GLOBAL SETTINGS ---
+# The Window: Jan 2026 (The Future Simulation)
+# We fetch 2025 data to act as the "Seed" for the simulation.
+START_DATE = "2025-01-02"
+END_DATE = "2025-01-10"
+BATCH_SIZE = 500
+
+# Databento is heavy, so we throttle physics threads. 
+# Polygon/OpenAI are fast, so we let them run wider.
+PHYSICS_WORKERS = 4  
+NEWS_WORKERS = 20    
+
+# --- THE GALAXY UNIVERSE ---
+# Currently set to Test Mode (7 Tickers)
 ANCHOR_TICKERS = [
-    "SPY", "QQQ", "IWM", "DIA",       
-    "AAPL", "MSFT", "NVDA", "GOOGL",  
-    "AMZN", "META", "TSLA",           
-    "JPM", "V", "UNH", "XOM"          
+    "AAPL", "MSFT", "NVDA", "GOOGL",
+    "AMZN", "META", "TSLA",
 ]
 
 MANUAL_TICKERS = [
-    "A", "AAL", "AAPL", "ABBV", "ABNB", "ABT", "ACGL", "ACN", "ADBE", "ADI", 
-    "ADM", "ADP", "ADSK", "AEE", "AEP", "AES", "AFL", "AFRM", "AGG", "AI", 
-    "AIG", "AIZ", "AJG", "AKAM", "ALB", "ALGN", "ALL", "ALLE", "AMAT", "AMC", 
-    "AMCR", "AMD", "AME", "AMGN", "AMP", "AMT", "AMZN", "ANET", "ANSS", "AON", 
-    "AOS", "APA", "APD", "APH", "APP", "APTV", "ARE", "ARES", "ARM", "ASML", 
-    "ASTS", "ATO", "AVB", "AVGO", "AVY", "AWK", "AXON", "AXP", "AZO", "BA", 
-    "BABA", "BAC", "BALL", "BAX", "BB", "BBWI", "BBY", "BCS", "BDX", "BEN", 
-    "BF.B", "BG", "BIIB", "BIO", "BK", "BKNG", "BKR", "BLK", "BMY", "BND", 
-    "BR", "BRK.B", "BRO", "BSX", "BWA", "BX", "BXP", "BYND", "C", "CAG", 
-    "CAH", "CARR", "CAT", "CB", "CBOE", "CBRE", "CCI", "CCL", "CDAY", "CDNS", 
-    "CDW", "CE", "CEG", "CF", "CFG", "CHD", "CHPT", "CHRW", "CHTR", "CHWY", 
-    "CI", "CINF", "CL", "CLX", "CMCSA", "CME", "CMG", "CMI", "CMS", "CNC", 
-    "CNH", "CNP", "COF", "COIN", "COO", "COP", "COR", "COST", "CPRT", "CPT", 
-    "CRL", "CRM", "CRWD", "CSCO", "CSGP", "CSX", "CTAS", "CTLT", "CTRA", "CTSH", 
-    "CTVA", "CVNA", "CVS", "CVX", "CZR", "D", "DAL", "DASH", "DBC", "DD", 
-    "DE", "DELL", "DFS", "DG", "DGX", "DHI", "DHR", "DIA", "DIS", "DJT", 
-    "DKNG", "DLR", "DLTR", "DOV", "DOW", "DPZ", "DRI", "DTE", "DUK", "DVA", 
-    "DVN", "DXCM", "EA", "EBAY", "ECL", "ED", "EFX", "EG", "EIX", "EL", 
-    "ELV", "EMN", "EMR", "ENPH", "EOG", "EPAM", "EQIX", "EQR", "EQT", "ERIE", 
-    "ES", "ESS", "ETN", "ETR", "ETSY", "EVRG", "EW", "EXC", "EXPD", "EXPE", 
-    "EXR", "F", "FANG", "FAST", "FCX", "FDS", "FDX", "FE", "FFIV", "FI", 
-    "FICO", "FIS", "FITB", "FLT", "FMC", "FOX", "FOXA", "FRT", "FSLR", "FTNT", 
-    "FTV", "FUBO", "GD", "GDDY", "GE", "GEHC", "GEV", "GILD", "GIS", "GL", 
-    "GLD", "GLW", "GM", "GME", "GNRC", "GOOG", "GOOGL", "GPC", "GPN", "GRMN", 
-    "GS", "GWW", "HAL", "HAS", "HBAN", "HCA", "HD", "HES", "HIG", "HII", 
-    "HIMS", "HLT", "HOLX", "HON", "HOOD", "HPE", "HPQ", "HRL", "HSIC", "HST", 
-    "HSY", "HUBB", "HUM", "HWM", "HYG", "IBM", "IBIT", "ICE", "IDXX", "IEF", 
-    "IEX", "IFF", "IGP", "ILMN", "INCY", "INTC", "INTU", "INVH", "IONQ", "IP", 
-    "IPG", "IQV", "IR", "IRM", "ISRG", "IT", "ITB", "ITW", "IVZ", "IWM", 
-    "J", "JBHT", "JCI", "JD", "JETS", "JKHY", "JNJ", "JNPR", "JPM", "K", 
-    "KBE", "KDP", "KEY", "KEYS", "KHC", "KIM", "KKR", "KLAC", "KMB", "KMI", 
-    "KMX", "KO", "KR", "KRE", "KVUE", "L", "LABD", "LABU", "LCID", "LDOS", 
-    "LEN", "LH", "LHX", "LIN", "LKQ", "LLY", "LMT", "LNT", "LOW", "LQD", 
-    "LRCX", "LULU", "LUNR", "LUV", "LVS", "LW", "LYB", "LYV", "MA", "MAA", 
-    "MAR", "MARA", "MAS", "MCD", "MCHP", "MCK", "MCO", "MDLZ", "MDT", "MET", 
-    "META", "MGM", "MHK", "MKC", "MKTX", "MLM", "MMC", "MMM", "MNST", "MO", 
-    "MOH", "MOS", "MPC", "MPWR", "MRK", "MRNA", "MRO", "MRVL", "MS", "MSCI", 
-    "MSFT", "MSI", "MSTR", "MTB", "MTCH", "MTD", "MU", "NCLH", "NDAQ", "NDSN", 
-    "NEE", "NEM", "NFLX", "NI", "NKLA", "NKE", "NOC", "NOW", "NRG", "NSC", 
-    "NTAP", "NTRS", "NUE", "NVDA", "NVR", "NWS", "NWSA", "NXPI", "O", "ODFL", 
-    "OGN", "OKE", "OMC", "ON", "OPEN", "ORCL", "ORLY", "OTIS", "OXY", "PANW", 
-    "PARA", "PAYC", "PAYX", "PCAR", "PCG", "PDD", "PEAK", "PEG", "PEP", "PFE", 
-    "PFG", "PG", "PGR", "PH", "PHM", "PKG", "PLD", "PLTR", "PM", "PNC", 
-    "PNR", "PNW", "PODD", "POOL", "PPG", "PPL", "PRU", "PSA", "PSX", "PTC", 
-    "PTON", "PWR", "PXD", "PYPL", "QCOM", "QQQ", "QRVO", "QS", "RBLX", "RCL", 
-    "RDDT", "REG", "REGN", "RF", "RHI", "RJF", "RKLB", "RL", "RMD", "RIVN", 
-    "ROK", "ROL", "ROP", "ROST", "RSG", "RTX", "RVTY", "SBAC", "SBUX", "SCHW", 
-    "SEE", "SHW", "SHY", "SJM", "SLB", "SLV", "SMH", "SNA", "SNPS", "SO", 
-    "SOFI", "SOLV", "SOUN", "SOXL", "SOXS", "SOXX", "SPCE", "SPG", "SPGI", 
-    "SPXU", "SPY", "SQ", "SQQQ", "SRE", "STE", "STLD", "STM", "STT", "STX", 
-    "STZ", "SWK", "SWKS", "SYF", "SYK", "SYY", "T", "TAP", "TDG", "TDY", 
-    "TECH", "TEL", "TER", "TFC", "TFX", "TGT", "TJX", "TLR", "TLRY", "TLT", 
-    "TMF", "TMO", "TMUS", "TMV", "TPR", "TQQQ", "TRGP", "TRMB", "TROW", "TRV", 
-    "TSCO", "TSLA", "TSM", "TSN", "TT", "TTD", "TTWO", "TXN", "TXT", "TYL", 
-    "U", "UAL", "UDR", "UHS", "ULTA", "UNG", "UNH", "UNP", "UPS", "UPRO", 
-    "UPST", "URI", "USB", "USO", "UVXY", "V", "VEA", "VFC", "VICI", "VIXY", 
-    "VLO", "VLTO", "VMC", "VNO", "VOO", "VRSK", "VRSN", "VRT", "VRTX", "VTI", 
-    "VTR", "VTRS", "VST", "VWO", "VXX", "VZ", "WAB", "WAT", "WBA", "WBD", 
-    "WDC", "WDAY", "WEC", "WELL", "WFC", "WHR", "WM", "WMB", "WMT", "WRB", 
-    "WRK", "WSM", "WST", "WTW", "WY", "WYNN", "XBI", "XEL", "XLB", "XLC", 
-    "XLE", "XLF", "XLI", "XLK", "XLP", "XLRE", "XLU", "XLV", "XLY", "XOM", 
-    "XRAY", "XYL", "YUM", "ZBH", "ZBRA", "ZION", "ZTS"
+    "AAPL", "MSFT", "NVDA", "GOOGL",
+    "AMZN", "META", "TSLA",
 ]
 
 TICKER_UNIVERSE = list(set(MANUAL_TICKERS + ANCHOR_TICKERS))
 
-# --- ROBUST UTILS ---
+# --- PART 1: THE PHYSICS ENGINE (DATABENTO MICRO-PRECISION) ---
+
+def fetch_physics_grade_data(ticker):
+    # This fetches REAL Order Book (MBP-10) data.
+    # It calculates the "Chandrasekhar Limit" (Floor Mass) and "Viscosity" (Liquidity thickness).
+    
+    print(f"   > 🔭 [Databento] Requesting Order Book Physics for {ticker}...")
+    
+    all_physics_frames = []
+    
+    # Set time pointers
+    current_start = datetime.strptime(START_DATE, "%Y-%m-%d")
+    final_end = datetime.strptime(END_DATE, "%Y-%m-%d")
+    
+    # LOOP BY DAY (instead of by month) to ensure we get a sample for EVERY day
+    while current_start < final_end:
+        current_end = current_start + timedelta(days=1)
+        
+        s_str = current_start.strftime("%Y-%m-%d")
+        e_str = current_end.strftime("%Y-%m-%d")
+        
+        # Skip weekends (simple check)
+        if current_start.weekday() >= 5:
+            current_start = current_end
+            continue
+            
+        try:
+            # Request MBP-10 (Market by Price, 10 levels deep)
+            # We fetch ONE DAY at a time. 
+            # limit=10000 gives us the "Morning Physics" (approx first few seconds/minutes)
+            # This serves as a valid sample for Mass/Viscosity without downloading TBs of data.
+            data = db_client.timeseries.get_range(
+                dataset="XNAS.ITCH",
+                symbols=ticker,
+                schema="mbp-10",           
+                start=s_str,
+                end=e_str,
+                stype_in="raw_symbol",
+                limit=10000 
+            )
+            
+            try:
+                df = data.to_df()
+            except Exception:
+                # No data for this day (holiday, etc)
+                current_start = current_end
+                continue
+            
+            if df.empty:
+                current_start = current_end
+                continue
+
+            # --- PHYSICS CALCULATIONS ---
+            
+            # 1. Price Logic (Mid-Price at top of book)
+            # Handle cases where bid/ask might be 0/NaN by filling or dropping
+            df['bid_px_00'] = df['bid_px_00'].replace(0, np.nan)
+            df['ask_px_00'] = df['ask_px_00'].replace(0, np.nan)
+            df.dropna(subset=['bid_px_00', 'ask_px_00'], inplace=True)
+            
+            df['price'] = (df['bid_px_00'] + df['ask_px_00']) / 2
+            
+            # 2. CHANDRASEKHAR MASS (M_ch)
+            # Sum the volume of the Buy Wall (Bid Levels 0-9)
+            bid_size_cols = [c for c in df.columns if c.startswith("bid_sz")]
+            df['floor_mass'] = df[bid_size_cols].sum(axis=1)
+            
+            # 3. VISCOSITY (Eta) -> For Reynolds Number
+            df['spread'] = df['ask_px_00'] - df['bid_px_00']
+            df['spread'] = df['spread'].replace(0, 0.01) 
+            df['viscosity'] = df['bid_sz_00'] / df['spread']
+            
+            # 4. AGGREGATE (Direct Calculation)
+            # Since we capped at 10k rows, we take the statistics of this chunk.
+            
+            # Use the last observed price in this chunk as the 'close' for the physics frame
+            close_price = df['price'].iloc[-1]
+            
+            # Use median for physics properties to ignore high-frequency noise/spikes
+            floor_mass_med = df['floor_mass'].median()
+            viscosity_med = df['viscosity'].median()
+            
+            # Create the record
+            record = {
+                "ticker": ticker,
+                "date": s_str, # Use the explicit start date of the loop
+                "close": float(close_price),
+                "chandrasekhar_mass": float(floor_mass_med),
+                "viscosity": float(viscosity_med),
+                "volume": 10000, # Placeholder volume since we capped it
+                "potential_energy": 0.0 
+            }
+            
+            all_physics_frames.append(record)
+            # print(f"     ✅ {ticker} {s_str} captured.")
+
+        except Exception as e:
+            # print(f"     ⚠️ Physics Fetch Error ({ticker} on {s_str}): {e}")
+            pass
+        
+        # Advance to next day
+        current_start = current_end
+
+    return all_physics_frames
+
+# --- PART 2: THE NARRATIVE ENGINE (POLYGON + OPENAI) ---
 
 @retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
 def get_embedding(text):
     text = text.replace("\n", " ")
     return openai_client.embeddings.create(input=[text], model="text-embedding-3-small").data[0].embedding
-
-def upload_stock_batch(records):
-    if not records: return
-    try:
-        supabase.table("stocks_ohlc").upsert(
-            records, 
-            on_conflict="ticker,date", 
-            ignore_duplicates=True
-        ).execute()
-        print(f" 💾 Saved {len(records)} rows to DB.")
-    except Exception as e:
-        print(f" ❌ DB Error (Batch Skipped): {str(e)[:100]}...")
-
-def upload_news_batch(vectors, edges):
-    if not vectors: return
-    try:
-        # Upload vectors
-        res = supabase.table("news_vectors").upsert(
-            vectors, 
-            on_conflict="url"
-        ).execute()
-        
-        # Map new IDs to edges
-        if res.data:
-            url_to_id = {item['url']: item['id'] for item in res.data}
-            
-            final_edges = []
-            for edge_stub in edges:
-                article_id = url_to_id.get(edge_stub['source_url'])
-                if article_id:
-                    final_edges.append({
-                        "source_node": str(article_id),
-                        "target_node": edge_stub['target_node'],
-                        "edge_type": "MENTIONS",
-                        "weight": edge_stub['weight']
-                    })
-            
-            if final_edges:
-                supabase.table("knowledge_graph").upsert(
-                    final_edges, 
-                    on_conflict="source_node,target_node,edge_type", 
-                    ignore_duplicates=True
-                ).execute()
-                print(f"   ↳ Linked {len(final_edges)} graph edges.")
-                
-    except Exception as e:
-        print(f" ❌ News Upload Error: {str(e)[:100]}")
-
-# --- PROCESSORS ---
-
-@retry(stop=stop_after_attempt(5), wait=wait_random_exponential(min=1, max=10))
-def fetch_ticker_history(ticker):
-    url = f"{POLYGON_BASE_URL}/v2/aggs/ticker/{ticker}/range/1/day/{START_DATE}/{END_DATE}?adjusted=true&sort=asc&apiKey={MASSIVE_KEY}"
-    
-    resp = requests.get(url, timeout=15)
-    
-    if resp.status_code == 429:
-        raise Exception("Rate Limited")
-        
-    if resp.status_code != 200:
-        return []
-        
-    data = resp.json()
-    if "results" not in data: return []
-        
-    records = []
-    for bar in data["results"]:
-        date_str = datetime.fromtimestamp(bar["t"] / 1000).strftime('%Y-%m-%d')
-        records.append({
-            "ticker": ticker,
-            "date": date_str,
-            "open": bar.get("o"),
-            "high": bar.get("h"),
-            "low": bar.get("l"),
-            "close": bar.get("c"),
-            "volume": bar.get("v")
-        })
-    return records
 
 def process_single_article(article):
     headline = article.get("title", "")
@@ -217,10 +203,39 @@ def process_single_article(article):
     except Exception as e:
         return None, []
 
+def upload_news_batch(vectors, edges):
+    if not vectors: return
+    try:
+        res = supabase.table("news_vectors").upsert(
+            vectors, on_conflict="url"
+        ).execute()
+        
+        if res.data:
+            url_to_id = {item['url']: item['id'] for item in res.data}
+            final_edges = []
+            for edge_stub in edges:
+                article_id = url_to_id.get(edge_stub['source_url'])
+                if article_id:
+                    final_edges.append({
+                        "source_node": str(article_id),
+                        "target_node": edge_stub['target_node'],
+                        "edge_type": "MENTIONS",
+                        "weight": edge_stub['weight']
+                    })
+            
+            if final_edges:
+                supabase.table("knowledge_graph").upsert(
+                    final_edges, on_conflict="source_node,target_node,edge_type", ignore_duplicates=True
+                ).execute()
+                print(f"   ↳ Linked {len(final_edges)} graph edges.")
+                
+    except Exception as e:
+        print(f" ❌ News Upload Error: {str(e)[:100]}")
+
 def backfill_news():
     print(f"\n📰 Starting Parallel News Backfill ({START_DATE} to {END_DATE})...")
     
-    url = f"{POLYGON_BASE_URL}/v2/reference/news?published_utc.gte={START_DATE}&published_utc.lte={END_DATE}&limit=1000&sort=published_utc&order=desc&apiKey={MASSIVE_KEY}"
+    url = f"https://api.polygon.io/v2/reference/news?published_utc.gte={START_DATE}&published_utc.lte={END_DATE}&limit=1000&sort=published_utc&order=desc&apiKey={MASSIVE_KEY}"
     
     total_processed = 0
     next_url = url
@@ -237,12 +252,12 @@ def backfill_news():
             
             if not articles: break
             
-            print(f" 📥 Fetched {len(articles)} articles. Crunching embeddings in parallel...")
+            print(f" 📥 Fetched {len(articles)} articles. Embedding...")
             
             page_vectors = []
             page_edges = []
             
-            with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=NEWS_WORKERS) as executor:
                 results = list(executor.map(process_single_article, articles))
                 
                 for vec, edges in results:
@@ -252,13 +267,10 @@ def backfill_news():
             
             chunk_size = 50
             for i in range(0, len(page_vectors), chunk_size):
-                upload_news_batch(
-                    page_vectors[i:i+chunk_size], 
-                    page_edges 
-                )
+                upload_news_batch(page_vectors[i:i+chunk_size], page_edges)
                 
             total_processed += len(page_vectors)
-            print(f" ✅ Page complete. Total embedded: {total_processed}")
+            print(f" ✅ Batch complete. Total embedded: {total_processed}")
             
             next_url = data.get("next_url")
             if next_url: next_url += f"&apiKey={MASSIVE_KEY}"
@@ -273,28 +285,39 @@ def backfill_news():
 if __name__ == "__main__":
     start_time = time.time()
     
-    # 1. Stocks
-    print(f"🚀 Backfilling STOCKS for {len(TICKER_UNIVERSE)} tickers...")
+    print("🚀 Initializing Reactor Ignition Sequence (FULL GALAXY)...")
+    print(f"📅 Window: {START_DATE} to {END_DATE}")
+    print(f"🔭 Target Universe: {len(TICKER_UNIVERSE)} Tickers")
+    
     all_stock_records = []
     
-    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        future_to_ticker = {executor.submit(fetch_ticker_history, t): t for t in TICKER_UNIVERSE}
-        completed = 0
+    # 1. RUN PHYSICS (Databento) - Throttled to avoid rate limits
+    with concurrent.futures.ThreadPoolExecutor(max_workers=PHYSICS_WORKERS) as executor:
+        future_to_ticker = {executor.submit(fetch_physics_grade_data, t): t for t in TICKER_UNIVERSE}
+        
+        completed_count = 0
         for future in concurrent.futures.as_completed(future_to_ticker):
             try:
                 data = future.result()
-                if data: all_stock_records.extend(data)
+                if data: 
+                    all_stock_records.extend(data)
             except Exception as e:
-                print(f"Worker Error: {e}")
-            completed += 1
-            if completed % 50 == 0: print(f"  ... {completed}/{len(TICKER_UNIVERSE)}")
+                print(f"   ⚠️ Worker Error: {e}")
+            
+            completed_count += 1
+            if completed_count % 20 == 0:
+                print(f"   ... Processed {completed_count}/{len(TICKER_UNIVERSE)} tickers")
 
-    print(f"📦 Uploading {len(all_stock_records)} historical stock rows...")
-    for i in range(0, len(all_stock_records), DB_BATCH_SIZE):
-        batch = all_stock_records[i:i + DB_BATCH_SIZE]
-        upload_stock_batch(batch)
-    
-    # 2. News
+    print(f"📦 Storing {len(all_stock_records)} Physics Frames to Database...")
+    for i in range(0, len(all_stock_records), BATCH_SIZE):
+        batch = all_stock_records[i:i+BATCH_SIZE]
+        try:
+            supabase.table("stocks_ohlc").upsert(batch, on_conflict="ticker,date").execute()
+            print(f"   ✅ Batch {i//BATCH_SIZE + 1} Committed.")
+        except Exception as e:
+            print(f"   ⚠️ Batch Write Error: {e}")
+
+    # 2. RUN NARRATIVE (Polygon)
     backfill_news()
     
-    print(f"\n✨ BACKFILL COMPLETE in {time.time() - start_time:.2f}s")
+    print(f"\n✨ FULL BACKFILL COMPLETE in {time.time() - start_time:.2f}s")
