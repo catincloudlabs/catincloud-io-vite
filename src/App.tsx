@@ -38,7 +38,6 @@ function App() {
         {/* Footer Meta */}
         <div style={styles.footer}>
           <p style={styles.mono}>Status: PRE-REGISTRATION FREEZE</p>
-          <p style={styles.mono}>Est. Return: Q4 2026</p>
         </div>
       </div>
     </div>
