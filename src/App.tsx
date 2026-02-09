@@ -1,11 +1,8 @@
 import React from 'react';
 
-// "Research Mode" Screen
-// Now fully integrated with the 'index.css' design tokens.
 function App() {
   return (
     <div style={styles.container}>
-      {/* Background Gradient Effect matching the social card style */}
       <div style={styles.backgroundGradient}></div>
 
       <div style={styles.content}>
@@ -14,7 +11,6 @@ function App() {
         
         <div style={styles.divider}></div>
         
-        {/* Status Indicator: Uses --accent-ai (Amber) for the "Alert" feel */}
         <h2 style={styles.status}>Protocol Simulation In Progress</h2>
         
         {/* Main Context */}
@@ -27,7 +23,6 @@ function App() {
           Live visualization will return upon publication of the results.
         </p>
 
-        {/* New External Link: Uses --accent-green (Mint) for the call to action */}
         <div style={styles.linkContainer}>
           <p style={styles.smallText}>For more details on Product R&D and the Protocol:</p>
           <a 
@@ -50,7 +45,6 @@ function App() {
   );
 }
 
-// Styles now point to CSS Variables defined in your index.css
 const styles: Record<string, React.CSSProperties> = {
   container: {
     height: '100vh',
@@ -81,8 +75,7 @@ const styles: Record<string, React.CSSProperties> = {
     textAlign: 'center',
     border: '1px solid var(--glass-border)',
     borderRadius: '12px',
-    // Using the glass background from your variables
-    background: 'rgba(30, 41, 59, 0.5)', 
+    background: 'rgba(30, 41, 59, 0.5)', // Use glass background
     backdropFilter: 'blur(12px)',
     boxShadow: 'var(--shadow-soft)',
     zIndex: 10,
