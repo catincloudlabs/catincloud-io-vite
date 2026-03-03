@@ -4,7 +4,6 @@ import MarketMap from './components/MarketMap';
 import { processMarketData, MarketFrame, RawDataPoint } from './utils/processData';
 import { useTimelineAnimation } from './hooks/useTimelineAnimation';
 
-// --- NATIVE CSV PARSER ---
 const parseCSV = (csvText: string): RawDataPoint[] => {
   const lines = csvText.trim().split('\n');
   if (lines.length < 2) return [];
