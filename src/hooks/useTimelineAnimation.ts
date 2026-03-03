@@ -1,7 +1,5 @@
+// src/hooks/useTimelineAnimation.ts
 import { useState, useRef, useEffect, useCallback } from 'react';
-
-/* --- TIMELINE ANIMATION HOOK --- */
-/* Manages the playback loop for the market history timeline */
 
 interface UseTimelineAnimationProps {
   durationInSeconds?: number; // Default: 30s
@@ -48,7 +46,6 @@ export function useTimelineAnimation({
       if (progress >= totalFrames - 1) {
         setProgress(0);
       }
-
       previousTimeRef.current = undefined; 
       requestRef.current = requestAnimationFrame(animate);
     } else {
@@ -56,7 +53,6 @@ export function useTimelineAnimation({
         cancelAnimationFrame(requestRef.current);
       }
     }
-
     return () => {
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
     };
@@ -64,8 +60,12 @@ export function useTimelineAnimation({
 
   const togglePlay = () => setIsPlaying(p => !p);
 
+  // Derive the discrete integer index for our data arrays
+  const currentFrameIndex = Math.min(Math.floor(progress), totalFrames - 1);
+
   return {
     progress,
+    currentFrameIndex, // NEW: Use this to select the data frame!
     setProgress, 
     isPlaying,
     togglePlay,

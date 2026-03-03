@@ -1,193 +1,87 @@
+// src/utils/processData.ts
 import { getSectorForTicker } from './sectorMap';
 
 // --- CONFIGURATION ---
-const TARGET_WORLD_SIZE = 800; 
+// We scale the raw physics coordinates up so they fit nicely in the WebGL viewport
+const VISUAL_SCALAR_X = 100; // Merton distance is ~1 to 6. Multiplied by 100 = 100 to 600.
+const VISUAL_SCALAR_Y = 30;  // Log10(H_eff) is ~-6 to 11. Multiplied by 30 = -180 to 330.
+const X_OFFSET = -300;       // Center the diagram
 
-export type SectorNode = {
-  id: string;       // e.g., "Technology"
-  x: number;        // Weighted Center X
-  y: number;        // Weighted Center Y
-  vx: number;       // Weighted Velocity X
-  vy: number;       // Weighted Velocity Y
-  energy: number;   // Total Sector Energy (Sum)
-  count: number;    // Number of tickers
-};
-
-type RawDataPoint = {
+export type RawDataPoint = {
   date: string;
-  ticker: string;
-  x: number;
-  y: number;
-  headline: string;
-  sentiment: number;
-  sector?: string;
+  time: string;
+  symbol: string;
+  xi: number;
+  h_eff: number;
+  h_c: number;
+  merton_distance: number;
+  phase: 'ELASTIC' | 'SUPERCRITICAL' | 'BALLISTIC';
+  // Other CSV fields can be added here as needed
 };
 
 export type HydratedNode = {
   ticker: string;
-  x: number;
-  y: number;
-  vx: number;       
-  vy: number;       
-  energy: number;   
-  headline: string;
-  sentiment: number;
+  x: number;         // WebGL Render X
+  y: number;         // WebGL Render Y
+  merton: number;    // True Physics X
+  h_eff: number;     // True Physics Y
+  xi: number;        // Criticality Index
+  phase: 'ELASTIC' | 'SUPERCRITICAL' | 'BALLISTIC';
   sector: string;
 };
 
-export type DailyFrame = {
-  date: string;
+export type MarketFrame = {
+  date: string;       // Formatted as "YYYY-MM-DD HH:MM" to handle the snapshots
+  timestamp: number;  // For sorting
   nodes: HydratedNode[];
-  sectors: SectorNode[]; 
   nodeMap: Map<string, HydratedNode>;
 };
 
-// --- HELPER: SECTOR MATH ---
-function calculateSectorDynamics(nodes: HydratedNode[]): SectorNode[] {
-  type SectorAccumulator = {
-    sumX: number;
-    sumY: number;
-    sumVx: number;
-    sumVy: number;
-    totalWeight: number; // The Denominator
-    totalEnergy: number; // Pure Energy Sum (for visual sizing)
-    count: number;
-  };
-
-  const sectors: Record<string, SectorAccumulator> = {};
-
-  nodes.forEach(node => {
-    const sectorName = node.sector || "Other";
-
-    if (!sectors[sectorName]) {
-      sectors[sectorName] = { 
-        sumX: 0, sumY: 0, 
-        sumVx: 0, sumVy: 0, 
-        totalWeight: 0, 
-        totalEnergy: 0,
-        count: 0 
-      };
-    }
-
-    const s = sectors[sectorName];
-    
-    // Clamp minimum weight to prevent jitter on low-energy days
-    const weight = Math.max(node.energy, 0.2);
-
-    // Accumulate weighted numerators
-    s.sumX += node.x * weight;
-    s.sumY += node.y * weight;
-    s.sumVx += node.vx * weight;
-    s.sumVy += node.vy * weight;
-
-    // Accumulate denominator
-    s.totalWeight += weight;
-    
-    // Track raw stats
-    s.totalEnergy += node.energy;
-    s.count++;
-  });
-
-  // Normalize (calculate averages)
-  return Object.keys(sectors).map(key => {
-    const s = sectors[key];
-    const normalizationFactor = s.totalWeight > 0 ? s.totalWeight : 1;
-    
-    return {
-      id: key,
-      // Weighted Center of Mass
-      x: s.sumX / normalizationFactor, 
-      y: s.sumY / normalizationFactor,
-      // Weighted Average Momentum
-      vx: s.sumVx / normalizationFactor, 
-      vy: s.sumVy / normalizationFactor,
-      // Aggregates
-      energy: s.totalEnergy, 
-      count: s.count
-    };
-  });
-}
-
-// Main: Hydration Pipeline
-export function hydrateMarketData(rawData: RawDataPoint[]): DailyFrame[] {
-  
-  // 1. Auto-Scale Calculation
-  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-  
-  rawData.forEach(p => {
-    if (typeof p.x !== 'number' || typeof p.y !== 'number') return;
-    if (p.x < minX) minX = p.x;
-    if (p.x > maxX) maxX = p.x;
-    if (p.y < minY) minY = p.y;
-    if (p.y > maxY) maxY = p.y;
-  });
-
-  const rangeX = maxX - minX;
-  const rangeY = maxY - minY;
-  const maxRange = Math.max(rangeX, rangeY, 1);
-  const scaleFactor = TARGET_WORLD_SIZE / maxRange;
-  const rawCenterX = (minX + maxX) / 2;
-  const rawCenterY = (minY + maxY) / 2;
-
-  // 2. Group By Date
+export function processMarketData(rawData: RawDataPoint[]): MarketFrame[] {
+  // 1. Group by exact temporal snapshot (Date + Time)
   const grouped: Record<string, RawDataPoint[]> = {};
+  
   rawData.forEach(item => {
-    if (typeof item.x !== 'number' || typeof item.y !== 'number') return;
-    if (!grouped[item.date]) grouped[item.date] = [];
-    
-    // scale and center
-    grouped[item.date].push({
-        ...item,
-        x: (item.x - rawCenterX) * scaleFactor,
-        y: (item.y - rawCenterY) * scaleFactor
-    });
+    // Treat the 09:30 and 10:30 snapshots as completely distinct frames
+    const frameKey = `${item.date} ${item.time}`; 
+    if (!grouped[frameKey]) grouped[frameKey] = [];
+    grouped[frameKey].push(item);
   });
 
-  // 3. Frame Construction & Physics
-  const sortedDates = Object.keys(grouped).sort();
+  const sortedKeys = Object.keys(grouped).sort();
 
-  return sortedDates.map((date, index) => {
-    const currentDayData = grouped[date];
-    const nextDate = sortedDates[index + 1];
-    const nextDayData = nextDate ? grouped[nextDate] : [];
+  // 2. Hydrate Nodes with Logarithmic Spatial Topology
+  return sortedKeys.map((frameKey) => {
+    const currentFrameData = grouped[frameKey];
 
-    // Create a lookup for the next day to calculate velocity
-    const nextDayLookup = new Map<string, RawDataPoint>();
-    nextDayData.forEach(p => nextDayLookup.set(p.ticker, p));
+    const nodes: HydratedNode[] = currentFrameData.map(stock => {
+      // Safely calculate Log10 of H_eff. Prevent -Infinity if H_eff is exactly 0.
+      const logHeff = stock.h_eff > 0 ? Math.log10(stock.h_eff) : -6;
 
-    const nodes: HydratedNode[] = currentDayData.map(stock => {
-      const nextState = nextDayLookup.get(stock.ticker);
-      const vx = nextState ? nextState.x - stock.x : 0;
-      const vy = nextState ? nextState.y - stock.y : 0;
-      
-      // Calculate Energy (kinetic + sentiment)
-      const energy = (Math.abs(vx) + Math.abs(vy)) * (1 + Math.abs(stock.sentiment));
-      
-      // Look up the sector using utility
-      const sector = getSectorForTicker(stock.ticker);
+      // Apply Topology Mapping
+      const x = (stock.merton_distance * VISUAL_SCALAR_X) + X_OFFSET;
+      const y = (logHeff * VISUAL_SCALAR_Y);
 
       return {
-        ticker: stock.ticker,
-        x: stock.x,
-        y: stock.y,
-        vx, vy,
-        energy: parseFloat(energy.toFixed(4)), 
-        headline: stock.headline,
-        sentiment: stock.sentiment,
-        sector: sector 
+        ticker: stock.symbol,
+        x,
+        y,
+        merton: stock.merton_distance,
+        h_eff: stock.h_eff,
+        xi: stock.xi,
+        phase: stock.phase,
+        sector: getSectorForTicker(stock.symbol),
       };
     });
 
-    const sectors = calculateSectorDynamics(nodes);
-
     const nodeMap = new Map<string, HydratedNode>();
-    nodes.forEach(node => nodeMap.set(node.ticker, node));
+    nodes.forEach(n => nodeMap.set(n.ticker, n));
 
     return {
-      date,
+      date: frameKey,
+      timestamp: new Date(frameKey.replace(' ', 'T')).getTime(),
       nodes,
-      sectors, 
-      nodeMap 
+      nodeMap
     };
   });
 }
