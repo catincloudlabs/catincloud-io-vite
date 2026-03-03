@@ -64,7 +64,6 @@ function App() {
   // Initialize Timeline Physics
   const {
     currentFrameIndex,
-    progress,
     setProgress,
     isPlaying,
     togglePlay
