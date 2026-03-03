@@ -28,6 +28,9 @@ const INITIAL_VIEW_STATE = {
 export default function MarketMap({ data, onNodeClick, onBackgroundClick }: MarketMapProps) {
   const [hoverInfo, setHoverInfo] = useState<any>(null);
 
+  // Detect if we are transitioning into an "Inhale" (09:30) or "Exhale" (10:30) frame
+  const isExhale = data.date.includes("10:30");
+
   // 1. Render the Ticker Nodes in the Phase Space
   const scatterLayer = new ScatterplotLayer({
     id: 'thermodynamic-nodes',
@@ -47,8 +50,16 @@ export default function MarketMap({ data, onNodeClick, onBackgroundClick }: Mark
     },
     transitions: {
         getPosition: {
-            duration: 800, // Temporarily use standard linear transition until Phase 3 (Springs)
-            easing: (t) => t // We will replace this with react-spring later
+            type: 'spring',
+            // THE PHYSICS ENGINE:
+            // 10:30 Exhale: Stiff restorative force (snap/bounce)
+            // 09:30 Inhale: Loose/viscous spread (float)
+            stiffness: isExhale ? 400 : 120, 
+            damping: isExhale ? 12 : 25      
+        },
+        getFillColor: {
+            duration: 500, // Smooth color crossfade during phase transitions
+            easing: (t: number) => t
         }
     }
   });
