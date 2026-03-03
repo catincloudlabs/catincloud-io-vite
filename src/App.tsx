@@ -1,44 +1,131 @@
-import React from 'react';
+// src/App.tsx
+import React, { useEffect, useState } from 'react';
+import MarketMap from './components/MarketMap';
+import { processMarketData, MarketFrame, RawDataPoint } from './utils/processData';
+import { useTimelineAnimation } from './hooks/useTimelineAnimation';
+
+// --- NATIVE CSV PARSER ---
+const parseCSV = (csvText: string): RawDataPoint[] => {
+  const lines = csvText.trim().split('\n');
+  if (lines.length < 2) return [];
+  
+  const headers = lines[0].split(',');
+  const parsedData: RawDataPoint[] = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const values = lines[i].split(',');
+    if (values.length === headers.length) {
+      const row: Record<string, string> = {};
+      headers.forEach((header, index) => {
+        row[header.trim()] = values[index].trim();
+      });
+      
+      parsedData.push({
+        date: row.date,
+        time: row.time,
+        symbol: row.symbol,
+        xi: parseFloat(row.xi),
+        h_eff: parseFloat(row.h_eff),
+        h_c: parseFloat(row.h_c),
+        merton_distance: parseFloat(row.merton_distance),
+        phase: row.phase as 'ELASTIC' | 'SUPERCRITICAL' | 'BALLISTIC',
+      });
+    }
+  }
+  return parsedData;
+};
 
 function App() {
+  const [marketFrames, setMarketFrames] = useState<MarketFrame[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch and Process Data
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // Fetching the newly uploaded CSV instead of JSON
+        const response = await fetch('/data/systemic_stress_results_final.csv');
+        const csvText = await response.text();
+        
+        // Parse CSV text into heavily typed RawDataPoint objects
+        const rawData: RawDataPoint[] = parseCSV(csvText);
+
+        // Pipe into our Phase Space topological topology mapper
+        const processed = processMarketData(rawData);
+        setMarketFrames(processed);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Failed to load market physics CSV:", error);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // Initialize Timeline Physics
+  const {
+    currentFrameIndex,
+    progress,
+    setProgress,
+    isPlaying,
+    togglePlay
+  } = useTimelineAnimation({
+    totalFrames: marketFrames.length,
+    durationInSeconds: 45 // Adjust playback speed here
+  });
+
+  if (isLoading) {
+    return (
+      <div style={styles.loadingContainer}>
+        <h2 style={styles.loadingText}>INITIALIZING THERMODYNAMIC MANIFOLD...</h2>
+      </div>
+    );
+  }
+
+  const currentFrame = marketFrames[currentFrameIndex];
+
   return (
     <div style={styles.container}>
-      <div style={styles.backgroundGradient}></div>
+      {/* WebGL Phase Space Background */}
+      <MarketMap data={currentFrame} />
 
-      <div style={styles.content}>
+      {/* UI Overlay */}
+      <div style={styles.uiOverlay}>
+        
         {/* Header */}
-        <h1 style={styles.title}>CatInCloud.io</h1>
-        
-        <div style={styles.divider}></div>
-        
-        <h2 style={styles.status}>Protocol Simulation In Progress</h2>
-        
-        {/* Main Context */}
-        <p style={styles.text}>
-          The Market Physics Engine has been taken offline for a major architectural upgrade.
-        </p>
-        
-        <p style={styles.text}>
-          We are currently running <strong style={styles.strong}>Protocol #1 (Thermodynamics of Market Fragility)</strong>. 
-          Live visualization will return upon publication of the results.
-        </p>
-
-        <div style={styles.linkContainer}>
-          <p style={styles.smallText}>For more details on Product R&D and the Protocol:</p>
-          <a 
-            href="https://catincloudlabs.com" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            style={styles.link}
-          >
-            Visit catincloudlabs.com &rarr;
-          </a>
+        <div style={styles.header}>
+          <h1 style={styles.title}>CatInCloud Labs: Protocol #1</h1>
+          <p style={styles.subtitle}>Endogenous Phase Transitions in Market Microstructure</p>
         </div>
 
-        {/* Footer Meta */}
-        <div style={styles.footer}>
-          <p style={styles.mono}>Status: PRE-REGISTRATION FREEZE</p>
+        {/* Playback Controls */}
+        <div style={styles.controlsContainer}>
+          <div style={styles.timeDisplay}>
+            <span style={styles.dateText}>
+              {currentFrame?.date.split(' ')[0]} {/* YYYY-MM-DD */}
+            </span>
+            <span style={styles.timeText}>
+              {currentFrame?.date.split(' ')[1]} ET {/* 09:30 or 10:30 */}
+            </span>
+          </div>
+
+          <div style={styles.sliderRow}>
+            <button style={styles.playButton} onClick={togglePlay}>
+              {isPlaying ? 'PAUSE' : 'PLAY'}
+            </button>
+            
+            <input 
+              type="range" 
+              min="0" 
+              max={marketFrames.length - 1} 
+              step="1"
+              value={currentFrameIndex}
+              onChange={(e) => setProgress(Number(e.target.value))}
+              style={styles.slider}
+            />
+          </div>
         </div>
+
       </div>
     </div>
   );
@@ -48,105 +135,107 @@ const styles: Record<string, React.CSSProperties> = {
   container: {
     height: '100vh',
     width: '100vw',
-    backgroundColor: 'var(--background)', // #0f172a
-    color: 'var(--text-primary)',         // #f8fafc
+    backgroundColor: '#0f172a', // Deep slate background for WebGL to pop against
+    position: 'relative',
+    overflow: 'hidden',
+    fontFamily: 'monospace',
+  },
+  loadingContainer: {
+    height: '100vh',
+    width: '100vw',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontFamily: 'var(--font-sans)',
-    position: 'relative',
-    overflow: 'hidden',
+    backgroundColor: '#0f172a',
+    color: '#34d399',
   },
-  backgroundGradient: {
+  loadingText: {
+    letterSpacing: '0.1em',
+    animation: 'pulse 2s infinite',
+  },
+  uiOverlay: {
     position: 'absolute',
-    top: '-50%',
-    right: '-20%',
-    width: '1000px',
-    height: '1000px',
-    background: 'radial-gradient(circle, rgba(52, 211, 153, 0.03) 0%, transparent 60%)', // Subtle Mint glow
-    pointerEvents: 'none',
-    zIndex: 0,
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    pointerEvents: 'none', // Lets mouse clicks pass through to WebGL map
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    padding: '24px',
+    boxSizing: 'border-box',
   },
-  content: {
-    maxWidth: '600px',
-    width: '90%',
-    padding: '40px',
-    textAlign: 'center',
-    border: '1px solid var(--glass-border)',
-    borderRadius: '12px',
-    background: 'rgba(30, 41, 59, 0.5)', // Use glass background
-    backdropFilter: 'blur(12px)',
-    boxShadow: 'var(--shadow-soft)',
-    zIndex: 10,
-    position: 'relative',
+  header: {
+    pointerEvents: 'auto',
+    background: 'rgba(15, 23, 42, 0.7)',
+    backdropFilter: 'blur(8px)',
+    padding: '16px 24px',
+    borderRadius: '8px',
+    border: '1px solid rgba(255,255,255,0.1)',
+    display: 'inline-block',
+    alignSelf: 'flex-start',
   },
   title: {
-    fontSize: '2rem',
-    fontWeight: 700,
-    letterSpacing: '-0.03em',
-    marginBottom: '24px',
-    color: 'var(--text-primary)',
-    fontFamily: 'var(--font-mono)', // Tech feel
+    color: '#f8fafc',
+    margin: 0,
+    fontSize: '1.2rem',
+    fontWeight: 'bold',
   },
-  divider: {
-    height: '1px',
-    width: '80px',
-    backgroundColor: 'var(--glass-border)',
-    margin: '0 auto 30px auto',
+  subtitle: {
+    color: '#94a3b8',
+    margin: '4px 0 0 0',
+    fontSize: '0.85rem',
   },
-  status: {
-    fontSize: '1.1rem',
-    fontWeight: 600,
-    color: 'var(--accent-ai)', // Amber #fbbf24
-    marginBottom: '24px',
-    letterSpacing: '0.1em',
-    textTransform: 'uppercase',
-    fontFamily: 'var(--font-mono)',
-  },
-  text: {
-    fontSize: '1rem',
-    lineHeight: '1.6',
-    color: 'var(--text-muted)', // #94a3b8
+  controlsContainer: {
+    pointerEvents: 'auto',
+    background: 'rgba(15, 23, 42, 0.85)',
+    backdropFilter: 'blur(12px)',
+    padding: '20px',
+    borderRadius: '12px',
+    border: '1px solid rgba(255,255,255,0.1)',
+    width: '100%',
+    maxWidth: '600px',
+    alignSelf: 'center',
     marginBottom: '20px',
   },
-  strong: {
-    color: 'var(--text-primary)',
-    fontWeight: 600,
+  timeDisplay: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '16px',
+    borderBottom: '1px solid rgba(255,255,255,0.1)',
+    paddingBottom: '12px',
   },
-  linkContainer: {
-    marginTop: '32px',
-    padding: '24px',
-    backgroundColor: 'rgba(52, 211, 153, 0.03)', // Very faint mint bg
-    borderRadius: '8px',
-    border: '1px solid var(--glass-border)',
+  dateText: {
+    color: '#f8fafc',
+    fontSize: '1.4rem',
+    fontWeight: 'bold',
   },
-  smallText: {
-    fontSize: '0.85rem',
-    color: 'var(--text-muted)',
-    marginBottom: '12px',
-    marginTop: 0,
-    fontFamily: 'var(--font-mono)',
+  timeText: {
+    color: '#fbbf24', // Amber to highlight the Inhale/Exhale frame
+    fontSize: '1.4rem',
+    fontWeight: 'bold',
   },
-  link: {
-    color: 'var(--accent-green)', // Mint #34d399
-    textDecoration: 'none',
-    fontWeight: 600,
-    fontSize: '1rem',
-    borderBottom: '1px solid rgba(52, 211, 153, 0.3)',
-    transition: 'opacity 0.2s',
+  sliderRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px',
   },
-  footer: {
-    marginTop: '40px',
-    paddingTop: '20px',
-    borderTop: '1px solid var(--glass-border)',
-  },
-  mono: {
-    fontFamily: 'var(--font-mono)',
-    fontSize: '0.75rem',
-    color: 'var(--text-muted)',
-    opacity: 0.7,
-    marginBottom: '6px',
+  playButton: {
+    background: '#34d399',
+    color: '#0f172a',
+    border: 'none',
+    padding: '8px 20px',
+    borderRadius: '4px',
+    fontWeight: 'bold',
+    cursor: 'pointer',
+    fontFamily: 'monospace',
     letterSpacing: '0.05em',
+  },
+  slider: {
+    flex: 1,
+    cursor: 'pointer',
   }
 };
 
