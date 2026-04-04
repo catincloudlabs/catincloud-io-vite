@@ -1,7 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { hydrateMarketData } from './utils/processData';
 import { MarketMap, MarketFrame } from './components/MarketMap'; 
-import { AgentPanel } from './components/AgentPanel';
 import Header from './components/Header';
 import { useKnowledgeGraph } from './hooks/useKnowledgeGraph';
 import Legend from './components/Legend';
@@ -114,7 +113,7 @@ function App() {
   const [isArchOpen, setArchOpen] = useState(false);
   const [isBioOpen, setBioOpen] = useState(false);
 
-  const { connections, loading } = useKnowledgeGraph(selectedTicker);
+  const { connections } = useKnowledgeGraph(selectedTicker);
 
   // Memo: Derived Sector List
   const availableSectors = useMemo(() => {
@@ -324,15 +323,6 @@ function App() {
         >
             {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
         </button>
-      </div>
-
-      <div className="agent-panel-wrapper">
-        <AgentPanel 
-          currentFrame={currentFrameData} 
-          selectedTicker={selectedTicker}
-          graphConnections={connections}
-          isLoading={loading}
-        />
       </div>
 
       <ArchitectureModal isOpen={isArchOpen} onClose={() => setArchOpen(false)} />
