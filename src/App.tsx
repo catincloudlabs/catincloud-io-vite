@@ -309,7 +309,6 @@ function App() {
             aria-label="Simulation Timeline"
             className="slider-input"
           />
-          {/* Disclaimer is positioned absolute relative to this container in CSS */}
           <div className="disclaimer-footer" aria-hidden="true">
             SIMULATION ONLY. NOT FINANCIAL ADVICE.
           </div>
