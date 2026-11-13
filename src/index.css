@@ -300,6 +300,13 @@ html, body {
 
 .text-accent { color: var(--accent-green); font-weight: 600; margin-right: 6px;}
 
+.stack-link { display: block; text-decoration: none; transition: all 0.2s; }
+
+.stack-link:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--text-primary);
+}
+
 .contact-row { display: flex; gap: 12px; flex-wrap: wrap; }
 
 .contact-btn { 

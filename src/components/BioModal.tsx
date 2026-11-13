@@ -89,10 +89,26 @@ const BioModal: React.FC<BioModalProps> = ({ isOpen, onClose }) => {
 
           <div className="bio-divider" />
 
+          {/* OPEN SOURCE */}
+          <h3 className="bio-h3">OPEN_SOURCE</h3>
+          <div className="stack-grid">
+            <a href="https://github.com/catincloud-labs/dagster-dex" target="_blank" rel="noreferrer" className="stack-item stack-link">
+                <span className="text-accent">dagster-dex:</span> lets dex read a Dagster asset graph the way it reads a dbt project
+            </a>
+            <a href="https://github.com/catincloud-labs/ration" target="_blank" rel="noreferrer" className="stack-item stack-link">
+                <span className="text-accent">ration:</span> a bounded claim on a shared pool, refused rather than overdrawn
+            </a>
+            <a href="https://github.com/catincloud-labs/crosslink" target="_blank" rel="noreferrer" className="stack-item stack-link">
+                <span className="text-accent">crosslink:</span> an asset graph reduced to a project format, and the write path back
+            </a>
+          </div>
+
+          <div className="bio-divider" />
+
           {/* CONTACT LINKS */}
           <h3 className="bio-h3">UPLINK</h3>
           <div className="contact-row">
-            <a href="https://github.com/catincloudlabs" target="_blank" rel="noreferrer" className="contact-btn">
+            <a href="https://github.com/catincloud-labs" target="_blank" rel="noreferrer" className="contact-btn">
               <Github size={14} aria-hidden="true" />
               <span>GITHUB</span>
             </a>
